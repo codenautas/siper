@@ -2,12 +2,12 @@
 
 import {TableDefinition, TableContext, soloDigitosCons} from "./types-principal";
 
-export function personal(context:TableContext):TableDefinition{
+export function personal(context: TableContext): TableDefinition {
     var admin = context.user.rol==='admin';
     return {
-        name:'personal',
-        elementName:'persona',
-        editable:admin,
+        name: 'personal',
+        elementName: 'persona',
+        editable: admin,
         fields:[
             {name: 'cuil'     , typeName: 'text',              title:'CUIL'                      },
             {name: 'ficha'    , typeName: 'text', isName:true,                                   },
@@ -16,13 +16,13 @@ export function personal(context:TableContext):TableDefinition{
             {name: 'sector'   , typeName: 'text',                                                },
             {name: 'categoria', typeName: 'text',              title:'categoría'                 },
         ],
-        primaryKey:['cuil'],
-        constraints:[
+        primaryKey: ['cuil'],
+        constraints: [
             soloDigitosCons('cuil'   ),
             soloDigitosCons('ficha'  ),
             soloDigitosCons('idmeta4'),
         ],
-        detailTables:[
+        detailTables: [
             {table:'novedades'         , fields:['cuil'], abr:'N'},
             {table:'registro_novedades', fields:['cuil'], abr:'R'},
             {table:'nov_per'           , fields:['cuil'], abr:'#'}

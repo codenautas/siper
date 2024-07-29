@@ -15,10 +15,10 @@ export function nov_per_importado(context:TableContext):TableDefinition{
             {name: 'categoria', typeName: 'text', nullable:false, allowEmptyText:true, title:'Categoría'                 },
             {name: 'nomyape'  , typeName: 'text', nullable:false, allowEmptyText:true, title:'Nombre y Apellido'         },
             {name: 'sector'   , typeName: 'text', nullable:false, allowEmptyText:true, title:'Sector'                    },
-            {name: 'novedad'  , typeName: 'text', nullable:false, allowEmptyText:true, title:'Código'                    },
-            {name: 'motivo'   , typeName: 'text', nullable:false, allowEmptyText:true, title:'Motivo'                    },
+            {name: 'motivo'  , typeName: 'text', nullable:false, allowEmptyText:true, title:'Código'                    },
+            {name: 'novedad'   , typeName: 'text', nullable:false, allowEmptyText:true, title:'novedad'                    },
             {name: 'cantidad' , typeName: 'text', nullable:false, allowEmptyText:true, title:'Cantidad'                  },
         ],
-        primaryKey:['annio', 'cuil', 'ficha', 'idmeta4', 'categoria', 'nomyape','sector', 'novedad', 'motivo']
+        primaryKey:['annio', 'cuil', 'ficha', 'idmeta4', 'categoria', 'nomyape','sector', 'motivo', 'novedad']
     };
 }

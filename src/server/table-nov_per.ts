@@ -2,7 +2,7 @@
 
 import {TableDefinition, TableContext} from "./types-principal";
 
-export function nov_per(context:TableContext):TableDefinition{
+export function nov_per(context: TableContext): TableDefinition {
     var admin = context.user.rol==='admin';
     return {
         name:'nov_per',
@@ -10,24 +10,24 @@ export function nov_per(context:TableContext):TableDefinition{
         editable:admin,
         fields:[
             {name: 'annio'       , typeName: 'integer', title:'año'      },
-            {name: 'novedad'     , typeName: 'text'   ,                  },
+            {name: 'motivo'      , typeName: 'text'   ,                  },
             {name: 'cuil'        , typeName: 'text'   ,                  },
             {name: 'cantidad'    , typeName: 'integer',                  },
         ],
-        primaryKey:['annio', 'novedad', 'cuil'],
-        softForeignKeys:[
-            {references:'personal'     , fields:['cuil'   ]},
-            {references:'motivos', fields:['novedad']},
+        primaryKey: ['annio', 'motivo', 'cuil'],
+        softForeignKeys: [
+            {references: 'personal'     , fields: ['cuil'   ]},
+            {references: 'motivos'      , fields: ['motivo']},
         ],
-        detailTables:[
-            {table:'novedades', fields:['annio','novedad','cuil'], abr:'N'}
+        detailTables: [
+            {table:'novedades', fields:['annio','motivo','cuil'], abr:'N'}
         ],
-        sql:{
+        sql: {
             isTable:false,
             from:`(
-                select extract(year from fecha) as annio, novedad, cuil, count(*) as cantidad
+                select extract(year from fecha) as annio, motivo, cuil, count(*) as cantidad
                     from novedades
-                    group by extract(year from fecha), novedad, cuil
+                    group by extract(year from fecha), motivo, cuil
             )`
         }
     };

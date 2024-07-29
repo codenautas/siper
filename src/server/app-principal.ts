@@ -11,6 +11,7 @@ import { grupos               } from './table-grupos';
 import { sectores             } from './table-sectores';
 import { personal             } from './table-personal';
 import { per_gru              } from './table-per_gru';
+import { mot_gru              } from './table-mot_gru';
 import { novedades_importadas } from './table-novedades_importadas';
 import { nov_per_importado    } from './table-nov_per_importado';
 import { registro_novedades   } from './table-registro_novedades';
@@ -84,6 +85,7 @@ export class AppSiper extends AppBackend{
             grupos               ,
             personal             ,
             per_gru              ,
+            mot_gru              ,
             novedades_importadas ,
             nov_per_importado    ,
             registro_novedades   ,

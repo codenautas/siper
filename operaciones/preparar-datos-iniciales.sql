@@ -9,12 +9,12 @@ insert into fechas (fecha)
 
 -- delete from motivos;
 
-insert into motivos (novedad, motivo, c_dds)
-  select novedad, motivo, case when motivo like '% Diagra%' then true else null end
-    from (select n.novedad, string_agg(distinct n.motivo,'|') as motivo
-	        from nov_per_importado n left join motivos c on c.novedad = n.novedad
-	        where c.novedad is null
-	        group by n.novedad) n;
+insert into motivos (motivo, novedad, c_dds)
+  select motivo, novedad, case when novedad like '% Diagra%' then true else null end
+    from (select n.motivo, string_agg(distinct n.novedad,'|') as novedad
+	        from nov_per_importado n left join motivos c on c.motivo = n.motivo
+	        where c.motivo is null
+	        group by n.motivo) n;
 
 -- delete from sectores ;
 
@@ -62,30 +62,30 @@ insert into personal (ficha, cuil, idmeta4, nomyape, sector)
 
 -- delete from novedades;
 
-insert into novedades (cuil, ficha, fecha, novedad, sector)
-	select cuil, ficha, fecha, c.novedad, s.sector
+insert into novedades (cuil, ficha, fecha, motivo, sector)
+	select cuil, ficha, fecha, c.motivo, s.sector
 	    from novedades_importadas n 
             left join sectores s on s.nombre_sector = n.sector
-            left join motivos c on c.motivo = n.novedad
-	where c.novedad is not null;
+            left join motivos c on c.novedad = n.motivo
+	where c.motivo is not null;
 
 */
 
-	select cuil, ficha, fecha, c.novedad, s.sector, n.novedad
+	select cuil, ficha, fecha, c.motivo, s.sector, n.motivo
 	    from novedades_importadas n 
             left join sectores s on s.nombre_sector = n.sector
-            left join motivos c on c.motivo = n.novedad
-	    where c.motivo is null;
+            left join motivos c on c.novedad = n.motivo
+	    where c.novedad is null;
 
 
 	
 select * from novedades where false;
 	
 
-select n.novedad, n.motivo, sum(cantidad::bigint)
+select n.motivo, n.novedad, sum(cantidad::bigint)
   from nov_per_importado n
-  where novedad in ('59','999','101')
-  group by n.novedad, n.motivo
+  where motivo in ('59','999','101')
+  group by n.motivo, n.novedad
   order by 1, 2;
 
 select *, extract(dow from fecha), (select count(*) from novedades n where f.fecha = n.fecha)
