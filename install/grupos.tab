@@ -1,0 +1,11 @@
+dimension|grupo|descripcion
+C|CC|Con Cónyuge
+C|SC|Sin Cónyuge
+H|CH|Con hijos
+H|SH|Sin hijos
+P|E|Encuestadores
+P|R|Resto
+P|S|Personal superior
+S|F|Femenino
+S|M|Masculino
+S|X|X
