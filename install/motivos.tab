@@ -1,37 +1,37 @@
-motivo|novedad|c_dds
-1|Art. 18 Descanso anual remunerado|
-2|Licencia ordinaria no controlada|
-5|Licencia por afecciones comunes (Art. 19)|
-7|Ausente|
-8|Cargo de mayor jerarquia|
-9|Cesantia en tramite|
-10|Comision de servicios|
-12|Enfermedad familiar (Art. 20)|
-13|Licencia por enfermedad largo tratamiento (Art. 21)|
-19|Licencia por Maternidad|
-21|Licencia por examen (Art. 25)|
-22|Licencia sin goce de sueldo|
-23|Licencia por matrimonio (Art. 27)|
-24|Licencia por nacimiento de hijo (Art. 26)|
-26|Renuncia en tramite|
-35|Afecciones comunes pendiente de justificar|
-37|Tarde|
-38|Tarde+|
-41|Feriado religioso|
-59|Abandono de servicio (Sin fichada de salida o Ficho antes)|
-85|Autorizado a no fichar|
-89|Encuestador y/o supervisor|
-99|Presente (justificado por personal)|
-101|Teletrabajo Diagramado|true
-102|AI Ausente injustificado|
-103|Franco Diagramado|true
-106|Teletrabajo|
-116|Ley 360|
-121|CC 09/10 Art. 67 c Tramites particulares|
-124|CC 09/10 Art. 67 d Mudanza|
-126|Art 30 ter Licencia esp.l para controles de prev.|
-140|Autoridades superiores|
-154|Ley 6025, Art. 12. Licencia con goce de haberes por nacimiento de hijo/a (30 corridos - no gestante)|
-156|Fallecimiento de Conyuge/Padre/Madre/Hno/Nieto|
-158|Violencia de Genero|
-999|Presente(Horario Flexible)|
+motivo|novedad|dimension|c_dds
+1|Art. 18 Descanso anual remunerado||
+2|Licencia ordinaria no controlada||
+5|Licencia por afecciones comunes (Art. 19)||
+7|Ausente||
+8|Cargo de mayor jerarquia||
+9|Cesantia en tramite||
+10|Comision de servicios||
+12|Enfermedad familiar (Art. 20)||
+13|Licencia por enfermedad largo tratamiento (Art. 21)||
+19|Licencia por Maternidad|S|
+21|Licencia por examen (Art. 25)||
+22|Licencia sin goce de sueldo||
+23|Licencia por matrimonio (Art. 27)|C|
+24|Licencia por nacimiento de hijo (Art. 26)|U|
+26|Renuncia en tramite||
+35|Afecciones comunes pendiente de justificar||
+37|Tarde||
+38|Tarde+||
+41|Feriado religioso||
+59|Abandono de servicio (Sin fichada de salida o Ficho antes)||
+85|Autorizado a no fichar||
+89|Encuestador y/o supervisor||
+99|Presente (justificado por personal)||
+101|Teletrabajo Diagramado||true
+102|AI Ausente injustificado||
+103|Franco Diagramado||true
+106|Teletrabajo||
+116|Ley 360||
+121|CC 09/10 Art. 67 c Tramites particulares|U|
+124|CC 09/10 Art. 67 d Mudanza||
+126|Art 30 ter Licencia esp.l para controles de prev.||
+140|Autoridades superiores|P|
+154|Ley 6025, Art. 12. Licencia con goce de haberes por nacimiento de hijo/a (30 corridos - no gestante)||
+156|Fallecimiento de Conyuge/Padre/Madre/Hno/Nieto||
+158|Violencia de Genero||
+999|Presente(Horario Flexible)||
