@@ -2,27 +2,27 @@
 
 import {TableDefinition, TableContext} from "./types-principal";
 
-export function mot_gru(context:TableContext):TableDefinition{
+export function nov_gru(context:TableContext):TableDefinition{
     var admin = context.user.rol==='admin';
     return {
-        name:'mot_gru',
+        name:'nov_gru',
         title: 'cantidad de novedades por persona',
         editable:admin,
         fields:[
             {name: 'annio'       , typeName: 'integer', title: 'año'       },
-            {name: 'motivo'      , typeName: 'text'   ,                    },
-            {name: 'dimension'   , typeName: 'text'   , title: 'dimensión' },
+            {name: 'cod_nov'      , typeName: 'text'   ,                    },
+            {name: 'clase'   , typeName: 'text'   , title: 'dimensión' },
             {name: 'grupo'       , typeName: 'text'   ,                    },
             {name: 'minimo'      , typeName: 'integer', title: 'mínimo'    },
             {name: 'maximo'      , typeName: 'integer', title: 'máximo'    },
         ],
-        primaryKey:['annio', 'motivo', 'dimension', 'grupo'],
+        primaryKey:['annio', 'cod_nov', 'clase', 'grupo'],
         foreignKeys:[
-            {references:'motivos'       , fields:['motivo'            ]},
-            {references:'grupos'        , fields:['dimension', 'grupo' ]},
+            {references:'cod_nov'       , fields:['cod_nov'            ]},
+            {references:'grupos'        , fields:['clase', 'grupo' ]},
         ],
         detailTables:[
-            // {table:'novedades', fields:['annio','motivo','cuil'], abr:'N'}
+            // {table:'novedades', fields:['annio','cod_nov','cuil'], abr:'N'}
         ]
     };
 }

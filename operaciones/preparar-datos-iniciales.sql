@@ -7,14 +7,14 @@ insert into fechas (fecha)
   select fecha 
 	from generate_series('2023-01-01'::date, '2024-12-31'::date, interval '1 day') fecha;
 
--- delete from motivos;
+-- delete from cod_nov;
 
-insert into motivos (motivo, novedad, c_dds)
-  select motivo, novedad, case when novedad like '% Diagra%' then true else null end
-    from (select n.motivo, string_agg(distinct n.novedad,'|') as novedad
-	        from nov_per_importado n left join motivos c on c.motivo = n.motivo
-	        where c.motivo is null
-	        group by n.motivo) n;
+insert into cod_nov (cod_nov, novedad, c_dds)
+  select cod_nov, novedad, case when novedad like '% Diagra%' then true else null end
+    from (select n.cod_nov, string_agg(distinct n.novedad,'|') as novedad
+	        from nov_per_importado n left join cod_nov c on c.cod_nov = n.cod_nov
+	        where c.cod_nov is null
+	        group by n.cod_nov) n;
 
 -- delete from sectores ;
 
@@ -62,19 +62,19 @@ insert into personal (ficha, cuil, idmeta4, nomyape, sector)
 
 -- delete from novedades;
 
-insert into novedades (cuil, ficha, fecha, motivo, sector)
-	select cuil, ficha, fecha, c.motivo, s.sector
+insert into novedades (cuil, ficha, fecha, cod_nov, sector)
+	select cuil, ficha, fecha, c.cod_nov, s.sector
 	    from novedades_importadas n 
             left join sectores s on s.nombre_sector = n.sector
-            left join motivos c on c.novedad = n.motivo
-	where c.motivo is not null;
+            left join cod_nov c on c.novedad = n.cod_nov
+	where c.cod_nov is not null;
 
 */
 
-	select cuil, ficha, fecha, c.motivo, s.sector, n.motivo
+	select cuil, ficha, fecha, c.cod_nov, s.sector, n.cod_nov
 	    from novedades_importadas n 
             left join sectores s on s.nombre_sector = n.sector
-            left join motivos c on c.novedad = n.motivo
+            left join cod_nov c on c.novedad = n.cod_nov
 	    where c.novedad is null;
 
 
@@ -82,10 +82,10 @@ insert into novedades (cuil, ficha, fecha, motivo, sector)
 select * from novedades where false;
 	
 
-select n.motivo, n.novedad, sum(cantidad::bigint)
+select n.cod_nov, n.novedad, sum(cantidad::bigint)
   from nov_per_importado n
-  where motivo in ('59','999','101')
-  group by n.motivo, n.novedad
+  where cod_nov in ('59','999','101')
+  group by n.cod_nov, n.novedad
   order by 1, 2;
 
 select *, extract(dow from fecha), (select count(*) from novedades n where f.fecha = n.fecha)
@@ -95,7 +95,7 @@ select *, extract(dow from fecha), (select count(*) from novedades n where f.fec
   order by fecha asc
   limit 200;
 
-insert into per_gru (persona, dimension, grupo)
+insert into per_gru (persona, clase, grupo)
   (select
 	cuil
 	'S',

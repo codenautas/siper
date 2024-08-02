@@ -12,13 +12,13 @@ export function registro_novedades(context: TableContext): TableDefinition{
             {name: 'cuil'     , typeName: 'text'   ,                                    },
             {name: 'desde'    , typeName: 'date'   ,                                    },
             {name: 'hasta'    , typeName: 'date'   ,                                    },
-            {name: 'motivo'   , typeName: 'text'   ,                                    },
+            {name: 'cod_nov'   , typeName: 'text'   ,                                    },
             {name: 'dds1'     , typeName: 'boolean', title:'lunes'                      },
             {name: 'dds2'     , typeName: 'boolean', title:'martes'                     },
             {name: 'dds3'     , typeName: 'boolean', title:'miércoles'                  },
             {name: 'dds4'     , typeName: 'boolean', title:'jueves'                     },
             {name: 'dds5'     , typeName: 'boolean', title:'viernes'                    },
         ],         
-        primaryKey: ['cuil', 'desde', 'motivo']
+        primaryKey: ['cuil', 'desde', 'cod_nov']
     };
 }

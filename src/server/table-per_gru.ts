@@ -10,13 +10,13 @@ export function per_gru(context: TableContext): TableDefinition{
         editable:admin,
         fields: [
             {name: 'cuil'        , typeName: 'text'   ,                 },
-            {name: 'dimension'   , typeName: 'text'   ,                 },
+            {name: 'clase'   , typeName: 'text'   ,                 },
             {name: 'grupo'       , typeName: 'text'   ,                 },
         ],
-        primaryKey: ['cuil', 'dimension'],
+        primaryKey: ['cuil', 'clase'],
         foreignKeys: [
             {references:'personal'       , fields:['cuil']              , displayAllFields:true},
-            {references:'grupos'         , fields:['dimension', 'grupo'], displayAllFields:true},
+            {references:'grupos'         , fields:['clase', 'grupo'], displayAllFields:true},
         ]
     };
 }

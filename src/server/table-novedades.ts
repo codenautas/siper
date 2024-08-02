@@ -6,25 +6,25 @@ export function novedades(context: TableContext): TableDefinition {
     var admin = context.user.rol==='admin';
     return {
         name:'novedades',
-        elementName:'motivo',
+        elementName:'cod_nov',
         editable:admin,
         fields: [
             {name: 'cuil'     , typeName: 'text'   ,                                    },
             {name: 'ficha'    , typeName: 'text'   ,                                    },
             {name: 'fecha'    , typeName: 'date'   ,                                    },
             {name: 'dds'      , typeName: 'text'   , inTable:false, serverSide:true, editable:false },
-            {name: 'motivo'   , typeName: 'text'   ,                                    },
+            {name: 'cod_nov'   , typeName: 'text'   ,                                    },
             {name: 'sector'   , typeName: 'text'   ,                                    },
             {name: 'ent_fich' , typeName: 'text'   , title:'entrada - fichada'          },
             {name: 'sal_fich' , typeName: 'text'   , title:'salida - fichada'           },
             {name: 'annio'    , typeName: 'integer', inTable:false, serverSide:true, editable:false },
         ],
-        primaryKey: ['cuil', 'fecha', 'motivo'],
+        primaryKey: ['cuil', 'fecha', 'cod_nov'],
         foreignKeys: [
             {references:'personal'     , fields: ['cuil'   ]},
             {references:'fechas'       , fields: ['fecha'  ]},
             {references:'sectores'     , fields: ['sector' ]},
-            {references:'motivos'      , fields: ['motivo' ]},
+            {references:'cod_nov'      , fields: ['cod_nov' ]},
         ],
         sql: {
             fields: {

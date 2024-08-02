@@ -10,24 +10,24 @@ export function nov_per(context: TableContext): TableDefinition {
         editable:admin,
         fields:[
             {name: 'annio'       , typeName: 'integer', title:'año'      },
-            {name: 'motivo'      , typeName: 'text'   ,                  },
+            {name: 'cod_nov'      , typeName: 'text'   ,                  },
             {name: 'cuil'        , typeName: 'text'   ,                  },
             {name: 'cantidad'    , typeName: 'integer',                  },
         ],
-        primaryKey: ['annio', 'motivo', 'cuil'],
+        primaryKey: ['annio', 'cod_nov', 'cuil'],
         softForeignKeys: [
             {references: 'personal'     , fields: ['cuil'   ]},
-            {references: 'motivos'      , fields: ['motivo']},
+            {references: 'cod_nov'      , fields: ['cod_nov']},
         ],
         detailTables: [
-            {table:'novedades', fields:['annio','motivo','cuil'], abr:'N'}
+            {table:'novedades', fields:['annio','cod_nov','cuil'], abr:'N'}
         ],
         sql: {
             isTable:false,
             from:`(
-                select extract(year from fecha) as annio, motivo, cuil, count(*) as cantidad
+                select extract(year from fecha) as annio, cod_nov, cuil, count(*) as cantidad
                     from novedades
-                    group by extract(year from fecha), motivo, cuil
+                    group by extract(year from fecha), cod_nov, cuil
             )`
         }
     };

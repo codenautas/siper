@@ -1,4 +1,4 @@
-dimension|grupo|descripcion
+clase|grupo|descripcion
 C|CC|Con Cónyuge
 C|SC|Sin Cónyuge
 H|CH|Con hijos
@@ -9,3 +9,4 @@ P|S|Personal superior
 S|F|Femenino
 S|M|Masculino
 S|X|X
+U|T|Todos

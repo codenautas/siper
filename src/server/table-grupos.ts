@@ -9,17 +9,17 @@ export function grupos(context:TableContext):TableDefinition{
         elementName: 'grupo',
         editable:admin,
         fields:[
-            {name: 'dimension'   , typeName: 'text'   ,                 },
+            {name: 'clase'   , typeName: 'text'   ,                 },
             {name: 'grupo'       , typeName: 'text'   ,                 },
             {name: 'descripcion' , typeName: 'text'   , isName:true     },
         ],
-        primaryKey:['dimension', 'grupo'],
+        primaryKey:['clase', 'grupo'],
         constraints:[
             {constraintType:'unique', fields:['descripcion']},
             soloCodigo('grupo'),
         ],
         detailTables:[
-            {table:'per_gru'       , fields:['dimension', 'grupo'], abr:'p'},
+            {table:'per_gru'       , fields:['clase', 'grupo'], abr:'p'},
         ]
     };
 }

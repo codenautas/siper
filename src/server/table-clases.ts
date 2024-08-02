@@ -2,23 +2,23 @@
 
 import {TableDefinition, TableContext, soloCodigo} from "./types-principal";
 
-export function dimensiones(context:TableContext):TableDefinition{
+export function clases(context:TableContext):TableDefinition{
     var admin = context.user.rol==='admin';
     return {
-        name:'dimensiones',
+        name:'clases',
         elementName: 'dimensión',
         editable:admin,
         fields:[
-            {name: 'dimension'   , typeName: 'text'   ,                 },
+            {name: 'clase'   , typeName: 'text'   ,                 },
             {name: 'nombre'      , typeName: 'text'   , isName:true   , },
         ],
-        primaryKey:['dimension'],
+        primaryKey:['clase'],
         constraints:[
             {constraintType:'unique', fields:['nombre']},
-            soloCodigo('dimension'),
+            soloCodigo('clase'),
         ],
         detailTables:[
-            {table:'grupos'            , fields:['dimension'], abr:'g'},
+            {table:'grupos'            , fields:['clase'], abr:'g'},
         ]
     };
 }

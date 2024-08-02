@@ -4,14 +4,14 @@ import { AppBackend, Context, Request,
     ClientModuleDefinition, OptsClientPage, MenuDefinition, MenuInfoBase
 } from "./types-principal";
 
-import { motivos              } from './table-motivos';
+import { cod_nov              } from './table-cod_nov';
 import { fechas               } from './table-fechas';
-import { dimensiones          } from './table-dimensiones';
+import { clases          } from './table-clases';
 import { grupos               } from './table-grupos';
 import { sectores             } from './table-sectores';
 import { personal             } from './table-personal';
 import { per_gru              } from './table-per_gru';
-import { mot_gru              } from './table-mot_gru';
+import { nov_gru              } from './table-nov_gru';
 import { novedades_importadas } from './table-novedades_importadas';
 import { nov_per_importado    } from './table-nov_per_importado';
 import { registro_novedades   } from './table-registro_novedades';
@@ -41,7 +41,7 @@ export class AppSiper extends AppBackend{
                 ]},
                 {menuType:'menu', name:'config', label:'configurar', menuContent:[
                     {menuType:'table', name:'fechas'        },
-                    {menuType:'table', name:'motivos' },
+                    {menuType:'table', name:'cod_nov' },
                     {menuType:'table', name:'sectores'      },
                     {menuType:'table', name:'usuarios'      },
                 ]}
@@ -78,14 +78,14 @@ export class AppSiper extends AppBackend{
         super.prepareGetTables();
         this.getTableDefinition={
             ... this.getTableDefinition,
-            motivos        ,
+            cod_nov        ,
             fechas               ,
             sectores             ,
-            dimensiones          ,
+            clases          ,
             grupos               ,
             personal             ,
             per_gru              ,
-            mot_gru              ,
+            nov_gru              ,
             novedades_importadas ,
             nov_per_importado    ,
             registro_novedades   ,
