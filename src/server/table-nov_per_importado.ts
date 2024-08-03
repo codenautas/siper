@@ -6,8 +6,10 @@ export function nov_per_importado(context:TableContext):TableDefinition{
     var admin = context.user.rol==='admin';
     return {
         name:'nov_per_importado',
+        /* tabla temporaria que permite importar desde un Excel externo */
         editable:admin,
         fields:[
+            /* Estos campos no deben cambiarse aunque cambien los originales */
             {name: 'annio'    , typeName: 'text', nullable:false, allowEmptyText:true, title:'Año'                       },
             {name: 'ficha'    , typeName: 'text', nullable:false, allowEmptyText:true, title:'Ficha'                     },
             {name: 'cuil'     , typeName: 'text', nullable:false, allowEmptyText:true, title:'Cuil'                      },
@@ -15,10 +17,10 @@ export function nov_per_importado(context:TableContext):TableDefinition{
             {name: 'categoria', typeName: 'text', nullable:false, allowEmptyText:true, title:'Categoría'                 },
             {name: 'nomyape'  , typeName: 'text', nullable:false, allowEmptyText:true, title:'Nombre y Apellido'         },
             {name: 'sector'   , typeName: 'text', nullable:false, allowEmptyText:true, title:'Sector'                    },
-            {name: 'cod_nov'  , typeName: 'text', nullable:false, allowEmptyText:true, title:'Código'                    },
-            {name: 'novedad'   , typeName: 'text', nullable:false, allowEmptyText:true, title:'novedad'                    },
+            {name: 'motivo'   , typeName: 'text', nullable:false, allowEmptyText:true, title:'Código'                    },
+            {name: 'novedad'  , typeName: 'text', nullable:false, allowEmptyText:true, title:'novedad'                    },
             {name: 'cantidad' , typeName: 'text', nullable:false, allowEmptyText:true, title:'Cantidad'                  },
         ],
-        primaryKey:['annio', 'cuil', 'ficha', 'idmeta4', 'categoria', 'nomyape','sector', 'cod_nov', 'novedad']
+        primaryKey:['annio', 'cuil', 'ficha', 'idmeta4', 'categoria', 'nomyape','sector', 'motivo', 'novedad']
     };
 }

@@ -17,6 +17,9 @@ export function personal(context: TableContext): TableDefinition {
             {name: 'categoria', typeName: 'text',              title:'categoría'                 },
         ],
         primaryKey: ['cuil'],
+        foreignKeys: [
+            {references: 'sectores', fields:['sector']}
+        ],
         constraints: [
             soloDigitosCons('cuil'   ),
             soloDigitosCons('ficha'  ),

@@ -6,10 +6,10 @@ export function clases(context:TableContext):TableDefinition{
     var admin = context.user.rol==='admin';
     return {
         name:'clases',
-        elementName: 'dimensión',
+        elementName: 'clase',
         editable:admin,
         fields:[
-            {name: 'clase'   , typeName: 'text'   ,                 },
+            {name: 'clase'       , typeName: 'text'   ,                 },
             {name: 'nombre'      , typeName: 'text'   , isName:true   , },
         ],
         primaryKey:['clase'],

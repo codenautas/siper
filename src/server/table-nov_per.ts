@@ -10,7 +10,7 @@ export function nov_per(context: TableContext): TableDefinition {
         editable:admin,
         fields:[
             {name: 'annio'       , typeName: 'integer', title:'año'      },
-            {name: 'cod_nov'      , typeName: 'text'   ,                  },
+            {name: 'cod_nov'     , typeName: 'text'   ,                  },
             {name: 'cuil'        , typeName: 'text'   ,                  },
             {name: 'cantidad'    , typeName: 'integer',                  },
         ],

@@ -10,11 +10,12 @@ export function fechas(context:TableContext):TableDefinition{
         editable:admin,
         fields:[
             {name: 'fecha'     , typeName: 'date'   ,           },
-            {name: 'laborable' , typeName: 'boolean',isName:true},
-            {name: 'dds'       , typeName: 'text'   ,inTable:false, serverSide:true, editable:false},
-            {name: 'razon'     , typeName: 'text'   ,           },
-            {name: 'repite'    , typeName: 'boolean',           },
-            {name: 'inamovible', typeName: 'boolean',           },
+            {name: 'laborable' , typeName: 'boolean', isName:true},
+            {name: 'dds'       , typeName: 'text'   , inTable:false, serverSide:true, editable:false},
+            {name: 'leyenda'   , typeName: 'text'   , description: 'lo que se verá en el calendario cuando haya suficiente espacio'},
+            {name: 'abr'       , typeName: 'text'   , description: 'lo que se verá en el calendario cuando haya poco espacio'},
+            {name: 'repite'    , typeName: 'boolean', description: 'si es un feriado todos los años (poner no a feriados turísticos y a asuetos puntuales'},
+            {name: 'inamovible', typeName: 'boolean', description: 'si es un feriado que no se mueve, que se festeja siempre en la misma fecha'},
         ],
         primaryKey:['fecha'],
         constraints:[

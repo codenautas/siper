@@ -9,7 +9,7 @@ export function grupos(context:TableContext):TableDefinition{
         elementName: 'grupo',
         editable:admin,
         fields:[
-            {name: 'clase'   , typeName: 'text'   ,                 },
+            {name: 'clase'       , typeName: 'text'   ,                 },
             {name: 'grupo'       , typeName: 'text'   ,                 },
             {name: 'descripcion' , typeName: 'text'   , isName:true     },
         ],

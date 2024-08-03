@@ -11,6 +11,7 @@ export function usuarios(context: TableContext): TableDefinition{
         fields: [
             {name:'usuario'          , typeName:'text'    , nullable:false  },
             {name:'rol'              , typeName:'text'    },
+            {name:'cuil'             , typeName:'text'    , editable: admin},
             {name:'md5clave'         , typeName:'text'    , allow:{select: context.forDump} },
             {name:'activo'           , typeName:'boolean' , nullable:false ,defaultValue:false},
             {name:'nombre'           , typeName:'text'                      },
@@ -22,6 +23,9 @@ export function usuarios(context: TableContext): TableDefinition{
             {name:'clave_nueva'      , typeName:'text', clientSide:'newPass', allow:{select:admin, update:true, insert:false}},
         ],
         primaryKey: ['usuario'],
+        foreignKeys: [
+            {references: 'personal', fields:['cuil']}
+        ],
         sql: {
             where:admin || context.forDump?'true':"usuario = "+context.be.db.quoteNullable(context.user.usuario)
         }
