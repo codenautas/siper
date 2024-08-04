@@ -22,6 +22,9 @@ export function registro_novedades(context: TableContext): TableDefinition{
             {name: 'dds4'     , typeName: 'boolean', title:'jueves'                     },
             {name: 'dds5'     , typeName: 'boolean', title:'viernes'                    },
         ],         
-        primaryKey: [cuil.name, 'desde', cod_nov.name]
+        primaryKey: [cuil.name, 'desde', cod_nov.name],
+        foreignKeys: [
+            {references: 'personal', fields: [cuil.name]}
+        ]
     };
 }

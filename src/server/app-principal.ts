@@ -19,6 +19,8 @@ import { novedades            } from './table-novedades';
 import { nov_per              } from './table-nov_per';
 import { usuarios             } from './table-usuarios';
 
+import { ProceduresPrincipal } from './procedures-principal'
+
 import {staticConfigYaml} from './def-config';
 
 export class AppSiper extends AppBackend{
@@ -29,15 +31,28 @@ export class AppSiper extends AppBackend{
         super.configStaticConfig();
         this.setStaticConfig(staticConfigYaml);
     }
+    override async getProcedures(){
+        var be = this;
+        return [
+            ...await super.getProcedures(),
+            ...ProceduresPrincipal
+        ].map(be.procedureDefCompleter, be);
+    }
     override getMenu(context:Context):MenuDefinition{
         var menuContent:MenuInfoBase[]=[];
         if(context.user && context.user.rol=="admin"){
             menuContent.push(
                 {menuType:'table', name:'personal'          },
-                {menuType:'table', name:'novedades'         },
-                {menuType:'table', name:'registro_novedades'},
+                {menuType:'menu', name:'novedades', menuContent:[
+                    {menuType:'registroNovedades', name:'registro'},
+                    {menuType:'menu', name:'tablas', menuContent:[
+                        {menuType:'table', name:'novedades'         },
+                        {menuType:'table', name:'registro_novedades'},
+                    ]},
+                ]},
                 {menuType:'menu', name:'importaciones', menuContent:[
                     {menuType:'table', name:'novedades_importadas'},
+                    {menuType:'table', name:'nov_per_importado'},
                 ]},
                 {menuType:'menu', name:'config', label:'configurar', menuContent:[
                     {menuType:'table', name:'fechas'        },
@@ -46,12 +61,12 @@ export class AppSiper extends AppBackend{
                     {menuType:'table', name:'clases'        },
                     {menuType:'table', name:'usuarios'      },
                 ]}
-            )
-        };
+            );
+        }
         return {menu:menuContent};
     }
     override clientIncludes(req:Request|null, opts:OptsClientPage):ClientModuleDefinition[]{
-        var UsandoREact = false;
+        var UsandoREact = true;
         var menuedResources:ClientModuleDefinition[]=req && opts && !opts.skipMenu ? [
             { type:'js' , src:'client.js' },
         ]:[
@@ -60,17 +75,20 @@ export class AppSiper extends AppBackend{
             ...(UsandoREact?[
                 { type: 'js', module: 'react', modPath: 'umd', fileDevelopment:'react.development.js', file:'react.production.min.js' },
                 { type: 'js', module: 'react-dom', modPath: 'umd', fileDevelopment:'react-dom.development.js', file:'react-dom.production.min.js' },
-                { type: 'js', module: '@mui/material', modPath: 'umd', fileDevelopment:'material-ui.development.js', file:'material-ui.production.min.js' },
+                { type: 'js', module: '@mui/material', modPath: '../umd', fileDevelopment:'material-ui.development.js', file:'material-ui.production.min.js' },
                 { type: 'js', module: 'clsx', file:'clsx.min.js' },
-                { type: 'js', module: 'redux', modPath:'../dist', fileDevelopment:'redux.js', file:'redux.min.js' },
-                { type: 'js', module: 'react-redux', modPath:'../dist', fileDevelopment:'react-redux.js', file:'react-redux.min.js' },
+                // { type: 'js', module: 'redux', modPath:'../dist', fileDevelopment:'redux.js', file:'redux.min.js' },
+                // { type: 'js', module: 'react-redux', modPath:'../dist', fileDevelopment:'react-redux.js', file:'react-redux.min.js' },
             ]:[]) satisfies ClientModuleDefinition[],
             ...super.clientIncludes(req, opts),
             ...(UsandoREact?[
-                { type: 'js', module: 'redux-typed-reducer', modPath:'../dist', file:'redux-typed-reducer.js' },
+                // { type: 'js', module: 'redux-typed-reducer', modPath:'../dist', file:'redux-typed-reducer.js' },
                 { type: 'js', src: 'adapt.js' },
             ]:[])  satisfies ClientModuleDefinition[],
+            { type: 'js', src: 'lib/my-icons.js' },
+            { type: 'js', module: 'frontend-plus', file:'frontend-plus.js'},
             { type: 'css', file: 'menu.css' },
+            { type: 'js', file: 'ws-registro_novedades.js' },
             ... menuedResources
         ] satisfies ClientModuleDefinition[];
         return list;

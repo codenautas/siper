@@ -12,6 +12,7 @@
   ],
   "dependencies": {
     "backend-plus": "^2.0.0-rc.23",
+    "frontend-plus": "^0.0.2",
     "pg-triggers": "^0.3.3"
   },
   "devDependencies": {
