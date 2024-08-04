@@ -1,25 +1,33 @@
 "use strict";
 
-import {TableDefinition, TableContext, soloCodigo} from "./types-principal";
+import {FieldDefinition, TableDefinition, TableContext, soloCodigo} from "./types-principal";
+
+import {clase} from "./table-clases";
+
+export const grupo:FieldDefinition = {
+    name: 'grupo', 
+    typeName: 'text', 
+    postInput: 'upperWithoutDiacritics'
+}
 
 export function grupos(context:TableContext):TableDefinition{
     var admin = context.user.rol==='admin';
     return {
-        name:'grupos',
+        name: 'grupos',
         elementName: 'grupo',
-        editable:admin,
-        fields:[
-            {name: 'clase'       , typeName: 'text'   ,                 },
-            {name: 'grupo'       , typeName: 'text'   ,                 },
-            {name: 'descripcion' , typeName: 'text'   , isName:true     },
+        editable: admin,
+        fields: [
+            clase,
+            grupo,
+            {name: 'descripcion', typeName: 'text', isName:true},
         ],
-        primaryKey:['clase', 'grupo'],
-        constraints:[
-            {constraintType:'unique', fields:['descripcion']},
-            soloCodigo('grupo'),
+        primaryKey: [clase.name, grupo.name],
+        constraints: [
+            {constraintType: 'unique', fields: ['descripcion']},
+            soloCodigo(grupo.name),
         ],
-        detailTables:[
-            {table:'per_gru'       , fields:['clase', 'grupo'], abr:'p'},
+        detailTables: [
+            {table: 'per_gru', fields: [clase.name, grupo.name], abr:'p'},
         ]
     };
 }

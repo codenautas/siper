@@ -1,4 +1,4 @@
-import { Constraint } from "backend-plus";
+import { Constraint, PostInputOptions } from "backend-plus";
 import { AppSiper } from "./app-principal";
 
 // exposes APIs from this package
@@ -21,6 +21,8 @@ declare module "backend-plus"{
         rol:string
     }
 }
+
+export const soloDigitosPostConfig = 'soloDigitos' as PostInputOptions
 
 export function soloDigitosCons(fieldName: string):Constraint{
     return {

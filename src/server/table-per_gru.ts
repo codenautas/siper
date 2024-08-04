@@ -2,6 +2,10 @@
 
 import {TableDefinition, TableContext} from "./types-principal";
 
+import {cuil} from "./table-personal";
+import {clase} from "./table-clases";
+import {grupo} from "./table-grupos";
+
 export function per_gru(context: TableContext): TableDefinition{
     var admin = context.user.rol==='admin';
     return {
@@ -9,14 +13,14 @@ export function per_gru(context: TableContext): TableDefinition{
         elementName: 'persona-grupo',
         editable:admin,
         fields: [
-            {name: 'cuil'        , typeName: 'text'   ,                 },
-            {name: 'clase'       , typeName: 'text'   ,                 },
-            {name: 'grupo'       , typeName: 'text'   ,                 },
+            cuil,
+            clase,
+            grupo,
         ],
-        primaryKey: ['cuil', 'clase'],
+        primaryKey: [cuil.name, clase.name],
         foreignKeys: [
-            {references:'personal'       , fields:['cuil']          , displayAllFields:true},
-            {references:'grupos'         , fields:['clase', 'grupo'], displayAllFields:true},
+            {references:'personal'       , fields:[cuil.name]             , displayAllFields:true},
+            {references:'grupos'         , fields:[clase.name, grupo.name], displayAllFields:true},
         ]
     };
 }

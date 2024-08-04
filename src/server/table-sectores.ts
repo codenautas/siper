@@ -1,6 +1,8 @@
 "use strict";
 
-import {TableDefinition, TableContext} from "./types-principal";
+import {FieldDefinition, TableDefinition, TableContext} from "./types-principal";
+
+export const sector: FieldDefinition = {name: 'sector', typeName: 'text', title:'sector'}
 
 export function sectores(context: TableContext): TableDefinition {
     var admin = context.user.rol==='admin';
@@ -9,12 +11,12 @@ export function sectores(context: TableContext): TableDefinition {
         elementName: 'sector',
         editable: admin,
         fields: [
-            {name: 'sector'          , typeName: 'text',              title:'sector'                   },
-            {name: 'nombre_sector'   , typeName: 'text', isName:true, title:'sector departamento área' },
+            sector,
+            {name: 'nombre_sector', typeName: 'text', isName:true, title:'sector departamento área'},
         ],
-        primaryKey: ['sector'],
+        primaryKey: [sector.name],
         detailTables: [
-            {table:'personal', fields:['sector'], abr:'P'}
+            {table:'personal', fields:[sector.name], abr:'P'}
         ]
     };
 }

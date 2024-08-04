@@ -4,9 +4,9 @@ import { AppBackend, Context, Request,
     ClientModuleDefinition, OptsClientPage, MenuDefinition, MenuInfoBase
 } from "./types-principal";
 
-import { cod_nov              } from './table-cod_nov';
+import { cod_novedades        } from './table-cod_novedades';
 import { fechas               } from './table-fechas';
-import { clases          } from './table-clases';
+import { clases               } from './table-clases';
 import { grupos               } from './table-grupos';
 import { sectores             } from './table-sectores';
 import { personal             } from './table-personal';
@@ -41,8 +41,9 @@ export class AppSiper extends AppBackend{
                 ]},
                 {menuType:'menu', name:'config', label:'configurar', menuContent:[
                     {menuType:'table', name:'fechas'        },
-                    {menuType:'table', name:'cod_nov' },
+                    {menuType:'table', name:'cod_novedades' },
                     {menuType:'table', name:'sectores'      },
+                    {menuType:'table', name:'clases'        },
                     {menuType:'table', name:'usuarios'      },
                 ]}
             )
@@ -78,10 +79,10 @@ export class AppSiper extends AppBackend{
         super.prepareGetTables();
         this.getTableDefinition={
             ... this.getTableDefinition,
-            cod_nov        ,
+            cod_novedades        ,
             fechas               ,
             sectores             ,
-            clases          ,
+            clases               ,
             grupos               ,
             personal             ,
             per_gru              ,

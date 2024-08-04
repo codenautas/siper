@@ -2,25 +2,28 @@
 
 import {TableDefinition, TableContext} from "./types-principal";
 
-export function nov_per(context: TableContext): TableDefinition {
-    var admin = context.user.rol==='admin';
+import {año} from "./table-fechas"
+import {cuil} from "./table-personal"
+import {cod_nov} from "./table-cod_novedades"
+
+export function nov_per(_context: TableContext): TableDefinition {
     return {
         name:'nov_per',
         title: 'cantidad de novedades por persona',
-        editable:admin,
+        editable: false,
         fields:[
-            {name: 'annio'       , typeName: 'integer', title:'año'      },
-            {name: 'cod_nov'     , typeName: 'text'   ,                  },
-            {name: 'cuil'        , typeName: 'text'   ,                  },
-            {name: 'cantidad'    , typeName: 'integer',                  },
+            año,
+            cod_nov,
+            cuil,
+            {name: 'cantidad', typeName: 'integer'},
         ],
-        primaryKey: ['annio', 'cod_nov', 'cuil'],
+        primaryKey: [año.name, cod_nov.name, cuil.name],
         softForeignKeys: [
-            {references: 'personal'     , fields: ['cuil'   ]},
-            {references: 'cod_nov'      , fields: ['cod_nov']},
+            {references: 'personal'     , fields: [cuil.name]},
+            {references: 'cod_novedades', fields: [cod_nov.name]},
         ],
         detailTables: [
-            {table:'novedades', fields:['annio','cod_nov','cuil'], abr:'N'}
+            {table:'novedades', fields:[año.name, cod_nov.name, cuil.name], abr:'N'}
         ],
         sql: {
             isTable:false,

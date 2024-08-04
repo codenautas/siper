@@ -2,6 +2,9 @@
 
 import {TableDefinition, TableContext} from "./types-principal";
 
+import {cuil} from "./table-personal"
+import {cod_nov} from "./table-cod_novedades";
+
 export function registro_novedades(context: TableContext): TableDefinition{
     var admin = context.user.rol==='admin';
     return {
@@ -9,16 +12,16 @@ export function registro_novedades(context: TableContext): TableDefinition{
         elementName: 'registro',
         editable: admin,
         fields:[
-            {name: 'cuil'     , typeName: 'text'   ,                                    },
+            cuil,
             {name: 'desde'    , typeName: 'date'   ,                                    },
             {name: 'hasta'    , typeName: 'date'   ,                                    },
-            {name: 'cod_nov'  , typeName: 'text'   ,                                    },
+            cod_nov,
             {name: 'dds1'     , typeName: 'boolean', title:'lunes'                      },
             {name: 'dds2'     , typeName: 'boolean', title:'martes'                     },
             {name: 'dds3'     , typeName: 'boolean', title:'miércoles'                  },
             {name: 'dds4'     , typeName: 'boolean', title:'jueves'                     },
             {name: 'dds5'     , typeName: 'boolean', title:'viernes'                    },
         ],         
-        primaryKey: ['cuil', 'desde', 'cod_nov']
+        primaryKey: [cuil.name, 'desde', cod_nov.name]
     };
 }
