@@ -14,7 +14,7 @@ import { per_gru              } from './table-per_gru';
 import { nov_gru              } from './table-nov_gru';
 import { novedades_importadas } from './table-novedades_importadas';
 import { nov_per_importado    } from './table-nov_per_importado';
-import { registro_novedades   } from './table-registro_novedades';
+import { novedades_registradas   } from './table-novedades_registradas';
 import { novedades            } from './table-novedades';
 import { nov_per              } from './table-nov_per';
 import { usuarios             } from './table-usuarios';
@@ -47,7 +47,7 @@ export class AppSiper extends AppBackend{
                     {menuType:'registroNovedades', name:'registro'},
                     {menuType:'menu', name:'tablas', menuContent:[
                         {menuType:'table', name:'novedades'         },
-                        {menuType:'table', name:'registro_novedades'},
+                        {menuType:'table', name:'novedades_registradas'},
                     ]},
                 ]},
                 {menuType:'menu', name:'importaciones', menuContent:[
@@ -88,7 +88,7 @@ export class AppSiper extends AppBackend{
             { type: 'js', src: 'lib/my-icons.js' },
             { type: 'js', module: 'frontend-plus', file:'frontend-plus.js'},
             { type: 'css', file: 'menu.css' },
-            { type: 'js', file: 'ws-registro_novedades.js' },
+            { type: 'js', file: 'ws-novedades_registradas.js' },
             ... menuedResources
         ] satisfies ClientModuleDefinition[];
         return list;
@@ -107,7 +107,7 @@ export class AppSiper extends AppBackend{
             nov_gru              ,
             novedades_importadas ,
             nov_per_importado    ,
-            registro_novedades   ,
+            novedades_registradas   ,
             novedades            ,
             nov_per              ,
             usuarios             ,

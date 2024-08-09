@@ -10,7 +10,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         ],
         coreFunction: async function(context: ProcedureContext, params:{table:string}){
             const {client} = context;
-            if (params.table != 'registro_novedades') throw new Error('tabla invalida');
+            if (params.table != 'novedades_registradas') throw new Error('tabla invalida');
             return {
                 relations: {
                     cuil    : (await client.query('select cuil from personal order by cuil', []).fetchAll()).rows.map(row => row.cuil),

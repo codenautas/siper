@@ -9,7 +9,7 @@ var my=myOwn;
 myOwn.wScreens.registroNovedades = function registroNovedades(addrParams:any){
     renderCardEditor(
         myOwn as never as Connector,
-        { ...addrParams, table: 'registro_novedades' },
+        { ...addrParams, table: 'novedades_registradas' },
         document.getElementById('total-layout')!
     )
 }

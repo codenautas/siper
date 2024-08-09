@@ -30,7 +30,7 @@ export function fechas(context:TableContext):TableDefinition{
         ],
         detailTables:[
             {table:'novedades'         , fields:[fecha.name], abr:'N'},
-            // {table:'registro_novedades', fields:['fecha'], abr:'R'}
+            // {table:'novedades_registradas', fields:['fecha'], abr:'R'}
         ],
         sql:{
             fields:{

@@ -5,10 +5,10 @@ import {TableDefinition, TableContext} from "./types-principal";
 import {cuil} from "./table-personal"
 import {cod_nov} from "./table-cod_novedades";
 
-export function registro_novedades(context: TableContext): TableDefinition{
+export function novedades_registradas(context: TableContext): TableDefinition{
     var admin = context.user.rol==='admin';
     return {
-        name: 'registro_novedades',
+        name: 'novedades_registradas',
         elementName: 'registro',
         editable: admin,
         fields:[
