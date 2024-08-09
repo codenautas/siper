@@ -23,7 +23,7 @@ export function nov_per(_context: TableContext): TableDefinition {
             {references: 'cod_novedades', fields: [cod_nov.name]},
         ],
         detailTables: [
-            {table:'novedades', fields:[año.name, cod_nov.name, cuil.name], abr:'N'}
+            {table:'novedades_vigentes', fields:[año.name, cod_nov.name, cuil.name], abr:'N'}
         ],
         sql: {
             isTable:false,

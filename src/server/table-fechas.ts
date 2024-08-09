@@ -29,7 +29,7 @@ export function fechas(context:TableContext):TableDefinition{
             {constraintType:'check', consName:'laborable no o en blanco', expr:'laborable is not true'},
         ],
         detailTables:[
-            {table:'novedades'         , fields:[fecha.name], abr:'N'},
+            {table:'novedades_vigentes'         , fields:[fecha.name], abr:'N'},
             // {table:'novedades_registradas', fields:['fecha'], abr:'R'}
         ],
         sql:{

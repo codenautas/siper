@@ -35,7 +35,7 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {references: 'clases', fields:[clase.name]}
         ],
         detailTables:[
-            {table:'novedades'         , fields:[cod_nov.name], abr:'N'},
+            {table:'novedades_vigentes'   , fields:[cod_nov.name], abr:'N'},
             {table:'novedades_registradas', fields:[cod_nov.name], abr:'R'},
             {table:'nov_per'           , fields:[cod_nov.name], abr:'#'},
             {table:'nov_gru'           , fields:[cod_nov.name, clase.name], abr:'g'}

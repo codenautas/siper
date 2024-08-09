@@ -26,7 +26,7 @@ export function nov_gru(context:TableContext):TableDefinition{
             {references: 'grupos'        , fields: [clase.name, grupo.name]},
         ],
         detailTables:[
-            // {table:'novedades', fields:['annio','cod_nov',cuil.name], abr:'N'}
+            // {table:'novedades_vigentes', fields:['annio','cod_nov',cuil.name], abr:'N'}
         ]
     };
 }

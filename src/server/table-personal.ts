@@ -33,7 +33,7 @@ export function personal(context: TableContext): TableDefinition {
             soloDigitosCons('idmeta4'),
         ],
         detailTables: [
-            {table:'novedades'         , fields:[cuil.name], abr:'N'},
+            {table:'novedades_vigentes'   , fields:[cuil.name], abr:'N'},
             {table:'novedades_registradas', fields:[cuil.name], abr:'R'},
             {table:'nov_per'           , fields:[cuil.name], abr:'#'}
         ]
