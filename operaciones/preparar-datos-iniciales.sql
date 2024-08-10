@@ -60,9 +60,9 @@ insert into personal (ficha, cuil, idmeta4, nomyape, sector)
 
 
 
--- delete from novedades;
+-- delete from novedades_vigentes;
 
-insert into novedades (cuil, ficha, fecha, cod_nov, sector)
+insert into novedades_vigentes (cuil, ficha, fecha, cod_nov, sector)
 	select cuil, ficha, fecha, c.cod_nov, s.sector
 	    from novedades_importadas n 
             left join sectores s on s.nombre_sector = n.sector
@@ -79,7 +79,7 @@ insert into novedades (cuil, ficha, fecha, cod_nov, sector)
 
 
 	
-select * from novedades where false;
+select * from novedades_vigentes where false;
 	
 
 select n.cod_nov, n.novedad, sum(cantidad::bigint)
@@ -88,10 +88,10 @@ select n.cod_nov, n.novedad, sum(cantidad::bigint)
   group by n.cod_nov, n.novedad
   order by 1, 2;
 
-select *, extract(dow from fecha), (select count(*) from novedades n where f.fecha = n.fecha)
+select *, extract(dow from fecha), (select count(*) from novedades_vigentes n where f.fecha = n.fecha)
   from fechas f
   where extract(dow from fecha) between 1 and 5
-    and laborable is null = not exists (select 1 from novedades n where f.fecha = n.fecha limit 1)
+    and laborable is null = not exists (select 1 from novedades_vigentes n where f.fecha = n.fecha limit 1)
   order by fecha asc
   limit 200;
 

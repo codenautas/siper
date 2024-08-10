@@ -29,7 +29,7 @@ export function nov_per(_context: TableContext): TableDefinition {
             isTable:false,
             from:`(
                 select extract(year from fecha) as annio, cod_nov, cuil, count(*) as cantidad
-                    from novedades
+                    from novedades_vigentes
                     group by extract(year from fecha), cod_nov, cuil
             )`
         }

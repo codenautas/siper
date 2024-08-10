@@ -14,8 +14,8 @@ import { per_gru              } from './table-per_gru';
 import { nov_gru              } from './table-nov_gru';
 import { novedades_importadas } from './table-novedades_importadas';
 import { nov_per_importado    } from './table-nov_per_importado';
-import { novedades_registradas   } from './table-novedades_registradas';
-import { novedades_vigentes      } from './table-novedades_vigentes';
+import { novedades_registradas} from './table-novedades_registradas';
+import { novedades_vigentes   } from './table-novedades_vigentes';
 import { nov_per              } from './table-nov_per';
 import { usuarios             } from './table-usuarios';
 
@@ -46,7 +46,7 @@ export class AppSiper extends AppBackend{
                 {menuType:'menu', name:'novedades', menuContent:[
                     {menuType:'registroNovedades', name:'registro'},
                     {menuType:'menu', name:'tablas', menuContent:[
-                        {menuType:'table', name:'novedades_vigentes'         },
+                        {menuType:'table', name:'novedades_vigentes'   },
                         {menuType:'table', name:'novedades_registradas'},
                     ]},
                 ]},
@@ -107,8 +107,8 @@ export class AppSiper extends AppBackend{
             nov_gru              ,
             novedades_importadas ,
             nov_per_importado    ,
-            novedades_registradas   ,
-            novedades_vigentes      ,
+            novedades_registradas,
+            novedades_vigentes   ,
             nov_per              ,
             usuarios             ,
         }
