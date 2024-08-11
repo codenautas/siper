@@ -18,6 +18,7 @@ import { novedades_registradas} from './table-novedades_registradas';
 import { novedades_vigentes   } from './table-novedades_vigentes';
 import { nov_per              } from './table-nov_per';
 import { usuarios             } from './table-usuarios';
+import { parametros           } from "./table-parametros";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -111,6 +112,7 @@ export class AppSiper extends AppBackend{
             novedades_vigentes   ,
             nov_per              ,
             usuarios             ,
+            parametros           ,
         }
     }       
 }
