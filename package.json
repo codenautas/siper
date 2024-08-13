@@ -3,7 +3,7 @@
   "version": "0.1.8",
   "private": true,
   "license": "MIT",
-  "description": "Puntapié inicial para hacer una aplicación en backend-plus desde cero",
+  "description": "Sistema Integral de Gestión de Agentes, Recursos, Personal y Actividades",
   "main": "dist/server/server-principal.js",
   "types": "dist/server/server-principal.d.ts",
   "files": [
