@@ -11,5 +11,6 @@ $BODY$
       INNER JOIN personal p ON nr.cuil = p.cuil
     WHERE nr.desde >= p_desde AND nr.hasta <= p_hasta
       AND extract(DOW from f.fecha) BETWEEN 1 AND 5
+      AND f.laborable IS NOT false
       AND p.cuil = p_cuil;
 $BODY$;
