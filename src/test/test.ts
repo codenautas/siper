@@ -43,6 +43,7 @@ const CUIL_DE_PRUEBA = `cuil like '1_3300_____'`;
 const COD_VACACIONES = "1";
 const COD_TELETRABAJO = "106";
 const COD_TRAMITE = "121";
+const COD_DIAGRAMADO = "101";
 
 describe("connected", function(){
     var server: AppSiper;
@@ -164,6 +165,19 @@ describe("connected", function(){
                 {fecha:date.iso('2000-05-10'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
                 {fecha:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, cuil: persona.cuil},
                 {fecha:date.iso('2000-05-12'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
+            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+        })
+        it("cargo teletrabajo diagramado", async function(){
+            await wrap.saveRecord(
+                'novedades_registradas', 
+                {desde:'2000-01-01', hasta:'2000-01-07', cod_nov:COD_DIAGRAMADO, cuil: persona.cuil, 
+                    dds1:true, dds2:false, dds3:true, dds4:true, dds5:false},
+                'new'
+            );
+            await wrap.tableDataTest('novedades_vigentes', [
+                {fecha:date.iso('2000-01-03'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
+                {fecha:date.iso('2000-01-05'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
+                {fecha:date.iso('2000-01-06'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
             ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
         })
     })
