@@ -40,7 +40,7 @@ const HASTA_AÑO = `2009`;
 const AÑOS_DE_PRUEBA = `annio BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
 const CUIL_DE_PRUEBA = `cuil like '1_3300_____'`;
 
-const COD_VACACIONES = 1;
+const COD_VACACIONES = "1";
 
 describe("connected", function(){
     var server: AppSiper;
