@@ -8,9 +8,13 @@ $BODY$
   SELECT nr.cuil, p.ficha, f.fecha, nr.cod_nov, null as ent_fich, null as sal_fich, p.sector, nr.annio
     FROM novedades_registradas nr 
       INNER JOIN fechas f ON f.fecha between desde and hasta
+      INNER JOIN cod_novedades cn ON cn.cod_nov = nr.cod_nov
       INNER JOIN personal p ON nr.cuil = p.cuil
     WHERE nr.desde >= p_desde AND nr.hasta <= p_hasta
       AND extract(DOW from f.fecha) BETWEEN 1 AND 5
       AND f.laborable IS NOT false
+      AND (cn.c_dds IS NOT TRUE -- FILTRO PARA DIAGRAMADO POR DIA DE SEMANA:
+           OR CASE extract(DOW from f.fecha) WHEN 1 THEN dds1 WHEN 2 THEN dds2 WHEN 3 THEN dds3 WHEN 4 THEN dds4 WHEN 5 THEN dds5 ELSE false END
+           )
       AND p.cuil = p_cuil;
 $BODY$;
