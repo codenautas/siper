@@ -33,10 +33,13 @@ install:
     scripts:
       pre-adapt:
       - ../node_modules/pg-triggers/lib/table-changes.sql
-      - install/validad_codigo.sql
+      - ../install/validad_codigo.sql
       post-adapt:
       - ../node_modules/pg-triggers/lib/function-changes-trg.sql
       - ../node_modules/pg-triggers/lib/enance.sql    
+      - ../install/novedades_calculadas.sql
+      - ../install/actualizar_novedades_vigentes.sql
+      - ../install/novedades_registradas_trg.sql
 logo: 
   path: client/img
 `;

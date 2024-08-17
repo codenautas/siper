@@ -13,18 +13,18 @@ begin
   if array_length(p_digitos, 1) = length(p_codigo) then
     v_dim := length(p_codigo);
     for i in 1..v_dim loop
-	  v_digito := substr(p_codigo, v_dim - i + 1, 1)::integer;
-	  v_multiplicador := p_digitos[i];
-	  p_sumador := p_sumador + v_digito * v_multiplicador;
-	end loop;
-	v_verificador := p_sumador % p_modulo;
-	if v_verificador = 0 then 
-	  return 0;
-	end if;
-	if p_modulo - v_verificador > 9 then
-	  return -2;
-	end if;
-	return p_modulo - v_verificador;
+      v_digito := substr(p_codigo, v_dim - i + 1, 1)::integer;
+      v_multiplicador := p_digitos[i];
+      p_sumador := p_sumador + v_digito * v_multiplicador;
+    end loop;
+    v_verificador := p_sumador % p_modulo;
+    if v_verificador = 0 then 
+      return 0;
+    end if;
+    if p_modulo - v_verificador > 9 then
+      return -2;
+    end if;
+    return p_modulo - v_verificador;
   else
     return -1;
   end if;

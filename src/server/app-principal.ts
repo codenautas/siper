@@ -24,6 +24,12 @@ import { ProceduresPrincipal } from './procedures-principal'
 
 import {staticConfigYaml} from './def-config';
 
+import { Persona } from "../common/contracts"
+/* Dos líneas para incluir contracts: */
+var persona: Persona | null = null;
+console.log(persona)
+
+
 export class AppSiper extends AppBackend{
     constructor(){
         super();
@@ -89,7 +95,7 @@ export class AppSiper extends AppBackend{
             { type: 'js', src: 'lib/my-icons.js' },
             { type: 'js', module: 'frontend-plus', file:'frontend-plus.js'},
             { type: 'css', file: 'menu.css' },
-            { type: 'js', file: 'ws-novedades_registradas.js' },
+            { type: 'js', file: 'client/ws-novedades_registradas.js' },
             ... menuedResources
         ] satisfies ClientModuleDefinition[];
         return list;

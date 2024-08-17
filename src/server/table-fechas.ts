@@ -24,8 +24,8 @@ export function fechas(context:TableContext):TableDefinition{
         ],
         primaryKey:[fecha.name],
         constraints:[
-            {constraintType:'check', consName:'solo asuetos y feriados', expr:'laborable is false or repite is null and inamovible is null'},
-            {constraintType:'check', consName:'obligatorio para asuetos y feriados', expr:'laborable is null or repite is not null and inamovible is not null'},
+            {constraintType:'check', consName:'repite e inamovible solo asuetos y feriados', expr:'laborable is false or repite is null and inamovible is null'},
+            {constraintType:'check', consName:'repite e inamovible obligatorio para asuetos y feriados', expr:'laborable is null or repite is not null and inamovible is not null'},
             {constraintType:'check', consName:'laborable no o en blanco', expr:'laborable is not true'},
         ],
         detailTables:[

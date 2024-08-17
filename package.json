@@ -35,6 +35,6 @@
     "test": "tsc -p tsconfig-test.json && mocha --reporter spec --bail --check-leaks dist/test/test/",
     "dump": "npm start -- --dump-db",
     "dumpb": "(tsc -p tsconfig-server.json  || echo \"continue w/error\") && npm run dump",
-    "start": "node dist/server/server-principal.js"
+    "start": "node dist/server/server/server-principal.js"
   }
 }
