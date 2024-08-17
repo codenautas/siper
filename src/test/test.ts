@@ -41,6 +41,8 @@ const AÑOS_DE_PRUEBA = `annio BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
 const CUIL_DE_PRUEBA = `cuil like '1_3300_____'`;
 
 const COD_VACACIONES = "1";
+const COD_TELETRABAJO = "106";
+const COD_TRAMITE = "121";
 
 describe("connected", function(){
     var server: AppSiper;
@@ -133,6 +135,35 @@ describe("connected", function(){
                 {fecha:date.iso('2000-03-08'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
                 {fecha:date.iso('2000-03-09'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
                 {fecha:date.iso('2000-03-10'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+        })
+        it.skip("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
+            // https://argentina.workingdays.org/dias_laborables_calendario_2000.htm
+            await wrap.saveRecord(
+                'novedades_registradas', 
+                {desde:'2000-05-02', hasta:'2000-05-12', cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                'new'
+            );
+            await wrap.saveRecord(
+                'novedades_registradas', 
+                {desde:'2000-05-08', hasta:'2000-05-12', cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
+                'new'
+            );
+            await wrap.saveRecord(
+                'novedades_registradas', 
+                {desde:'2000-05-11', hasta:'2000-05-11', cod_nov:COD_TRAMITE, cuil: persona.cuil},
+                'new'
+            );
+            await wrap.tableDataTest('novedades_vigentes', [
+                {fecha:date.iso('2000-05-02'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                {fecha:date.iso('2000-05-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                {fecha:date.iso('2000-05-04'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                {fecha:date.iso('2000-05-05'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                {fecha:date.iso('2000-05-08'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
+                {fecha:date.iso('2000-05-09'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
+                {fecha:date.iso('2000-05-10'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
+                {fecha:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, cuil: persona.cuil},
+                {fecha:date.iso('2000-05-12'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
             ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
         })
     })

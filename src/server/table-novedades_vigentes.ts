@@ -27,7 +27,7 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
             /* campos automáticos */
             añoEnBaseAFecha
         ],
-        primaryKey: [cuil.name, 'fecha', 'cod_nov'],
+        primaryKey: [cuil.name, fecha.name],
         foreignKeys: [
             {references:'personal'     , fields: [cuil.name]},
             {references:'fechas'       , fields: [fecha.name]},
