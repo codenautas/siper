@@ -122,6 +122,19 @@ describe("connected", function(){
                 {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
             ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
         })
+        it("insertar una semana de vacaciones en una semana con feriados", async function(){
+            // https://argentina.workingdays.org/dias_laborables_calendario_2000.htm
+            await wrap.saveRecord(
+                'novedades_registradas', 
+                {desde:'2000-03-06', hasta:'2000-03-12', cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                'new'
+            );
+            await wrap.tableDataTest('novedades_vigentes', [
+                {fecha:date.iso('2000-03-08'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                {fecha:date.iso('2000-03-09'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                {fecha:date.iso('2000-03-10'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+        })
     })
 })
 
