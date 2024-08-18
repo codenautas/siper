@@ -59,6 +59,8 @@ describe("connected", function(){
                     `delete from novedades_registradas where ${AÑOS_DE_PRUEBA} and ${CUIL_DE_PRUEBA}`,
                     `delete from personal where ${CUIL_DE_PRUEBA}`,
                     `delete from fechas where ${AÑOS_DE_PRUEBA}`,
+                    `delete from annios where ${AÑOS_DE_PRUEBA}`,
+                    `insert into annios (annio) select * from generate_series(${DESDE_AÑO}, ${HASTA_AÑO}) d`,
                     `insert into fechas (fecha) select date_trunc('day', d) from generate_series(cast('${DESDE_AÑO}-01-01' as timestamp), cast('${HASTA_AÑO}-12-31' as timestamp), cast('1 day' as interval)) d`,
                     `update fechas set laborable = false, repite = false, inamovible = false where fecha in (
                         '2000-03-06', 
@@ -110,6 +112,9 @@ describe("connected", function(){
                 persona,
                 'new'
             )
+            await wrap.saveRecord('grupos' , {clase: 'I', grupo: persona.cuil}, 'new');
+            await wrap.saveRecord('per_gru', {cuil: persona.cuil, clase: 'I', grupo: persona.cuil}, 'new');
+            await wrap.saveRecord('per_gru', {cuil: persona.cuil, clase: 'U', grupo: 'T'}, 'new');
         }) 
         it("insertar una semana de vacaciones como primera novedad", async function(){
             await wrap.saveRecord(
@@ -124,6 +129,11 @@ describe("connected", function(){
                 {fecha:date.iso('2000-01-06'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
                 {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
             ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            // LÍMIES:
+            await wrap.saveRecord('nov_gru', {annio:2000, cod_nov: COD_VACACIONES, clase: 'I', grupo: persona.cuil, maximo: 20 }, 'new')
+            await wrap.tableDataTest('nov_per', [
+                {annio:2000, cod_nov:COD_VACACIONES, limite:20, cantidad:5, saldo:15},
+            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
         })
         it("insertar una semana de vacaciones en una semana con feriados", async function(){
             // https://argentina.workingdays.org/dias_laborables_calendario_2000.htm
@@ -136,6 +146,11 @@ describe("connected", function(){
                 {fecha:date.iso('2000-03-08'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
                 {fecha:date.iso('2000-03-09'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
                 {fecha:date.iso('2000-03-10'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            // LÍMIES:
+            await wrap.saveRecord('nov_gru', {annio:2000, cod_nov: COD_VACACIONES, clase: 'I', grupo: persona.cuil, maximo: 15 }, 'new')
+            await wrap.tableDataTest('nov_per', [
+                {annio:2000, cod_nov:COD_VACACIONES, limite:15, cantidad:3, saldo:12},
             ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
         })
         it.skip("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
@@ -166,6 +181,14 @@ describe("connected", function(){
                 {fecha:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, cuil: persona.cuil},
                 {fecha:date.iso('2000-05-12'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
             ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            // LÍMIES:
+            await wrap.saveRecord('nov_gru', {annio:2000, cod_nov: COD_VACACIONES, clase: 'I', grupo: persona.cuil, maximo: 20 }, 'new')
+            await wrap.saveRecord('nov_gru', {annio:2000, cod_nov: COD_TRAMITE, clase: 'U', grupo: 'T', maximo: 4 }, 'new')
+            await wrap.tableDataTest('nov_per', [
+                {annio:2000, cod_nov:COD_VACACIONES, limite:20, cantidad:4, saldo:16},
+                {annio:2000, cod_nov:COD_TRAMITE, limite:4, cantidad:1, saldo:3},
+                {annio:2000, cod_nov:COD_TELETRABAJO, limite:null, cantidad:4, saldo:null},
+            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
         })
         it("cargo teletrabajo diagramado", async function(){
             await wrap.saveRecord(
@@ -178,6 +201,10 @@ describe("connected", function(){
                 {fecha:date.iso('2000-01-03'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
                 {fecha:date.iso('2000-01-05'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
                 {fecha:date.iso('2000-01-06'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
+            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            // LÍMIES:
+            await wrap.tableDataTest('nov_per', [
+                {annio:2000, cod_nov:COD_DIAGRAMADO, limite:null, cantidad:3, saldo:null},
             ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
         })
     })

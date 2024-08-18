@@ -4,6 +4,7 @@ import { AppBackend, Context, Request,
     ClientModuleDefinition, OptsClientPage, MenuDefinition, MenuInfoBase
 } from "./types-principal";
 
+import { annios               } from './table-annios';
 import { cod_novedades        } from './table-cod_novedades';
 import { fechas               } from './table-fechas';
 import { clases               } from './table-clases';
@@ -104,6 +105,7 @@ export class AppSiper extends AppBackend{
         super.prepareGetTables();
         this.getTableDefinition={
             ... this.getTableDefinition,
+            annios               ,
             cod_novedades        ,
             fechas               ,
             sectores             ,

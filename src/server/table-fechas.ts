@@ -2,17 +2,18 @@
 
 import {FieldDefinition, TableDefinition, TableContext} from "./types-principal";
 
+import {año} from "./table-annios"
+
 export const fecha: FieldDefinition = {name: 'fecha', typeName: 'date'};
-export const año: FieldDefinition = {name: 'annio', typeName: 'integer', title: 'año'};
 export const añoEnBaseAFecha = {...año, editable:false, generatedAs:`extract(year from ${fecha.name})`}
 
 export function fechas(context:TableContext):TableDefinition{
     var admin = context.user.rol==='admin';
     return {
-        name:'fechas',
-        elementName:'fecha',
-        editable:admin,
-        fields:[
+        name: 'fechas',
+        elementName: 'fecha',
+        editable: admin,
+        fields: [
             fecha,
             {name: 'laborable' , typeName: 'boolean', isName:true},
             {name: 'dds'       , typeName: 'text'   , inTable:false, serverSide:true, editable:false},
@@ -22,13 +23,16 @@ export function fechas(context:TableContext):TableDefinition{
             {name: 'inamovible', typeName: 'boolean', description: 'si es un feriado que no se mueve, que se festeja siempre en la misma fecha'},
             añoEnBaseAFecha,
         ],
-        primaryKey:[fecha.name],
-        constraints:[
+        primaryKey: [fecha.name],
+        foreignKeys: [
+            {references: 'annios'  , fields: [año.name], onUpdate: 'no action'},
+        ],
+        constraints: [
             {constraintType:'check', consName:'repite e inamovible solo asuetos y feriados', expr:'laborable is false or repite is null and inamovible is null'},
             {constraintType:'check', consName:'repite e inamovible obligatorio para asuetos y feriados', expr:'laborable is null or repite is not null and inamovible is not null'},
             {constraintType:'check', consName:'laborable no o en blanco', expr:'laborable is not true'},
         ],
-        detailTables:[
+        detailTables: [
             {table:'novedades_vigentes'         , fields:[fecha.name], abr:'N'},
             // {table:'novedades_registradas', fields:['fecha'], abr:'R'}
         ],

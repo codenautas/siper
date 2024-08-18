@@ -36,7 +36,7 @@ export function soloCodigo(fieldName: string):Constraint{
     return {
         constraintType:'check', 
         consName:`palabra corta y solo mayusculas en ${fieldName}`, 
-        expr: `${fieldName} similar to '[A-Z][A-Z0-9]{0,9}'`
+        expr: `${fieldName} similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\\d{0,10}'`
     }
 }
 

@@ -4,7 +4,7 @@ import {TableDefinition, TableContext} from "./types-principal";
 
 import {cuil} from "./table-personal"
 import {cod_nov} from "./table-cod_novedades";
-import {año} from "./table-fechas"
+import {año} from "./table-annios"
 
 export function novedades_registradas(context: TableContext): TableDefinition{
     var admin = context.user.rol==='admin';
@@ -26,7 +26,8 @@ export function novedades_registradas(context: TableContext): TableDefinition{
         ],         
         primaryKey: [cuil.name, 'desde', cod_nov.name],
         foreignKeys: [
-            {references: 'personal', fields: [cuil.name]}
+            {references: 'annios'  , fields: [año.name], onUpdate: 'no action'},
+            {references: 'personal', fields: [cuil.name]},
         ],
         constraints: [
             {constraintType:'check', consName:'desde y hasta deben ser del mismo annio', expr:`extract(year from desde) is not distinct from extract(year from desde)`}

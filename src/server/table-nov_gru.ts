@@ -2,7 +2,7 @@
 
 import {TableDefinition, TableContext} from "./types-principal";
 
-import {año} from "./table-fechas";
+import {año} from "./table-annios";
 import {clase} from "./table-clases";
 import {grupo} from "./table-grupos";
 import {cod_nov} from "./table-cod_novedades";
@@ -22,6 +22,7 @@ export function nov_gru(context:TableContext):TableDefinition{
         ],
         primaryKey: [año.name, cod_nov.name, clase.name, grupo.name],
         foreignKeys: [
+            {references: 'annios'        , fields: [año.name], onUpdate: 'no action'},
             {references: 'cod_novedades' , fields: [cod_nov.name          ]},
             {references: 'grupos'        , fields: [clase.name, grupo.name]},
         ],
