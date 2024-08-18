@@ -22,6 +22,9 @@ export function grupos(context:TableContext):TableDefinition{
             {name: 'descripcion', typeName: 'text', isName:true},
         ],
         primaryKey: [clase.name, grupo.name],
+        foreignKeys: [
+            {references: 'clases', fields: [clase.name]}
+        ],
         constraints: [
             {constraintType: 'unique', fields: ['descripcion']},
             soloCodigo(grupo.name),

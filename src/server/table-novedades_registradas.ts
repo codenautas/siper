@@ -31,6 +31,9 @@ export function novedades_registradas(context: TableContext): TableDefinition{
         foreignKeys: [
             {references: 'annios'  , fields: [año.name], onUpdate: 'no action'},
             {references: 'personal', fields: [cuil.name]},
+            {references: 'cod_novedades', fields: [cod_nov.name]},
+            {references: 'fechas', fields: [{source:'desde', target:'fecha'}], alias:'desde'},
+            {references: 'fechas', fields: [{source:'hasta', target:'fecha'}], alias:'hasta'},
         ],
         constraints: [
             {constraintType:'check', consName:'desde y hasta deben ser del mismo annio', expr:`extract(year from desde) is not distinct from extract(year from desde)`}
