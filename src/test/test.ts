@@ -170,7 +170,7 @@ describe("connected", function(){
                 ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
             })
         })
-        it.skip("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
+        it("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
             await enNuevaPersona(3, {vacaciones: 20, tramites: 4}, async (persona) => {
                 await wrap.saveRecord(
                     'novedades_registradas', 
@@ -201,8 +201,8 @@ describe("connected", function(){
                 // LÍMIES:
                 await wrap.tableDataTest('nov_per', [
                     {annio:2000, cod_nov:COD_VACACIONES, limite:20, cantidad:4, saldo:16},
-                    {annio:2000, cod_nov:COD_TRAMITE, limite:4, cantidad:1, saldo:3},
                     {annio:2000, cod_nov:COD_TELETRABAJO, limite:null, cantidad:4, saldo:null},
+                    {annio:2000, cod_nov:COD_TRAMITE, limite:4, cantidad:1, saldo:3},
                 ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
             })
         })
