@@ -55,9 +55,11 @@ describe("connected", function(){
         if (server.config.devel['tests-can-delete-db']) {
             await server.inDbClient(null, async client=>{
                 await client.executeSentences([
+                    `delete from nov_gru where ${AÑOS_DE_PRUEBA}`,
                     `delete from novedades_vigentes where ${AÑOS_DE_PRUEBA} and ${CUIL_DE_PRUEBA}`,
                     `delete from novedades_registradas where ${AÑOS_DE_PRUEBA} and ${CUIL_DE_PRUEBA}`,
                     `delete from personal where ${CUIL_DE_PRUEBA}`,
+                    `delete from grupos where ${CUIL_DE_PRUEBA.replace('cuil', 'grupo')}`,
                     `delete from fechas where ${AÑOS_DE_PRUEBA}`,
                     `delete from annios where ${AÑOS_DE_PRUEBA}`,
                     `insert into annios (annio) select * from generate_series(${DESDE_AÑO}, ${HASTA_AÑO}) d`,
@@ -93,20 +95,22 @@ describe("connected", function(){
             {unico_registro:true},
         ], 'all')
     })
-    describe("registro de novedades", function(){
-        var persona: Persona
-        var contador: number = 0;
-        beforeEach(async function(){
-            contador++; 
-            persona = {
-                cuil: (10330010005 + contador*11).toString(),
-                nomyape: "Persona de prueba " + contador,
+    async function enNuevaPersona(
+        numero: number, 
+        options: {vacaciones?: number, tramites?: number},
+        probar: (persona: Persona) => Promise<void>
+    ){
+        var haciendo = 'inicializando';
+        try {
+            var {vacaciones, tramites} = options;
+            var persona: Persona = {
+                cuil: (10330010005 + numero*11).toString(),
+                nomyape: "Persona de prueba " + numero,
                 idmeta4: null,
                 ficha: null,
                 categoria: null,
                 sector: null
             }
-            console.log('*********************************',persona.cuil,'*')
             await wrap.saveRecord(
                 'personal',
                 persona,
@@ -115,97 +119,111 @@ describe("connected", function(){
             await wrap.saveRecord('grupos' , {clase: 'I', grupo: persona.cuil}, 'new');
             await wrap.saveRecord('per_gru', {cuil: persona.cuil, clase: 'I', grupo: persona.cuil}, 'new');
             await wrap.saveRecord('per_gru', {cuil: persona.cuil, clase: 'U', grupo: 'T'}, 'new');
-        }) 
+            if (vacaciones) await wrap.saveRecord('nov_gru', {annio:2000, cod_nov: COD_VACACIONES, clase: 'I', grupo: persona.cuil, maximo: vacaciones }, 'new')
+            if (tramites) await wrap.saveRecord('nov_gru', {annio:2000, cod_nov: COD_TRAMITE, clase: 'U', grupo: 'T', maximo: 4 }, 'new')
+            haciendo = 'probando'
+            await probar(persona);
+        } catch (err) {
+            console.error("Test falla", haciendo)
+            console.log({numero})
+            console.log(persona!)
+            throw err;
+        }
+    } 
+    describe("registro de novedades", function(){
         it("insertar una semana de vacaciones como primera novedad", async function(){
-            await wrap.saveRecord(
-                'novedades_registradas', 
-                {desde:'2000-01-01', hasta:'2000-01-07', cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                'new'
-            );
-            await wrap.tableDataTest('novedades_vigentes', [
-                {fecha:date.iso('2000-01-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                {fecha:date.iso('2000-01-04'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                {fecha:date.iso('2000-01-05'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                {fecha:date.iso('2000-01-06'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
-            // LÍMIES:
-            await wrap.saveRecord('nov_gru', {annio:2000, cod_nov: COD_VACACIONES, clase: 'I', grupo: persona.cuil, maximo: 20 }, 'new')
-            await wrap.tableDataTest('nov_per', [
-                {annio:2000, cod_nov:COD_VACACIONES, limite:20, cantidad:5, saldo:15},
-            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            await enNuevaPersona(1, {vacaciones: 20}, async (persona) => {
+                await wrap.saveRecord(
+                    'novedades_registradas', 
+                    {desde:'2000-01-01', hasta:'2000-01-07', cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    'new'
+                );
+                await wrap.tableDataTest('novedades_vigentes', [
+                    {fecha:date.iso('2000-01-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-01-04'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-01-05'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-01-06'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                // LÍMIES:
+                await wrap.tableDataTest('nov_per', [
+                    {annio:2000, cod_nov:COD_VACACIONES, limite:20, cantidad:5, saldo:15},
+                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            })
         })
         it("insertar una semana de vacaciones en una semana con feriados", async function(){
             // https://argentina.workingdays.org/dias_laborables_calendario_2000.htm
-            await wrap.saveRecord(
-                'novedades_registradas', 
-                {desde:'2000-03-06', hasta:'2000-03-12', cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                'new'
-            );
-            await wrap.tableDataTest('novedades_vigentes', [
-                {fecha:date.iso('2000-03-08'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                {fecha:date.iso('2000-03-09'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                {fecha:date.iso('2000-03-10'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
-            // LÍMIES:
-            await wrap.saveRecord('nov_gru', {annio:2000, cod_nov: COD_VACACIONES, clase: 'I', grupo: persona.cuil, maximo: 15 }, 'new')
-            await wrap.tableDataTest('nov_per', [
-                {annio:2000, cod_nov:COD_VACACIONES, limite:15, cantidad:3, saldo:12},
-            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            await enNuevaPersona(2, {vacaciones: 15}, async (persona) => {
+                await wrap.saveRecord(
+                    'novedades_registradas', 
+                    {desde:'2000-03-06', hasta:'2000-03-12', cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    'new'
+                );
+                await wrap.tableDataTest('novedades_vigentes', [
+                    {fecha:date.iso('2000-03-08'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-03-09'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-03-10'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                // LÍMIES:
+                await wrap.tableDataTest('nov_per', [
+                    {annio:2000, cod_nov:COD_VACACIONES, limite:15, cantidad:3, saldo:12},
+                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            })
         })
         it.skip("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
-            // https://argentina.workingdays.org/dias_laborables_calendario_2000.htm
-            await wrap.saveRecord(
-                'novedades_registradas', 
-                {desde:'2000-05-02', hasta:'2000-05-12', cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                'new'
-            );
-            await wrap.saveRecord(
-                'novedades_registradas', 
-                {desde:'2000-05-08', hasta:'2000-05-12', cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
-                'new'
-            );
-            await wrap.saveRecord(
-                'novedades_registradas', 
-                {desde:'2000-05-11', hasta:'2000-05-11', cod_nov:COD_TRAMITE, cuil: persona.cuil},
-                'new'
-            );
-            await wrap.tableDataTest('novedades_vigentes', [
-                {fecha:date.iso('2000-05-02'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                {fecha:date.iso('2000-05-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                {fecha:date.iso('2000-05-04'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                {fecha:date.iso('2000-05-05'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                {fecha:date.iso('2000-05-08'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
-                {fecha:date.iso('2000-05-09'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
-                {fecha:date.iso('2000-05-10'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
-                {fecha:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, cuil: persona.cuil},
-                {fecha:date.iso('2000-05-12'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
-            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
-            // LÍMIES:
-            await wrap.saveRecord('nov_gru', {annio:2000, cod_nov: COD_VACACIONES, clase: 'I', grupo: persona.cuil, maximo: 20 }, 'new')
-            await wrap.saveRecord('nov_gru', {annio:2000, cod_nov: COD_TRAMITE, clase: 'U', grupo: 'T', maximo: 4 }, 'new')
-            await wrap.tableDataTest('nov_per', [
-                {annio:2000, cod_nov:COD_VACACIONES, limite:20, cantidad:4, saldo:16},
-                {annio:2000, cod_nov:COD_TRAMITE, limite:4, cantidad:1, saldo:3},
-                {annio:2000, cod_nov:COD_TELETRABAJO, limite:null, cantidad:4, saldo:null},
-            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            await enNuevaPersona(3, {vacaciones: 20, tramites: 4}, async (persona) => {
+                await wrap.saveRecord(
+                    'novedades_registradas', 
+                    {desde:'2000-05-02', hasta:'2000-05-12', cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    'new'
+                );
+                await wrap.saveRecord(
+                    'novedades_registradas', 
+                    {desde:'2000-05-08', hasta:'2000-05-12', cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
+                    'new'
+                );
+                await wrap.saveRecord(
+                    'novedades_registradas', 
+                    {desde:'2000-05-11', hasta:'2000-05-11', cod_nov:COD_TRAMITE, cuil: persona.cuil},
+                    'new'
+                );
+                await wrap.tableDataTest('novedades_vigentes', [
+                    {fecha:date.iso('2000-05-02'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-05-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-05-04'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-05-05'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-05-08'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
+                    {fecha:date.iso('2000-05-09'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
+                    {fecha:date.iso('2000-05-10'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
+                    {fecha:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, cuil: persona.cuil},
+                    {fecha:date.iso('2000-05-12'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
+                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                // LÍMIES:
+                await wrap.tableDataTest('nov_per', [
+                    {annio:2000, cod_nov:COD_VACACIONES, limite:20, cantidad:4, saldo:16},
+                    {annio:2000, cod_nov:COD_TRAMITE, limite:4, cantidad:1, saldo:3},
+                    {annio:2000, cod_nov:COD_TELETRABAJO, limite:null, cantidad:4, saldo:null},
+                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            })
         })
         it("cargo teletrabajo diagramado", async function(){
-            await wrap.saveRecord(
-                'novedades_registradas', 
-                {desde:'2000-01-01', hasta:'2000-01-07', cod_nov:COD_DIAGRAMADO, cuil: persona.cuil, 
-                    dds1:true, dds2:false, dds3:true, dds4:true, dds5:false},
-                'new'
-            );
-            await wrap.tableDataTest('novedades_vigentes', [
-                {fecha:date.iso('2000-01-03'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
-                {fecha:date.iso('2000-01-05'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
-                {fecha:date.iso('2000-01-06'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
-            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
-            // LÍMIES:
-            await wrap.tableDataTest('nov_per', [
-                {annio:2000, cod_nov:COD_DIAGRAMADO, limite:null, cantidad:3, saldo:null},
-            ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            await enNuevaPersona(4, {}, async (persona) => {
+                await wrap.saveRecord(
+                    'novedades_registradas', 
+                    {desde:'2000-01-01', hasta:'2000-01-07', cod_nov:COD_DIAGRAMADO, cuil: persona.cuil, 
+                        dds1:true, dds2:false, dds3:true, dds4:true, dds5:false},
+                    'new'
+                );
+                await wrap.tableDataTest('novedades_vigentes', [
+                    {fecha:date.iso('2000-01-03'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
+                    {fecha:date.iso('2000-01-05'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
+                    {fecha:date.iso('2000-01-06'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
+                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                // LÍMIES:
+                await wrap.tableDataTest('nov_per', [
+                    {annio:2000, cod_nov:COD_DIAGRAMADO, limite:null, cantidad:3, saldo:null},
+                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            })
         })
     })
 })

@@ -19,7 +19,7 @@ export function per_gru(context: TableContext): TableDefinition{
         ],
         primaryKey: [cuil.name, clase.name],
         foreignKeys: [
-            {references:'personal'       , fields:[cuil.name]             , displayAllFields:true},
+            {references:'personal'       , fields:[cuil.name]             , displayAllFields:true, onDelete: 'cascade'},
             {references:'grupos'         , fields:[clase.name, grupo.name], displayAllFields:true},
         ]
     };
