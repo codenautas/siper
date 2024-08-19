@@ -11,6 +11,8 @@ BEGIN
     PERFORM calcular_novedades_vigentes(old.desde, old.hasta, old.cuil);
   END IF;
   IF tg_op <> 'DELETE' THEN
+    -- La siguiente línea está solamente para ver funcionar el caso de prueba que espera el error 42501
+    -- IF new.cuil = '10330010071' THEN RAISE EXCEPTION 'no tiene permiso' USING ERRCODE = '42501'; END IF;
     PERFORM calcular_novedades_vigentes(new.desde, new.hasta, new.cuil);
   END IF;
   IF tg_op = 'DELETE' THEN

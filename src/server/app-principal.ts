@@ -5,6 +5,7 @@ import { AppBackend, Context, Request,
 } from "./types-principal";
 
 import { annios               } from './table-annios';
+import { roles                } from './table-roles';
 import { cod_novedades        } from './table-cod_novedades';
 import { fechas               } from './table-fechas';
 import { clases               } from './table-clases';
@@ -106,6 +107,7 @@ export class AppSiper extends AppBackend{
         this.getTableDefinition={
             ... this.getTableDefinition,
             annios               ,
+            roles                ,
             cod_novedades        ,
             fechas               ,
             sectores             ,

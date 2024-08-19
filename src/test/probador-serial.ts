@@ -37,7 +37,9 @@ export async function startServer<T extends AppBackend>(AppConstructor: Construc
 
 export type Row = Record<string, any>
 
-export class Wrap<TApp extends AppBackend>{
+export type Credentials = {username:string, password:string}
+
+export class EmulatedSession<TApp extends AppBackend>{
     private connstr:string
     public tableDefs: Record<string, TableDefinition> = {}
     private cookies:string[] = []
@@ -68,20 +70,21 @@ export class Wrap<TApp extends AppBackend>{
             var line = lines.shift();
             if (line == '--') return JSON4all.parse( lines.shift() || 'null')
             try{
-                var obj = JSON4all.parse( line || '{}' ) as {error:{message:string}};
+                var obj = JSON4all.parse( line || '{}' ) as {error:{message:string, code:string}};
             }catch(err){
                 console.log('Json error:',line)
                 throw err; 
             }
-            if (obj.error) throw new Error("Backend error: " + obj.error.message);
+            if (obj.error) {
+                const error = expected(new Error("Backend error: " + obj.error.message));
+                error.code = obj.error.code;
+                throw error;
+            } 
         } while (lines.length);
         throw new Error('result not received')
     }
-    async login(){
-        var payload = {
-            username: 'perry',
-            password: 'white',
-        }
+    async login(credentials: Credentials) {
+        var payload = credentials;
         var request = await this.request({path:'/login', payload, onlyHeaders:true});
         this.cookies = request.headers.getSetCookie();
         if (request.status != 302) throw new Error("se esperaba una redirección");

@@ -1,0 +1,4 @@
+rol      |puede_cargar_todo|puede_cargar_dependientes|puede_cargar_propio
+admin    |true             |true                     |true               
+rrhh     |true             |true                     |true               
+basico   |false            |false                    |false              
