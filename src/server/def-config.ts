@@ -4,6 +4,7 @@ server:
   session-store: memory-saved
 db:
   motor: postgresql
+  min-version: 16
   host: localhost
   database: siper_db
   schema: siper

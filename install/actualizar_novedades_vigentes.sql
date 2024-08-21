@@ -7,9 +7,7 @@ AS
 $BODY$
 BEGIN
 MERGE INTO novedades_vigentes nv USING
-  (SELECT cn.*
-     FROM novedades_calculadas(p_desde, p_hasta, p_cuil) cn
-     LEFT JOIN novedades_vigentes nv ON cn.cuil = nv.cuil and cn.fecha = nv.fecha) AS q
+     novedades_calculadas(p_desde, p_hasta, p_cuil) q
   ON nv.cuil = q.cuil AND nv.fecha = q.fecha
 WHEN MATCHED AND 
      (nv.cod_nov IS DISTINCT FROM q.cod_nov
@@ -22,5 +20,6 @@ WHEN MATCHED AND
 WHEN NOT MATCHED THEN
   INSERT (cuil, ficha, fecha, cod_nov, ent_fich, sal_fich, sector)
     VALUES (q.cuil, q.ficha, q.fecha, q.cod_nov, q.ent_fich, q.sal_fich, q.sector);
+--WHEN NOT MATCHED BY SOURCE THEN DELETE --Postgresql 17
 END;
 $BODY$;
