@@ -19,7 +19,7 @@ $BODY$
           AND (cn.c_dds IS NOT TRUE -- FILTRO PARA DIAGRAMADO POR DIA DE SEMANA:
                OR CASE extract(DOW from f.fecha) WHEN 1 THEN dds1 WHEN 2 THEN dds2 WHEN 3 THEN dds3 WHEN 4 THEN dds4 WHEN 5 THEN dds5 ELSE false END
                )
-          AND p.cuil = p_cuil
+          AND CASE WHEN p_cuil IS NULL THEN TRUE ELSE p.cuil = p_cuil END
       ) x
     WHERE prioridad = 1
 $BODY$;

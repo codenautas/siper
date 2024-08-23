@@ -1,7 +1,7 @@
 -- EJECUTAR LOCALMENTE, NO DESCOMENTAR Y COMMITEAR:
 -- SET search_path = siper; SET ROLE siper_owner;
 
-CREATE OR REPLACE FUNCTION calcular_novedades_vigentes(p_desde date, p_hasta date, p_cuil text) RETURNS void
+CREATE OR REPLACE FUNCTION calcular_novedades_vigentes(p_desde date, p_hasta date, p_cuil text DEFAULT NULL) RETURNS void
   LANGUAGE PLPGSQL
 AS
 $BODY$
