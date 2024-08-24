@@ -13,7 +13,8 @@ $BODY$
           INNER JOIN fechas f ON f.fecha between desde and hasta
           INNER JOIN cod_novedades cn ON cn.cod_nov = nr.cod_nov
           INNER JOIN personal p ON nr.cuil = p.cuil
-        WHERE nr.desde >= p_desde AND nr.hasta <= p_hasta
+        WHERE nr.desde <= f.fecha AND f.fecha <= nr.hasta
+          AND p_desde <= f.fecha AND f.fecha <= p_hasta
           AND extract(DOW from f.fecha) BETWEEN 1 AND 5
           AND f.laborable IS NOT false
           AND (cn.c_dds IS NOT TRUE -- FILTRO PARA DIAGRAMADO POR DIA DE SEMANA:

@@ -41,6 +41,7 @@ install:
       - ../install/novedades_calculadas.sql
       - ../install/actualizar_novedades_vigentes.sql
       - ../install/novedades_registradas_trg.sql
+      - ../install/fechas_nov_trg.sql
 logo: 
   path: client/img
 `;

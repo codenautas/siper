@@ -9,7 +9,7 @@ import * as MiniTools from 'mini-tools';
 import { expected } from "cast-error";
 import { promises as fs } from 'fs';
 import { LikeAr } from 'like-ar';
-import { guarantee, is } from "guarantee-type";
+import { Description, guarantee, is, DefinedType } from "guarantee-type";
 import * as JSON4all from 'json4all';
 
 import * as discrepances from 'discrepances';
@@ -92,8 +92,10 @@ export class EmulatedSession<TApp extends AppBackend>{
         discrepances.showAndThrow(result, './menu');
         return result;
     }
-    async saveRecord<T extends Row>(table:string, rowToSave:T, status:'new'|'update'='new'):Promise<T>{
+    // @ts-ignore
+    async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:DefinedType<NoInfer<T>>, status:'new'|'update'):Promise<DefinedType<T>>{
         var context = this.server.getContextForDump();
+        const {table, description} = target
         var tableDef = this.server.tableStructures[table](context);
         var result = await this.request({
             path:'/table_record_save',
@@ -105,9 +107,9 @@ export class EmulatedSession<TApp extends AppBackend>{
                 status
             }
         })
-        var {command, row} = guarantee(is.object({command: is.string, row:is.object({})}), result);
+        var {command, row} = guarantee(is.object({command: is.string, row:description}), result);
         discrepances.showAndThrow(command, discrepances.test(x => x=='INSERT' || x=='UPDATE'));
-        return row as T;
+        return row;
     }
     async tableDataTest(table:string, rows:Row[], compare:'all',opts?:{fixedFields?:{fieldName:string, value:any}[]}){
         var result = await this.request({
@@ -119,7 +121,7 @@ export class EmulatedSession<TApp extends AppBackend>{
                 fixedFields:JSON.stringify(opts?.fixedFields??[])
             }
         })
-        var response = guarantee(is.array.object({}), result);
+        var response = guarantee({array:is.object({},{})}, result);
         var existColumn = LikeAr(rows[0]).map(_ => true).plain();
         var filteredReponseRows = response.map(row => LikeAr(row).filter((_,k) => existColumn[k]).plain());
         switch(compare){
@@ -129,9 +131,9 @@ export class EmulatedSession<TApp extends AppBackend>{
                 throw new Error('mode not recognized '+compare);
         }
     }
-    async tableDataSaveAndTest(table:string, rows:Row[], compare:'all'){
+    async tableDataSaveAndTest(table:string, rows:Row[], compare:'all', status:'new'|'update'){
         for (var row of rows) {
-            await this.saveRecord(table, row);
+            await this.saveRecord({table, description:is.object({})}, row, status);
         }
         return this.tableDataTest(table, rows, compare);
     }

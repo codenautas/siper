@@ -17,8 +17,8 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.7",
-    "@types/node": "^22.2.0",
-    "guarantee-type": "^0.1.2",
+    "@types/node": "^22.5.0",
+    "guarantee-type": "^0.1.4",
     "mixin-patch": "^0.4.1",
     "mocha": "^10.7.3",
     "typescript": "^5.5.4",
