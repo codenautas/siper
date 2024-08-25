@@ -340,12 +340,31 @@ describe("connected", function(){
                     {fecha:date.iso('2000-01-10'), laborable:null, repite:null, inamovible:null, leyenda:'PRUEBA AUTOMÁTICA agregar feriado'}, 
                     'update'
                 )
-                /* Verifico que ese día tenga 4 novedades cargadas */
+                /* Verifico que esos días tengan 4 novedades vigentes */
                 await rrhhSession.tableDataTest('novedades_vigentes', [
                     {fecha:date.iso('2000-01-10'), cod_nov, cuil: persona1.cuil},
                     {fecha:date.iso('2000-01-11'), cod_nov, cuil: persona1.cuil},
                     {fecha:date.iso('2000-01-10'), cod_nov, cuil: persona2.cuil},
                     {fecha:date.iso('2000-01-11'), cod_nov, cuil: persona2.cuil},
+                ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
+           })
+        })
+        // salteo este porque calcular_novedades_vigentes todavía no hace delete
+        it.skip("agrego un feriado y veo que hay menos novedades", async function(){
+            await enDosNuevasPersonasConFeriado10EneroFeriadoy11No(10, 11, '10002', async (persona1, persona2, cod_nov) => {
+                /* Verifico que ese día tenga 2 novedades cargadas */
+                await rrhhSession.tableDataTest('novedades_vigentes', [
+                    {fecha:date.iso('2000-01-11'), cod_nov, cuil: persona1.cuil},
+                    {fecha:date.iso('2000-01-11'), cod_nov, cuil: persona2.cuil},
+                ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
+                /* agrego otro feriado */
+                await rrhhSession.saveRecord(
+                    ctts.fecha, 
+                    {fecha:date.iso('2000-01-11'), laborable:false, repite:false, inamovible:false, leyenda:'PRUEBA AUTOMÁTICA agregar feriado'}, 
+                    'update'
+                )
+                /* Verifico que esos días no tengan novedades vigentes */
+                await rrhhSession.tableDataTest('novedades_vigentes', [
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
            })
         })
