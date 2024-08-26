@@ -116,31 +116,31 @@ function GenericField(props:{
 function RegistrarNovedades(props:{updatesToRow:RowType, originalRow:RowType, onRowChange: (row:RowType)=>void, tableDef:TableDefinition, lists:(name:string, row:RowType)=>string[], forEdit:boolean,
     mobile:boolean
 }){
-    const {updatesToRow, originalRow, tableDef, lists, mobile} = props;
+    const {updatesToRow, originalRow, tableDef, lists, mobile, forEdit} = props;
     const fieldsDef = tableDef.fields; 
     const newRow = {...originalRow, ...updatesToRow};
-    console.log('**************')
+    console.log('=============')
     console.log(JSON.stringify(newRow))
-    return <>
-        {fieldsDef.map((fd) => { 
-            var {name} = fd;
-            const makeChange = (newValue: any) => {
-                var newUpdatesToRow = {...updatesToRow}
-                if (BestGlobals.sameValue(newValue, originalRow[name] ?? null)){
-                    delete newUpdatesToRow[name];
-                } else {
-                    newUpdatesToRow[name] = newValue;
-                }
-                props.onRowChange(newUpdatesToRow);
+    var fieldsProps = fieldsDef.map((fd) => { 
+        var {name} = fd;
+        const makeChange = (newValue: any) => {
+            var newUpdatesToRow = {...updatesToRow}
+            if (BestGlobals.sameValue(newValue, originalRow[name] ?? null)){
+                delete newUpdatesToRow[name];
+            } else {
+                newUpdatesToRow[name] = newValue;
             }
-            const isValueUpdated = name in updatesToRow;
-            const value = (isValueUpdated ? updatesToRow[name] : originalRow[name]) ?? null;
-            const originalValue = originalRow[name] ?? null;
-            return <GenericField 
-                fd={fd} value={value} forEdit={props.forEdit} originalValue={originalValue} isValueUpdated={isValueUpdated}
-                mobile={mobile} makeChange={makeChange} getOptions={()=>lists(name, newRow) ?? []}
-            />
-        })}
+            props.onRowChange(newUpdatesToRow);
+        }
+        const isValueUpdated = name in updatesToRow;
+        const value = (isValueUpdated ? updatesToRow[name] : originalRow[name]) ?? null;
+        const originalValue = originalRow[name] ?? null;
+        return {fd, value, forEdit, originalValue, isValueUpdated, mobile, makeChange, getOptions:()=>lists(name, newRow) ?? []}
+    });
+    return <>
+        {fieldsProps.map(props =>
+            <GenericField {...props}/>
+        )}
     </>
 }
 
