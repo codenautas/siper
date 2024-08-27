@@ -26,10 +26,9 @@ DELETE FROM novedades_vigentes nv
   USING
   (SELECT v.cuil, v.fecha
     FROM novedades_vigentes v
-    JOIN fechas f on v.fecha = f.fecha
-    --LEFT JOIN novedades_calculadas(p_desde, p_hasta, null) c ON v.cuil = c.cuil AND v.fecha = c.fecha
-    WHERE --c.cuil IS NULL AND
-    NOT f.laborable
+    LEFT JOIN novedades_calculadas(p_desde, p_hasta, p_cuil) c ON v.cuil = c.cuil AND v.fecha = c.fecha
+    WHERE CASE WHEN p_cuil IS NULL THEN TRUE ELSE v.cuil = p_cuil END
+          AND v.fecha BETWEEN p_desde AND p_hasta AND c.cuil IS NULL
   ) d
   WHERE nv.cuil = d.cuil AND nv.fecha = d.fecha;
 --FIN agrego delete provisorio hasta que se instale el postgres 17
