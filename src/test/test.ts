@@ -349,8 +349,8 @@ describe("connected", function(){
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
            })
         })
-        // salteo este porque calcular_novedades_vigentes todavía no hace delete
-        it.skip("agrego un feriado y veo que hay menos novedades", async function(){
+        // agrego delete en calcular_novedades_vigentes e incorporo este test
+        it("agrego un feriado y veo que hay menos novedades", async function(){
             await enDosNuevasPersonasConFeriado10EneroFeriadoy11No(10, 11, '10002', async (persona1, persona2, cod_nov) => {
                 /* Verifico que ese día tenga 2 novedades cargadas */
                 await rrhhSession.tableDataTest('novedades_vigentes', [

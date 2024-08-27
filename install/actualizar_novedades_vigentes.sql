@@ -21,5 +21,17 @@ MERGE INTO novedades_vigentes nv
     INSERT (cuil, ficha, fecha, cod_nov, ent_fich, sal_fich, sector)
       VALUES (q.cuil, q.ficha, q.fecha, q.cod_nov, q.ent_fich, q.sal_fich, q.sector);
 --WHEN NOT MATCHED BY SOURCE THEN DELETE --Postgresql 17
+--agrego delete provisorio hasta que se instale el postgres 17
+DELETE FROM novedades_vigentes nv
+  USING
+  (SELECT v.cuil, v.fecha
+    FROM novedades_vigentes v
+    JOIN fechas f on v.fecha = f.fecha
+    --LEFT JOIN novedades_calculadas(p_desde, p_hasta, null) c ON v.cuil = c.cuil AND v.fecha = c.fecha
+    WHERE --c.cuil IS NULL AND
+    NOT f.laborable
+  ) d
+  WHERE nv.cuil = d.cuil AND nv.fecha = d.fecha;
+--FIN agrego delete provisorio hasta que se instale el postgres 17
 END;
 $BODY$;
