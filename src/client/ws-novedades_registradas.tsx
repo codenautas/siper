@@ -5,6 +5,7 @@ import {
     Connector,
     GenericField,
     GenericFieldProperties,
+    OptionsInfo,
     renderConnectedApp, 
 } from "frontend-plus";
 
@@ -27,9 +28,10 @@ var my=myOwn;
 var persona: Persona | null = null;
 console.log(persona)
 
-export function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[]}){
-    const {fieldsProps} = props;
+export function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
+    const {fieldsProps, optionsInfo} = props;
     const f = createIndex(fieldsProps, f => f.fd.name)
+    const rowsCodNov = optionsInfo.tables!.cod_novedades;
     if (f.cuil == null) return <Card> <Typography>Cargando...</Typography> </Card>
     return <Card style={{width:'auto'}}>
         <Box>
@@ -38,27 +40,27 @@ export function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[]}){
             <GenericField {...f.personal__ficha   }/>
             <GenericField {...f.personal__idmeta4 }/>
         </Box>
+        <Box style={{display: 'flex', flexDirection:'row'}}>
+            <GenericField {...f.cod_nov   }/>
+            <GenericField {...f.cod_novedades__novedad }/>
+        </Box>
         <Box>
             <GenericField {...f.desde }/>
             <GenericField {...f.hasta }/>
+            { rowsCodNov?.[f.cod_nov.value]?.c_dds ?
+            <>
+                <GenericField {...f.dds1}/>
+                <GenericField {...f.dds2}/>
+                <GenericField {...f.dds3}/>
+                <GenericField {...f.dds4}/>
+                <GenericField {...f.dds5}/>
+            </>
+            : null}
         </Box>
     </Card>
 }
 
 /*
-        <div style={{display: 'flex', flexDirection:'row'}}>
-            <GenericField {...f.cod_nov   }/>
-            <GenericField {...f.cod_novedades__novedad }/>
-        </div>
-     {f.cod_novedades__c_dds.value ?
-     <>
-         <GenericField {...f.dds1}/>
-         <GenericField {...f.dds2}/>
-         <GenericField {...f.dds3}/>
-         <GenericField {...f.dds4}/>
-         <GenericField {...f.dds5}/>
-     </>
-     : null}
 */
 
 // @ts-ignore
