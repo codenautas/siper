@@ -35,12 +35,22 @@ function DiasHabiles(props:{novedad:Partial<NovedadRegistrada>}){
     const leyendaVacia = {leyenda:"ingrese desde hasta para calcular días hábiles"}; 
     const leyendaCalculando = {leyenda:"calculando..."};
     const [leyenda, setLeyenda] = useState({leyenda:"..."})
+    const grabado = true;
     useEffect(()=>{
         if (novedad.desde == null || novedad.hasta == null) {
             setLeyenda(leyendaVacia);
         } else {
             setLeyenda(leyendaCalculando);
-            my.ajax.si_cargara_novedad(novedad).then(setLeyenda, setLeyenda)
+            my.ajax.si_cargara_novedad(novedad).then(
+                info => {
+                    setLeyenda({leyenda: `${info.dias_habiles} días hábiles (${info.dias_corridos} días corridos)${
+                        !grabado && info.dias_coincidentes?` Atención hay ${info.dias_coincidentes} días que coinciden con una carga anterior`:``
+                    }.`})
+                },
+                err => {
+                    setLeyenda({leyenda: err.message})
+                }
+            )
         }
     },[json4all.toUrl(novedad)]);
     return <Typography>{leyenda.leyenda}</Typography>
