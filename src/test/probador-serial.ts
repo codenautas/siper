@@ -8,7 +8,7 @@ import { AppBackend, TableDefinition } from 'backend-plus';
 import * as MiniTools from 'mini-tools';
 import { expected } from "cast-error";
 import { promises as fs } from 'fs';
-import { LikeAr } from 'like-ar';
+import { strict as LikeAr } from 'like-ar';
 import { Description, guarantee, is, DefinedType } from "guarantee-type";
 import * as JSON4all from 'json4all';
 
@@ -63,9 +63,27 @@ export class EmulatedSession<TApp extends AppBackend>{
             return this.getResult(request);
         }
     }
+    // @ts-ignore se queja de infinito
+    async callProcedure<T extends Description, U extends Description>(
+        target:{procedure:string, parameters:T, result:U}, 
+        params:DefinedType<NoInfer<T>>
+    ):Promise<DefinedType<NoInfer<U>>>{
+        // @ts-ignore
+        var mandatoryParameters = target.parameters.optionals;
+        var result = await this.request({
+            path: '/'+target.procedure,
+            payload: {
+                ...(LikeAr(mandatoryParameters).map(_ => null).plain()),
+                ...(LikeAr(params).map(value => JSON4all.stringify(value)).plain())
+            }
+        })
+        return result;
+        // return guarantee(target.result, result);
+    }
     async getResult(request:Awaited<ReturnType<typeof fetch>>){
         var result = await request.text();
         var lines = result.split(/\r?\n/);
+        var notices:string[] = []
         do {
             var line = lines.shift();
             if (line == '--') return JSON4all.parse( lines.shift() || 'null')
@@ -79,8 +97,11 @@ export class EmulatedSession<TApp extends AppBackend>{
                 const error = expected(new Error("Backend error: " + obj.error.message));
                 error.code = obj.error.code;
                 throw error;
-            } 
+            }
+            if (line != null) notices.push(line);
         } while (lines.length);
+        console.log("notices")
+        console.log(notices)
         throw new Error('result not received')
     }
     async login(credentials: Credentials) {

@@ -40,6 +40,7 @@
     "watch:buildS": "tsc -p tsconfig-server.json --watch",
     "watch:buildU": "tsc -p tsconfig-unlogged.json --watch",
     "test": "tsc -p tsconfig-test.json && mocha --reporter spec --bail --check-leaks dist/test/test/",
+    "test-directo": "mocha --reporter spec --bail --check-leaks dist/test/test/",
     "dump": "npm start -- --dump-db",
     "dumpb": "(tsc -p tsconfig-server.json  || echo \"continue w/error\") && npm run dump",
     "start": "node dist/server/server/server-principal.js"

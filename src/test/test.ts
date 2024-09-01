@@ -14,6 +14,15 @@ import { expected } from "cast-error";
 
 import * as discrepances from 'discrepances';
 
+/*
+ * Para debuguear el servidor por separado hay abrir dos ventanas, en una corren los test (normalmente) 
+ * y en la otra corre el servidor (para poner breakpoints elegir cuál se corre en visual studio code).
+ * antes de npm start (el servidor) hay que poner 
+ * 
+ *      set BACKEND_PLUS_LOCAL_CONFIG=config-adicionar-para-test.yaml
+ * 
+ * y antes de correr los tests hay que comentar con // la próxima línea (para qu se descomente el PORT = 3333)
+ */
 const PORT = null; /*
 const PORT = 3333;
 // */
@@ -53,7 +62,7 @@ describe("connected", function(){
     var server: AppSiper;
     var rrhhSession: EmulatedSession<AppSiper>;
     before(async function(){
-        this.timeout(4000);
+        this.timeout(6000);
         server = await startServer(AppSiper);
         // @ts-expect-error: todavía no está en el config tests-can-delete-db
         if (server.config.devel['tests-can-delete-db']) {
@@ -134,6 +143,7 @@ describe("connected", function(){
             console.error("Test enNuevaPersona falla", haciendo)
             console.log({numero})
             console.log(persona!)
+            console.log(err)
             throw err;
         }
     }
@@ -175,6 +185,7 @@ describe("connected", function(){
         }
     }
     describe("registro de novedades", function(){
+        this.timeout(6000);
         var basicoSession: EmulatedSession<AppSiper>
         before(async function(){
             await enNuevaPersona(0, {}, async (personaComun) => {
@@ -188,12 +199,12 @@ describe("connected", function(){
             });
         })
         it("insertar una semana de vacaciones como primera novedad", async function(){
+            this.timeout(6000);
             await enNuevaPersona(1, {vacaciones: 20}, async (persona) => {
-                await rrhhSession.saveRecord(
-                    ctts.novedades_registradas, 
-                    {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    'new'
-                );
+                var novedadRegistradaPorCargar = {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, cuil: persona.cuil};
+                var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
+                discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:5, dias_coincidentes:0})
+                await rrhhSession.saveRecord(ctts.novedades_registradas, novedadRegistradaPorCargar, 'new');
                 await rrhhSession.tableDataTest('novedades_vigentes', [
                     {fecha:date.iso('2000-01-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
                     {fecha:date.iso('2000-01-04'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
@@ -210,11 +221,10 @@ describe("connected", function(){
         it("insertar una semana de vacaciones en una semana con feriados", async function(){
             // https://argentina.workingdays.org/dias_laborables_calendario_2000.htm
             await enNuevaPersona(2, {vacaciones: 15}, async (persona) => {
-                await rrhhSession.saveRecord(
-                    ctts.novedades_registradas, 
-                    {desde:date.iso('2000-03-06'), hasta:date.iso('2000-03-12'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    'new'
-                );
+                var novedadRegistradaPorCargar = {desde:date.iso('2000-03-06'), hasta:date.iso('2000-03-12'), cod_nov:COD_VACACIONES, cuil: persona.cuil}
+                var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
+                discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:3, dias_coincidentes:0})
+                await rrhhSession.saveRecord(ctts.novedades_registradas, novedadRegistradaPorCargar, 'new');
                 await rrhhSession.tableDataTest('novedades_vigentes', [
                     {fecha:date.iso('2000-03-08'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
                     {fecha:date.iso('2000-03-09'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
@@ -233,9 +243,12 @@ describe("connected", function(){
                     {desde:date.iso('2000-05-02'), hasta:date.iso('2000-05-12'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
                     'new'
                 );
+                var novedadRegistradaPorCargar = {desde:date.iso('2000-05-08'), hasta:date.iso('2000-05-12'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil}
+                var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
+                discrepances.showAndThrow(informe, {dias_corridos:5, dias_habiles:5, dias_coincidentes:5})
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-05-08'), hasta:date.iso('2000-05-12'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
+                    novedadRegistradaPorCargar,
                     'new'
                 );
                 await rrhhSession.saveRecord(

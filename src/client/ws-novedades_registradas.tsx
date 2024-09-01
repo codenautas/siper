@@ -1,5 +1,9 @@
 import * as React from "react";
 
+import {
+    useEffect, useState, 
+} from "react";
+
 import { 
     CardEditorConnected,
     Connector,
@@ -16,23 +20,39 @@ import {
 } from "@mui/material";
 
 // import * as BestGlobals from "best-globals";
-import { createIndex } from "like-ar";
+import { strict as likear, createIndex } from "like-ar";
+import * as json4all from "json4all";
 
-import { Persona } from "../common/contracts"
-// import { FieldDefinition } from "backend-plus";
+// import { guarantee } from "guarantee-type"
+
+import { NovedadRegistrada } from "../common/contracts"
 
 // @ts-ignore 
 var my=myOwn;
 
-/* Dos líneas para incluir contracts: */
-var persona: Persona | null = null;
-console.log(persona)
+function DiasHabiles(props:{novedad:Partial<NovedadRegistrada>}){
+    const {novedad} = props;
+    const leyendaVacia = {leyenda:"ingrese desde hasta para calcular días hábiles"}; 
+    const leyendaCalculando = {leyenda:"calculando..."};
+    const [leyenda, setLeyenda] = useState({leyenda:"..."})
+    useEffect(()=>{
+        if (novedad.desde == null || novedad.hasta == null) {
+            setLeyenda(leyendaVacia);
+        } else {
+            setLeyenda(leyendaCalculando);
+            my.ajax.si_cargara_novedad(novedad).then(setLeyenda, setLeyenda)
+        }
+    },[json4all.toUrl(novedad)]);
+    return <Typography>{leyenda.leyenda}</Typography>
+}
 
-export function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
+function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
     const {fieldsProps, optionsInfo} = props;
     const f = createIndex(fieldsProps, f => f.fd.name)
     const rowsCodNov = optionsInfo.tables!.cod_novedades;
     if (f.cuil == null) return <Card> <Typography>Cargando...</Typography> </Card>
+    const novedad = likear(f).filter((_, name) => !(/__/.test(name as string))).map(f => f.value).plain() as Partial<NovedadRegistrada>
+    const c_dds = !!rowsCodNov?.[f.cod_nov.value]?.c_dds;
     return <Card style={{width:'auto'}}>
         <Box>
             <GenericField {...f.cuil              }/>
@@ -47,7 +67,7 @@ export function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], op
         <Box>
             <GenericField {...f.desde }/>
             <GenericField {...f.hasta }/>
-            { rowsCodNov?.[f.cod_nov.value]?.c_dds ?
+            { c_dds ?
             <>
                 <GenericField {...f.dds1}/>
                 <GenericField {...f.dds2}/>
@@ -56,6 +76,9 @@ export function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], op
                 <GenericField {...f.dds5}/>
             </>
             : null}
+        </Box>
+        <Box>
+            <DiasHabiles novedad={novedad} />
         </Box>
     </Card>
 }

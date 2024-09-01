@@ -91,3 +91,23 @@ export const per_gru = {
 } satisfies CommonEntityDefinition
 
 export type PerGru = DefinedType<typeof per_gru.description>
+
+export const si_cargara_novedad = {
+    procedure: 'si_cargara_novedad',
+    parameters: is.object({},{
+        cuil: is.nullable.string,
+        cod_nov: is.nullable.string,
+        desde: is.Date,
+        hasta: is.Date,
+        dds1: is.nullable.boolean,
+        dds2: is.nullable.boolean,
+        dds3: is.nullable.boolean,
+        dds4: is.nullable.boolean,
+        dds5: is.nullable.boolean,
+    }),
+    result: is.object({
+        dias_corridos: is.number,
+        dias_habiles: is.number,
+        dias_coincidentes: is.number,
+    },{})
+}
