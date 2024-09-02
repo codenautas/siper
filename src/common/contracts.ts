@@ -111,3 +111,21 @@ export const si_cargara_novedad = {
         dias_coincidentes: is.number,
     },{})
 }
+
+export const calendario_persona = {
+    procedure: 'calendario_persona',
+    parameters: is.object({
+        cuil: is.string,
+        annio: is.number,
+        mes: is.number
+    }),
+    result: is.object({
+        dia: is.number,
+        dds: is.number,
+        semana: is.number,
+        cod_nov: is.string,
+        tipo_dia: is.string
+    })
+}
+
+export type CalendarioResult = DefinedType<typeof calendario_persona.result>

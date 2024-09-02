@@ -19,13 +19,11 @@ import {
     Typography,
 } from "@mui/material";
 
-// import * as BestGlobals from "best-globals";
+import { date } from "best-globals";
 import { strict as likear, createIndex } from "like-ar";
 import * as json4all from "json4all";
 
-// import { guarantee } from "guarantee-type"
-
-import { NovedadRegistrada } from "../common/contracts"
+import { NovedadRegistrada, CalendarioResult } from "../common/contracts"
 
 // @ts-ignore 
 var my=myOwn;
@@ -54,6 +52,54 @@ function DiasHabiles(props:{novedad:Partial<NovedadRegistrada>}){
         }
     },[json4all.toUrl(novedad)]);
     return <Typography>{leyenda.leyenda}</Typography>
+}
+
+function Calendario(props:{cuil:string}){
+    const {cuil} = props;
+    const [periodo, _setPeriodo] = useState({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
+    const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
+    useEffect(function(){
+        setCalendario([]);
+        if (cuil != null) my.ajax.calendario_persona({cuil, ...periodo}).then(dias => {
+            var semanas = [];
+            var semana = [];
+            for(var i = 0; i < dias[0].dds; i++) {
+                semana.push({});
+            }
+            for(var dia of dias){
+                semana.push(dia);
+                if (dia.dds == 6) {
+                    semanas.push(semana);
+                    semana = []
+                }
+            }
+            if (dia.dds != 6) {
+                for(var j = dias[0].dds + 1; j < 6; j++) {
+                    semana.push({});
+                }
+                semanas.push(semana);
+            }
+            setCalendario(semanas)
+        })
+
+    },[cuil, periodo.mes, periodo.annio])
+    return <Card className="calendario-mes">
+        <Box className="calendario-semana">
+            <div className="calendario-nombre-dia tipo-dia-no-laborable">dom</div>
+            <div className="calendario-nombre-dia">lun</div>
+            <div className="calendario-nombre-dia">mar</div>
+            <div className="calendario-nombre-dia">mié</div>
+            <div className="calendario-nombre-dia">jue</div>
+            <div className="calendario-nombre-dia">vie</div>
+            <div className="calendario-nombre-dia tipo-dia-no-laborable">sáb</div>
+        </Box>
+        {calendario.map(semana => <Box className="calendario-semana">
+            {semana.map(dia => <div className={`calendario-dia tipo-dia-${dia.tipo_dia}`}>
+                <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
+                <span className="calendario-dia-contenido">{dia.cod_nov ?? ''}</span>
+            </div>)}
+        </Box>)}
+    </Card>
 }
 
 function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
@@ -90,6 +136,7 @@ function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsIn
         <Box>
             <DiasHabiles novedad={novedad} />
         </Box>
+        <Calendario cuil={f.cuil.value} />
     </Card>
 }
 

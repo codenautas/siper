@@ -2,7 +2,10 @@
 
 import {strict as likeAr, createIndex} from 'like-ar';
 import { ProcedureDef, ProcedureContext } from './types-principal';
-import { NovedadRegistrada } from '../common/contracts';
+import { NovedadRegistrada, calendario_persona } from '../common/contracts';
+
+import { date } from 'best-globals'
+import { DefinedType } from 'guarantee-type';
 
 export const ProceduresPrincipal:ProcedureDef[] = [
     {
@@ -45,7 +48,6 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         ],
         coreFunction: async function(context: ProcedureContext, params:Partial<NovedadRegistrada>){
             const {desde, hasta, cod_nov, cuil, ...resto} = params;
-            console.log("***********", params)
             const info = await context.client.query(
                 `select count(*) as dias_corridos,
                         count(*) filter (
@@ -60,8 +62,33 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     where f.fecha between $1 and $2`, 
                 [desde, hasta, cod_nov, cuil, JSON.stringify(resto)]
             ).fetchUniqueRow();
-            console.log("xxxxxxxxxx", info)
             return info.row
+        }
+    },
+    {
+        action: 'calendario_persona',
+        parameters: [
+            {name:'cuil'      , typeName:'text'   },
+            {name:'annio'     , typeName:'integer'},
+            {name:'mes'       , typeName:'integer'},
+        ],
+        coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof calendario_persona.parameters>){
+            const {cuil, annio, mes} = params;
+            const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
+            const info = await context.client.query(
+                `select extract(day from f.fecha) as dia,
+                        extract(dow from f.fecha) as dds,
+                        extract(day from f.fecha) - extract(dow from f.fecha) as semana,
+                        cod_nov,
+                        case extract(dow from f.fecha) when 0 then 'no-laborable' when 6 then 'no-laborable' else 
+                            case when laborable is false then 'no-laborable' when cod_nov is not null then 'no-trabaja' else 'normal' end end as tipo_dia
+                    from fechas f
+                        left join novedades_vigentes v on v.fecha = f.fecha and v.cuil = $1
+                    where f.fecha between $2 and ($3::date + interval '1 month'  - interval '1 day')
+                    order by f.fecha`,
+                [cuil, desde, desde]
+            ).fetchAll();
+            return info.rows
         }
     }
 ];
