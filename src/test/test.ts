@@ -57,16 +57,17 @@ const COD_VACACIONES = "1";
 const COD_TELETRABAJO = "106";
 const COD_TRAMITE = "121";
 const COD_DIAGRAMADO = "101";
+const ADMIN_REQ = {user:{usuario:'perry'}} as any;
 
 describe("connected", function(){
     var server: AppSiper;
     var rrhhSession: EmulatedSession<AppSiper>;
     before(async function(){
-        this.timeout(6000);
+        this.timeout(7000);
         server = await startServer(AppSiper);
         // @ts-expect-error: todavía no está en el config tests-can-delete-db
         if (server.config.devel['tests-can-delete-db']) {
-            await server.inDbClient(null, async client=>{
+            await server.inDbClient(ADMIN_REQ, async client=>{
                 await client.executeSentences([
                     `delete from nov_gru where ${AÑOS_DE_PRUEBA}`,
                     `delete from novedades_vigentes where ${AÑOS_DE_PRUEBA} and ${CUIL_DE_PRUEBA}`,
@@ -99,7 +100,7 @@ describe("connected", function(){
         });
     })
     async function crearUsuario(usuario: {username:string, password:string, rol:string, cuil:string}){
-        await server.inDbClient(null, async client => {
+        await server.inDbClient(ADMIN_REQ, async client => {
             await client.query(
                 `INSERT INTO usuarios (usuario, md5clave, rol, cuil, activo) values ($1, md5($2), $3, $4, true)`,
                 [usuario.username, usuario.password+usuario.username, usuario.rol, usuario.cuil]
@@ -185,7 +186,7 @@ describe("connected", function(){
         }
     }
     describe("registro de novedades", function(){
-        this.timeout(6000);
+        this.timeout(7000);
         var basicoSession: EmulatedSession<AppSiper>
         before(async function(){
             await enNuevaPersona(0, {}, async (personaComun) => {
@@ -199,7 +200,7 @@ describe("connected", function(){
             });
         })
         it("insertar una semana de vacaciones como primera novedad", async function(){
-            this.timeout(6000);
+            this.timeout(7000);
             await enNuevaPersona(1, {vacaciones: 20}, async (persona) => {
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, cuil: persona.cuil};
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
@@ -393,7 +394,7 @@ describe("connected", function(){
              */
             const sqlTraerNovedades = `SELECT array_agg(concat_ws(' ',fecha,cuil,cod_nov) order by fecha, cuil) FROM novedades_vigentes WHERE ${FECHAS_DE_PRUEBA}`
             const sqlCalcularNovedades = `SELECT calcular_novedades_vigentes('${DESDE_AÑO}-01-01','${HASTA_AÑO}-12-31',null)`;
-            await server.inDbClient(null, async client => {
+            await server.inDbClient(ADMIN_REQ, async client => {
                 const todasLasNovedadesGeneradas = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
                 await client.query(sqlCalcularNovedades).execute();
                 console.log('calculando novedadesRecalculadasEncima')

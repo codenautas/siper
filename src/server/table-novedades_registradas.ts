@@ -38,6 +38,18 @@ export function novedades_registradas(context: TableContext): TableDefinition{
         constraints: [
             {constraintType:'check', consName:'desde y hasta deben ser del mismo annio', expr:`extract(year from desde) is not distinct from extract(year from desde)`}
         ],
-        hiddenColumns: [idr.name]
+        hiddenColumns: [idr.name],
+        sql:{
+            policies: {
+                all: {
+                    using: `( 
+                        SELECT rol='admin' FROM usuarios WHERE usuario = get_app_user()
+                    ) OR (
+                        cuil = (SELECT cuil FROM usuarios WHERE usuario = get_app_user())
+                    )
+                `
+                }
+            },
+        }
     };
 }
