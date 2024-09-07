@@ -43,6 +43,7 @@ install:
       - ../install/novedades_registradas_trg.sql
       - ../install/fechas_nov_trg.sql
       - ../install/sector_pertenece.sql
+      - ../install/sectores_circulares_trg.sql
 logo: 
   path: client/img
 `;

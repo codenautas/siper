@@ -140,3 +140,7 @@ export const calendario_persona = {
 }
 
 export type CalendarioResult = DefinedType<typeof calendario_persona.result>
+
+
+//////////// ERRORES POSTGRES:
+export const ERROR_REFERENCIA_CIRCULAR_EN_SECTORES = 'P1001';

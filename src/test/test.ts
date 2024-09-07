@@ -423,8 +423,9 @@ describe("connected", function(){
                     await rrhhAdminSesion.saveRecord(ctts.sectores, {sector, pertenece_a: nuevoPertenceA}, 'update');
                     throw new Error("se esperaba un error para impedir la referencia circular")
                 } catch (err) {
+                    console.log('****************', err)
                     var error = expected(err);
-                    if (error.code == 'NO PERMITIR ESTO') {
+                    if (error.code == ctts.ERROR_REFERENCIA_CIRCULAR_EN_SECTORES) {
                         return 'ok';
                     }
                     throw err;
@@ -442,6 +443,9 @@ describe("connected", function(){
             })
             it("impiede una referencia circular larga", async function(){
                 await verifcaImpedirReferenciaCircular('PRA1', 'PRA1111');
+            })
+            it("impiede una referencia a sí mismo", async function(){
+                await verifcaImpedirReferenciaCircular('PRA11', 'PRA11');
             })
         })
     })
