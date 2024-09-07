@@ -114,6 +114,8 @@ export class EmulatedSession<TApp extends AppBackend>{
         return result;
     }
     // @ts-ignore
+    async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:DefinedType<NoInfer<T>>, status:'new'):Promise<DefinedType<T>>
+    async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:Partial<DefinedType<NoInfer<T>>>, status:'update'):Promise<DefinedType<T>>
     async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:DefinedType<NoInfer<T>>, status:'new'|'update'):Promise<DefinedType<T>>{
         var context = this.server.getContextForDump();
         const {table, description} = target
@@ -154,6 +156,7 @@ export class EmulatedSession<TApp extends AppBackend>{
     }
     async tableDataSaveAndTest(table:string, rows:Row[], compare:'all', status:'new'|'update'){
         for (var row of rows) {
+            // @ts-ignore
             await this.saveRecord({table, description:is.object({})}, row, status);
         }
         return this.tableDataTest(table, rows, compare);

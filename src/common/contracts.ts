@@ -92,6 +92,17 @@ export const per_gru = {
 
 export type PerGru = DefinedType<typeof per_gru.description>
 
+export const sectores = {
+    table: 'sectores',
+    description: is.object({
+        sector: is.string,
+        nombre_sector: is.string,
+        pertenece_a: is.nullable.string
+    })
+}
+
+////////////// PROCEDIMEINTOS
+
 export const si_cargara_novedad = {
     procedure: 'si_cargara_novedad',
     parameters: is.object({},{

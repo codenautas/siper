@@ -62,6 +62,7 @@ const ADMIN_REQ = {user:{usuario:'perry', rol:''}};
 describe("connected", function(){
     var server: AppSiper;
     var rrhhSession: EmulatedSession<AppSiper>;
+    var rrhhAdminSesion: EmulatedSession<AppSiper>; // no cualquier rrhh
     before(async function(){
         this.timeout(7000);
         server = await startServer(AppSiper);
@@ -86,6 +87,14 @@ describe("connected", function(){
                         '2000-03-24',
                         '2000-04-20',
                         '2000-04-21');
+                    `,
+                    `delete from sectores where nombre_sector like 'PRUEBA AUTOM_TICA%'`,
+                    `insert into sectores (sector, nombre_sector, pertenece_a) values
+                        ('PRA1'   , 'PRUEBA AUTOMATICA 1'      , null    ),
+                        ('PRA11'  , 'PRUEBA AUTOMATICA 1.1'    , 'PRA1'  ),
+                        ('PRA111' , 'PRUEBA AUTOMATICA 1.1.1'  , 'PRA11' ),
+                        ('PRA1111', 'PRUEBA AUTOMATICA 1.1.1.1', 'PRA111'),
+                        ('PRA12'  , 'PRUEBA AUTOMATICA 1.2'    , 'PRA1'  );
                     `
                 ])
             })
@@ -94,6 +103,7 @@ describe("connected", function(){
             throw new Error("no se puede probar sin setear devel: tests-can-delete-db: true")
         }
         rrhhSession = new EmulatedSession(server, PORT || server.config.server.port);
+        rrhhAdminSesion = rrhhSession; // por ahora es lo mismo
         await rrhhSession.login({
             username: 'perry',
             password: 'white',
@@ -381,6 +391,58 @@ describe("connected", function(){
                 await rrhhSession.tableDataTest('novedades_vigentes', [
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
            })
+        })
+    })
+    describe("jerarquía de sectores", function(){
+        async function pertenceceSector(sector:string, perteneceA:string){
+            return (await server.inDbClient(ADMIN_REQ, client => client.query(
+                'select sector_pertenece($1, $2)',
+                [sector, perteneceA]
+            ).fetchUniqueValue())).value
+        }
+        it("detecta que PRA111 pertenece a PRA11", async function(){
+            var result = await pertenceceSector('PRA111','PRA11')
+            discrepances.showAndThrow(result, true);
+        })
+        it("detecta que PRA1111 pertenece a PRA1 (salto de 3 niveles)", async function(){
+            var result = await pertenceceSector('PRA1111','PRA1')
+            discrepances.showAndThrow(result, true);
+        })
+        it("detecta que PRA1 no pertenece a PRA11 (invertido)", async function(){
+            var result = await pertenceceSector('PRA1','PRA11')
+            discrepances.showAndThrow(result, false);
+            
+        })
+        it("detecta que PRA111 no pertenece a PRA12 (otra rama)", async function(){
+            var result = await pertenceceSector('PRA111','PRA12')
+            discrepances.showAndThrow(result, false);
+        })
+        describe("controla las referencias circulares", async function(){
+            async function verifcaImpedirReferenciaCircular(sector:string, nuevoPertenceA:string){
+                try {
+                    await rrhhAdminSesion.saveRecord(ctts.sectores, {sector, pertenece_a: nuevoPertenceA}, 'update');
+                    throw new Error("se esperaba un error para impedir la referencia circular")
+                } catch (err) {
+                    var error = expected(err);
+                    if (error.code == 'NO PERMITIR ESTO') {
+                        return 'ok';
+                    }
+                    throw err;
+                }
+            }
+            it("permite cambia de quién depende", async function(){
+                await rrhhAdminSesion.saveRecord(ctts.sectores, {sector: 'PRA12', pertenece_a:'PRA1111'}, 'update');
+                await rrhhAdminSesion.tableDataTest('sectores', [
+                    {sector: 'PRA12', pertenece_a:'PRA1111'}
+                ], 'all', {fixedFields:[{fieldName:'sector', value:'PRA12'}]})
+                await rrhhAdminSesion.saveRecord(ctts.sectores, {sector: 'PRA12', pertenece_a:'PRA1'}, 'update');
+            })
+            it("impiede una referencia circular corta", async function(){
+                await verifcaImpedirReferenciaCircular('PRA11', 'PRA111');
+            })
+            it("impiede una referencia circular larga", async function(){
+                await verifcaImpedirReferenciaCircular('PRA1', 'PRA1111');
+            })
         })
     })
     after(async function(){
