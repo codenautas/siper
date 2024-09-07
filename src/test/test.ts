@@ -308,7 +308,7 @@ describe("connected", function(){
                 ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
             })
         })
-        it.skip("intento de cargar novedades sin permiso", async function(){
+        it("intento de cargar novedades sin permiso", async function(){
             await enNuevaPersona(6, {}, async (persona) => {
                 try {
                     await basicoSession.saveRecord(

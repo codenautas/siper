@@ -8,12 +8,11 @@ import {año} from "./table-annios"
 
 export const idr: FieldDefinition = {name: 'idr', typeName: 'bigint', description: 'identificador de la novedad registrada'}
 
-export function novedades_registradas(context: TableContext): TableDefinition{
-    var admin = context.user.rol==='admin';
+export function novedades_registradas(_context: TableContext): TableDefinition{
     return {
         name: 'novedades_registradas',
         elementName: 'registro',
-        editable: admin,
+        editable: true,
         fields:[
             cuil,
             {name: 'desde'    , typeName: 'date'   ,                                    },
