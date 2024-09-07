@@ -326,7 +326,7 @@ describe("connected", function(){
                 }
             })
         })
-        it.skip("intento ver novedades de otra persona", async function(){
+        it("intento ver novedades de otra persona", async function(){
             await enNuevaPersona(7, {}, async (persona) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 

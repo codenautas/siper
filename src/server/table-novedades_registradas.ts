@@ -8,6 +8,17 @@ import {año} from "./table-annios"
 
 export const idr: FieldDefinition = {name: 'idr', typeName: 'bigint', description: 'identificador de la novedad registrada'}
 
+export const politicaNovedades = {
+    all: {
+        using: `( 
+            SELECT rol='admin' FROM usuarios WHERE usuario = get_app_user()
+        ) OR (
+            cuil = (SELECT cuil FROM usuarios WHERE usuario = get_app_user())
+        )
+    `
+    }
+}
+
 export function novedades_registradas(_context: TableContext): TableDefinition{
     return {
         name: 'novedades_registradas',
@@ -39,16 +50,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
         ],
         hiddenColumns: [idr.name],
         sql:{
-            policies: {
-                all: {
-                    using: `( 
-                        SELECT rol='admin' FROM usuarios WHERE usuario = get_app_user()
-                    ) OR (
-                        cuil = (SELECT cuil FROM usuarios WHERE usuario = get_app_user())
-                    )
-                `
-                }
-            },
+            policies: politicaNovedades,
         }
     };
 }
