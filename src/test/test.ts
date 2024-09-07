@@ -57,7 +57,7 @@ const COD_VACACIONES = "1";
 const COD_TELETRABAJO = "106";
 const COD_TRAMITE = "121";
 const COD_DIAGRAMADO = "101";
-const ADMIN_REQ = {user:{usuario:'perry'}} as any;
+const ADMIN_REQ = {user:{usuario:'perry', rol:''}};
 
 describe("connected", function(){
     var server: AppSiper;

@@ -15,7 +15,7 @@
     "npm" : ">=10.7"
   },  
   "dependencies": {
-    "backend-plus": "^2.0.0-rc.29",
+    "backend-plus": "^2.0.0-rc.30",
     "frontend-plus": "^0.0.4",
     "like-ar": "^0.5.1",
     "react": "^18.3.1",
