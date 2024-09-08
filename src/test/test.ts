@@ -2,15 +2,11 @@
 
 import { AppSiper } from '../server/app-principal';
 
-// import { date } from "best-globals";
-// import * as pg from 'pg-promise-strict';
-
-import { startServer, EmulatedSession } from "./probador-serial";
+import { startServer, EmulatedSession, expectError } from "./probador-serial";
 
 import * as ctts from "../common/contracts"
 
 import { date } from "best-globals";
-import { expected } from "cast-error";
 
 import * as discrepances from 'discrepances';
 
@@ -47,6 +43,7 @@ import * as from "node-fetch";
 import * as FormData from "form-data";
 */
 
+const FECHA_ACTUAL = date.iso('2000-01-01');
 const DESDE_AÑO = `2000`;
 const HASTA_AÑO = `2009`;
 const AÑOS_DE_PRUEBA = `annio BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
@@ -59,10 +56,13 @@ const COD_TRAMITE = "121";
 const COD_DIAGRAMADO = "101";
 const ADMIN_REQ = {user:{usuario:'perry', rol:''}};
 
+type Credenciales = {username: string, password: string};
+type UsuarioConCredenciales = ctts.Usuario & {credenciales: Credenciales};
+
 describe("connected", function(){
     var server: AppSiper;
     var rrhhSession: EmulatedSession<AppSiper>;
-    var rrhhAdminSesion: EmulatedSession<AppSiper>; // no cualquier rrhh
+    var rrhhAdminSession: EmulatedSession<AppSiper>; // no cualquier rrhh
     before(async function(){
         this.timeout(7000);
         server = await startServer(AppSiper);
@@ -103,19 +103,23 @@ describe("connected", function(){
             throw new Error("no se puede probar sin setear devel: tests-can-delete-db: true")
         }
         rrhhSession = new EmulatedSession(server, PORT || server.config.server.port);
-        rrhhAdminSesion = rrhhSession; // por ahora es lo mismo
+        rrhhAdminSession = rrhhSession; // por ahora es lo mismo
         await rrhhSession.login({
             username: 'perry',
             password: 'white',
         });
     })
-    async function crearUsuario(usuario: {username:string, password:string, rol:string, cuil:string}){
+    async function crearUsuario(nuevoUsuario: {numero:number, rol:string, cuil:string}){
+        const {numero, rol, cuil} = nuevoUsuario;
+        var usuario = 'usuario_prueba_' + numero;
+        var password = 'clave_prueba_' + Math.random();
         await server.inDbClient(ADMIN_REQ, async client => {
-            await client.query(
-                `INSERT INTO usuarios (usuario, md5clave, rol, cuil, activo) values ($1, md5($2), $3, $4, true)`,
-                [usuario.username, usuario.password+usuario.username, usuario.rol, usuario.cuil]
-            ).execute();
+            return await client.query(
+                `INSERT INTO usuarios (usuario, md5clave, rol, cuil, activo) values ($1, md5($2), $3, $4, true) returning *`,
+                [usuario, password+usuario, rol, cuil]
+            ).fetchUniqueRow();
         })
+        return {usuario, password, rol, cuil, credenciales:{username:usuario, password}};
     }
     it("verifica que exista la tabla de parámetros", async function(){
         await rrhhSession.tableDataTest('parametros',[
@@ -134,28 +138,52 @@ describe("connected", function(){
         )
         return personaGrabada;
     }
+    var cacheSesionDeUsuario:Record<string, EmulatedSession<AppSiper>>={}
+    async function sesionDeUsuario(usuario:UsuarioConCredenciales){
+        if (usuario.usuario in cacheSesionDeUsuario) {
+            return cacheSesionDeUsuario[usuario.usuario];
+        }
+        const nuevaSession =  new EmulatedSession(server, PORT || server.config.server.port);
+        await nuevaSession.login(usuario.credenciales);
+        return nuevaSession
+    }
     async function enNuevaPersona(
         numero: number, 
-        options: {vacaciones?: number, tramites?: number},
-        probar: (persona: ctts.Persona) => Promise<void>
+        opciones: {vacaciones?: number, tramites?: number, usuario?:{rol?:string, sector?:string, sesion?:boolean}, hoy?:Date},
+        probar: (persona: ctts.Persona, mas:{usuario: UsuarioConCredenciales, sesion:EmulatedSession<AppSiper>}) => Promise<void>
     ){
         var haciendo = 'inicializando';
         try {
             var persona = await crearNuevaPersona(numero);
-            var {vacaciones, tramites} = options;
+            var {vacaciones, tramites, hoy} = opciones;
             await rrhhSession.saveRecord(ctts.grupos, {clase: 'I', grupo: persona.cuil}, 'new');
             await rrhhSession.saveRecord(ctts.per_gru, {cuil: persona.cuil, clase: 'I', grupo: persona.cuil}, 'new');
             await rrhhSession.saveRecord(ctts.per_gru, {cuil: persona.cuil, clase: 'U', grupo: 'T'}, 'new');
+            var usuario = null as unknown as UsuarioConCredenciales;
+            var sesion = null as unknown as EmulatedSession<AppSiper>;
+            if (opciones.usuario) {
+                usuario = await crearUsuario({numero, rol:'basico', cuil:persona.cuil, ...opciones.usuario})
+                if (opciones.usuario.sesion) {
+                    var sesion = await sesionDeUsuario(usuario);
+                }
+            }
             if (vacaciones) await rrhhSession.saveRecord(ctts.nov_gru, {annio:2000, cod_nov: COD_VACACIONES, clase: 'I', grupo: persona.cuil, maximo: vacaciones }, 'new')
             if (tramites) await rrhhSession.saveRecord(ctts.nov_gru, {annio:2000, cod_nov: COD_TRAMITE, clase: 'U', grupo: 'T', maximo: 4 }, 'new')
+            if (hoy) {
+                await server.inDbClient(ADMIN_REQ, client => client.query("update parametros set fecha_actual = $1", [hoy]).execute())
+            }
             haciendo = 'probando'
-            await probar(persona);
+            await probar(persona, {usuario, sesion});
         } catch (err) {
             console.error("Test enNuevaPersona falla", haciendo)
             console.log({numero})
             console.log(persona!)
             console.log(err)
             throw err;
+        } finally {
+            if (hoy) {
+                await server.inDbClient(ADMIN_REQ, client => client.query("update parametros set fecha_actual = $1", [FECHA_ACTUAL]).execute())
+            }
         }
     }
     async function enDosNuevasPersonasConFeriado10EneroFeriadoy11No(
@@ -198,15 +226,13 @@ describe("connected", function(){
     describe("registro de novedades", function(){
         this.timeout(7000);
         var basicoSession: EmulatedSession<AppSiper>
+        var jefe11Session: EmulatedSession<AppSiper>
         before(async function(){
-            await enNuevaPersona(0, {}, async (personaComun) => {
-                const credentials = {
-                    username: 'test_basico',
-                    password: 'basico1234',
-                }
-                await crearUsuario({...credentials, cuil: personaComun.cuil, rol:'basico'});
-                basicoSession = new EmulatedSession(server, PORT || server.config.server.port);
-                await basicoSession.login(credentials);
+            await enNuevaPersona(0, {usuario:{sesion:true}}, async (_, {sesion}) => {
+                basicoSession = sesion;
+            });
+            await enNuevaPersona(14, {usuario:{sesion:true, rol:'jefe', sector:'PRA11'}}, async (_, {sesion}) => {
+                jefe11Session = sesion;
             });
         })
         it("insertar una semana de vacaciones como primera novedad", async function(){
@@ -320,20 +346,13 @@ describe("connected", function(){
         })
         it("intento de cargar novedades sin permiso", async function(){
             await enNuevaPersona(6, {}, async (persona) => {
-                try {
+                await expectError( async () => {
                     await basicoSession.saveRecord(
                         ctts.novedades_registradas, 
                         {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
                         'new'
                     );
-                    throw new Error("Se esperaba un error 42501")
-                } catch (err) {
-                    const error = expected(err);
-                    if (error.code != '42501') {
-                        console.log("no se esperaba este error", error.code, error);
-                        throw error;
-                    }
-                }
+                }, ctts.insufficient_privilege);
             })
         })
         it("intento ver novedades de otra persona", async function(){
@@ -392,6 +411,59 @@ describe("connected", function(){
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
            })
         })
+        it("un usuario común puede ver sus novedades pasadas", async function(){
+            await enNuevaPersona(12, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async (persona, {sesion}) => {
+                await rrhhAdminSession.saveRecord(
+                    ctts.novedades_registradas, 
+                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    'new'
+                );
+                await sesion.tableDataTest('novedades_vigentes', [
+                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            })
+        })
+        it.skip("un usuario común no puede cargar novedades pasadas", async function(){
+            await expectError( async () => {
+                await enNuevaPersona(13, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async (persona, {sesion}) => {
+                    await sesion.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                        'new'
+                    );
+                })
+            }, ctts.ERROR_NO_SE_PUEDE_CARGAR_EN_EL_PASADO)
+        })
+        it.skip("un jefe puede cargar a alguien de su equipo", async function(){
+            await enNuevaPersona(15, {usuario:{sector:'PRA11'}, hoy:date.iso('2000-02-01')}, async (persona) => {
+                await jefe11Session.saveRecord(
+                    ctts.novedades_registradas, 
+                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    'new'
+                );
+                await jefe11Session.tableDataTest('novedades_vigentes', [
+                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            })
+        })
+        it.skip("un jefe puede cargar a alguien de un equipo perteneciente", async function(){
+            await enNuevaPersona(16, {usuario:{sector:'PRA1111'}, hoy:date.iso('2000-02-01')}, async (persona) => {
+                await jefe11Session.saveRecord(
+                    ctts.novedades_registradas, 
+                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    'new'
+                );
+                await jefe11Session.tableDataTest('novedades_vigentes', [
+                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+            })
+        })
     })
     describe("jerarquía de sectores", function(){
         async function pertenceceSector(sector:string, perteneceA:string){
@@ -419,24 +491,17 @@ describe("connected", function(){
         })
         describe("controla las referencias circulares", async function(){
             async function verifcaImpedirReferenciaCircular(sector:string, nuevoPertenceA:string){
-                try {
-                    await rrhhAdminSesion.saveRecord(ctts.sectores, {sector, pertenece_a: nuevoPertenceA}, 'update');
+                await expectError( async () => {
+                    await rrhhAdminSession.saveRecord(ctts.sectores, {sector, pertenece_a: nuevoPertenceA}, 'update');
                     throw new Error("se esperaba un error para impedir la referencia circular")
-                } catch (err) {
-                    console.log('****************', err)
-                    var error = expected(err);
-                    if (error.code == ctts.ERROR_REFERENCIA_CIRCULAR_EN_SECTORES) {
-                        return 'ok';
-                    }
-                    throw err;
-                }
+                }, ctts.ERROR_REFERENCIA_CIRCULAR_EN_SECTORES);
             }
             it("permite cambia de quién depende", async function(){
-                await rrhhAdminSesion.saveRecord(ctts.sectores, {sector: 'PRA12', pertenece_a:'PRA1111'}, 'update');
-                await rrhhAdminSesion.tableDataTest('sectores', [
+                await rrhhAdminSession.saveRecord(ctts.sectores, {sector: 'PRA12', pertenece_a:'PRA1111'}, 'update');
+                await rrhhAdminSession.tableDataTest('sectores', [
                     {sector: 'PRA12', pertenece_a:'PRA1111'}
                 ], 'all', {fixedFields:[{fieldName:'sector', value:'PRA12'}]})
-                await rrhhAdminSesion.saveRecord(ctts.sectores, {sector: 'PRA12', pertenece_a:'PRA1'}, 'update');
+                await rrhhAdminSession.saveRecord(ctts.sectores, {sector: 'PRA12', pertenece_a:'PRA1'}, 'update');
             })
             it("impiede una referencia circular corta", async function(){
                 await verifcaImpedirReferenciaCircular('PRA11', 'PRA111');

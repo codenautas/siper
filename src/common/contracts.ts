@@ -101,6 +101,15 @@ export const sectores = {
     })
 }
 
+export const usuarios = {
+    table: 'usuarios',
+    description: is.object({
+        usuario: is.string
+    })
+}
+
+export type Usuario = DefinedType<typeof usuarios.description>
+
 ////////////// PROCEDIMEINTOS
 
 export const si_cargara_novedad = {
@@ -142,5 +151,9 @@ export const calendario_persona = {
 export type CalendarioResult = DefinedType<typeof calendario_persona.result>
 
 
-//////////// ERRORES POSTGRES:
+//////////// ERRORES POSTGRES PROPIOS:
 export const ERROR_REFERENCIA_CIRCULAR_EN_SECTORES = 'P1001';
+export const ERROR_NO_SE_PUEDE_CARGAR_EN_EL_PASADO = 'P1002';
+
+//////////// ERRORES POSTGRES:
+export const insufficient_privilege = '42501';

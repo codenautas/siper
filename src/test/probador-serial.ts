@@ -162,3 +162,30 @@ export class EmulatedSession<TApp extends AppBackend>{
         return this.tableDataTest(table, rows, compare);
     }
 }
+
+export function expectError(action: ()=>void              , check: string): void              ;
+export function expectError(action: ()=>     Promise<void>, check: string):      Promise<void>;
+export function expectError(action: ()=>void|Promise<void>, check: string): void|Promise<void>{
+    var allOk = false;
+    function itDidntFail() {
+        allOk = true;
+        throw new Error("probador-serial: itDidntFail")
+    }
+    function checkExpected(err:Error|unknown) {
+        if (allOk) throw new Error("expectError -> not ERROR!");
+        var error = expected(err);
+        if (error.code != check) {
+            console.log(`Expected "${check}" error code. Gotten "${error.code}:  ${error.message}"`)
+            throw err;
+        }
+    }
+    try { 
+        var result = action();
+        if (result instanceof Promise) {
+            return result.then(itDidntFail).catch(checkExpected)
+        }
+        itDidntFail();
+    } catch (err) {
+        checkExpected(err);
+    }
+}
