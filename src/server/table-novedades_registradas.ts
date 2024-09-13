@@ -7,16 +7,67 @@ import {cod_nov} from "./table-cod_novedades";
 import {año} from "./table-annios"
 
 export const idr: FieldDefinition = {name: 'idr', typeName: 'bigint', description: 'identificador de la novedad registrada'}
-
+/*
+    policies?:{
+        all   ?:{using?:string, check?:string}
+        select?:{using?:string}
+        insert?:{               check?:string}
+        update?:{using?:string, check?:string}
+        delete?:{using?:string}
+    }
+*/
 export const politicaNovedades = {
     all: {
         using: `( 
             SELECT rol='admin' FROM usuarios WHERE usuario = get_app_user()
         ) OR (
             cuil = (SELECT cuil FROM usuarios WHERE usuario = get_app_user())
+        ) OR (
+            cuil in (SELECT cuilpersona
+                      FROM (SELECT u.cuil cuiljefe, p.sector sectorjefe
+                              FROM usuarios u
+                              JOIN personal p ON u.cuil = p.cuil
+                              WHERE u.rol = 'jefe' and u.usuario = get_app_user()) j,
+                           (SELECT cuil cuilpersona, sector sectorpersona
+                             FROM personal) d
+                    WHERE sector_pertenece(sectorpersona, sectorjefe) and cuiljefe <> cuilpersona)
         )
     `
-    }
+    },
+    insert: {
+        check: `( 
+            SELECT rol='admin' FROM usuarios WHERE usuario = get_app_user()
+        ) OR (
+            cuil = (SELECT cuil FROM usuarios WHERE usuario = get_app_user())
+        ) OR (
+            cuil in (SELECT cuilpersona
+                      FROM (SELECT u.cuil cuiljefe, p.sector sectorjefe
+                              FROM usuarios u
+                              JOIN personal p ON u.cuil = p.cuil
+                              WHERE u.rol = 'jefe' and u.usuario = get_app_user()) j,
+                           (SELECT cuil cuilpersona, sector sectorpersona
+                             FROM personal) d
+                    WHERE sector_pertenece(sectorpersona, sectorjefe) and cuiljefe <> cuilpersona)
+        )
+    `
+    },
+    update: {
+        check: `( 
+            SELECT rol='admin' FROM usuarios WHERE usuario = get_app_user()
+        ) OR (
+            cuil = (SELECT cuil FROM usuarios WHERE usuario = get_app_user())
+        ) OR (
+            cuil in (SELECT cuilpersona
+                      FROM (SELECT u.cuil cuiljefe, p.sector sectorjefe
+                              FROM usuarios u
+                              JOIN personal p ON u.cuil = p.cuil
+                              WHERE u.rol = 'jefe' and u.usuario = get_app_user()) j,
+                           (SELECT cuil cuilpersona, sector sectorpersona
+                             FROM personal) d
+                    WHERE sector_pertenece(sectorpersona, sectorjefe) and cuiljefe <> cuilpersona)
+        )
+    `
+    },
 }
 
 export function novedades_registradas(_context: TableContext): TableDefinition{

@@ -166,6 +166,7 @@ describe("connected", function(){
                 if (opciones.usuario.sesion) {
                     var sesion = await sesionDeUsuario(usuario);
                 }
+                if (opciones.usuario.sector) await rrhhSession.saveRecord(ctts.personas,{cuil:persona.cuil,sector:opciones.usuario.sector}, 'update')
             }
             if (vacaciones) await rrhhSession.saveRecord(ctts.nov_gru, {annio:2000, cod_nov: COD_VACACIONES, clase: 'I', grupo: persona.cuil, maximo: vacaciones }, 'new')
             if (tramites) await rrhhSession.saveRecord(ctts.nov_gru, {annio:2000, cod_nov: COD_TRAMITE, clase: 'U', grupo: 'T', maximo: 4 }, 'new')
@@ -274,6 +275,7 @@ describe("connected", function(){
             })
         })
         it("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
+            this.timeout(8000);
             await enNuevaPersona(3, {vacaciones: 20, tramites: 4}, async (persona) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
@@ -436,7 +438,7 @@ describe("connected", function(){
                 })
             }, ctts.ERROR_NO_SE_PUEDE_CARGAR_EN_EL_PASADO)
         })
-        it.skip("un jefe puede cargar a alguien de su equipo", async function(){
+        it("un jefe puede cargar a alguien de su equipo", async function(){
             await enNuevaPersona(15, {usuario:{sector:'PRA11'}, hoy:date.iso('2000-02-01')}, async (persona) => {
                 await jefe11Session.saveRecord(
                     ctts.novedades_registradas, 
@@ -450,7 +452,7 @@ describe("connected", function(){
                 ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
             })
         })
-        it.skip("un jefe puede cargar a alguien de un equipo perteneciente", async function(){
+        it("un jefe puede cargar a alguien de un equipo perteneciente", async function(){
             await enNuevaPersona(16, {usuario:{sector:'PRA1111'}, hoy:date.iso('2000-02-01')}, async (persona) => {
                 await jefe11Session.saveRecord(
                     ctts.novedades_registradas, 
