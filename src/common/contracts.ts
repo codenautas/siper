@@ -48,6 +48,20 @@ export const nov_gru = {
 
 export type NovGru = DefinedType<typeof nov_gru.description>
 
+export const nov_per = {
+    table: 'nov_per',
+    description: is.object({
+        año: is.string,
+        cod_nov: is.string,
+        cuil: is.string,
+        cantidad: is.number,
+        limite: is.number,
+        saldo: is.number,
+    })
+} satisfies CommonEntityDefinition
+
+export type NovPer = DefinedType<typeof nov_per.description>
+
 export const novedades_registradas = {
     table: 'novedades_registradas',
     description: is.object({
@@ -76,6 +90,7 @@ export const personas = {
         nomyape:   is.string,
         sector:    is.string,
         categoria: is.string,
+        
     })
 } satisfies CommonEntityDefinition
 
@@ -124,8 +139,49 @@ export const calendario_persona = {
         dds: is.number,
         semana: is.number,
         cod_nov: is.string,
-        tipo_dia: is.string
+        tipo_dia: is.string,
     })
 }
 
 export type CalendarioResult = DefinedType<typeof calendario_persona.result>
+
+export const historico_persona = {
+    procedure: 'historico_persona',
+    parameters: is.object({
+        cuil: is.string,
+        annio: is.number,
+        mes: is.number
+    }),
+    result: is.object({
+        fecha: is.Date,
+        cod_nov: is.string,
+        novedad: is.string,
+    })
+}
+
+export type HistoricoResult = DefinedType<typeof historico_persona.result>
+
+export const annio = {
+    table: 'annio',
+    description: is.object({
+        annio: is.number,
+        cerrado: is.boolean
+    })
+} satisfies CommonEntityDefinition
+
+
+export type Annio = DefinedType<typeof annio.description>
+
+export const meses = [
+    {  value:1, name:'enero' },
+    {  value:2, name:'febrero' },
+    {  value:3, name:'marzo' },
+    {  value:4, name:'abril' },
+    {  value:5, name:'mayo' },
+    {  value:6, name:'junio' },
+    {  value:7, name:'julio' },
+    {  value:8, name:'agosto' },
+    {  value:9, name:'septiembre' },
+    {  value:10, name:'octubre' },
+    {  value:11, name:'noviembre' },
+    {  value:12, name:'diciembre' }]

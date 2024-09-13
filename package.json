@@ -16,7 +16,7 @@
   },  
   "dependencies": {
     "backend-plus": "^2.0.0-rc.29",
-    "frontend-plus": "^0.0.4",
+    "frontend-plus": "^0.0.5",
     "like-ar": "^0.5.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -39,7 +39,7 @@
     "watch:buildC": "tsc -p tsconfig-client.json --watch",
     "watch:buildS": "tsc -p tsconfig-server.json --watch",
     "watch:buildU": "tsc -p tsconfig-unlogged.json --watch",
-    "test": "tsc -p tsconfig-test.json && mocha --reporter spec --bail --check-leaks dist/test/test/",
+    "test": "tsc -p tsconfig-test.json && mocha --reporter spec --check-leaks dist/test/test/",
     "test-directo": "mocha --reporter spec --bail --check-leaks dist/test/test/",
     "dump": "npm start -- --dump-db",
     "dumpb": "(tsc -p tsconfig-server.json  || echo \"continue w/error\") && npm run dump",

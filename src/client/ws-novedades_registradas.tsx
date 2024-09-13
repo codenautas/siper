@@ -15,15 +15,26 @@ import {
 
 import {
     Box,
-    Card,
-    Typography,
+    Card, 
+    Typography, 
+    Select, 
+    MenuItem, 
+    Button, 
+    Drawer,
+    TableContainer,
+    Table,
+    TableHead,
+    TableRow,
+    TableCell,
+    TableBody,
+    Paper
 } from "@mui/material";
 
 import { date } from "best-globals";
 import { strict as likear, createIndex } from "like-ar";
 import * as json4all from "json4all";
 
-import { NovedadRegistrada, CalendarioResult } from "../common/contracts"
+import { NovedadRegistrada, CalendarioResult, Annio, meses, HistoricoResult } from "../common/contracts"
 
 // @ts-ignore 
 var my=myOwn;
@@ -54,12 +65,88 @@ function DiasHabiles(props:{novedad:Partial<NovedadRegistrada>}){
     return <Typography>{leyenda.leyenda}</Typography>
 }
 
+function Historico(props:{cuil:string}){
+    const {cuil} = props;
+    const [annios, setAnnios] = useState<Annio[]>([]);
+    const [periodo, setPeriodo] = useState({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
+    const [historico, setHistorico] = useState<HistoricoResult[]>([]);
+    useEffect(function(){
+        setHistorico([]);
+        my.ajax.table_data({table: 'annios', fixedFields: [],paramfun:{} }).then(_annios => {
+            setAnnios(_annios);
+        });
+        if (cuil != null) my.ajax.historico_persona({cuil, ...periodo}).then(_historico => {
+            setHistorico(_historico)
+            console.log(_historico)
+        })
+    },[cuil, periodo.mes, periodo.annio])
+    return <Card>
+        <Box style={{ flex:1}}>
+            <Box>
+                <Select 
+                    value={periodo.mes}
+                    onChange={(event) => { // buscar el tipo correcto
+                        setPeriodo({mes:Number(event.target.value), annio:periodo.annio});
+                    }}
+                >
+                    {meses.map((mes) => (
+                        <MenuItem key={mes.value} value={mes.value}>
+                            {mes.name}
+                        </MenuItem>
+                    ))}
+                </Select>
+                <Select 
+                    value={periodo.annio}
+                    onChange={(event) => { // buscar el tipo correcto
+                        setPeriodo({mes:periodo.mes, annio:Number(event.target.value)});
+                    }}
+                >
+                    {
+                        // @ts-ignore
+                        annios.map((annio:Annio) => (
+                        <MenuItem key={annio.annio} value={annio.annio}>
+                            {annio.annio.toString()}
+                        </MenuItem>
+                    ))
+                        }
+                </Select>
+            </Box>
+            <Box>
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Fecha</TableCell>
+                            <TableCell>Novedad</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                            {historico.map((item, index) => (
+                                <TableRow key={index}>
+                                    <TableCell>{item.fecha.toString()}</TableCell>
+                                    <TableCell>{item.cod_nov} - {item.novedad}</TableCell>
+                                </TableRow>
+                            ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+            </Box>
+        </Box>
+    </Card>
+}
+
 function Calendario(props:{cuil:string}){
     const {cuil} = props;
-    const [periodo, _setPeriodo] = useState({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
+    const [annios, setAnnios] = useState<Annio[]>([]);
+    const [periodo, setPeriodo] = useState({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
     const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
+    const [diaSeleccionado, setDiaSeleccionado] = useState<{ dia: number | null, mes: number | null, annio: number | null, cod_nov?: string }>({ dia: null, mes: null, annio: null });
     useEffect(function(){
         setCalendario([]);
+        // ver async
+        my.ajax.table_data({table: 'annios', fixedFields: [],paramfun:{} }).then(_annios => {
+            setAnnios(_annios);
+        });
         if (cuil != null) my.ajax.calendario_persona({cuil, ...periodo}).then(dias => {
             var semanas = [];
             var semana = [];
@@ -69,7 +156,7 @@ function Calendario(props:{cuil:string}){
             for(var dia of dias){
                 semana.push(dia);
                 if (dia.dds == 6) {
-                    semanas.push(semana);
+                    semanas.push(semana);   
                     semana = []
                 }
             }
@@ -84,6 +171,36 @@ function Calendario(props:{cuil:string}){
 
     },[cuil, periodo.mes, periodo.annio])
     return <Card className="calendario-mes">
+        <Box style={{ flex:1}}>
+        <Box>
+            <Select 
+                value={periodo.mes}
+                onChange={(event) => { // buscar el tipo correcto
+                    setPeriodo({mes:Number(event.target.value), annio:periodo.annio});
+                }}
+            >
+                {meses.map((mes) => (
+                    <MenuItem key={mes.value} value={mes.value}>
+                        {mes.name}
+                    </MenuItem>
+                ))}
+            </Select>
+            <Select 
+                value={periodo.annio}
+                onChange={(event) => { // buscar el tipo correcto
+                    setPeriodo({mes:periodo.mes, annio:Number(event.target.value)});
+                }}
+            >
+                {
+                    // @ts-ignore
+                    annios.map((annio:Annio) => (
+                    <MenuItem key={annio.annio} value={annio.annio}>
+                        {annio.annio.toString()}
+                    </MenuItem>
+                ))
+                    }
+            </Select>
+        </Box>
         <Box className="calendario-semana">
             <div className="calendario-nombre-dia tipo-dia-no-laborable">dom</div>
             <div className="calendario-nombre-dia">lun</div>
@@ -94,11 +211,23 @@ function Calendario(props:{cuil:string}){
             <div className="calendario-nombre-dia tipo-dia-no-laborable">sáb</div>
         </Box>
         {calendario.map(semana => <Box className="calendario-semana">
-            {semana.map(dia => <div className={`calendario-dia tipo-dia-${dia.tipo_dia}`}>
+            {semana.map(dia => <div className={`calendario-dia tipo-dia-${dia.tipo_dia} ${
+                diaSeleccionado.dia === dia.dia && diaSeleccionado.mes === periodo.mes && diaSeleccionado.annio === periodo.annio? 'calendario-dia-seleccionado' : ''
+              }`}
+              onClick={() => setDiaSeleccionado({ dia: dia.dia, mes: periodo.mes, annio: periodo.annio, cod_nov: dia.cod_nov })}
+              >
                 <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
                 <span className="calendario-dia-contenido">{dia.cod_nov ?? ''}</span>
             </div>)}
         </Box>)}
+        </Box>
+        <Box>
+        {diaSeleccionado.cod_nov && (
+          <div>
+            <p><strong>Codigo:</strong> {diaSeleccionado.cod_nov}</p>
+          </div>
+        )}
+      </Box>
     </Card>
 }
 
@@ -109,39 +238,104 @@ function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsIn
     if (f.cuil == null) return <Card> <Typography>Cargando...</Typography> </Card>
     const novedad = likear(f).filter((_, name) => !(/__/.test(name as string))).map(f => f.value).plain() as Partial<NovedadRegistrada>
     const c_dds = !!rowsCodNov?.[f.cod_nov.value]?.c_dds;
-    return <Card style={{width:'auto'}}>
-        <Box>
-            <GenericField {...f.cuil              }/>
-            <GenericField {...f.personal__nomyape }/>
-            <GenericField {...f.personal__ficha   }/>
-            <GenericField {...f.personal__idmeta4 }/>
-        </Box>
-        <Box style={{display: 'flex', flexDirection:'row'}}>
-            <GenericField {...f.cod_nov   }/>
-            <GenericField {...f.cod_novedades__novedad }/>
-        </Box>
-        <Box>
-            <GenericField {...f.desde }/>
-            <GenericField {...f.hasta }/>
-            { c_dds ?
-            <>
-                <GenericField {...f.dds1}/>
-                <GenericField {...f.dds2}/>
-                <GenericField {...f.dds3}/>
-                <GenericField {...f.dds4}/>
-                <GenericField {...f.dds5}/>
-            </>
-            : null}
-        </Box>
-        <Box>
-            <DiasHabiles novedad={novedad} />
-        </Box>
-        <Calendario cuil={f.cuil.value} />
-    </Card>
-}
 
-/*
-*/
+    const [isCalendarioOpen, setIsCalendarioOpen] = useState(false);
+    const toggleCalendario = (open: boolean) => {
+        setIsCalendarioOpen(open);
+    };
+    const [isHistoricoOpen, setIsHistoricoOpen] = useState(false);
+    const toggleHistorico = (open: boolean) => {
+        setIsHistoricoOpen(open);
+    };
+
+    return <Card style={{ width: 'auto' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+      }}
+    >
+      <Box
+        sx={{
+          width: '100%',
+          height: '100px',
+        }}
+      >
+        detalle general persona
+        <Box>
+            <GenericField {...f.cuil} />
+            <GenericField {...f.personal__nomyape} />
+            <GenericField {...f.personal__ficha} />
+            <GenericField {...f.personal__idmeta4} />
+          </Box>
+      </Box>
+  
+      <Box
+        sx={{
+          display: 'flex',
+          flexGrow: 1,
+        }}
+      >
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+
+          }}
+        >
+            solicitar novedad
+          <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+            <GenericField {...f.cod_nov} />
+            <GenericField {...f.cod_novedades__novedad} />
+          </Box>
+  
+          <Box>
+            <GenericField {...f.desde} />
+            <GenericField {...f.hasta} />
+            {c_dds ? (
+              <>
+                <GenericField {...f.dds1} />
+                <GenericField {...f.dds2} />
+                <GenericField {...f.dds3} />
+                <GenericField {...f.dds4} />
+                <GenericField {...f.dds5} />
+              </>
+            ) : null}
+          </Box>
+  
+          <Box>
+            <DiasHabiles novedad={novedad} />
+          </Box>
+  
+          <Button variant="contained" onClick={() => toggleCalendario(true)}>
+            Calendario
+          </Button>
+          <Button variant="contained" onClick={() => toggleHistorico(true)}>
+            Historico
+          </Button>
+        </Box>
+  
+        <Box
+          sx={{
+            flex: 2,
+          }}
+        >
+          solicitudes/novedades
+        </Box>
+      </Box>
+    </Box>
+  
+    <Drawer anchor="right" open={isCalendarioOpen} onClose={() => toggleCalendario(false)}>
+      <Calendario cuil={f.cuil.value} />
+    </Drawer>
+    <Drawer anchor="right" open={isHistoricoOpen} onClose={() => toggleHistorico(false)}>
+      <Historico cuil={f.cuil.value} />
+    </Drawer>
+  </Card>
+  
+}
 
 // @ts-ignore
 myOwn.wScreens.registroNovedades = function registroNovedades(addrParams:any){

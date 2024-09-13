@@ -54,6 +54,7 @@ export class AppSiper extends AppBackend{
                 {menuType:'table', name:'personal'          },
                 {menuType:'menu', name:'novedades', menuContent:[
                     {menuType:'registroNovedades', name:'registro'},
+                    {menuType:'statusPersona', name:'status'},
                     {menuType:'menu', name:'tablas', menuContent:[
                         {menuType:'table', name:'novedades_vigentes'   },
                         {menuType:'table', name:'novedades_registradas'},
@@ -100,6 +101,7 @@ export class AppSiper extends AppBackend{
             { type: 'css', file: 'menu.css' },
             { type: 'js', file: 'common/contracts.js' },
             { type: 'js', file: 'client/ws-novedades_registradas.js' },
+            { type: 'js', file: 'client/ws-status_persona.js' },
             ... menuedResources
         ] satisfies ClientModuleDefinition[];
         return list;
