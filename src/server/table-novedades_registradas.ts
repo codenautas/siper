@@ -33,18 +33,23 @@ export function politicaNovedadesComun(alias:string){
 }
 
 export function politicaNovedades(alias:string){
-    var politicaModficacion = `${politicaNovedadesComun(alias)}
+    var politicaModficacion = `(${politicaNovedadesComun(alias)})
         AND (
-            ${alias == 'novedades_registradas' ? `desde` : alias == 'novedades_vigentes' ? `fecha` : 'ERROR'} 
+            (${alias == 'novedades_registradas' ? `desde` : alias == 'novedades_vigentes' ? `fecha` : 'ERROR'} 
                 >= (SELECT fecha_actual FROM parametros WHERE unico_registro)
+            )
+            OR (
+                SELECT puede_cargar_todo FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user()
+            )
         )
     `
+    var politicaVisibilidad = `${politicaNovedadesComun(alias)}
+        OR (
+            SELECT true FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user() and cuil = ${alias}.cuil
+        )`
     return {
         select: {
-            using: `${politicaNovedadesComun(alias)}
-                OR (
-                    SELECT true FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user() and cuil = ${alias}.cuil
-                )`
+            using: politicaVisibilidad
         },
         insert: {
             check: politicaModficacion

@@ -1,5 +1,5 @@
-rol      |puede_cargar_todo|puede_cargar_dependientes|puede_cargar_propio
-admin    |true             |true                     |true               
-rrhh     |true             |true                     |true               
-basico   |false            |false                    |false              
-jefe     |false            |true                     |false
+rol      |puede_cargar_todo|puede_cargar_dependientes|puede_cargar_propio|puede_corregir_el_pasado
+admin    |true             |true                     |true               |true                    
+rrhh     |true             |true                     |true               |false                   
+basico   |false            |false                    |false              |false                   
+jefe     |false            |true                     |false              |false                   

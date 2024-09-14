@@ -79,6 +79,7 @@ describe("connected", function(){
                     `delete from fechas where ${AÑOS_DE_PRUEBA}`,
                     `delete from annios where ${AÑOS_DE_PRUEBA}`,
                     `delete from cod_novedades where novedad like 'PRUEBA AUTOM_TICA%'`,
+                    `update parametros set fecha_actual = '${FECHA_ACTUAL.toYmd()}' where unico_registro`,
                     `insert into annios (annio) select * from generate_series(${DESDE_AÑO}, ${HASTA_AÑO}) d`,
                     `insert into fechas (fecha) select date_trunc('day', d) from generate_series(cast('${DESDE_AÑO}-01-01' as timestamp), cast('${HASTA_AÑO}-12-31' as timestamp), cast('1 day' as interval)) d`,
                     `update fechas set laborable = false, repite = false, inamovible = false where fecha in (
@@ -102,11 +103,15 @@ describe("connected", function(){
         } else {
             throw new Error("no se puede probar sin setear devel: tests-can-delete-db: true")
         }
-        rrhhSession = new EmulatedSession(server, PORT || server.config.server.port);
-        rrhhAdminSession = rrhhSession; // por ahora es lo mismo
-        await rrhhSession.login({
+        rrhhAdminSession = new EmulatedSession(server, PORT || server.config.server.port);
+        await rrhhAdminSession.login({
             username: 'perry',
             password: 'white',
+        });
+        rrhhSession = new EmulatedSession(server, PORT || server.config.server.port);
+        await rrhhSession.login({
+            username: 'jimmi',
+            password: 'olsen',
         });
     })
     async function crearUsuario(nuevoUsuario: {numero:number, rol:string, cuil:string}){
@@ -156,9 +161,9 @@ describe("connected", function(){
         try {
             var persona = await crearNuevaPersona(numero);
             var {vacaciones, tramites, hoy} = opciones;
-            await rrhhSession.saveRecord(ctts.grupos, {clase: 'I', grupo: persona.cuil}, 'new');
-            await rrhhSession.saveRecord(ctts.per_gru, {cuil: persona.cuil, clase: 'I', grupo: persona.cuil}, 'new');
-            await rrhhSession.saveRecord(ctts.per_gru, {cuil: persona.cuil, clase: 'U', grupo: 'T'}, 'new');
+            await rrhhAdminSession.saveRecord(ctts.grupos, {clase: 'I', grupo: persona.cuil}, 'new');
+            await rrhhAdminSession.saveRecord(ctts.per_gru, {cuil: persona.cuil, clase: 'I', grupo: persona.cuil}, 'new');
+            await rrhhAdminSession.saveRecord(ctts.per_gru, {cuil: persona.cuil, clase: 'U', grupo: 'T'}, 'new');
             var usuario = null as unknown as UsuarioConCredenciales;
             var sesion = null as unknown as EmulatedSession<AppSiper>;
             if (opciones.usuario) {
@@ -168,8 +173,8 @@ describe("connected", function(){
                 }
                 if (opciones.usuario.sector) await rrhhSession.saveRecord(ctts.personas,{cuil:persona.cuil,sector:opciones.usuario.sector}, 'update')
             }
-            if (vacaciones) await rrhhSession.saveRecord(ctts.nov_gru, {annio:2000, cod_nov: COD_VACACIONES, clase: 'I', grupo: persona.cuil, maximo: vacaciones }, 'new')
-            if (tramites) await rrhhSession.saveRecord(ctts.nov_gru, {annio:2000, cod_nov: COD_TRAMITE, clase: 'U', grupo: 'T', maximo: 4 }, 'new')
+            if (vacaciones) await rrhhAdminSession.saveRecord(ctts.nov_gru, {annio:2000, cod_nov: COD_VACACIONES, clase: 'I', grupo: persona.cuil, maximo: vacaciones }, 'new')
+            if (tramites) await rrhhAdminSession.saveRecord(ctts.nov_gru, {annio:2000, cod_nov: COD_TRAMITE, clase: 'U', grupo: 'T', maximo: 4 }, 'new')
             if (hoy) {
                 await server.inDbClient(ADMIN_REQ, client => client.query("update parametros set fecha_actual = $1", [hoy]).execute())
             }
@@ -198,9 +203,9 @@ describe("connected", function(){
         try {
             var persona1 = await crearNuevaPersona(numero1);
             var persona2 = await crearNuevaPersona(numero2);
-            await rrhhSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA agregar feriado' }, 'new')
+            await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA agregar feriado' }, 'new')
             haciendo = 'poniendo el feriado'
-            await rrhhSession.saveRecord(
+            await rrhhAdminSession.saveRecord(
                 ctts.fecha, 
                 {fecha:date.iso('2000-01-10'), laborable:false, repite:false, inamovible:false, leyenda:'PRUEBA AUTOMÁTICA agregar feriado'}, 
                 'update'
@@ -380,7 +385,7 @@ describe("connected", function(){
                     {fecha:date.iso('2000-01-11'), cod_nov, cuil: persona2.cuil},
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
                 /* quito el feriado */
-                await rrhhSession.saveRecord(
+                await rrhhAdminSession.saveRecord(
                     ctts.fecha, 
                     {fecha:date.iso('2000-01-10'), laborable:null, repite:null, inamovible:null, leyenda:'PRUEBA AUTOMÁTICA agregar feriado'}, 
                     'update'
@@ -403,7 +408,7 @@ describe("connected", function(){
                     {fecha:date.iso('2000-01-11'), cod_nov, cuil: persona2.cuil},
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
                 /* agrego otro feriado */
-                await rrhhSession.saveRecord(
+                await rrhhAdminSession.saveRecord(
                     ctts.fecha, 
                     {fecha:date.iso('2000-01-11'), laborable:false, repite:false, inamovible:false, leyenda:'PRUEBA AUTOMÁTICA agregar feriado'}, 
                     'update'
@@ -413,7 +418,7 @@ describe("connected", function(){
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
            })
         })
-        it("un usuario común puede ver sus novedades pasadas", async function(){
+        it("un usuario común puede ver sus novedades pasadas (y rrhh las puede cargar)", async function(){
             await enNuevaPersona(12, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async (persona, {sesion}) => {
                 await rrhhAdminSession.saveRecord(
                     ctts.novedades_registradas, 

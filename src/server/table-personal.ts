@@ -10,7 +10,7 @@ export const cuil: FieldDefinition = {
 }
 
 export function personal(context: TableContext): TableDefinition {
-    var admin = context.user.rol==='admin';
+    var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
     return {
         name: 'personal',
         elementName: 'persona',

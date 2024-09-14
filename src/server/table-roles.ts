@@ -21,6 +21,7 @@ export function roles(context:TableContext):TableDefinition{
             {name: 'puede_cargar_todo'        , typeName: 'boolean'},
             {name: 'puede_cargar_dependientes', typeName: 'boolean'},
             {name: 'puede_cargar_propio'      , typeName: 'boolean'},
+            {name: 'puede_corregir_el_pasado' , typeName: 'boolean'},
         ],
         primaryKey: [rol.name],
         constraints: [
