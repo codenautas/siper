@@ -34,40 +34,6 @@ export const politicaNovedades = {
         )
     `
     },
-    insert: {
-        check: `( 
-            SELECT rol='admin' FROM usuarios WHERE usuario = get_app_user()
-        ) OR (
-            cuil = (SELECT cuil FROM usuarios WHERE usuario = get_app_user())
-        ) OR (
-            cuil in (SELECT cuilpersona
-                      FROM (SELECT u.cuil cuiljefe, p.sector sectorjefe
-                              FROM usuarios u
-                              JOIN personal p ON u.cuil = p.cuil
-                              WHERE u.rol = 'jefe' and u.usuario = get_app_user()) j,
-                           (SELECT cuil cuilpersona, sector sectorpersona
-                             FROM personal) d
-                    WHERE sector_pertenece(sectorpersona, sectorjefe) and cuiljefe <> cuilpersona)
-        )
-    `
-    },
-    update: {
-        check: `( 
-            SELECT rol='admin' FROM usuarios WHERE usuario = get_app_user()
-        ) OR (
-            cuil = (SELECT cuil FROM usuarios WHERE usuario = get_app_user())
-        ) OR (
-            cuil in (SELECT cuilpersona
-                      FROM (SELECT u.cuil cuiljefe, p.sector sectorjefe
-                              FROM usuarios u
-                              JOIN personal p ON u.cuil = p.cuil
-                              WHERE u.rol = 'jefe' and u.usuario = get_app_user()) j,
-                           (SELECT cuil cuilpersona, sector sectorpersona
-                             FROM personal) d
-                    WHERE sector_pertenece(sectorpersona, sectorjefe) and cuiljefe <> cuilpersona)
-        )
-    `
-    },
 }
 
 export function novedades_registradas(_context: TableContext): TableDefinition{

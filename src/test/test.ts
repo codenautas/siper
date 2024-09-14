@@ -466,6 +466,22 @@ describe("connected", function(){
                 ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
             })
         })
+        it("un jefe no puede cargar a alguien de un equipo no perteneciente", async function(){
+            await expectError( async () => {
+                await enNuevaPersona(17, {usuario:{sector:'PRA12'}, hoy:date.iso('2000-02-01')}, async (persona) => {
+                    await jefe11Session.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                        'new'
+                    );
+                    await jefe11Session.tableDataTest('novedades_vigentes', [
+                        {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                        {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                        {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                })
+            }, ctts.insufficient_privilege);
+        })
     })
     describe("jerarquía de sectores", function(){
         async function pertenceceSector(sector:string, perteneceA:string){
