@@ -35,6 +35,7 @@ install:
       pre-adapt:
       - ../node_modules/pg-triggers/lib/table-changes.sql
       - ../install/validad_codigo.sql
+      - ../install/sector_pertenece.sql
       post-adapt:
       - ../node_modules/pg-triggers/lib/function-changes-trg.sql
       - ../node_modules/pg-triggers/lib/enance.sql    
@@ -42,7 +43,6 @@ install:
       - ../install/actualizar_novedades_vigentes.sql
       - ../install/novedades_registradas_trg.sql
       - ../install/fechas_nov_trg.sql
-      - ../install/sector_pertenece.sql
       - ../install/sectores_circulares_trg.sql
 logo: 
   path: client/img
