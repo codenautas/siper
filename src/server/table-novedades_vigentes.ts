@@ -40,7 +40,7 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
             fields: {
                 dds:{ expr:`case extract(dow from novedades_vigentes.fecha) when 0 then 'domingo' when 1 then 'lunes' when 2 then 'martes' when 3 then 'miércoles' when 4 then 'jueves'when 5 then 'viernes' when 6 then 'sábado' end`},
             },
-            policies: politicaNovedades,
+            policies: politicaNovedades('novedades_vigentes'),
         },
         hiddenColumns: [añoEnBaseAFecha.name]
     };

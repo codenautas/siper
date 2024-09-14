@@ -16,24 +16,40 @@ export const idr: FieldDefinition = {name: 'idr', typeName: 'bigint', descriptio
         delete?:{using?:string}
     }
 */
-export const politicaNovedades = {
-    all: {
-        using: `( 
-            SELECT rol='admin' FROM usuarios WHERE usuario = get_app_user()
-        ) OR (
-            cuil = (SELECT cuil FROM usuarios WHERE usuario = get_app_user())
-        ) OR (
-            cuil in (SELECT cuilpersona
-                      FROM (SELECT u.cuil cuiljefe, p.sector sectorjefe
-                              FROM usuarios u
-                              JOIN personal p ON u.cuil = p.cuil
-                              WHERE u.rol = 'jefe' and u.usuario = get_app_user()) j,
-                           (SELECT cuil cuilpersona, sector sectorpersona
-                             FROM personal) d
-                    WHERE sector_pertenece(sectorpersona, sectorjefe) and cuiljefe <> cuilpersona)
-        )
-    `
-    },
+export function politicaNovedadesComun(alias:string){
+    return `( 
+                SELECT puede_cargar_todo FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user()
+            ) OR (
+                SELECT puede_cargar_propio FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user() and cuil = ${alias}.cuil
+            ) OR (
+                SELECT sector_pertenece(
+                    (SELECT sector FROM personal WHERE cuil = ${alias}.cuil),
+                    (SELECT sector 
+                        FROM personal INNER JOIN usuarios USING (cuil) 
+                        WHERE usuario = get_app_user() AND cuil <> ${alias}.cuil)
+                )
+            )
+        `;
+}
+
+export function politicaNovedades(alias:string){
+    return {
+        select: {
+            using: `${politicaNovedadesComun(alias)}
+                OR (
+                    SELECT true FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user() and cuil = ${alias}.cuil
+                )`
+        },
+        insert: {
+            check: politicaNovedadesComun(alias)
+        },
+        update: {
+            using: politicaNovedadesComun(alias)
+        },
+        delete: {
+            using: politicaNovedadesComun(alias)
+        }
+    }
 }
 
 export function novedades_registradas(_context: TableContext): TableDefinition{
@@ -67,7 +83,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
         ],
         hiddenColumns: [idr.name],
         sql:{
-            policies: politicaNovedades,
+            policies: politicaNovedades('novedades_registradas'),
         }
     };
 }

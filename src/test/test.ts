@@ -439,7 +439,7 @@ describe("connected", function(){
             }, ctts.ERROR_NO_SE_PUEDE_CARGAR_EN_EL_PASADO)
         })
         it("un jefe puede cargar a alguien de su equipo", async function(){
-            await enNuevaPersona(15, {usuario:{sector:'PRA11'}, hoy:date.iso('2000-02-01')}, async (persona) => {
+            await enNuevaPersona(15, {usuario:{sector:'PRA11'}}, async (persona) => {
                 await jefe11Session.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
@@ -453,7 +453,7 @@ describe("connected", function(){
             })
         })
         it("un jefe puede cargar a alguien de un equipo perteneciente", async function(){
-            await enNuevaPersona(16, {usuario:{sector:'PRA1111'}, hoy:date.iso('2000-02-01')}, async (persona) => {
+            await enNuevaPersona(16, {usuario:{sector:'PRA1111'}}, async (persona) => {
                 await jefe11Session.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
@@ -468,17 +468,23 @@ describe("connected", function(){
         })
         it("un jefe no puede cargar a alguien de un equipo no perteneciente", async function(){
             await expectError( async () => {
-                await enNuevaPersona(17, {usuario:{sector:'PRA12'}, hoy:date.iso('2000-02-01')}, async (persona) => {
+                await enNuevaPersona(17, {usuario:{sector:'PRA12'}}, async (persona) => {
                     await jefe11Session.saveRecord(
                         ctts.novedades_registradas, 
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
                         'new'
                     );
-                    await jefe11Session.tableDataTest('novedades_vigentes', [
-                        {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                        {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                        {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                })
+            }, ctts.insufficient_privilege);
+        })
+        it("un usuario no puede cargarse novedades a sí mismo", async function(){
+            await expectError( async () => {
+                await enNuevaPersona(18, {usuario:{sector:'PRA12', sesion:true}}, async (persona, {sesion}) => {
+                    await sesion.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                        'new'
+                    );
                 })
             }, ctts.insufficient_privilege);
         })
