@@ -33,6 +33,12 @@ export function politicaNovedadesComun(alias:string){
 }
 
 export function politicaNovedades(alias:string){
+    var politicaModficacion = `${politicaNovedadesComun(alias)}
+        AND (
+            ${alias == 'novedades_registradas' ? `desde` : alias == 'novedades_vigentes' ? `fecha` : 'ERROR'} 
+                >= (SELECT fecha_actual FROM parametros WHERE unico_registro)
+        )
+    `
     return {
         select: {
             using: `${politicaNovedadesComun(alias)}
@@ -41,13 +47,13 @@ export function politicaNovedades(alias:string){
                 )`
         },
         insert: {
-            check: politicaNovedadesComun(alias)
+            check: politicaModficacion
         },
         update: {
-            using: politicaNovedadesComun(alias)
+            using: politicaModficacion
         },
         delete: {
-            using: politicaNovedadesComun(alias)
+            using: politicaModficacion
         }
     }
 }

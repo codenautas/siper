@@ -427,7 +427,7 @@ describe("connected", function(){
                 ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
             })
         })
-        it.skip("un usuario común no puede cargar novedades pasadas", async function(){
+        it("un usuario común no puede cargar novedades pasadas", async function(){
             await expectError( async () => {
                 await enNuevaPersona(13, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async (persona, {sesion}) => {
                     await sesion.saveRecord(
@@ -436,7 +436,7 @@ describe("connected", function(){
                         'new'
                     );
                 })
-            }, ctts.ERROR_NO_SE_PUEDE_CARGAR_EN_EL_PASADO)
+            }, ctts.insufficient_privilege)
         })
         it("un jefe puede cargar a alguien de su equipo", async function(){
             await enNuevaPersona(15, {usuario:{sector:'PRA11'}}, async (persona) => {
