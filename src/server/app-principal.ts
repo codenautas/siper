@@ -21,6 +21,7 @@ import { novedades_vigentes   } from './table-novedades_vigentes';
 import { nov_per              } from './table-nov_per';
 import { usuarios             } from './table-usuarios';
 import { parametros           } from "./table-parametros";
+import { horarios             } from "./table-horarios";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -69,6 +70,7 @@ export class AppSiper extends AppBackend{
                     {menuType:'table', name:'sectores'      },
                     {menuType:'table', name:'clases'        },
                     {menuType:'table', name:'usuarios'      },
+                    {menuType:'table', name:'horarios'      },
                 ]}
             );
         }
@@ -125,6 +127,7 @@ export class AppSiper extends AppBackend{
             nov_per              ,
             usuarios             ,
             parametros           ,
+            horarios             ,
         }
     }       
 }
