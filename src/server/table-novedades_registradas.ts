@@ -74,11 +74,13 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {name: 'hasta'    , typeName: 'date'   ,                                    },
             {...idr, sequence:{name:'idr_seq', firstValue:1001}, nullable:true, editable:false },
             cod_nov,
+            {name: 'dds0'     , typeName: 'boolean', title:'domingo'                    },
             {name: 'dds1'     , typeName: 'boolean', title:'lunes'                      },
             {name: 'dds2'     , typeName: 'boolean', title:'martes'                     },
             {name: 'dds3'     , typeName: 'boolean', title:'miércoles'                  },
             {name: 'dds4'     , typeName: 'boolean', title:'jueves'                     },
             {name: 'dds5'     , typeName: 'boolean', title:'viernes'                    },
+            {name: 'dds6'     , typeName: 'boolean', title:'sabado'                     },
             {...año, editable:false, generatedAs:`extract(year from desde)`}
         ],         
         primaryKey: [cuil.name, 'desde', idr.name],

@@ -125,11 +125,13 @@ function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsIn
             <GenericField {...f.hasta }/>
             { c_dds ?
             <>
+                <GenericField {...f.dds0}/>
                 <GenericField {...f.dds1}/>
                 <GenericField {...f.dds2}/>
                 <GenericField {...f.dds3}/>
                 <GenericField {...f.dds4}/>
                 <GenericField {...f.dds5}/>
+                <GenericField {...f.dds6}/>
             </>
             : null}
         </Box>

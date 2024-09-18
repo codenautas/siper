@@ -56,11 +56,13 @@ export const novedades_registradas = {
         desde: is.Date,
         hasta: is.Date,
     },{
+        dds0: is.boolean,
         dds1: is.boolean,
         dds2: is.boolean,
         dds3: is.boolean,
         dds4: is.boolean,
         dds5: is.boolean,
+        dds6: is.boolean,
     })
 } satisfies CommonEntityDefinition
 
@@ -119,11 +121,13 @@ export const si_cargara_novedad = {
         cod_nov: is.nullable.string,
         desde: is.Date,
         hasta: is.Date,
+        dds0: is.nullable.boolean,
         dds1: is.nullable.boolean,
         dds2: is.nullable.boolean,
         dds3: is.nullable.boolean,
         dds4: is.nullable.boolean,
         dds5: is.nullable.boolean,
+        dds6: is.nullable.boolean,
     }),
     result: is.object({
         dias_corridos: is.number,

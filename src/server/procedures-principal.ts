@@ -40,11 +40,13 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name:'cod_nov'   , typeName:'text'   },
             {name:'desde'     , typeName:'date'   },
             {name:'hasta'     , typeName:'date'   },
+            {name:'dds0'      , typeName:'boolean'},
             {name:'dds1'      , typeName:'boolean'},
             {name:'dds2'      , typeName:'boolean'},
             {name:'dds3'      , typeName:'boolean'},
             {name:'dds4'      , typeName:'boolean'},
             {name:'dds5'      , typeName:'boolean'},
+            {name:'dds6'      , typeName:'boolean'},
         ],
         coreFunction: async function(context: ProcedureContext, params:Partial<NovedadRegistrada>){
             const {desde, hasta, cod_nov, cuil, ...resto} = params;

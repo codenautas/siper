@@ -18,7 +18,7 @@ $BODY$
           AND extract(DOW from f.fecha) BETWEEN 1 AND 5
           AND f.laborable IS NOT false
           AND (cn.c_dds IS NOT TRUE -- FILTRO PARA DIAGRAMADO POR DIA DE SEMANA:
-               OR CASE extract(DOW from f.fecha) WHEN 1 THEN dds1 WHEN 2 THEN dds2 WHEN 3 THEN dds3 WHEN 4 THEN dds4 WHEN 5 THEN dds5 ELSE false END
+               OR CASE extract(DOW from f.fecha) WHEN 0 THEN dds0 WHEN 1 THEN dds1 WHEN 2 THEN dds2 WHEN 3 THEN dds3 WHEN 4 THEN dds4 WHEN 5 THEN dds5 WHEN 6 THEN dds6 ELSE false END
                )
           AND CASE WHEN p_cuil IS NULL THEN TRUE ELSE p.cuil = p_cuil END
       ) x
