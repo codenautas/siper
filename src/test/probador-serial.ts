@@ -11,6 +11,7 @@ import { promises as fs } from 'fs';
 import { strict as LikeAr } from 'like-ar';
 import { Description, guarantee, is, DefinedType } from "guarantee-type";
 import * as JSON4all from 'json4all';
+import { sameValue } from 'best-globals'
 
 import * as discrepances from 'discrepances';
 
@@ -187,5 +188,42 @@ export function expectError(action: ()=>void|Promise<void>, check: string): void
         itDidntFail();
     } catch (err) {
         checkExpected(err);
+    }
+}
+
+export async function loadLocalFile<T>(empty:T, fileNameOrBP_TEST_BENCHMARKS?:string): Promise<T>{
+    try {
+        const fileName = fileNameOrBP_TEST_BENCHMARKS ?? `local-${process.env.BP_TEST_BENCHMARKS}.json4all`;
+        if (!fileName) return empty;
+        const raw = await fs.readFile(fileName, 'utf-8');
+        var json = JSON4all.parse<T>(raw);
+        return json;
+    } catch (err) {
+        var error = expected(err);
+        if (error.code == 'ENOENT') {
+            return empty
+        }
+        throw error;
+    }
+}
+
+export async function saveLocalFile<T>(data:T, fileNameOrBP_TEST_BENCHMARKS?:string, transform?:(data:T)=>string): Promise<void>{
+    const fileName = fileNameOrBP_TEST_BENCHMARKS ?? `local-${process.env.BP_TEST_BENCHMARKS}.json4all`;
+    if (!fileName) return;
+    return fs.writeFile(fileName, (transform ?? JSON4all.toUrl)(data), 'utf-8');
+}
+
+export async function benchmarksSave(benchmark:any){
+    if (process.env.BP_TEST_BENCHMARKS) {
+        const HEADER = `[ ${JSON4all.toUrl(`BenchMark ${process.env.BP_TEST_BENCHMARKS}`)}`
+        const FOOTER = `${JSON4all.toUrl(`BenchMark ${process.env.BP_TEST_BENCHMARKS}`)} ]`
+        const fileName = `benchmarks/${process.env.BP_TEST_BENCHMARKS}.json4all`;
+        var benchmarksRawLines = await loadLocalFile([{},{date:new Date()}], fileName)
+        const benchmarks = benchmarksRawLines.slice(1,-1);
+        if (benchmarks.length && sameValue(benchmark.date, benchmarks[benchmarks.length -1].date)) {
+            benchmarks.pop();
+        }
+        benchmarks.push(benchmark);
+        await fs.writeFile(fileName, [HEADER, ...(benchmarks.map(b => JSON4all.toUrl(b))), FOOTER].join(',\r\n'));
     }
 }
