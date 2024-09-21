@@ -561,7 +561,7 @@ describe("connected", function(){
              * primero calcula todo junto, luego fecha por fecha y finalmente persona por persona
              */
             const sqlTraerNovedades = `SELECT array_agg(concat_ws(' ',fecha,cuil,cod_nov) order by fecha, cuil) FROM novedades_vigentes WHERE ${FECHAS_DE_PRUEBA}`
-            const sqlCalcularNovedades = `SELECT calcular_novedades_vigentes('${DESDE_AÑO}-01-01','${HASTA_AÑO}-12-31',null)`;
+            const sqlCalcularNovedades = `SELECT calcular_novedades_vigentes('${DESDE_AÑO}-01-01','${HASTA_AÑO}-12-31')`;
             const emptyBenchmarkDay = {
                 date: date.today(),
                 tiempos: []
@@ -591,7 +591,7 @@ describe("connected", function(){
                 var fechas = (await client.query(`select distinct fecha from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
                 await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
                 for(var row of fechas) {
-                    await client.query(`SELECT calcular_novedades_vigentes($1, $2, null)`, [row.fecha, row.fecha]).execute();
+                    await client.query(`SELECT calcular_novedades_vigentes($1, $2)`, [row.fecha, row.fecha]).execute();
                 }
                 const novedadesRecalculadasPorFecha = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
                 discrepances.showAndThrow(novedadesRecalculadasPorFecha, todasLasNovedadesGeneradas);
@@ -599,7 +599,7 @@ describe("connected", function(){
                 var cuits = (await client.query(`select distinct cuil from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
                 await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
                 for(var row of cuits) {
-                    await client.query(`SELECT calcular_novedades_vigentes('${DESDE_AÑO}-01-01', '${HASTA_AÑO}-12-31', $1)`, [row.cuil]).execute();
+                    await client.query(`SELECT calcular_novedades_vigentes_cuil('${DESDE_AÑO}-01-01', '${HASTA_AÑO}-12-31', $1)`, [row.cuil]).execute();
                 }
                 const novedadesRecalculadasPorCuit = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
                 benchmark.duracion = Number(

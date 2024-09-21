@@ -16,11 +16,12 @@ export function fechas(context:TableContext):TableDefinition{
         fields: [
             fecha,
             {name: 'laborable' , typeName: 'boolean', isName:true},
-            {name: 'dds'       , typeName: 'text'   , inTable:false, serverSide:true, editable:false},
+            {name: 'dia'       , typeName: 'text'   , title:'día', inTable:false, serverSide:true, editable:false},
             {name: 'leyenda'   , typeName: 'text'   , description: 'lo que se verá en el calendario cuando haya suficiente espacio'},
             {name: 'abr'       , typeName: 'text'   , description: 'lo que se verá en el calendario cuando haya poco espacio'},
             {name: 'repite'    , typeName: 'boolean', description: 'si es un feriado todos los años (poner no a feriados turísticos y a asuetos puntuales'},
             {name: 'inamovible', typeName: 'boolean', description: 'si es un feriado que no se mueve, que se festeja siempre en la misma fecha'},
+            {name: 'dds'       , typeName: 'integer', generatedAs: 'extract(dow from fecha)' /*, inTable:false, serverSide:true, editable:false*/},
             añoEnBaseAFecha,
         ],
         primaryKey: [fecha.name],
@@ -38,7 +39,7 @@ export function fechas(context:TableContext):TableDefinition{
         ],
         sql:{
             fields:{
-                dds:{ expr:`case extract(dow from fecha) when 0 then 'domingo' when 1 then 'lunes' when 2 then 'martes' when 3 then 'miércoles' when 4 then 'jueves'when 5 then 'viernes' when 6 then 'sábado' end`}
+                dia:{ expr:`case dds when 0 then 'domingo' when 1 then 'lunes' when 2 then 'martes' when 3 then 'miércoles' when 4 then 'jueves'when 5 then 'viernes' when 6 then 'sábado' end`}
             }
         }
     };
