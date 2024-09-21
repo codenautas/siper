@@ -379,7 +379,7 @@ describe("connected", function(){
                 ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
             })
         })
-        it.skip("quito un feriado y veo que hay más novedades", async function(){
+        it("quito un feriado y veo que hay más novedades", async function(){
             await enDosNuevasPersonasConFeriado10EneroFeriadoy11No(8, 9, '10001', async (persona1, persona2, cod_nov) => {
                 /* Verifico que ese día tenga 2 novedades cargadas */
                 await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -402,7 +402,7 @@ describe("connected", function(){
            })
         })
         // agrego delete en calcular_novedades_vigentes e incorporo este test
-        it.skip("agrego un feriado y veo que hay menos novedades", async function(){
+        it("agrego un feriado y veo que hay menos novedades", async function(){
             await enDosNuevasPersonasConFeriado10EneroFeriadoy11No(10, 11, '10002', async (persona1, persona2, cod_nov) => {
                 /* Verifico que ese día tenga 2 novedades cargadas */
                 await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -546,7 +546,7 @@ describe("connected", function(){
         })
     })
     after(async function(){
-        this.timeout(20000);
+        this.timeout(120000);
         var error: Error|null = null;
         try {
             /**
