@@ -2,13 +2,14 @@
 
 import { AppSiper } from '../server/app-principal';
 
-import { startServer, EmulatedSession, expectError } from "./probador-serial";
+import { startServer, EmulatedSession, expectError, loadLocalFile, saveLocalFile, benchmarksSave } from "./probador-serial";
 
 import * as ctts from "../common/contracts"
 
 import { date } from "best-globals";
 
 import * as discrepances from 'discrepances';
+
 
 /*
  * Para debuguear el servidor por separado hay abrir dos ventanas, en una corren los test (normalmente) 
@@ -562,13 +563,32 @@ describe("connected", function(){
         try {
             /**
              * Podría ocurrir que haya algún problema al recalcular. 
+             * 
+             * Además queremos tener registro de cuánto demoran los tests en las máquinas locales
+             * Para incluir una máquina de desarrollo en el cálculo de tiempos hay que setear
+             * la variable de ambiente BP_TEST_BENCHMARKS a un nombre de máquina.
+             * 
              * Esta secuencia saca una foto del resultado de todos los test y vuelve a recalcular
              * sobre lo ya calculado, luego borrando todo 3 veces en cada una de esas 3 veces
              * primero calcula todo junto, luego fecha por fecha y finalmente persona por persona
              */
             const sqlTraerNovedades = `SELECT array_agg(concat_ws(' ',fecha,cuil,cod_nov) order by fecha, cuil) FROM novedades_vigentes WHERE ${FECHAS_DE_PRUEBA}`
             const sqlCalcularNovedades = `SELECT calcular_novedades_vigentes('${DESDE_AÑO}-01-01','${HASTA_AÑO}-12-31',null)`;
+            const emptyBenchmarkDay = {
+                date: date.today(),
+                tiempos: []
+            }
+            var benchmarkDelDia = await loadLocalFile(emptyBenchmarkDay);
+            if (benchmarkDelDia.date != emptyBenchmarkDay.date) {
+                benchmarkDelDia = emptyBenchmarkDay;
+            }
+            const comienzo = new Date();
             await server.inDbClient(ADMIN_REQ, async client => {
+                const {row: tamannio} = await client.query(`select count(*) as personal from personal where ${CUIL_DE_PRUEBA}`).fetchUniqueRow();
+                const benchmark = {
+                    tamannio,
+                    duracion: null as number|null
+                }
                 const todasLasNovedadesGeneradas = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
                 await client.query(sqlCalcularNovedades).execute();
                 console.log('calculando novedadesRecalculadasEncima')
@@ -594,6 +614,14 @@ describe("connected", function(){
                     await client.query(`SELECT calcular_novedades_vigentes('${DESDE_AÑO}-01-01', '${HASTA_AÑO}-12-31', $1)`, [row.cuil]).execute();
                 }
                 const novedadesRecalculadasPorCuit = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
+                benchmark.duracion = Number(
+                    // @ts-ignore   
+                    new Date() - comienzo
+                );
+                // @ts-ignore
+                benchmarkDelDia.tiempos.push(benchmark); 
+                await saveLocalFile(benchmarkDelDia);
+                await benchmarksSave(benchmarkDelDia);
                 discrepances.showAndThrow(novedadesRecalculadasPorCuit, todasLasNovedadesGeneradas)
             })
         } catch(err) {
