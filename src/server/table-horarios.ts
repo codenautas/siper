@@ -20,7 +20,7 @@ export function horarios(context: TableContext): TableDefinition{
         ],
         primaryKey: [cuil.name,'dds'],
         foreignKeys: [
-            {references: 'personal', fields:[cuil.name]},
+            {references: 'personal', fields:[cuil.name], onDelete:'cascade'},
         ],
         constraints: [
             {constraintType: 'check', consName:'dia de la semana entre 0 y 6', expr: 'dds between 0 and 6'},

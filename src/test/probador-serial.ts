@@ -215,15 +215,13 @@ export async function saveLocalFile<T>(data:T, fileNameOrBP_TEST_BENCHMARKS?:str
 
 export async function benchmarksSave(benchmark:any){
     if (process.env.BP_TEST_BENCHMARKS) {
-        const HEADER = `[ ${JSON4all.toUrl(`BenchMark ${process.env.BP_TEST_BENCHMARKS}`)}`
-        const FOOTER = `${JSON4all.toUrl(`BenchMark ${process.env.BP_TEST_BENCHMARKS}`)} ]`
         const fileName = `benchmarks/${process.env.BP_TEST_BENCHMARKS}.json4all`;
-        var benchmarksRawLines = await loadLocalFile([{},{date:new Date()}], fileName)
-        const benchmarks = benchmarksRawLines.slice(1,-1);
+        var benchmarks = await loadLocalFile([] as {date:Date}[], fileName)
         if (benchmarks.length && sameValue(benchmark.date, benchmarks[benchmarks.length -1].date)) {
             benchmarks.pop();
         }
+        // @ts-ignore
         benchmarks.push(benchmark);
-        await fs.writeFile(fileName, [HEADER, ...(benchmarks.map(b => JSON4all.toUrl(b))), FOOTER].join(',\r\n'));
+        await fs.writeFile(fileName, JSON4all.toUrlLines(benchmarks, '\r\n'));
     }
 }

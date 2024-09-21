@@ -56,9 +56,6 @@ const COD_TELETRABAJO = "106";
 const COD_TRAMITE = "121";
 const COD_DIAGRAMADO = "101";
 const ADMIN_REQ = {user:{usuario:'perry', rol:''}};
-const TRABAJA = "true";
-const HORA_DESDE = "09:00";
-const HORA_HASTA = "16:00";
 
 type Credenciales = {username: string, password: string};
 type UsuarioConCredenciales = ctts.Usuario & {credenciales: Credenciales};
@@ -88,12 +85,8 @@ describe("connected", function(){
                     `insert into annios (annio) select * from generate_series(${DESDE_AÑO}, ${HASTA_AÑO}) d`,
                     `insert into fechas (fecha) select date_trunc('day', d) from generate_series(cast('${DESDE_AÑO}-01-01' as timestamp), cast('${HASTA_AÑO}-12-31' as timestamp), cast('1 day' as interval)) d`,
                     `update fechas set laborable = false, repite = false, inamovible = false where fecha in (
-                        '2000-01-01',
-                        '2000-01-02',
                         '2000-03-06', 
                         '2000-03-07',
-                        '2000-03-11',
-                        '2000-03-12',
                         '2000-03-24',
                         '2000-04-20',
                         '2000-04-21');
@@ -163,13 +156,13 @@ describe("connected", function(){
     }
     async function enNuevaPersona(
         numero: number, 
-        opciones: {vacaciones?: number, tramites?: number, usuario?:{rol?:string, sector?:string, sesion?:boolean}, hoy?:Date, desde?:Date, hasta?:Date},
+        opciones: {vacaciones?: number, tramites?: number, usuario?:{rol?:string, sector?:string, sesion?:boolean}, hoy?:Date},
         probar: (persona: ctts.Persona, mas:{usuario: UsuarioConCredenciales, sesion:EmulatedSession<AppSiper>}) => Promise<void>
     ){
         var haciendo = 'inicializando';
         try {
             var persona = await crearNuevaPersona(numero);
-            var {vacaciones, tramites, hoy, desde, hasta} = opciones;
+            var {vacaciones, tramites, hoy} = opciones;
             await rrhhAdminSession.saveRecord(ctts.grupos, {clase: 'I', grupo: persona.cuil}, 'new');
             await rrhhAdminSession.saveRecord(ctts.per_gru, {cuil: persona.cuil, clase: 'I', grupo: persona.cuil}, 'new');
             await rrhhAdminSession.saveRecord(ctts.per_gru, {cuil: persona.cuil, clase: 'U', grupo: 'T'}, 'new');
@@ -186,12 +179,6 @@ describe("connected", function(){
             if (tramites) await rrhhAdminSession.saveRecord(ctts.nov_gru, {annio:2000, cod_nov: COD_TRAMITE, clase: 'U', grupo: 'T', maximo: 4 }, 'new')
             if (hoy) {
                 await server.inDbClient(ADMIN_REQ, client => client.query("update parametros set fecha_actual = $1", [hoy]).execute())
-            }
-            if ((desde)&&(hasta)){
-                await server.inDbClient(ADMIN_REQ, client => client.query("insert into horarios (select distinct $1, extract(dow from fecha), $4::boolean, $5, $6 from fechas where fecha between $2 and $3)", 
-                                                                          [persona.cuil, desde, hasta, TRABAJA, HORA_DESDE, HORA_HASTA]
-                                                                         ).execute()
-                                       )
             }
             haciendo = 'probando'
             await probar(persona, {usuario, sesion});
@@ -258,7 +245,7 @@ describe("connected", function(){
         })
         it("insertar una semana de vacaciones como primera novedad", async function(){
             this.timeout(7000);
-            await enNuevaPersona(1, {vacaciones: 20, desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07')}, async (persona) => {
+            await enNuevaPersona(1, {vacaciones: 20}, async (persona) => {
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, cuil: persona.cuil};
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:5, dias_coincidentes:0})
@@ -278,7 +265,7 @@ describe("connected", function(){
         })
         it("insertar una semana de vacaciones en una semana con feriados", async function(){
             // https://argentina.workingdays.org/dias_laborables_calendario_2000.htm
-            await enNuevaPersona(2, {vacaciones: 15, desde:date.iso('2000-03-06'), hasta:date.iso('2000-03-12')}, async (persona) => {
+            await enNuevaPersona(2, {vacaciones: 15}, async (persona) => {
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-03-06'), hasta:date.iso('2000-03-12'), cod_nov:COD_VACACIONES, cuil: persona.cuil}
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:3, dias_coincidentes:0})
@@ -296,7 +283,7 @@ describe("connected", function(){
         })
         it("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
             this.timeout(8000);
-            await enNuevaPersona(3, {vacaciones: 20, tramites: 4, desde:date.iso('2000-05-08'), hasta:date.iso('2000-05-12')}, async (persona) => {
+            await enNuevaPersona(3, {vacaciones: 20, tramites: 4}, async (persona) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-05-02'), hasta:date.iso('2000-05-12'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
@@ -335,7 +322,7 @@ describe("connected", function(){
             })
         })
         it("cargo teletrabajo diagramado", async function(){
-            await enNuevaPersona(4, {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07')}, async (persona) => {
+            await enNuevaPersona(4, {}, async (persona) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil, 
@@ -354,7 +341,7 @@ describe("connected", function(){
             })
         })
         it("cargo un día de trámite", async function(){
-            await enNuevaPersona(5, {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06')}, async (persona) => {
+            await enNuevaPersona(5, {}, async (persona) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, cuil: persona.cuil, 
@@ -367,7 +354,7 @@ describe("connected", function(){
             })
         })
         it("intento de cargar novedades sin permiso", async function(){
-            await enNuevaPersona(6, {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07')}, async (persona) => {
+            await enNuevaPersona(6, {}, async (persona) => {
                 await expectError( async () => {
                     await basicoSession.saveRecord(
                         ctts.novedades_registradas, 
@@ -378,7 +365,7 @@ describe("connected", function(){
             })
         })
         it("intento ver novedades de otra persona", async function(){
-            await enNuevaPersona(7, {desde:date.iso('2000-01-03'), hasta:date.iso('2000-01-03')}, async (persona) => {
+            await enNuevaPersona(7, {}, async (persona) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-01-03'), hasta:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, cuil: persona.cuil},
@@ -434,7 +421,7 @@ describe("connected", function(){
            })
         })
         it("un usuario común puede ver sus novedades pasadas (y rrhh las puede cargar)", async function(){
-            await enNuevaPersona(12, {usuario:{sesion:true}, hoy:date.iso('2000-02-02'), desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03')}, async (persona, {sesion}) => {
+            await enNuevaPersona(12, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async (persona, {sesion}) => {
                 await rrhhAdminSession.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
@@ -449,7 +436,7 @@ describe("connected", function(){
         })
         it("un usuario común no puede cargar novedades pasadas", async function(){
             await expectError( async () => {
-                await enNuevaPersona(13, {usuario:{sesion:true}, hoy:date.iso('2000-02-02'), desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03')}, async (persona, {sesion}) => {
+                await enNuevaPersona(13, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async (persona, {sesion}) => {
                     await sesion.saveRecord(
                         ctts.novedades_registradas, 
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
@@ -459,7 +446,7 @@ describe("connected", function(){
             }, ctts.insufficient_privilege)
         })
         it("un jefe puede cargar a alguien de su equipo", async function(){
-            await enNuevaPersona(15, {usuario:{sector:'PRA11'}, desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03')}, async (persona) => {
+            await enNuevaPersona(15, {usuario:{sector:'PRA11'}}, async (persona) => {
                 await jefe11Session.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
@@ -473,7 +460,7 @@ describe("connected", function(){
             })
         })
         it("un jefe puede cargar a alguien de un equipo perteneciente", async function(){
-            await enNuevaPersona(16, {usuario:{sector:'PRA1111'}, desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03')}, async (persona) => {
+            await enNuevaPersona(16, {usuario:{sector:'PRA1111'}}, async (persona) => {
                 await jefe11Session.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
@@ -488,7 +475,7 @@ describe("connected", function(){
         })
         it("un jefe no puede cargar a alguien de un equipo no perteneciente", async function(){
             await expectError( async () => {
-                await enNuevaPersona(17, {usuario:{sector:'PRA12'}, desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03')}, async (persona) => {
+                await enNuevaPersona(17, {usuario:{sector:'PRA12'}}, async (persona) => {
                     await jefe11Session.saveRecord(
                         ctts.novedades_registradas, 
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
@@ -499,7 +486,7 @@ describe("connected", function(){
         })
         it("un usuario no puede cargarse novedades a sí mismo", async function(){
             await expectError( async () => {
-                await enNuevaPersona(18, {usuario:{sector:'PRA12', sesion:true}, desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03')}, async (persona, {sesion}) => {
+                await enNuevaPersona(18, {usuario:{sector:'PRA12', sesion:true}}, async (persona, {sesion}) => {
                     await sesion.saveRecord(
                         ctts.novedades_registradas, 
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
@@ -559,6 +546,7 @@ describe("connected", function(){
         })
     })
     after(async function(){
+        this.timeout(20000);
         var error: Error|null = null;
         try {
             /**
