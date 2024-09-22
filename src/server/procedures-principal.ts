@@ -2,7 +2,7 @@
 
 import {strict as likeAr, createIndex} from 'like-ar';
 import { ProcedureDef, ProcedureContext } from './types-principal';
-import { NovedadRegistrada, calendario_persona } from '../common/contracts';
+import { NovedadRegistrada, calendario_persona, historico_persona } from '../common/contracts';
 
 import { date } from 'best-globals'
 import { DefinedType } from 'guarantee-type';
@@ -89,6 +89,49 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     where f.fecha between $2 and ($3::date + interval '1 month'  - interval '1 day')
                     order by f.fecha`,
                 [cuil, desde, desde]
+            ).fetchAll();
+            return info.rows
+        }
+    },
+    {
+        action: 'historico_persona',
+        parameters: [
+            {name:'cuil'      , typeName:'text'   },
+            {name:'annio'     , typeName:'integer'},
+            {name:'mes'       , typeName:'integer'},
+        ],
+        coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof historico_persona.parameters>){
+            const {cuil, annio, mes} = params;
+            const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
+            const info = await context.client.query(
+                `select fecha,
+                        v.cod_nov,
+                        novedad    
+                    from novedades_vigentes v
+                        left join cod_novedades n on v.cod_nov = n.cod_nov
+                    where v.fecha between $2 and ($2 + interval '1 month' - interval '1 day') and v.cuil = $1
+                    order by v.fecha`,
+                [cuil, desde]
+            ).fetchAll();
+            return info.rows
+        }
+    },
+    {
+        action: 'novedades_pendientes',
+        parameters: [
+            {name:'cuil'      , typeName:'text'   }
+        ],
+        coreFunction: async function(context: ProcedureContext, params:Partial<NovedadRegistrada>){
+            const {cuil} = params;
+            const info = await context.client.query(
+                `select cuil,
+                        desde,
+                        hasta,
+                        cod_nov
+                    from novedades_registradas
+                    where cuil = $1
+                    order by desde`,
+                [cuil]
             ).fetchAll();
             return info.rows
         }
