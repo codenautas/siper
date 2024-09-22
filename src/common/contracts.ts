@@ -53,7 +53,7 @@ export const nov_per = {
     description: is.object({
         año: is.string,
         cod_nov: is.string,
-        cuil: is.string,
+        idper: is.string,
         cantidad: is.number,
         limite: is.number,
         saldo: is.number,
@@ -65,7 +65,7 @@ export type NovPer = DefinedType<typeof nov_per.description>
 export const novedades_registradas = {
     table: 'novedades_registradas',
     description: is.object({
-        cuil: is.string,
+        idper: is.string,
         cod_nov: is.string,
         desde: is.Date,
         hasta: is.Date,
@@ -83,9 +83,9 @@ export const novedades_registradas = {
 export type NovedadRegistrada = DefinedType<typeof novedades_registradas.description>
 
 export const personas = {
-    table: 'personal',
+    table: 'personas',
     description: is.object({
-        cuil:      is.string,
+        idper:      is.string,
     },{
         ficha:     is.string,
         idmeta4:   is.string,
@@ -102,7 +102,7 @@ export const per_gru = {
     description: is.object({
         clase: is.string,
         grupo: is.string,
-        cuil: is.string
+        idper: is.string
     })
 } satisfies CommonEntityDefinition
 
@@ -131,7 +131,7 @@ export type Usuario = DefinedType<typeof usuarios.description>
 export const si_cargara_novedad = {
     procedure: 'si_cargara_novedad',
     parameters: is.object({},{
-        cuil: is.nullable.string,
+        idper: is.nullable.string,
         cod_nov: is.nullable.string,
         desde: is.Date,
         hasta: is.Date,
@@ -153,7 +153,7 @@ export const si_cargara_novedad = {
 export const calendario_persona = {
     procedure: 'calendario_persona',
     parameters: is.object({
-        cuil: is.string,
+        idper: is.string,
         annio: is.number,
         mes: is.number
     }),
@@ -168,13 +168,10 @@ export const calendario_persona = {
 
 export type CalendarioResult = DefinedType<typeof calendario_persona.result>
 
-
-export type CalendarioResult = DefinedType<typeof calendario_persona.result>
-
 export const historico_persona = {
     procedure: 'historico_persona',
     parameters: is.object({
-        cuil: is.string,
+        idper: is.string,
         annio: is.number,
         mes: is.number
     }),

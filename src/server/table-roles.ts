@@ -28,7 +28,7 @@ export function roles(context:TableContext):TableDefinition{
             {constraintType: 'unique', fields: ['descripcion']},
         ],
         detailTables: [
-            {table: 'personal', fields: [rol.name], abr:'p'},
+            {table: 'personas', fields: [rol.name], abr:'p'},
         ]
     };
 }

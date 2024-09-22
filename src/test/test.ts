@@ -49,7 +49,7 @@ const DESDE_AÑO = `2000`;
 const HASTA_AÑO = `2009`;
 const AÑOS_DE_PRUEBA = `annio BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
 const FECHAS_DE_PRUEBA = `extract(year from fecha) BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
-const CUIL_DE_PRUEBA = `cuil like '1_3300_____'`;
+const IDPER_DE_PRUEBA = `idper like '1_3300_____'`;
 
 const COD_VACACIONES = "1";
 const COD_TELETRABAJO = "106";
@@ -72,12 +72,12 @@ describe("connected", function(){
             await server.inDbClient(ADMIN_REQ, async client=>{
                 await client.executeSentences([
                     `delete from nov_gru where ${AÑOS_DE_PRUEBA}`,
-                    `delete from novedades_vigentes where ${AÑOS_DE_PRUEBA} and ${CUIL_DE_PRUEBA}`,
-                    `delete from novedades_registradas where ${AÑOS_DE_PRUEBA} and ${CUIL_DE_PRUEBA}`,
-                    `delete from usuarios where ${CUIL_DE_PRUEBA}`,
-                    `delete from horarios where ${CUIL_DE_PRUEBA}`,
-                    `delete from personal where ${CUIL_DE_PRUEBA}`,
-                    `delete from grupos where ${CUIL_DE_PRUEBA.replace('cuil', 'grupo')}`,
+                    `delete from novedades_vigentes where ${AÑOS_DE_PRUEBA} and ${IDPER_DE_PRUEBA}`,
+                    `delete from novedades_registradas where ${AÑOS_DE_PRUEBA} and ${IDPER_DE_PRUEBA}`,
+                    `delete from usuarios where ${IDPER_DE_PRUEBA}`,
+                    `delete from horarios where ${IDPER_DE_PRUEBA}`,
+                    `delete from personas where ${IDPER_DE_PRUEBA}`,
+                    `delete from grupos where ${IDPER_DE_PRUEBA.replace('idper', 'grupo')}`,
                     `delete from fechas where ${AÑOS_DE_PRUEBA}`,
                     `delete from annios where ${AÑOS_DE_PRUEBA}`,
                     `delete from cod_novedades where novedad like 'PRUEBA AUTOM_TICA%'`,
@@ -116,17 +116,17 @@ describe("connected", function(){
             password: 'olsen',
         });
     })
-    async function crearUsuario(nuevoUsuario: {numero:number, rol:string, cuil:string}){
-        const {numero, rol, cuil} = nuevoUsuario;
+    async function crearUsuario(nuevoUsuario: {numero:number, rol:string, idper:string}){
+        const {numero, rol, idper} = nuevoUsuario;
         var usuario = 'usuario_prueba_' + numero;
         var password = 'clave_prueba_' + Math.random();
         await server.inDbClient(ADMIN_REQ, async client => {
             return await client.query(
-                `INSERT INTO usuarios (usuario, md5clave, rol, cuil, activo) values ($1, md5($2), $3, $4, true) returning *`,
-                [usuario, password+usuario, rol, cuil]
+                `INSERT INTO usuarios (usuario, md5clave, rol, idper, activo) values ($1, md5($2), $3, $4, true) returning *`,
+                [usuario, password+usuario, rol, idper]
             ).fetchUniqueRow();
         })
-        return {usuario, password, rol, cuil, credenciales:{username:usuario, password}};
+        return {usuario, password, rol, idper, credenciales:{username:usuario, password}};
     }
     it("verifica que exista la tabla de parámetros", async function(){
         await rrhhSession.tableDataTest('parametros',[
@@ -135,7 +135,7 @@ describe("connected", function(){
     })
     async function crearNuevaPersona(numero:number): Promise<ctts.Persona>{
         var persona: ctts.Persona = {
-            cuil: (10330010005 + numero*11).toString(),
+            idper: (10330010005 + numero*11).toString(),
             nomyape: "Persona de prueba " + numero,
         }
         var personaGrabada = await rrhhSession.saveRecord(
@@ -163,19 +163,19 @@ describe("connected", function(){
         try {
             var persona = await crearNuevaPersona(numero);
             var {vacaciones, tramites, hoy} = opciones;
-            await rrhhAdminSession.saveRecord(ctts.grupos, {clase: 'I', grupo: persona.cuil}, 'new');
-            await rrhhAdminSession.saveRecord(ctts.per_gru, {cuil: persona.cuil, clase: 'I', grupo: persona.cuil}, 'new');
-            await rrhhAdminSession.saveRecord(ctts.per_gru, {cuil: persona.cuil, clase: 'U', grupo: 'T'}, 'new');
+            await rrhhAdminSession.saveRecord(ctts.grupos, {clase: 'I', grupo: persona.idper}, 'new');
+            await rrhhAdminSession.saveRecord(ctts.per_gru, {idper: persona.idper, clase: 'I', grupo: persona.idper}, 'new');
+            await rrhhAdminSession.saveRecord(ctts.per_gru, {idper: persona.idper, clase: 'U', grupo: 'T'}, 'new');
             var usuario = null as unknown as UsuarioConCredenciales;
             var sesion = null as unknown as EmulatedSession<AppSiper>;
             if (opciones.usuario) {
-                usuario = await crearUsuario({numero, rol:'basico', cuil:persona.cuil, ...opciones.usuario})
+                usuario = await crearUsuario({numero, rol:'basico', idper:persona.idper, ...opciones.usuario})
                 if (opciones.usuario.sesion) {
                     var sesion = await sesionDeUsuario(usuario);
                 }
-                if (opciones.usuario.sector) await rrhhSession.saveRecord(ctts.personas,{cuil:persona.cuil,sector:opciones.usuario.sector}, 'update')
+                if (opciones.usuario.sector) await rrhhSession.saveRecord(ctts.personas,{idper:persona.idper,sector:opciones.usuario.sector}, 'update')
             }
-            if (vacaciones) await rrhhAdminSession.saveRecord(ctts.nov_gru, {annio:2000, cod_nov: COD_VACACIONES, clase: 'I', grupo: persona.cuil, maximo: vacaciones }, 'new')
+            if (vacaciones) await rrhhAdminSession.saveRecord(ctts.nov_gru, {annio:2000, cod_nov: COD_VACACIONES, clase: 'I', grupo: persona.idper, maximo: vacaciones }, 'new')
             if (tramites) await rrhhAdminSession.saveRecord(ctts.nov_gru, {annio:2000, cod_nov: COD_TRAMITE, clase: 'U', grupo: 'T', maximo: 4 }, 'new')
             if (hoy) {
                 await server.inDbClient(ADMIN_REQ, client => client.query("update parametros set fecha_actual = $1", [hoy]).execute())
@@ -215,12 +215,12 @@ describe("connected", function(){
             haciendo = 'registrando los movimientos'
             await rrhhSession.saveRecord(
                 ctts.novedades_registradas, 
-                {desde:date.iso('2000-01-10'), hasta:date.iso('2000-01-11'), cod_nov, cuil: persona1.cuil},
+                {desde:date.iso('2000-01-10'), hasta:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
                 'new'
             );
             await rrhhSession.saveRecord(
                 ctts.novedades_registradas, 
-                {desde:date.iso('2000-01-10'), hasta:date.iso('2000-01-11'), cod_nov, cuil: persona2.cuil},
+                {desde:date.iso('2000-01-10'), hasta:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
                 'new'
             );
             haciendo = 'probando'
@@ -246,39 +246,39 @@ describe("connected", function(){
         it("insertar una semana de vacaciones como primera novedad", async function(){
             this.timeout(7000);
             await enNuevaPersona(1, {vacaciones: 20}, async (persona) => {
-                var novedadRegistradaPorCargar = {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, cuil: persona.cuil};
+                var novedadRegistradaPorCargar = {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper: persona.idper};
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:5, dias_coincidentes:0})
                 await rrhhSession.saveRecord(ctts.novedades_registradas, novedadRegistradaPorCargar, 'new');
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-01-04'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-01-05'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-01-06'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                    {fecha:date.iso('2000-01-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-01-04'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-01-05'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-01-06'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
                     {annio:2000, cod_nov:COD_VACACIONES, limite:20, cantidad:5, saldo:15},
-                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
             })
         })
         it("insertar una semana de vacaciones en una semana con feriados", async function(){
             // https://argentina.workingdays.org/dias_laborables_calendario_2000.htm
             await enNuevaPersona(2, {vacaciones: 15}, async (persona) => {
-                var novedadRegistradaPorCargar = {desde:date.iso('2000-03-06'), hasta:date.iso('2000-03-12'), cod_nov:COD_VACACIONES, cuil: persona.cuil}
+                var novedadRegistradaPorCargar = {desde:date.iso('2000-03-06'), hasta:date.iso('2000-03-12'), cod_nov:COD_VACACIONES, idper: persona.idper}
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:3, dias_coincidentes:0})
                 await rrhhSession.saveRecord(ctts.novedades_registradas, novedadRegistradaPorCargar, 'new');
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-03-08'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-03-09'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-03-10'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                    {fecha:date.iso('2000-03-08'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-03-09'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-03-10'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
                     {annio:2000, cod_nov:COD_VACACIONES, limite:15, cantidad:3, saldo:12},
-                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
             })
         })
         it("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
@@ -286,10 +286,10 @@ describe("connected", function(){
             await enNuevaPersona(3, {vacaciones: 20, tramites: 4}, async (persona) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-05-02'), hasta:date.iso('2000-05-12'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {desde:date.iso('2000-05-02'), hasta:date.iso('2000-05-12'), cod_nov:COD_VACACIONES, idper: persona.idper},
                     'new'
                 );
-                var novedadRegistradaPorCargar = {desde:date.iso('2000-05-08'), hasta:date.iso('2000-05-12'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil}
+                var novedadRegistradaPorCargar = {desde:date.iso('2000-05-08'), hasta:date.iso('2000-05-12'), cod_nov:COD_TELETRABAJO, idper: persona.idper}
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 discrepances.showAndThrow(informe, {dias_corridos:5, dias_habiles:5, dias_coincidentes:5})
                 await rrhhSession.saveRecord(
@@ -299,58 +299,58 @@ describe("connected", function(){
                 );
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-05-11'), hasta:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, cuil: persona.cuil},
+                    {desde:date.iso('2000-05-11'), hasta:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, idper: persona.idper},
                     'new'
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-05-02'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-05-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-05-04'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-05-05'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-05-08'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
-                    {fecha:date.iso('2000-05-09'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
-                    {fecha:date.iso('2000-05-10'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
-                    {fecha:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, cuil: persona.cuil},
-                    {fecha:date.iso('2000-05-12'), cod_nov:COD_TELETRABAJO, cuil: persona.cuil},
-                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                    {fecha:date.iso('2000-05-02'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-05-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-05-04'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-05-05'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-05-08'), cod_nov:COD_TELETRABAJO, idper: persona.idper},
+                    {fecha:date.iso('2000-05-09'), cod_nov:COD_TELETRABAJO, idper: persona.idper},
+                    {fecha:date.iso('2000-05-10'), cod_nov:COD_TELETRABAJO, idper: persona.idper},
+                    {fecha:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, idper: persona.idper},
+                    {fecha:date.iso('2000-05-12'), cod_nov:COD_TELETRABAJO, idper: persona.idper},
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
                     {annio:2000, cod_nov:COD_VACACIONES, limite:20, cantidad:4, saldo:16},
                     {annio:2000, cod_nov:COD_TELETRABAJO, limite:null, cantidad:4, saldo:null},
                     {annio:2000, cod_nov:COD_TRAMITE, limite:4, cantidad:1, saldo:3},
-                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
             })
         })
         it("cargo teletrabajo diagramado", async function(){
             await enNuevaPersona(4, {}, async (persona) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil, 
+                    {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_DIAGRAMADO, idper: persona.idper, 
                         dds1:true, dds2:false, dds3:true, dds4:true, dds5:false},
                     'new'
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-03'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
-                    {fecha:date.iso('2000-01-05'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
-                    {fecha:date.iso('2000-01-06'), cod_nov:COD_DIAGRAMADO, cuil: persona.cuil},
-                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                    {fecha:date.iso('2000-01-03'), cod_nov:COD_DIAGRAMADO, idper: persona.idper},
+                    {fecha:date.iso('2000-01-05'), cod_nov:COD_DIAGRAMADO, idper: persona.idper},
+                    {fecha:date.iso('2000-01-06'), cod_nov:COD_DIAGRAMADO, idper: persona.idper},
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
                     {annio:2000, cod_nov:COD_DIAGRAMADO, limite:null, cantidad:3, saldo:null},
-                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
             })
         })
         it("cargo un día de trámite", async function(){
             await enNuevaPersona(5, {}, async (persona) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, cuil: persona.cuil, 
+                    {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper: persona.idper, 
                         dds1:true, dds2:false, dds3:true, dds4:true, dds5:false},
                     'new'
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, cuil: persona.cuil},
-                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                    {fecha:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper: persona.idper},
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
             })
         })
         it("intento de cargar novedades sin permiso", async function(){
@@ -358,7 +358,7 @@ describe("connected", function(){
                 await expectError( async () => {
                     await basicoSession.saveRecord(
                         ctts.novedades_registradas, 
-                        {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                        {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper: persona.idper},
                         'new'
                     );
                 }, ctts.insufficient_privilege);
@@ -368,23 +368,23 @@ describe("connected", function(){
             await enNuevaPersona(7, {}, async (persona) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-01-03'), hasta:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, cuil: persona.cuil},
+                    {desde:date.iso('2000-01-03'), hasta:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, idper: persona.idper},
                     'new'
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, cuil: persona.cuil},
-                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                    {fecha:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, idper: persona.idper},
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
                 // el usuario básico no debería ver los datos de otra persona:
                 await basicoSession.tableDataTest('novedades_vigentes', [
-                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
             })
         })
         it("quito un feriado y veo que hay más novedades", async function(){
             await enDosNuevasPersonasConFeriado10EneroFeriadoy11No(8, 9, '10001', async (persona1, persona2, cod_nov) => {
                 /* Verifico que ese día tenga 2 novedades cargadas */
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-11'), cod_nov, cuil: persona1.cuil},
-                    {fecha:date.iso('2000-01-11'), cod_nov, cuil: persona2.cuil},
+                    {fecha:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
+                    {fecha:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
                 /* quito el feriado */
                 await rrhhAdminSession.saveRecord(
@@ -394,10 +394,10 @@ describe("connected", function(){
                 )
                 /* Verifico que esos días tengan 4 novedades vigentes */
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-10'), cod_nov, cuil: persona1.cuil},
-                    {fecha:date.iso('2000-01-11'), cod_nov, cuil: persona1.cuil},
-                    {fecha:date.iso('2000-01-10'), cod_nov, cuil: persona2.cuil},
-                    {fecha:date.iso('2000-01-11'), cod_nov, cuil: persona2.cuil},
+                    {fecha:date.iso('2000-01-10'), cod_nov, idper: persona1.idper},
+                    {fecha:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
+                    {fecha:date.iso('2000-01-10'), cod_nov, idper: persona2.idper},
+                    {fecha:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
            })
         })
@@ -406,8 +406,8 @@ describe("connected", function(){
             await enDosNuevasPersonasConFeriado10EneroFeriadoy11No(10, 11, '10002', async (persona1, persona2, cod_nov) => {
                 /* Verifico que ese día tenga 2 novedades cargadas */
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-11'), cod_nov, cuil: persona1.cuil},
-                    {fecha:date.iso('2000-01-11'), cod_nov, cuil: persona2.cuil},
+                    {fecha:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
+                    {fecha:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
                 /* agrego otro feriado */
                 await rrhhAdminSession.saveRecord(
@@ -424,14 +424,14 @@ describe("connected", function(){
             await enNuevaPersona(12, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async (persona, {sesion}) => {
                 await rrhhAdminSession.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
                     'new'
                 );
                 await sesion.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
             })
         })
         it("un usuario común no puede cargar novedades pasadas", async function(){
@@ -439,7 +439,7 @@ describe("connected", function(){
                 await enNuevaPersona(13, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async (persona, {sesion}) => {
                     await sesion.saveRecord(
                         ctts.novedades_registradas, 
-                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
                         'new'
                     );
                 })
@@ -449,28 +449,28 @@ describe("connected", function(){
             await enNuevaPersona(15, {usuario:{sector:'PRA11'}}, async (persona) => {
                 await jefe11Session.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
                     'new'
                 );
                 await jefe11Session.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
             })
         })
         it("un jefe puede cargar a alguien de un equipo perteneciente", async function(){
             await enNuevaPersona(16, {usuario:{sector:'PRA1111'}}, async (persona) => {
                 await jefe11Session.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
                     'new'
                 );
                 await jefe11Session.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
-                ], 'all', {fixedFields:[{fieldName:'cuil', value:persona.cuil}]})
+                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
             })
         })
         it("un jefe no puede cargar a alguien de un equipo no perteneciente", async function(){
@@ -478,7 +478,7 @@ describe("connected", function(){
                 await enNuevaPersona(17, {usuario:{sector:'PRA12'}}, async (persona) => {
                     await jefe11Session.saveRecord(
                         ctts.novedades_registradas, 
-                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
                         'new'
                     );
                 })
@@ -489,7 +489,7 @@ describe("connected", function(){
                 await enNuevaPersona(18, {usuario:{sector:'PRA12', sesion:true}}, async (persona, {sesion}) => {
                     await sesion.saveRecord(
                         ctts.novedades_registradas, 
-                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, cuil: persona.cuil},
+                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
                         'new'
                     );
                 })
@@ -560,7 +560,7 @@ describe("connected", function(){
              * sobre lo ya calculado, luego borrando todo 3 veces en cada una de esas 3 veces
              * primero calcula todo junto, luego fecha por fecha y finalmente persona por persona
              */
-            const sqlTraerNovedades = `SELECT array_agg(concat_ws(' ',fecha,cuil,cod_nov) order by fecha, cuil) FROM novedades_vigentes WHERE ${FECHAS_DE_PRUEBA}`
+            const sqlTraerNovedades = `SELECT array_agg(concat_ws(' ',fecha,idper,cod_nov) order by fecha, idper) FROM novedades_vigentes WHERE ${FECHAS_DE_PRUEBA}`
             const sqlCalcularNovedades = `SELECT calcular_novedades_vigentes('${DESDE_AÑO}-01-01','${HASTA_AÑO}-12-31')`;
             const emptyBenchmarkDay = {
                 date: date.today(),
@@ -572,7 +572,7 @@ describe("connected", function(){
             }
             const comienzo = new Date();
             await server.inDbClient(ADMIN_REQ, async client => {
-                const {row: tamannio} = await client.query(`select count(*) as personal from personal where ${CUIL_DE_PRUEBA}`).fetchUniqueRow();
+                const {row: tamannio} = await client.query(`select count(*) as personas from personas where ${IDPER_DE_PRUEBA}`).fetchUniqueRow();
                 const benchmark = {
                     tamannio,
                     duracion: null as number|null
@@ -596,10 +596,10 @@ describe("connected", function(){
                 const novedadesRecalculadasPorFecha = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
                 discrepances.showAndThrow(novedadesRecalculadasPorFecha, todasLasNovedadesGeneradas);
                 console.log('calculando novedadesRecalculadasPorCuit')
-                var cuits = (await client.query(`select distinct cuil from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
+                var cuits = (await client.query(`select distinct idper from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
                 await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
                 for(var row of cuits) {
-                    await client.query(`SELECT calcular_novedades_vigentes_cuil('${DESDE_AÑO}-01-01', '${HASTA_AÑO}-12-31', $1)`, [row.cuil]).execute();
+                    await client.query(`SELECT calcular_novedades_vigentes_idper('${DESDE_AÑO}-01-01', '${HASTA_AÑO}-12-31', $1)`, [row.idper]).execute();
                 }
                 const novedadesRecalculadasPorCuit = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
                 benchmark.duracion = Number(

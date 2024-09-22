@@ -4,7 +4,7 @@ import {TableDefinition, TableContext} from "./types-principal";
 
 import {fecha, añoEnBaseAFecha} from "./table-fechas"
 import {sector} from "./table-sectores"
-import {cuil} from "./table-personal"
+import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades"
 
 import { politicaNovedades } from "./table-novedades_registradas";
@@ -16,7 +16,7 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
         elementName:'novedad',
         editable:admin,
         fields: [
-            cuil,
+            idper,
             {name: 'ficha'    , typeName: 'text'   ,                                    },
             fecha,
             {name: 'dds'      , typeName: 'text'   , inTable:false, serverSide:true, editable:false },
@@ -24,14 +24,14 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
             /* campos de sistemas externos: */
             {name: 'ent_fich' , typeName: 'text'   , title:'entrada - fichada'          },
             {name: 'sal_fich' , typeName: 'text'   , title:'salida - fichada'           },
-            /* campos redundantes que reflejan el estado del personal al momento de obtener la novedad */
+            /* campos redundantes que reflejan el estado del personas al momento de obtener la novedad */
             {name: 'sector'   , typeName: 'text'   ,                                    },
             /* campos automáticos */
             añoEnBaseAFecha
         ],
-        primaryKey: [cuil.name, fecha.name],
+        primaryKey: [idper.name, fecha.name],
         foreignKeys: [
-            {references:'personal'     , fields: [cuil.name]},
+            {references:'personas'     , fields: [idper.name]},
             {references:'fechas'       , fields: [fecha.name]},
             {references:'sectores'     , fields: [sector.name]},
             {references:'cod_novedades', fields: [cod_nov.name]},

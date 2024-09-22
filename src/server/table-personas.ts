@@ -2,40 +2,41 @@
 
 import {FieldDefinition, TableDefinition, TableContext, soloDigitosCons, soloDigitosPostConfig} from "./types-principal";
 
-export const cuil: FieldDefinition = {
-    name: 'cuil', 
+export const idper: FieldDefinition = {
+    name: 'idper', 
     typeName: 'text', 
-    title: 'CUIL', 
-    postInput: soloDigitosPostConfig
+    title: 'idper',
+    postInput: 'upperWithoutDiacritics',
 }
 
-export function personal(context: TableContext): TableDefinition {
+export function personas(context: TableContext): TableDefinition {
     var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
     return {
-        name: 'personal',
+        name: 'personas',
         elementName: 'persona',
         editable: admin,
         fields:[
-            cuil,
+            idper,
+            {name: 'cuil'     , typeName: 'text', isName:false,postInput: soloDigitosPostConfig  },
             {name: 'ficha'    , typeName: 'text', isName:true,                                   },
-            {name: 'idmeta4'  , typeName: 'text', isName:true, title:'id meta4'                  },
+            {name: 'idmeta4'  , typeName: 'text', isName:false,title:'id meta4'                  },
             {name: 'nomyape'  , typeName: 'text', isName:true, title:'nombre y apellido'         },
             {name: 'sector'   , typeName: 'text',                                                },
             {name: 'categoria', typeName: 'text',              title:'categoría'                 },
         ],
-        primaryKey: [cuil.name],
+        primaryKey: [idper.name],
         foreignKeys: [
             {references: 'sectores', fields:['sector']}
         ],
         constraints: [
-            soloDigitosCons(cuil.name),
+            soloDigitosCons(idper.name),
             soloDigitosCons('ficha'  ),
             soloDigitosCons('idmeta4'),
         ],
         detailTables: [
-            {table:'novedades_vigentes'   , fields:[cuil.name], abr:'N'},
-            {table:'novedades_registradas', fields:[cuil.name], abr:'R'},
-            {table:'nov_per'              , fields:[cuil.name], abr:'#'}
+            {table:'novedades_vigentes'   , fields:[idper.name], abr:'N'},
+            {table:'novedades_registradas', fields:[idper.name], abr:'R'},
+            {table:'nov_per'              , fields:[idper.name], abr:'#'}
         ]
     };
 }

@@ -17,7 +17,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const {client} = context;
             if (params.table != 'novedades_registradas') throw new Error('tabla invalida');
             var defs = {
-                personal      : {key:'cuil'   , sql:'select * from personal'},
+                personas      : {key:'idper'   , sql:'select * from personas'},
                 cod_novedades : {key:'cod_nov', sql:'select * from cod_novedades'},
             };
             var data = await likeAr(defs)
@@ -26,7 +26,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 .awaitAll();
             return {
                 relations: {
-                    cuil    : data.personal.map(row => row.cuil),
+                    idper    : data.personas.map(row => row.idper),
                     cod_nov : data.cod_novedades.map(row => row.cod_nov),
                 },
                 tables: likeAr(data).map((rows, table) => createIndex(rows, defs[table].key)).plain()
@@ -36,7 +36,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     {
         action: 'si_cargara_novedad',
         parameters: [
-            {name:'cuil'      , typeName:'text'   },
+            {name:'idper'      , typeName:'text'   },
             {name:'cod_nov'   , typeName:'text'   },
             {name:'desde'     , typeName:'date'   },
             {name:'hasta'     , typeName:'date'   },
@@ -49,7 +49,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name:'dds6'      , typeName:'boolean'},
         ],
         coreFunction: async function(context: ProcedureContext, params:Partial<NovedadRegistrada>){
-            const {desde, hasta, cod_nov, cuil, ...resto} = params;
+            const {desde, hasta, cod_nov, idper, ...resto} = params;
             const info = await context.client.query(
                 `select count(*) as dias_corridos,
                         count(*) filter (
@@ -59,10 +59,10 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         ) as dias_habiles,
                         count(*) filter (where v.fecha is not null) as dias_coincidentes
                     from fechas f
-                        left join novedades_vigentes v on v.fecha = f.fecha and v.cuil = $4
+                        left join novedades_vigentes v on v.fecha = f.fecha and v.idper = $4
                         left join (select * from cod_novedades where cod_nov = $3) c on true
                     where f.fecha between $1 and $2`, 
-                [desde, hasta, cod_nov, cuil, JSON.stringify(resto)]
+                [desde, hasta, cod_nov, idper, JSON.stringify(resto)]
             ).fetchUniqueRow();
             return info.row
         }
@@ -70,12 +70,12 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     {
         action: 'calendario_persona',
         parameters: [
-            {name:'cuil'      , typeName:'text'   },
+            {name:'idper'      , typeName:'text'   },
             {name:'annio'     , typeName:'integer'},
             {name:'mes'       , typeName:'integer'},
         ],
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof calendario_persona.parameters>){
-            const {cuil, annio, mes} = params;
+            const {idper, annio, mes} = params;
             const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
             const info = await context.client.query(
                 `select extract(day from f.fecha) as dia,
@@ -85,10 +85,10 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         case extract(dow from f.fecha) when 0 then 'no-laborable' when 6 then 'no-laborable' else 
                             case when laborable is false then 'no-laborable' when cod_nov is not null then 'no-trabaja' else 'normal' end end as tipo_dia
                     from fechas f
-                        left join novedades_vigentes v on v.fecha = f.fecha and v.cuil = $1
+                        left join novedades_vigentes v on v.fecha = f.fecha and v.idper = $1
                     where f.fecha between $2 and ($3::date + interval '1 month'  - interval '1 day')
                     order by f.fecha`,
-                [cuil, desde, desde]
+                [idper, desde, desde]
             ).fetchAll();
             return info.rows
         }
@@ -96,12 +96,12 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     {
         action: 'historico_persona',
         parameters: [
-            {name:'cuil'      , typeName:'text'   },
+            {name:'idper'      , typeName:'text'   },
             {name:'annio'     , typeName:'integer'},
             {name:'mes'       , typeName:'integer'},
         ],
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof historico_persona.parameters>){
-            const {cuil, annio, mes} = params;
+            const {idper, annio, mes} = params;
             const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
             const info = await context.client.query(
                 `select fecha,
@@ -109,9 +109,9 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         novedad    
                     from novedades_vigentes v
                         left join cod_novedades n on v.cod_nov = n.cod_nov
-                    where v.fecha between $2 and ($2 + interval '1 month' - interval '1 day') and v.cuil = $1
+                    where v.fecha between $2 and ($2 + interval '1 month' - interval '1 day') and v.idper = $1
                     order by v.fecha`,
-                [cuil, desde]
+                [idper, desde]
             ).fetchAll();
             return info.rows
         }
@@ -119,19 +119,19 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     {
         action: 'novedades_pendientes',
         parameters: [
-            {name:'cuil'      , typeName:'text'   }
+            {name:'idper'      , typeName:'text'   }
         ],
         coreFunction: async function(context: ProcedureContext, params:Partial<NovedadRegistrada>){
-            const {cuil} = params;
+            const {idper} = params;
             const info = await context.client.query(
-                `select cuil,
+                `select idper,
                         desde,
                         hasta,
                         cod_nov
                     from novedades_registradas
-                    where cuil = $1
+                    where idper = $1
                     order by desde`,
-                [cuil]
+                [idper]
             ).fetchAll();
             return info.rows
         }

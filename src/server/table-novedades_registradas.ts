@@ -2,7 +2,7 @@
 
 import {FieldDefinition, TableDefinition, TableContext} from "./types-principal";
 
-import {cuil} from "./table-personal"
+import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {año} from "./table-annios"
 
@@ -20,13 +20,13 @@ export function politicaNovedadesComun(alias:string){
     return `( 
                 SELECT puede_cargar_todo FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user()
             ) OR (
-                SELECT puede_cargar_propio FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user() and cuil = ${alias}.cuil
+                SELECT puede_cargar_propio FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user() and idper = ${alias}.idper
             ) OR (
                 SELECT sector_pertenece(
-                    (SELECT sector FROM personal WHERE cuil = ${alias}.cuil),
+                    (SELECT sector FROM personas WHERE idper = ${alias}.idper),
                     (SELECT sector 
-                        FROM personal INNER JOIN usuarios USING (cuil) 
-                        WHERE usuario = get_app_user() AND cuil <> ${alias}.cuil)
+                        FROM personas INNER JOIN usuarios USING (idper) 
+                        WHERE usuario = get_app_user() AND idper <> ${alias}.idper)
                 )
             )
         `;
@@ -45,7 +45,7 @@ export function politicaNovedades(alias:string){
     `
     var politicaVisibilidad = `${politicaNovedadesComun(alias)}
         OR (
-            SELECT true FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user() and cuil = ${alias}.cuil
+            SELECT true FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user() and idper = ${alias}.idper
         )`
     return {
         select: {
@@ -69,7 +69,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
         elementName: 'registro',
         editable: true,
         fields:[
-            cuil,
+            idper,
             {name: 'desde'    , typeName: 'date'   ,                                    },
             {name: 'hasta'    , typeName: 'date'   ,                                    },
             {...idr, sequence:{name:'idr_seq', firstValue:1001}, nullable:true, editable:false },
@@ -83,10 +83,10 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {name: 'dds6'     , typeName: 'boolean', title:'sabado'                     },
             {...año, editable:false, generatedAs:`extract(year from desde)`}
         ],         
-        primaryKey: [cuil.name, 'desde', idr.name],
+        primaryKey: [idper.name, 'desde', idr.name],
         foreignKeys: [
             {references: 'annios'  , fields: [año.name], onUpdate: 'no action'},
-            {references: 'personal', fields: [cuil.name]},
+            {references: 'personas', fields: [idper.name]},
             {references: 'cod_novedades', fields: [cod_nov.name]},
             {references: 'fechas', fields: [{source:'desde', target:'fecha'}], alias:'desde'},
             {references: 'fechas', fields: [{source:'hasta', target:'fecha'}], alias:'hasta'},

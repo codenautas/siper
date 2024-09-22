@@ -2,7 +2,7 @@
 
 import {TableDefinition, TableContext} from "./types-principal";
 
-import {cuil} from "./table-personal"
+import {idper} from "./table-personas"
 import {rol} from "./table-roles"
 
 export function usuarios(context: TableContext): TableDefinition{
@@ -14,7 +14,7 @@ export function usuarios(context: TableContext): TableDefinition{
         fields: [
             {name:'usuario'          , typeName:'text'    , nullable:false  },
             {name: rol.name          , typeName:'text'    },
-            {...cuil, editable:admin},
+            {...idper, editable:admin},
             {name:'md5clave'         , typeName:'text'    , allow:{select: context.forDump} },
             {name:'activo'           , typeName:'boolean' , nullable:false ,defaultValue:false},
             {name:'nombre'           , typeName:'text'                      },
@@ -27,7 +27,7 @@ export function usuarios(context: TableContext): TableDefinition{
         ],
         primaryKey: ['usuario'],
         foreignKeys: [
-            {references: 'personal', fields:[cuil.name]},
+            {references: 'personas', fields:[idper.name]},
             {references: 'roles'   , fields:[rol.name ]},
         ],
         sql: {

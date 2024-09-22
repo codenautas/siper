@@ -2,7 +2,7 @@
 
 import {TableDefinition, TableContext} from "./types-principal";
 
-import {cuil} from "./table-personal";
+import {idper} from "./table-personas";
 import {clase} from "./table-clases";
 import {grupo} from "./table-grupos";
 
@@ -13,13 +13,13 @@ export function per_gru(context: TableContext): TableDefinition{
         elementName: 'persona-grupo',
         editable:admin,
         fields: [
-            cuil,
+            idper,
             clase,
             grupo,
         ],
-        primaryKey: [cuil.name, clase.name],
+        primaryKey: [idper.name, clase.name],
         foreignKeys: [
-            {references:'personal'       , fields:[cuil.name]             , displayAllFields:true, onDelete: 'cascade'},
+            {references:'personas'       , fields:[idper.name]             , displayAllFields:true, onDelete: 'cascade'},
             {references:'grupos'         , fields:[clase.name, grupo.name], displayAllFields:true},
         ]
     };

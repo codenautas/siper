@@ -65,8 +65,8 @@ function DiasHabiles(props:{novedad:Partial<NovedadRegistrada>}){
     return <Typography>{leyenda.leyenda}</Typography>
 }
 
-function Historico(props:{cuil:string}){
-    const {cuil} = props;
+function Historico(props:{idper:string}){
+    const {idper} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     const [periodo, setPeriodo] = useState({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
     const [historico, setHistorico] = useState<HistoricoResult[]>([]);
@@ -75,11 +75,11 @@ function Historico(props:{cuil:string}){
         my.ajax.table_data({table: 'annios', fixedFields: [],paramfun:{} }).then(_annios => {
             setAnnios(_annios);
         });
-        if (cuil != null) my.ajax.historico_persona({cuil, ...periodo}).then(_historico => {
+        if (idper != null) my.ajax.historico_persona({idper, ...periodo}).then(_historico => {
             setHistorico(_historico)
             console.log(_historico)
         })
-    },[cuil, periodo.mes, periodo.annio])
+    },[idper, periodo.mes, periodo.annio])
     return <Card>
         <Box style={{ flex:1}}>
             <Box>
@@ -135,8 +135,8 @@ function Historico(props:{cuil:string}){
     </Card>
 }
 
-function Calendario(props:{cuil:string}){
-    const {cuil} = props;
+function Calendario(props:{idper:string}){
+    const {idper} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     const [periodo, setPeriodo] = useState({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
     const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
@@ -147,7 +147,7 @@ function Calendario(props:{cuil:string}){
         my.ajax.table_data({table: 'annios', fixedFields: [],paramfun:{} }).then(_annios => {
             setAnnios(_annios);
         });
-        if (cuil != null) my.ajax.calendario_persona({cuil, ...periodo}).then(dias => {
+        if (idper != null) my.ajax.calendario_persona({idper, ...periodo}).then(dias => {
             var semanas = [];
             var semana = [];
             for(var i = 0; i < dias[0].dds; i++) {
@@ -169,7 +169,7 @@ function Calendario(props:{cuil:string}){
             setCalendario(semanas)
         })
 
-    },[cuil, periodo.mes, periodo.annio])
+    },[idper, periodo.mes, periodo.annio])
     return <Card className="calendario-mes">
         <Box style={{ flex:1}}>
         <Box>
@@ -235,7 +235,7 @@ function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsIn
     const {fieldsProps, optionsInfo} = props;
     const f = createIndex(fieldsProps, f => f.fd.name)
     const rowsCodNov = optionsInfo.tables!.cod_novedades;
-    if (f.cuil == null) return <Card> <Typography>Cargando...</Typography> </Card>
+    if (f.idper == null) return <Card> <Typography>Cargando...</Typography> </Card>
     const novedad = likear(f).filter((_, name) => !(/__/.test(name as string))).map(f => f.value).plain() as Partial<NovedadRegistrada>
     const c_dds = !!rowsCodNov?.[f.cod_nov.value]?.c_dds;
 
@@ -264,7 +264,7 @@ function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsIn
       >
         detalle general persona
         <Box>
-            <GenericField {...f.cuil} />
+            <GenericField {...f.idper} />
             <GenericField {...f.personal__nomyape} />
             <GenericField {...f.personal__ficha} />
             <GenericField {...f.personal__idmeta4} />
@@ -328,10 +328,10 @@ function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsIn
     </Box>
   
     <Drawer anchor="right" open={isCalendarioOpen} onClose={() => toggleCalendario(false)}>
-      <Calendario cuil={f.cuil.value} />
+      <Calendario idper={f.idper.value} />
     </Drawer>
     <Drawer anchor="right" open={isHistoricoOpen} onClose={() => toggleHistorico(false)}>
-      <Historico cuil={f.cuil.value} />
+      <Historico idper={f.idper.value} />
     </Drawer>
   </Card>
   

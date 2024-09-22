@@ -7,17 +7,17 @@ CREATE OR REPLACE FUNCTION personas_horarios_trg()
 AS
 $BODY$
 BEGIN
-  INSERT INTO horarios (cuil, dds, hora_desde, hora_hasta, trabaja) 
-    SELECT new.cuil, dds, '09:00', '16:00', dds between 1 and 5
+  INSERT INTO horarios (idper, dds, hora_desde, hora_hasta, trabaja) 
+    SELECT new.idper, dds, '09:00', '16:00', dds between 1 and 5
       FROM generate_series(0,6) dds;
   RETURN NEW;
 END;
 $BODY$;
 
-DROP TRIGGER IF EXISTS personas_horarios_trg on personal;
+DROP TRIGGER IF EXISTS personas_horarios_trg on personas;
 CREATE TRIGGER personas_horarios_trg
   AFTER INSERT
-  ON personal
+  ON personas
   FOR EACH ROW
   EXECUTE PROCEDURE personas_horarios_trg();
 

@@ -36,24 +36,24 @@ insert into sectores (sector, nombre_sector)
 -- */
 
 
-select ficha, count(distinct cuil), count(distinct idmeta4), count(distinct nomyape) ,max(cuil), min(cuil)
+select ficha, count(distinct idper), count(distinct idmeta4), count(distinct nomyape) ,max(idper), min(idper)
   from novedades_importadas
 	group by ficha
-  having count(distinct cuil)>1 or count(distinct idmeta4)>1 or count(distinct nomyape)>1;
+  having count(distinct idper)>1 or count(distinct idmeta4)>1 or count(distinct nomyape)>1;
 
-select cuil, count(distinct ficha), count(distinct idmeta4), count(distinct nomyape) ,max(ficha), min(ficha)
+select idper, count(distinct ficha), count(distinct idmeta4), count(distinct nomyape) ,max(ficha), min(ficha)
   from novedades_importadas
-	group by cuil
+	group by idper
   having count(distinct ficha)>1 or count(distinct idmeta4)>1 or count(distinct nomyape)>1;
 
 
--- delete from personal ;
+-- delete from personas ;
 
-insert into personal (ficha, cuil, idmeta4, nomyape, sector)
-	select ficha, cuil, nullif(idmeta4,''), nomyape, sector 
+insert into personas (ficha, idper, idmeta4, nomyape, sector)
+	select ficha, idper, nullif(idmeta4,''), nomyape, sector 
 	  from
-    (select cuil, ficha, idmeta4, nomyape, c.sector,
-	        row_number() over (partition by cuil order by fecha desc) num 
+    (select idper, ficha, idmeta4, nomyape, c.sector,
+	        row_number() over (partition by idper order by fecha desc) num 
 	    from novedades_importadas n 
 	         left join sectores c on c.nombre_sector = n.sector) n
       where num = 1;
@@ -62,8 +62,8 @@ insert into personal (ficha, cuil, idmeta4, nomyape, sector)
 
 -- delete from novedades_vigentes;
 
-insert into novedades_vigentes (cuil, ficha, fecha, cod_nov, sector)
-	select cuil, ficha, fecha, c.cod_nov, s.sector
+insert into novedades_vigentes (idper, ficha, fecha, cod_nov, sector)
+	select idper, ficha, fecha, c.cod_nov, s.sector
 	    from novedades_importadas n 
             left join sectores s on s.nombre_sector = n.sector
             left join cod_nov c on c.novedad = n.cod_nov
@@ -71,7 +71,7 @@ insert into novedades_vigentes (cuil, ficha, fecha, cod_nov, sector)
 
 */
 
-	select cuil, ficha, fecha, c.cod_nov, s.sector, n.cod_nov
+	select idper, ficha, fecha, c.cod_nov, s.sector, n.cod_nov
 	    from novedades_importadas n 
             left join sectores s on s.nombre_sector = n.sector
             left join cod_nov c on c.novedad = n.cod_nov
@@ -97,13 +97,13 @@ select *, extract(dow from fecha), (select count(*) from novedades_vigentes n wh
 
 insert into per_gru (persona, clase, grupo)
   (select
-	cuil
+	idper
 	'S',
   select case 
-	when cuil like '20%' then 'M' 
-	when cuil like '27%' then 'F'
-    when cuil like '27%9' then 'M'
-    when cuil like '27%4' then 'F'
+	when idper like '20%' then 'M' 
+	when idper like '27%' then 'F'
+    when idper like '27%9' then 'M'
+    when idper like '27%4' then 'F'
     else 'X'
   end
   from personas);

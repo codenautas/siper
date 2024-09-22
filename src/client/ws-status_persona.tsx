@@ -34,8 +34,8 @@ import { CalendarioResult, Annio, meses, HistoricoResult, Persona, NovedadRegist
 // @ts-ignore 
 var my=myOwn;
 
-function Historico(props:{cuil:string}){
-    const {cuil} = props;
+function Historico(props:{idper:string}){
+    const {idper} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     const [periodo, setPeriodo] = useState({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
     const [historico, setHistorico] = useState<HistoricoResult[]>([]);
@@ -44,11 +44,11 @@ function Historico(props:{cuil:string}){
         my.ajax.table_data({table: 'annios', fixedFields: [],paramfun:{} }).then(_annios => {
             setAnnios(_annios);
         });
-        if (cuil != null) my.ajax.historico_persona({cuil, ...periodo}).then(_historico => {
+        if (idper != null) my.ajax.historico_persona({idper, ...periodo}).then(_historico => {
             setHistorico(_historico)
             console.log(_historico)
         })
-    },[cuil, periodo.mes, periodo.annio])
+    },[idper, periodo.mes, periodo.annio])
     return <Card>
         <Box style={{ flex:1}}>
             <Box>
@@ -104,8 +104,8 @@ function Historico(props:{cuil:string}){
     </Card>
 }
 
-function Calendario(props:{cuil:string}){
-    const {cuil} = props;
+function Calendario(props:{idper:string}){
+    const {idper} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     const [periodo, setPeriodo] = useState({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
     const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
@@ -116,7 +116,7 @@ function Calendario(props:{cuil:string}){
         my.ajax.table_data({table: 'annios', fixedFields: [],paramfun:{} }).then(_annios => {
             setAnnios(_annios);
         });
-        if (cuil != null) my.ajax.calendario_persona({cuil, ...periodo}).then(dias => {
+        if (idper != null) my.ajax.calendario_persona({idper, ...periodo}).then(dias => {
             var semanas = [];
             var semana = [];
             for(var i = 0; i < dias[0].dds; i++) {
@@ -138,7 +138,7 @@ function Calendario(props:{cuil:string}){
             setCalendario(semanas)
         })
 
-    },[cuil, periodo.mes, periodo.annio])
+    },[idper, periodo.mes, periodo.annio])
     return <Card className="calendario-mes">
         <Box style={{ flex:1}}>
         <Box>
@@ -200,16 +200,16 @@ function Calendario(props:{cuil:string}){
     </Card>
 }
 
-function LicenciaResumenPersona(props:{cuil:string}){
-    const {cuil} = props;
+function LicenciaResumenPersona(props:{idper:string}){
+    const {idper} = props;
     //@ts-ignore
     const [resumen, setResumen] = useState<NovPer[]>([]);
     useEffect(function(){
         setResumen([]);
-    },[cuil])
+    },[idper])
 
-    const mockresumen = [{año: '2024', cod_nov:'1', cuil: '10330010016', cantidad: 20, limite: 30, saldo: 10}
-                        ,{año: '2023', cod_nov:'1', cuil: '10330010016', cantidad: 29, limite: 30, saldo: 1}]
+    const mockresumen = [{año: '2024', cod_nov:'1', idper: '10330010016', cantidad: 20, limite: 30, saldo: 10}
+                        ,{año: '2023', cod_nov:'1', idper: '10330010016', cantidad: 29, limite: 30, saldo: 1}]
 
     // ver como traer data de una tabla calculada (nov_per)
     return <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, flexWrap: 'wrap' }}>
@@ -241,16 +241,16 @@ function LicenciaResumenPersona(props:{cuil:string}){
   </Box>
 }
 
-function NovedadesPendientes(props:{cuil:string}){
-    const {cuil} = props;
+function NovedadesPendientes(props:{idper:string}){
+    const {idper} = props;
     //@ts-ignore
     const [pendientes, setPendientes] = useState<NovedadRegistrada[]>([]);
     useEffect(function(){
         setPendientes([]);
-        if (cuil != null) my.ajax.novedades_pendientes({cuil}).then(_pendientes => {
+        if (idper != null) my.ajax.novedades_pendientes({idper}).then(_pendientes => {
             setPendientes(_pendientes)
         })
-    },[cuil])
+    },[idper])
     return <Card>
         <TableContainer component={Paper}>
             <Table>
@@ -278,8 +278,8 @@ function NovedadesPendientes(props:{cuil:string}){
 function StatusPersonalDisplay(props: { table: string, fixedFields: RowType, conn: Connector }) {
     //@ts-ignore
     const {table, fixedFields, conn} = props;
-    const cuil = Array.isArray(fixedFields) ? fixedFields.find(f => f.fieldName === 'cuil') ?? null : null;
-    if (cuil == null) return <Card> <Typography>Cargando...</Typography> </Card>
+    const idper = Array.isArray(fixedFields) ? fixedFields.find(f => f.fieldName === 'idper') ?? null : null;
+    if (idper == null) return <Card> <Typography>Cargando...</Typography> </Card>
 
     const [mobile, setMobile] = useState(window.navigator.maxTouchPoints > 2);
     const [isCalendarioOpen, setIsCalendarioOpen] = useState(false);
@@ -310,7 +310,7 @@ function StatusPersonalDisplay(props: { table: string, fixedFields: RowType, con
         }}
       >
         detalle general persona
-        <LicenciaResumenPersona cuil={cuil.value}/>
+        <LicenciaResumenPersona idper={idper.value}/>
       </Box>
   
       <Box
@@ -366,16 +366,16 @@ function StatusPersonalDisplay(props: { table: string, fixedFields: RowType, con
           }}
         >
           solicitudes/novedades
-          <NovedadesPendientes cuil={cuil.value} />
+          <NovedadesPendientes idper={idper.value} />
         </Box>
       </Box>
     </Box>
   
     <Drawer anchor="right" open={isCalendarioOpen} onClose={() => toggleCalendario(false)}>
-      <Calendario cuil={cuil.value} />
+      <Calendario idper={idper.value} />
     </Drawer>
     <Drawer anchor="right" open={isHistoricoOpen} onClose={() => toggleHistorico(false)}>
-      <Historico cuil={cuil.value} />
+      <Historico idper={idper.value} />
     </Drawer>
     </Card>
     </>
@@ -384,10 +384,10 @@ function StatusPersonalDisplay(props: { table: string, fixedFields: RowType, con
 // @ts-ignore
 myOwn.wScreens.statusPersona = function statusPersona(addrParams: any){
     //uso el cardeditor para probar, veo de crear un contenedor generico en frontendplus despues?
-    //http://localhost:3000/siper/menu#i=novedades,status&ff=,cuil:10330010016
+    //http://localhost:3000/siper/menu#i=novedades,status&ff=,idper:10330010016
     renderConnectedApp(
         myOwn as never as Connector,
-        { ...addrParams, table: 'personal' },
+        { ...addrParams, table: 'personas' },
         document.getElementById('total-layout')!,
         ({ table, fixedFields, conn }) => <StatusPersonalDisplay table={table} fixedFields={fixedFields} conn={conn} />
 

@@ -11,7 +11,7 @@ import { fechas               } from './table-fechas';
 import { clases               } from './table-clases';
 import { grupos               } from './table-grupos';
 import { sectores             } from './table-sectores';
-import { personal             } from './table-personal';
+import { personas             } from './table-personas';
 import { per_gru              } from './table-per_gru';
 import { nov_gru              } from './table-nov_gru';
 import { novedades_importadas } from './table-novedades_importadas';
@@ -52,7 +52,7 @@ export class AppSiper extends AppBackend{
         var menuContent:MenuInfoBase[]=[];
         if(context.user && context.user.rol=="admin"){
             menuContent.push(
-                {menuType:'table', name:'personal'          },
+                {menuType:'table', name:'personas'          },
                 {menuType:'menu', name:'novedades', menuContent:[
                     {menuType:'registroNovedades', name:'registro'},
                     {menuType:'statusPersona', name:'status'},
@@ -119,7 +119,7 @@ export class AppSiper extends AppBackend{
             sectores             ,
             clases               ,
             grupos               ,
-            personal             ,
+            personas             ,
             per_gru              ,
             nov_gru              ,
             novedades_importadas ,
