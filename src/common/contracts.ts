@@ -77,6 +77,7 @@ export const novedades_registradas = {
         dds4: is.boolean,
         dds5: is.boolean,
         dds6: is.boolean,
+        detalles: is.string,
     })
 } satisfies CommonEntityDefinition
 
@@ -214,6 +215,8 @@ export const meses = [
 //////////// ERRORES POSTGRES PROPIOS:
 export const ERROR_REFERENCIA_CIRCULAR_EN_SECTORES = 'P1001';
 export const ERROR_NO_SE_PUEDE_CARGAR_EN_EL_PASADO = 'P1002';
+export const ERROR_COD_NOVEDAD_INDICA_CON_DETALLES = 'P1003';
+export const ERROR_COD_NOVEDAD_INDICA_SIN_DETALLES = 'P1004';
 
 //////////// ERRORES POSTGRES:
 export const insufficient_privilege = '42501';

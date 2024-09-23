@@ -22,11 +22,12 @@ MERGE INTO novedades_vigentes nv
       OR nv.cod_nov IS DISTINCT FROM q.cod_nov 
       OR nv.ent_fich IS DISTINCT FROM q.ent_fich 
       OR nv.sal_fich IS DISTINCT FROM q.sal_fich 
-      OR nv.sector IS DISTINCT FROM q.sector) THEN
-    UPDATE SET ficha = q.ficha, cod_nov = q.cod_nov, ent_fich = q.ent_fich, sal_fich = q.sal_fich, sector = q.sector
+      OR nv.sector IS DISTINCT FROM q.sector
+      OR nv.detalles IS DISTINCT FROM q.detalles) THEN
+    UPDATE SET ficha = q.ficha, cod_nov = q.cod_nov, ent_fich = q.ent_fich, sal_fich = q.sal_fich, sector = q.sector, detalles = q.detalles
   WHEN NOT MATCHED THEN
-    INSERT (idper, ficha, fecha, cod_nov, ent_fich, sal_fich, sector)
-      VALUES (q.idper, q.ficha, q.fecha, q.cod_nov, q.ent_fich, q.sal_fich, q.sector);
+    INSERT (idper, ficha, fecha, cod_nov, ent_fich, sal_fich, sector, detalles)
+      VALUES (q.idper, q.ficha, q.fecha, q.cod_nov, q.ent_fich, q.sal_fich, q.sector, q.detalles);
 --WHEN NOT MATCHED BY SOURCE THEN DELETE --Postgresql 17
 --agrego delete provisorio hasta que se instale el postgres 17
 DELETE FROM novedades_vigentes nv

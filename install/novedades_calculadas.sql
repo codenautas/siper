@@ -13,9 +13,9 @@ $BODY$
   SELECT 
 -- ¡ATENCIÓN! NO MODIFICAR MANUALMENTE ESTA FUNCIÓN FUE GENERADA CON EL SCRIPT novedades_calculadas.sql
 -- Otras funciones que comienzan con el nombre novedades_calculadas se generaron junto a esta!
-      idper, ficha, fecha, cod_nov, ent_fich, sal_fich, sector, annio
+      idper, ficha, fecha, cod_nov, ent_fich, sal_fich, sector, annio, detalles
     FROM (
-      SELECT nr.idper, p.ficha, f.fecha, nr.cod_nov, null as ent_fich, null as sal_fich, p.sector, nr.annio,
+      SELECT nr.idper, p.ficha, f.fecha, nr.cod_nov, null as ent_fich, null as sal_fich, p.sector, nr.annio, nr.detalles,
              rank() over (PARTITION BY nr.idper, f.fecha ORDER BY nr.idr DESC) as prioridad
         FROM novedades_registradas nr 
           INNER JOIN fechas f ON f.fecha between desde and hasta

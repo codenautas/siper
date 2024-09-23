@@ -81,7 +81,8 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {name: 'dds4'     , typeName: 'boolean', title:'jueves'                     },
             {name: 'dds5'     , typeName: 'boolean', title:'viernes'                    },
             {name: 'dds6'     , typeName: 'boolean', title:'sabado'                     },
-            {...año, editable:false, generatedAs:`extract(year from desde)`}
+            {...año, editable:false, generatedAs:`extract(year from desde)`},
+            {name: 'detalles' , typeName: 'text'   ,                                    },
         ],         
         primaryKey: [idper.name, 'desde', idr.name],
         foreignKeys: [

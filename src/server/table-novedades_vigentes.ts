@@ -27,7 +27,8 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
             /* campos redundantes que reflejan el estado del personas al momento de obtener la novedad */
             {name: 'sector'   , typeName: 'text'   ,                                    },
             /* campos automáticos */
-            añoEnBaseAFecha
+            añoEnBaseAFecha                                                              ,
+            {name: 'detalles' , typeName: 'text'   ,                                    },
         ],
         primaryKey: [idper.name, fecha.name],
         foreignKeys: [

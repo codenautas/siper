@@ -24,6 +24,7 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {name: 'novedad'     , typeName: 'text'   , isName: true       },
             clase,
             {name: 'c_dds'       , typeName: 'boolean', description:'especifica el día de la semana'},
+            {name: 'con_detalles', typeName: 'boolean',                                             },
         ],
         primaryKey:[cod_nov.name],
         constraints:[
