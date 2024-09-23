@@ -12,6 +12,7 @@ import { clases               } from './table-clases';
 import { grupos               } from './table-grupos';
 import { sectores             } from './table-sectores';
 import { personas             } from './table-personas';
+import { personas_importadas  } from './table-personas-importadas';
 import { per_gru              } from './table-per_gru';
 import { nov_gru              } from './table-nov_gru';
 import { novedades_importadas } from './table-novedades_importadas';
@@ -122,6 +123,7 @@ export class AppSiper extends AppBackend{
             personas             ,
             per_gru              ,
             nov_gru              ,
+            personas_importadas  ,
             novedades_importadas ,
             nov_per_importado    ,
             novedades_registradas,

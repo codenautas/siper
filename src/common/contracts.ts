@@ -88,8 +88,10 @@ export const personas = {
         idper:      is.string,
     },{
         ficha:     is.string,
+        cuil:      is.string,
         idmeta4:   is.string,
-        nomyape:   is.string,
+        apellido:  is.string,
+        nombres:   is.string,
         sector:    is.string,
         categoria: is.string,
     })

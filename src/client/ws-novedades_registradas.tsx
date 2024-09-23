@@ -265,7 +265,8 @@ function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsIn
         detalle general persona
         <Box>
             <GenericField {...f.idper} />
-            <GenericField {...f.personal__nomyape} />
+            <GenericField {...f.personal__apellido} />
+            <GenericField {...f.personal__nombres} />
             <GenericField {...f.personal__ficha} />
             <GenericField {...f.personal__idmeta4} />
           </Box>

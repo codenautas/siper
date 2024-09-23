@@ -36,6 +36,8 @@ install:
       - ../node_modules/pg-triggers/lib/table-changes.sql
       - ../install/validad_codigo.sql
       - ../install/sector_pertenece.sql
+      - ../install/personas_id_trg.sql
+      - ../install/validar_digito.sql
       post-adapt:
       - ../node_modules/pg-triggers/lib/function-changes-trg.sql
       - ../node_modules/pg-triggers/lib/enance.sql    

@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext} from "./types-principal";
+import {TableDefinition, TableContext, idImportacion} from "./types-principal";
 
 export function novedades_importadas(context:TableContext):TableDefinition{
     var admin = context.user.rol==='admin';
@@ -8,6 +8,7 @@ export function novedades_importadas(context:TableContext):TableDefinition{
         name:'novedades_importadas',
         editable:admin,
         fields:[
+            idImportacion,
             {name: 'ficha'    , typeName: 'text', nullable:false, allowEmptyText:true, title:'Ficha'                    , },
             {name: 'cuil'     , typeName: 'text', nullable:false, allowEmptyText:true, title:'Cuil'                     , },
             {name: 'idmeta4'  , typeName: 'text', nullable:false, allowEmptyText:true, title:'id meta4'                 , },
@@ -20,6 +21,6 @@ export function novedades_importadas(context:TableContext):TableDefinition{
             {name: 'ent_hor'  , typeName: 'text', nullable:false, allowEmptyText:true, title:'Entrada - Horario Asig.'  , },
             {name: 'sal_hor'  , typeName: 'text', nullable:false, allowEmptyText:true, title:'Salida - Horario Asig.'   , },
         ],
-        primaryKey:['cuil', 'fecha', 'novedad', 'sector', 'ent_fich', 'sal_fich', 'ent_hor', 'sal_hor']
+        primaryKey: [idImportacion.name],
     };
 }

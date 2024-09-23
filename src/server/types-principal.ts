@@ -1,5 +1,6 @@
 import { Constraint, PostInputOptions } from "backend-plus";
 import { AppSiper } from "./app-principal";
+import { FieldDefinition } from "backend-plus";
 
 // exposes APIs from this package
 export * from "backend-plus";
@@ -41,3 +42,7 @@ export function soloCodigo(fieldName: string):Constraint{
 }
 
 export type Constructor<T> = new(...args: any[]) => T;
+
+export const idImportacion:FieldDefinition = {name: 'id_importacion', typeName: 'bigint', nullable:true, editable:false, // @ts-ignore */ 
+    sequence:{}
+}

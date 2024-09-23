@@ -49,7 +49,7 @@ const DESDE_AÑO = `2000`;
 const HASTA_AÑO = `2009`;
 const AÑOS_DE_PRUEBA = `annio BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
 const FECHAS_DE_PRUEBA = `extract(year from fecha) BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
-const IDPER_DE_PRUEBA = `idper like '1_3300_____'`;
+const IDPER_DE_PRUEBA = `idper like 'XX%'`;
 
 const COD_VACACIONES = "1";
 const COD_TELETRABAJO = "106";
@@ -134,10 +134,11 @@ describe("connected", function(){
         ], 'all')
     })
     async function crearNuevaPersona(numero:number): Promise<ctts.Persona>{
-        var persona: ctts.Persona = {
-            idper: (10330010005 + numero*11).toString(),
-            nomyape: "Persona de prueba " + numero,
-        }
+        var persona = {
+            cuil: (10330010005 + numero*11).toString(),
+            apellido: "XX Prueba " + numero,
+            nombres: "Persona"
+        } as ctts.Persona;
         var personaGrabada = await rrhhSession.saveRecord(
             ctts.personas,
             persona,

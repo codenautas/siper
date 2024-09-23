@@ -1,7 +1,7 @@
 set search_path = siper;
 
 create or replace function digito_verificador(p_digitos integer[], p_modulo integer, p_sumador integer, p_codigo text) returns integer
-  language plpgsql immutable leakproof strict parallel safe
+  language plpgsql immutable /*leakproof*/ strict parallel safe
 as
 $BODY$
 declare

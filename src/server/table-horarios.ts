@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, soloDigitosCons} from "./types-principal";
+import {TableDefinition, TableContext} from "./types-principal";
 
 import {idper} from "./table-personas"
 
@@ -24,7 +24,6 @@ export function horarios(context: TableContext): TableDefinition{
         ],
         constraints: [
             {constraintType: 'check', consName:'dia de la semana entre 0 y 6', expr: 'dds between 0 and 6'},
-            soloDigitosCons(idper.name),
         ]
     };
 }

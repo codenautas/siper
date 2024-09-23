@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext} from "./types-principal";
+import {TableDefinition, TableContext, idImportacion} from "./types-principal";
 
 export function nov_per_importado(context:TableContext):TableDefinition{
     var admin = context.user.rol==='admin';
@@ -9,6 +9,7 @@ export function nov_per_importado(context:TableContext):TableDefinition{
         /* tabla temporaria que permite importar desde un Excel externo */
         editable:admin,
         fields:[
+            idImportacion,
             /* Estos campos no deben cambiarse aunque cambien los originales */
             {name: 'annio'    , typeName: 'text', nullable:false, allowEmptyText:true, title:'Año'                       },
             {name: 'ficha'    , typeName: 'text', nullable:false, allowEmptyText:true, title:'Ficha'                     },
@@ -21,6 +22,6 @@ export function nov_per_importado(context:TableContext):TableDefinition{
             {name: 'novedad'  , typeName: 'text', nullable:false, allowEmptyText:true, title:'novedad'                    },
             {name: 'cantidad' , typeName: 'text', nullable:false, allowEmptyText:true, title:'Cantidad'                  },
         ],
-        primaryKey:['annio', 'cuil', 'ficha', 'idmeta4', 'categoria', 'nomyape','sector', 'motivo', 'novedad']
+        primaryKey: [idImportacion.name],
     };
 }
