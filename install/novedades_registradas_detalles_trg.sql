@@ -24,7 +24,7 @@ $BODY$;
 
 DROP TRIGGER IF EXISTS detalles_trg on novedades_registradas;
 CREATE TRIGGER detalles_trg
-  BEFORE INSERT OR UPDATE
+  BEFORE INSERT OR UPDATE OF detalles, cod_nov
   ON novedades_registradas
   FOR EACH ROW
   EXECUTE PROCEDURE detalles_trg();

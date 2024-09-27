@@ -47,7 +47,7 @@ install:
       - ../install/personas_horarios_trg.sql
       - ../install/fechas_nov_trg.sql
       - ../install/sectores_circulares_trg.sql
-      - ../install/detalles_trg.sql
+      - ../install/novedades_registradas_detalles_trg.sql
 logo: 
   path: client/img
 `;
