@@ -10,6 +10,8 @@ export const cod_nov = {
     description: is.object({
         cod_nov: is.string,
         novedad: is.string,
+    },{
+        con_detalles: is.nullable.boolean,
     })
 }
 

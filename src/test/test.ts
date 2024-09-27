@@ -55,7 +55,10 @@ const COD_VACACIONES = "1";
 const COD_TELETRABAJO = "106";
 const COD_TRAMITE = "121";
 const COD_DIAGRAMADO = "101";
+const COD_ENFERMEDAD = "12";
+const COD_MUDANZA = "124";
 const ADMIN_REQ = {user:{usuario:'perry', rol:''}};
+const TEXTO_PRUEBA = "un texto de prueba...";
 
 type Credenciales = {username: string, password: string};
 type UsuarioConCredenciales = ctts.Usuario & {credenciales: Credenciales};
@@ -484,6 +487,48 @@ describe("connected", function(){
                     );
                 })
             }, ctts.insufficient_privilege);
+        })
+        it("no puede cargarse una novedad sin detalles cuando el codigo de novedad indica con detalles", async function(){
+            await expectError( async () => {
+                await enNuevaPersona(19, {}, async (persona, {}) => {
+                    await rrhhAdminSession.saveRecord(
+                        ctts.cod_nov, 
+                        {cod_nov:COD_ENFERMEDAD, con_detalles:true}, 
+                        'update'
+                    );
+                    await rrhhAdminSession.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-02-09'), hasta:date.iso('2000-02-09'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
+                        'new'
+                    );
+                    await rrhhAdminSession.saveRecord(
+                        ctts.cod_nov, 
+                        {cod_nov:COD_ENFERMEDAD, con_detalles:null}, 
+                        'update'
+                    );
+                })
+            }, ctts.ERROR_COD_NOVEDAD_INDICA_CON_DETALLES);
+        })
+        it("no puede cargarse una novedad con detalles cuando el codigo de novedad indica sin detalles", async function(){
+            await expectError( async () => {
+                await enNuevaPersona(20, {}, async (persona, {}) => {
+                    await rrhhAdminSession.saveRecord(
+                        ctts.cod_nov, 
+                        {cod_nov:COD_MUDANZA, con_detalles:false}, 
+                        'update'
+                    );
+                    await rrhhAdminSession.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-02-09'), hasta:date.iso('2000-02-09'), cod_nov:COD_MUDANZA, idper: persona.idper, detalles:TEXTO_PRUEBA},
+                        'new'
+                    );
+                    await rrhhAdminSession.saveRecord(
+                        ctts.cod_nov, 
+                        {cod_nov:COD_MUDANZA, con_detalles:null}, 
+                        'update'
+                    );
+                })
+            }, ctts.ERROR_COD_NOVEDAD_INDICA_SIN_DETALLES);
         })
         it("un usuario común puede ver SOLO SUS novedades pasadas", async function(){
             await enNuevaPersona(27, {usuario:{sector:'PRA11',sesion:true}, hoy:date.iso('2000-02-02')}, async (persona, {sesion}) => {
