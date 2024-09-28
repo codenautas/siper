@@ -28,6 +28,9 @@ export function politicaNovedadesComun(alias:string){
                         FROM personas INNER JOIN usuarios USING (idper) 
                         WHERE usuario = get_app_user() AND idper <> ${alias}.idper)
                 )
+                AND (
+                    SELECT puede_cargar_dependientes FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user()
+                )
             )
         `;
 }

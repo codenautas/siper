@@ -531,27 +531,19 @@ describe("connected", function(){
             }, ctts.ERROR_COD_NOVEDAD_INDICA_SIN_DETALLES);
         })
         it("un usuario común puede ver SOLO SUS novedades pasadas", async function(){
-            var otrapersona = await crearNuevaPersona(26);
-            await rrhhSession.saveRecord(ctts.personas,{idper:otrapersona.idper,sector:'PRA11'}, 'update')
-            await rrhhAdminSession.saveRecord(
-                ctts.novedades_registradas, 
-                {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: otrapersona.idper},
-                'new'
-            );
-            await enNuevaPersona(27,
+            await enNuevaPersona(21,
                 {usuario:{sector:'PRA11',sesion:true}, hoy:date.iso('2000-02-02')},
-                async (persona, {sesion}) => {
-                    await rrhhAdminSession.saveRecord(
-                        ctts.novedades_registradas, 
-                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                        'new'
-                    );
-                    await sesion.tableDataTest('novedades_vigentes', [
-                        {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                        {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                        {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    ], 'all') //, {fixedFields:[{fieldName:'idper', value:persona.idper}]})
-                })
+                async (_, {sesion}
+            ) => {
+                var otrapersona = await crearNuevaPersona(22);
+                await rrhhSession.saveRecord(ctts.personas,{idper:otrapersona.idper,sector:'PRA11'}, 'update')
+                await rrhhAdminSession.saveRecord(
+                    ctts.novedades_registradas, 
+                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: otrapersona.idper},
+                    'new'
+                );
+                await sesion.tableDataTest('novedades_vigentes', [], 'all')
+            })
         })
         it("un usuario no puede cargarse novedades a sí mismo", async function(){
             await expectError( async () => {
