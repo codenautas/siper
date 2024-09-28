@@ -27,20 +27,8 @@ MERGE INTO novedades_vigentes nv
     UPDATE SET ficha = q.ficha, cod_nov = q.cod_nov, ent_fich = q.ent_fich, sal_fich = q.sal_fich, sector = q.sector, detalles = q.detalles
   WHEN NOT MATCHED THEN
     INSERT (idper, ficha, fecha, cod_nov, ent_fich, sal_fich, sector, detalles)
-      VALUES (q.idper, q.ficha, q.fecha, q.cod_nov, q.ent_fich, q.sal_fich, q.sector, q.detalles);
---WHEN NOT MATCHED BY SOURCE THEN DELETE --Postgresql 17
---agrego delete provisorio hasta que se instale el postgres 17
-DELETE FROM novedades_vigentes nv
-  USING
-  (SELECT v.idper, v.fecha
-    FROM novedades_vigentes v
-    LEFT JOIN novedades_calculadas/*idper**_idper**idper*/(p_desde, p_hasta/*idper**, p_idper**idper*/) c ON v.idper = c.idper AND v.fecha = c.fecha
-    WHERE /*idper**v.idper = p_idper
-      AND **idper*/v.fecha BETWEEN p_desde AND p_hasta 
-      AND c.idper IS NULL
-  ) d
-  WHERE nv.idper = d.idper AND nv.fecha = d.fecha;
---FIN agrego delete provisorio hasta que se instale el postgres 17
+      VALUES (q.idper, q.ficha, q.fecha, q.cod_nov, q.ent_fich, q.sal_fich, q.sector, q.detalles)
+  WHEN NOT MATCHED BY SOURCE AND nv.fecha BETWEEN p_desde AND p_hasta/*idper** AND nv.idper = p_idper**idper*/ THEN DELETE;
 END;
 $BODY$;
 
