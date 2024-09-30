@@ -530,6 +530,19 @@ describe("connected", function(){
                 })
             }, ctts.ERROR_COD_NOVEDAD_INDICA_SIN_DETALLES);
         })
+        it("un detalle para una novedad se copia en novedades_vigentes", async function(){
+            await enNuevaPersona(23, {}, async (persona) => {
+                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov:COD_MUDANZA, con_detalles:null}, 'update');
+                    await rrhhAdminSession.saveRecord(
+                    ctts.novedades_registradas, 
+                    {desde:date.iso('2000-02-10'), hasta:date.iso('2000-02-10'), cod_nov:COD_MUDANZA, idper: persona.idper, detalles:TEXTO_PRUEBA},
+                    'new'
+                );
+                await rrhhSession.tableDataTest('novedades_vigentes', [
+                    {fecha:date.iso('2000-02-10'), cod_nov:COD_MUDANZA, idper: persona.idper, detalles:TEXTO_PRUEBA},
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+            })
+        })
         it("un usuario común puede ver SOLO SUS novedades pasadas", async function(){
             await enNuevaPersona(21,
                 {usuario:{sector:'PRA11',sesion:true}, hoy:date.iso('2000-02-02')},
