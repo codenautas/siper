@@ -9,14 +9,14 @@ export function horarios(context: TableContext): TableDefinition{
     return {
         name: 'horarios',
         elementName: 'horario',
-        title: 'Horarios del personas',
+        title: 'Horarios del personal',
         editable: admin,
         fields: [
             {...idper, editable:admin},
             {name:'dds'              , typeName:'integer'                   },
             {name:'trabaja'          , typeName:'boolean' , nullable:false ,defaultValue:false},
-            {name:'hora_desde'       , typeName:'text'                      },
-            {name:'hora_hasta'       , typeName:'text'                      },
+            {name:'hora_desde'       , typeName:'time'                      },
+            {name:'hora_hasta'       , typeName:'time'                      },
         ],
         primaryKey: [idper.name,'dds'],
         foreignKeys: [

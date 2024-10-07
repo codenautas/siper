@@ -18,6 +18,7 @@ import { nov_gru              } from './table-nov_gru';
 import { novedades_importadas } from './table-novedades_importadas';
 import { nov_per_importado    } from './table-nov_per_importado';
 import { novedades_registradas} from './table-novedades_registradas';
+import { novedades_horarias   } from './table-novedades_horarias';
 import { novedades_vigentes   } from './table-novedades_vigentes';
 import { nov_per              } from './table-nov_per';
 import { usuarios             } from './table-usuarios';
@@ -127,6 +128,7 @@ export class AppSiper extends AppBackend{
             novedades_importadas ,
             nov_per_importado    ,
             novedades_registradas,
+            novedades_horarias   ,
             novedades_vigentes   ,
             nov_per              ,
             usuarios             ,

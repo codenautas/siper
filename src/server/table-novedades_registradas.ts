@@ -35,10 +35,10 @@ export function politicaNovedadesComun(alias:string){
         `;
 }
 
-export function politicaNovedades(alias:string){
+export function politicaNovedades(alias:string, nombreFecha:string){
     var politicaModficacion = `(${politicaNovedadesComun(alias)})
         AND (
-            (${alias == 'novedades_registradas' ? `desde` : alias == 'novedades_vigentes' ? `fecha` : 'ERROR'} 
+            (${nombreFecha} 
                 >= (SELECT fecha_actual FROM parametros WHERE unico_registro)
             )
             OR (
@@ -69,7 +69,7 @@ export function politicaNovedades(alias:string){
 export function novedades_registradas(_context: TableContext): TableDefinition{
     return {
         name: 'novedades_registradas',
-        elementName: 'registro',
+        elementName: 'novedad registrada',
         editable: true,
         fields:[
             idper,
@@ -100,7 +100,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
         ],
         hiddenColumns: [idr.name],
         sql:{
-            policies: politicaNovedades('novedades_registradas'),
+            policies: politicaNovedades('novedades_registradas', 'desde'),
         }
     };
 }
