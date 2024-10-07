@@ -7,7 +7,7 @@ CREATE OR REPLACE FUNCTION novedades_horarias_trg()
 AS
 $BODY$
 BEGIN
-  NEW.lapso = tsrange(new.fecha + new.desde_hora, new.fecha + new.hasta_hora);
+  NEW.lapso = tsrange(new.fecha + coalesce(new.desde_hora, '00:00'::time), new.fecha + coalesce(new.hasta_hora, '23:59'::time));
   RETURN NEW;
 END;
 $BODY$;
