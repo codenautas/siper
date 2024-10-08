@@ -57,8 +57,11 @@ const COD_TRAMITE = "121";
 const COD_DIAGRAMADO = "101";
 const COD_ENFERMEDAD = "12";
 const COD_MUDANZA = "124";
+const COD_COMISION = "10";
 const ADMIN_REQ = {user:{usuario:'perry', rol:''}};
 const TEXTO_PRUEBA = "un texto de prueba...";
+const HASTA_HORA = "14:00";
+const DESDE_HORA = "12:00";
 
 type Credenciales = {username: string, password: string};
 type UsuarioConCredenciales = ctts.Usuario & {credenciales: Credenciales};
@@ -568,6 +571,22 @@ describe("connected", function(){
                     );
                 })
             }, ctts.insufficient_privilege);
+        })
+        it("no puede cargarse una novedad horaria con superposición", async function(){
+            await expectError( async () => {
+                await enNuevaPersona(24, {}, async (persona, {}) => {
+                    await rrhhAdminSession.saveRecord(
+                        ctts.novedades_horarias, 
+                        {idper:persona.idper, fecha:date.iso('2000-03-05'), hasta_hora:HASTA_HORA ,cod_nov:COD_COMISION}, 
+                        'new'
+                    );
+                    await rrhhAdminSession.saveRecord(
+                        ctts.novedades_horarias, 
+                        {idper:persona.idper, fecha:date.iso('2000-03-05'), desde_hora:DESDE_HORA ,cod_nov:COD_COMISION}, 
+                        'new'
+                    );
+                })
+            }, ctts.check_sin_superponer);
         })
     })
     describe("jerarquía de sectores", function(){

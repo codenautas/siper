@@ -85,6 +85,21 @@ export const novedades_registradas = {
 
 export type NovedadRegistrada = DefinedType<typeof novedades_registradas.description>
 
+export const novedades_horarias = {
+    table: 'novedades_horarias',
+    description: is.object({
+        idper: is.string,
+        fecha: is.Date,
+    },{
+        desde_hora: is.string,
+        hasta_hora: is.string,
+        cod_nov: is.string,
+        detalles: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type NovedadHoraria = DefinedType<typeof novedades_horarias.description>
+
 export const personas = {
     table: 'personas',
     description: is.object({
@@ -222,3 +237,4 @@ export const ERROR_COD_NOVEDAD_INDICA_SIN_DETALLES = 'P1004';
 
 //////////// ERRORES POSTGRES:
 export const insufficient_privilege = '42501';
+export const check_sin_superponer = '23P01';
