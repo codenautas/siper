@@ -80,6 +80,7 @@ describe("connected", function(){
                     `delete from nov_gru where ${AÑOS_DE_PRUEBA}`,
                     `delete from novedades_vigentes where ${AÑOS_DE_PRUEBA} and ${IDPER_DE_PRUEBA}`,
                     `delete from novedades_registradas where ${AÑOS_DE_PRUEBA} and ${IDPER_DE_PRUEBA}`,
+                    `delete from novedades_horarias where ${IDPER_DE_PRUEBA}`,
                     `delete from usuarios where ${IDPER_DE_PRUEBA}`,
                     `delete from horarios where ${IDPER_DE_PRUEBA}`,
                     `delete from personas where ${IDPER_DE_PRUEBA}`,
