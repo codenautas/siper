@@ -34,6 +34,7 @@ export function novedades_horarias(_context: TableContext): TableDefinition{
         ],
         constraints: [
             {constraintType:'check', consName:'desde anterior a hasta', expr:`desde_hora < hasta_hora`},
+            {constraintType:'check', consName:'desde, hasta no ambos nulos', expr:`desde_hora is not null or hasta_hora is not null`},
             {constraintType:'exclude', consName:'sin superponer', using:'GIST', fields:[idper.name, {fieldName:'lapso', operator:'&&'}]}
         ],
         hiddenColumns: [idr.name],
