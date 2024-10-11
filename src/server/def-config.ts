@@ -53,6 +53,8 @@ install:
       - ../install/fechas_nov_trg.sql
       - ../install/sectores_circulares_trg.sql
       - ../install/novedades_registradas_detalles_trg.sql
+      - ../install/novedades_horarias_parcial_trg.sql
+      - ../install/novedades_registradas_total_trg.sql
 logo: 
   path: client/img
 `;

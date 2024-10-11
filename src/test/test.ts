@@ -213,7 +213,7 @@ describe("connected", function(){
         try {
             var persona1 = await crearNuevaPersona(numero1);
             var persona2 = await crearNuevaPersona(numero2);
-            await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA agregar feriado' }, 'new')
+            await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA agregar feriado', total:true }, 'new')
             haciendo = 'poniendo el feriado'
             await rrhhAdminSession.saveRecord(
                 ctts.fecha, 
@@ -576,6 +576,7 @@ describe("connected", function(){
         it("no puede cargarse una novedad horaria con superposición", async function(){
             await expectError( async () => {
                 await enNuevaPersona(24, {}, async (persona, {}) => {
+                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov:COD_COMISION, parcial:true}, 'update');
                     await rrhhAdminSession.saveRecord(
                         ctts.novedades_horarias, 
                         {idper:persona.idper, fecha:date.iso('2000-03-05'), hasta_hora:HASTA_HORA ,cod_nov:COD_COMISION}, 

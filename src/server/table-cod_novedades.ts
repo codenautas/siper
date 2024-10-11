@@ -25,6 +25,8 @@ export function cod_novedades(context:TableContext):TableDefinition{
             clase,
             {name: 'c_dds'       , typeName: 'boolean', description:'especifica el día de la semana'},
             {name: 'con_detalles', typeName: 'boolean',                                             },
+            {name: 'total'       , typeName: 'boolean',                                             },
+            {name: 'parcial'     , typeName: 'boolean',                                             },
         ],
         primaryKey:[cod_nov.name],
         constraints:[
@@ -38,6 +40,7 @@ export function cod_novedades(context:TableContext):TableDefinition{
         detailTables:[
             {table:'novedades_vigentes'   , fields:[cod_nov.name], abr:'N'},
             {table:'novedades_registradas', fields:[cod_nov.name], abr:'R'},
+            {table:'novedades_horarias'   , fields:[cod_nov.name], abr:'H'},
             {table:'nov_per'           , fields:[cod_nov.name], abr:'#'},
             {table:'nov_gru'           , fields:[cod_nov.name, clase.name], abr:'g'}
         ]

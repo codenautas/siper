@@ -12,6 +12,8 @@ export const cod_nov = {
         novedad: is.string,
     },{
         con_detalles: is.nullable.boolean,
+        total: is.nullable.boolean,
+        parcial: is.nullable.boolean,
     })
 }
 
@@ -234,6 +236,8 @@ export const ERROR_REFERENCIA_CIRCULAR_EN_SECTORES = 'P1001';
 export const ERROR_NO_SE_PUEDE_CARGAR_EN_EL_PASADO = 'P1002';
 export const ERROR_COD_NOVEDAD_INDICA_CON_DETALLES = 'P1003';
 export const ERROR_COD_NOVEDAD_INDICA_SIN_DETALLES = 'P1004';
+export const ERROR_COD_NOVEDAD_INDICA_NOV_TOTAL    = 'P1005';
+export const ERROR_COD_NOVEDAD_INDICA_NOV_PARCIAL  = 'P1006';
 
 //////////// ERRORES POSTGRES:
 export const insufficient_privilege = '42501';
