@@ -10,6 +10,7 @@ import { date } from "best-globals";
 
 import * as discrepances from 'discrepances';
 
+const TIMEOUT_SPEED = 1000 * (process.env.BP_TIMEOUT_SPEED as unknown as number ?? 1);
 
 /*
  * Para debuguear el servidor por separado hay abrir dos ventanas, en una corren los test (normalmente) 
@@ -71,7 +72,7 @@ describe("connected", function(){
     var rrhhSession: EmulatedSession<AppSiper>;
     var rrhhAdminSession: EmulatedSession<AppSiper>; // no cualquier rrhh
     before(async function(){
-        this.timeout(7000);
+        this.timeout(TIMEOUT_SPEED * 7);
         server = await startServer(AppSiper);
         // @ts-expect-error: todavía no está en el config tests-can-delete-db
         if (server.config.devel['tests-can-delete-db']) {
@@ -240,7 +241,7 @@ describe("connected", function(){
         }
     }
     describe("registro de novedades", function(){
-        this.timeout(7000);
+        this.timeout(TIMEOUT_SPEED * 7);
         var basicoSession: EmulatedSession<AppSiper>
         var jefe11Session: EmulatedSession<AppSiper>
         before(async function(){
@@ -252,7 +253,7 @@ describe("connected", function(){
             });
         })
         it("insertar una semana de vacaciones como primera novedad", async function(){
-            this.timeout(7000);
+            this.timeout(TIMEOUT_SPEED * 7);
             await enNuevaPersona(1, {vacaciones: 20}, async (persona) => {
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper: persona.idper};
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
@@ -290,7 +291,7 @@ describe("connected", function(){
             })
         })
         it("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
-            this.timeout(8000);
+            this.timeout(TIMEOUT_SPEED * 8);
             await enNuevaPersona(3, {vacaciones: 20, tramites: 4}, async (persona) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
@@ -641,7 +642,7 @@ describe("connected", function(){
         })
     })
     after(async function(){
-        this.timeout(120000);
+        this.timeout(TIMEOUT_SPEED * 12);
         var error: Error|null = null;
         try {
             /**
@@ -712,7 +713,7 @@ describe("connected", function(){
             console_log(err);
             error = err as Error;
         }
-        this.timeout(3000);
+        this.timeout(TIMEOUT_SPEED * 3);
         await server.shutdownBackend()
         console.log('server down!');
         server = null as unknown as AppSiper;
