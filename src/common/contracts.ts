@@ -55,7 +55,7 @@ export type NovGru = DefinedType<typeof nov_gru.description>
 export const nov_per = {
     table: 'nov_per',
     description: is.object({
-        año: is.string,
+        año: is.number,
         cod_nov: is.string,
         idper: is.string,
         cantidad: is.number,
@@ -65,6 +65,19 @@ export const nov_per = {
 } satisfies CommonEntityDefinition
 
 export type NovPer = DefinedType<typeof nov_per.description>
+
+export const per_nov_cant = {
+    table: 'per_nov_cant',
+    description: is.object({
+        annio: is.number,
+        cod_nov: is.string,
+        idper: is.string,
+        origen: is.string,
+        cantidad: is.number,
+    })
+} satisfies CommonEntityDefinition
+
+export type PerNovCant = DefinedType<typeof per_nov_cant.description>
 
 export const novedades_registradas = {
     table: 'novedades_registradas',

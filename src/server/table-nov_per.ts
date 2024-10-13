@@ -13,13 +13,14 @@ export function nov_per(_context: TableContext): TableDefinition {
         editable: false,
         fields:[
             año,
+            {name: 'origen' , typeName: 'text'},
             cod_nov,
             idper,
             {name: 'cantidad', typeName: 'integer'},
             {name: 'limite'  , typeName: 'integer', title:'límite'},
             {name: 'saldo'   , typeName: 'integer'},
         ],
-        primaryKey: [año.name, cod_nov.name, idper.name],
+        primaryKey: [año.name, cod_nov.name, 'origen', idper.name],
         softForeignKeys: [
             {references: 'annios'       , fields: [año.name], onUpdate: 'no action'},
             {references: 'personas'     , fields: [idper.name]},
@@ -31,13 +32,12 @@ export function nov_per(_context: TableContext): TableDefinition {
         sql: {
             isTable:false,
             from:`(
-                select annio, cod_nov, idper, count(*) as cantidad, maximo as limite, maximo - count(*) as saldo
+                select annio, cod_nov, idper, max(origen) as origen, count(*) as cantidad, cantidad as limite, cantidad - count(*) as saldo
                     from novedades_vigentes n
                         inner join cod_novedades cn using(cod_nov)
                         inner join personas p using(idper)
-                        left join per_gru pg using(clase, idper)
-                        left join nov_gru ng using(annio, cod_nov, clase, grupo)
-                    group by annio, cod_nov, idper, maximo
+                        left join per_nov_cant using(annio, idper, cod_nov)
+                    group by annio, cod_nov, idper, cantidad
             )`
         }
     };

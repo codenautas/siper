@@ -20,6 +20,7 @@ import { nov_per_importado    } from './table-nov_per_importado';
 import { novedades_registradas} from './table-novedades_registradas';
 import { novedades_horarias   } from './table-novedades_horarias';
 import { novedades_vigentes   } from './table-novedades_vigentes';
+import { per_nov_cant         } from './table-per_nov_cant';
 import { nov_per              } from './table-nov_per';
 import { usuarios             } from './table-usuarios';
 import { parametros           } from "./table-parametros";
@@ -130,6 +131,7 @@ export class AppSiper extends AppBackend{
             novedades_registradas,
             novedades_horarias   ,
             novedades_vigentes   ,
+            per_nov_cant         ,
             nov_per              ,
             usuarios             ,
             parametros           ,

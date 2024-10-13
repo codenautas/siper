@@ -78,6 +78,7 @@ describe("connected", function(){
         if (server.config.devel['tests-can-delete-db']) {
             await server.inDbClient(ADMIN_REQ, async client=>{
                 await client.executeSentences([
+                    `delete from per_nov_cant where ${AÑOS_DE_PRUEBA}`,
                     `delete from nov_gru where ${AÑOS_DE_PRUEBA}`,
                     `delete from novedades_vigentes where ${AÑOS_DE_PRUEBA} and ${IDPER_DE_PRUEBA}`,
                     `delete from novedades_registradas where ${AÑOS_DE_PRUEBA} and ${IDPER_DE_PRUEBA}`,
@@ -172,8 +173,6 @@ describe("connected", function(){
         try {
             var persona = await crearNuevaPersona(numero);
             var {vacaciones, tramites, hoy} = opciones;
-            await rrhhAdminSession.saveRecord(ctts.grupos, {clase: 'I', grupo: persona.idper}, 'new');
-            await rrhhAdminSession.saveRecord(ctts.per_gru, {idper: persona.idper, clase: 'I', grupo: persona.idper}, 'new');
             await rrhhAdminSession.saveRecord(ctts.per_gru, {idper: persona.idper, clase: 'U', grupo: 'T'}, 'new');
             var usuario = null as unknown as UsuarioConCredenciales;
             var sesion = null as unknown as EmulatedSession<AppSiper>;
@@ -184,8 +183,8 @@ describe("connected", function(){
                 }
                 if (opciones.usuario.sector) await rrhhSession.saveRecord(ctts.personas,{idper:persona.idper,sector:opciones.usuario.sector}, 'update')
             }
-            if (vacaciones) await rrhhAdminSession.saveRecord(ctts.nov_gru, {annio:2000, cod_nov: COD_VACACIONES, clase: 'I', grupo: persona.idper, maximo: vacaciones }, 'new')
-            if (tramites) await rrhhAdminSession.saveRecord(ctts.nov_gru, {annio:2000, cod_nov: COD_TRAMITE, clase: 'U', grupo: 'T', maximo: 4 }, 'new')
+            if (vacaciones) await rrhhAdminSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_VACACIONES, idper: persona.idper, cantidad: vacaciones }, 'new')
+            if (tramites) await rrhhAdminSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_TRAMITE, idper:persona.idper, cantidad: 4 }, 'new')
             if (hoy) {
                 await server.inDbClient(ADMIN_REQ, client => client.query("update parametros set fecha_actual = $1", [hoy]).execute())
             }
