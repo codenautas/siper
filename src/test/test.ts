@@ -444,15 +444,15 @@ describe("connected", function(){
             })
         })
         it("un usuario común no puede cargar novedades pasadas", async function(){
-            await expectError( async () => {
-                await enNuevaPersona(13, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async (persona, {sesion}) => {
+            await enNuevaPersona(13, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async (persona, {sesion}) => {
+                await expectError( async () => {
                     await sesion.saveRecord(
                         ctts.novedades_registradas, 
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
                         'new'
                     );
-                })
-            }, ctts.insufficient_privilege)
+                }, ctts.insufficient_privilege)
+            })
         })
         it("un jefe puede cargar a alguien de su equipo", async function(){
             await enNuevaPersona(15, {usuario:{sector:'PRA11'}}, async (persona) => {
@@ -483,19 +483,19 @@ describe("connected", function(){
             })
         })
         it("un jefe no puede cargar a alguien de un equipo no perteneciente", async function(){
-            await expectError( async () => {
-                await enNuevaPersona(17, {usuario:{sector:'PRA12'}}, async (persona) => {
+            await enNuevaPersona(17, {usuario:{sector:'PRA12'}}, async (persona) => {
+                await expectError( async () => {
                     await jefe11Session.saveRecord(
                         ctts.novedades_registradas, 
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
                         'new'
                     );
-                })
-            }, ctts.insufficient_privilege);
+                }, ctts.insufficient_privilege);
+            })
         })
         it("no puede cargarse una novedad sin detalles cuando el codigo de novedad indica con detalles", async function(){
-            await expectError( async () => {
-                await enNuevaPersona(19, {}, async (persona, {}) => {
+            await enNuevaPersona(19, {}, async (persona, {}) => {
+                await expectError( async () => {
                     await rrhhAdminSession.saveRecord(
                         ctts.cod_nov, 
                         {cod_nov:COD_ENFERMEDAD, con_detalles:true}, 
@@ -511,12 +511,12 @@ describe("connected", function(){
                         {cod_nov:COD_ENFERMEDAD, con_detalles:null}, 
                         'update'
                     );
-                })
-            }, ctts.ERROR_COD_NOVEDAD_INDICA_CON_DETALLES);
+                }, ctts.ERROR_COD_NOVEDAD_INDICA_CON_DETALLES);
+            })
         })
         it("no puede cargarse una novedad con detalles cuando el codigo de novedad indica sin detalles", async function(){
-            await expectError( async () => {
-                await enNuevaPersona(20, {}, async (persona, {}) => {
+            await enNuevaPersona(20, {}, async (persona, {}) => {
+                await expectError( async () => {
                     await rrhhAdminSession.saveRecord(
                         ctts.cod_nov, 
                         {cod_nov:COD_MUDANZA, con_detalles:false}, 
@@ -532,8 +532,8 @@ describe("connected", function(){
                         {cod_nov:COD_MUDANZA, con_detalles:null}, 
                         'update'
                     );
-                })
-            }, ctts.ERROR_COD_NOVEDAD_INDICA_SIN_DETALLES);
+                }, ctts.ERROR_COD_NOVEDAD_INDICA_SIN_DETALLES);
+            })
         })
         it("un detalle para una novedad se copia en novedades_vigentes", async function(){
             await enNuevaPersona(23, {}, async (persona) => {
@@ -564,19 +564,19 @@ describe("connected", function(){
             })
         })
         it("un usuario no puede cargarse novedades a sí mismo", async function(){
-            await expectError( async () => {
-                await enNuevaPersona(18, {usuario:{sector:'PRA12', sesion:true}}, async (persona, {sesion}) => {
+            await enNuevaPersona(18, {usuario:{sector:'PRA12', sesion:true}}, async (persona, {sesion}) => {
+                await expectError( async () => {
                     await sesion.saveRecord(
                         ctts.novedades_registradas, 
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
                         'new'
                     );
-                })
-            }, ctts.insufficient_privilege);
+                }, ctts.insufficient_privilege);
+            })
         })
         it("no puede cargarse una novedad horaria con superposición", async function(){
-            await expectError( async () => {
-                await enNuevaPersona(24, {}, async (persona, {}) => {
+            await enNuevaPersona(24, {}, async (persona, {}) => {
+                await expectError( async () => {
                     await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov:COD_COMISION, parcial:true}, 'update');
                     await rrhhAdminSession.saveRecord(
                         ctts.novedades_horarias, 
@@ -588,8 +588,8 @@ describe("connected", function(){
                         {idper:persona.idper, fecha:date.iso('2000-03-05'), desde_hora:DESDE_HORA ,cod_nov:COD_COMISION}, 
                         'new'
                     );
-                })
-            }, ctts.check_sin_superponer);
+                }, ctts.check_sin_superponer);
+            })
         })
     })
     describe("jerarquía de sectores", function(){
