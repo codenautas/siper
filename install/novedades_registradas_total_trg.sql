@@ -13,7 +13,7 @@ BEGIN
     FROM cod_novedades
     WHERE cod_nov = NEW.cod_nov;
   IF NOT COALESCE(vtotal, false) THEN
-    RAISE 'Novedad codigo % indica novedad TOTAL', NEW.cod_nov USING ERRCODE = 'P1005';
+    RAISE 'Novedad codigo % NO indica novedad TOTAL', NEW.cod_nov USING ERRCODE = 'P1005';
   END IF;
   RETURN NEW;
 END;

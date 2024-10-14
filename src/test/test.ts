@@ -590,6 +590,30 @@ describe("connected", function(){
                 }, ctts.check_sin_superponer);
             })
         })
+        it("no puede cargarse una novedad horaria cuando el codigo de novedad NO indica PARCIAL", async function(){
+            await enNuevaPersona(25, {}, async (persona, {}) => {
+                await expectError( async () => {
+                    await rrhhAdminSession.saveRecord(
+                        ctts.novedades_horarias, 
+                        {idper: persona.idper, fecha:date.iso('2000-02-09'),hasta_hora:HASTA_HORA, cod_nov:COD_MUDANZA},
+                        'new'
+                    );
+                }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_PARCIAL);
+            })
+        })
+        it("no puede cargarse una novedad (registrada) cuando el codigo de novedad NO indica TOTAL", async function(){
+            await enNuevaPersona(26, {}, async (persona, {}) => {
+                await expectError( async () => {
+                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov:COD_VACACIONES, total:false}, 'update');
+                    await rrhhAdminSession.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                        'new'
+                    );
+                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov:COD_VACACIONES, total:true}, 'update');
+                }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_TOTAL);
+            })
+        })
     })
     describe("jerarquía de sectores", function(){
         async function pertenceceSector(sector:string, perteneceA:string){

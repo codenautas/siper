@@ -13,7 +13,7 @@ BEGIN
     FROM cod_novedades
     WHERE cod_nov = NEW.cod_nov;
   IF NOT COALESCE(vparcial, false) THEN
-    RAISE 'Novedad codigo % indica novedad PARCIAL', NEW.cod_nov USING ERRCODE = 'P1006';
+    RAISE 'Novedad codigo % NO indica novedad PARCIAL', NEW.cod_nov USING ERRCODE = 'P1006';
   END IF;
   RETURN NEW;
 END;
