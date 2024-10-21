@@ -19,14 +19,17 @@ export type Constructor<T> = new(...args: any[]) => T;
 
 export async function startServer<T extends AppBackend>(AppConstructor: Constructor<T>):Promise<T>{
     var server = new AppConstructor();
+    await server.start();
     var config = await MiniTools.readConfig(
         [server.config],
         {whenNotExist:'ignore'}
     );
     // var client = await pg.connect(config.db);
     // await client.executeSqlScript('test/fixtures/dump-4test.sql');
-    console.log('servidor configurado',config);
-    await server.start();
+    if (config.devel.delay) {
+        console.log('************************ WARNING ************************')
+        console.log('config.devel.delay', config.devel.delay, 'deberia ser 0 para tests')
+    }
     try {
         fs.unlink('local-log-all.sql')
     } catch (err) {

@@ -90,7 +90,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
         primaryKey: [idper.name, 'desde', idr.name],
         foreignKeys: [
             {references: 'annios'  , fields: [año.name], onUpdate: 'no action'},
-            {references: 'personas', fields: [idper.name]},
+            {references: 'personas', fields: [idper.name], displayFields:['apellido', 'nombres', 'idmeta4', 'cuil', 'ficha']},
             {references: 'cod_novedades', fields: [cod_nov.name]},
             {references: 'fechas', fields: [{source:'desde', target:'fecha'}], alias:'desde'},
             {references: 'fechas', fields: [{source:'hasta', target:'fecha'}], alias:'hasta'},
