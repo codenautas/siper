@@ -65,6 +65,13 @@ function DiasHabiles(props:{novedad:Partial<NovedadRegistrada>}){
     return <Typography>{leyenda.leyenda}</Typography>
 }
 
+function Navegar(href:string){
+    // @ts-ignore
+    window.history.pushState(null, '', href);
+    window.location.href = href;
+    // my.showPage();
+}
+
 function Historico(props:{idper:string}){
     const {idper} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
@@ -317,8 +324,16 @@ function NovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsIn
           <Button variant="contained" onClick={() => toggleHistorico(true)}>
             Historico
           </Button>
+          <Button
+            variant="contained"
+            onClick={(e) => {
+                e.preventDefault();
+                Navegar(`menu#i=novedades,status&ff=,idper:${f.idper.value}`);
+            }}
+            >
+            Estado
+          </Button>
         </Box>
-  
         <Box
           sx={{
             flex: 2,

@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import {
-    useEffect, useState, 
+    useEffect, useState, useMemo
 } from "react";
 //@ts-ignore
 import { CardEditorConnected, Connector, GenericField, GenericFieldProperties, MenuH, OptionsInfo, renderConnectedApp, RowType } from "frontend-plus";
@@ -104,101 +104,346 @@ function Historico(props:{idper:string}){
     </Card>
 }
 
-function Calendario(props:{idper:string}){
-    const {idper} = props;
-    const [annios, setAnnios] = useState<Annio[]>([]);
-    const [periodo, setPeriodo] = useState({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
-    const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
-    const [diaSeleccionado, setDiaSeleccionado] = useState<{ dia: number | null, mes: number | null, annio: number | null, cod_nov?: string }>({ dia: null, mes: null, annio: null });
-    useEffect(function(){
-        setCalendario([]);
-        // ver async
-        my.ajax.table_data({table: 'annios', fixedFields: [],paramfun:{} }).then(_annios => {
-            setAnnios(_annios);
-        });
-        if (idper != null) my.ajax.calendario_persona({idper, ...periodo}).then(dias => {
-            var semanas = [];
-            var semana = [];
-            for(var i = 0; i < dias[0].dds; i++) {
-                semana.push({});
-            }
-            for(var dia of dias){
-                semana.push(dia);
-                if (dia.dds == 6) {
-                    semanas.push(semana);   
-                    semana = []
-                }
-            }
-            if (dia.dds != 6) {
-                for(var j = dias[0].dds + 1; j < 6; j++) {
-                    semana.push({});
-                }
-                semanas.push(semana);
-            }
-            setCalendario(semanas)
-        })
+function Calendario(props: { idper: string }) {
+  const { idper } = props;
+  const [annios, setAnnios] = useState<Annio[]>([]);
+  const [periodo, setPeriodo] = useState({
+    mes: new Date().getMonth() + 1,
+    annio: new Date().getFullYear(),
+  });
+  const [calendario, setCalendario] = useState<CalendarioResult[]>([]);
+  const [diaSeleccionado, setDiaSeleccionado] = useState<{
+    dia: number | null;
+    mes: number | null;
+    annio: number | null;
+    cod_nov?: string;
+  }>({ dia: null, mes: null, annio: null });
 
-    },[idper, periodo.mes, periodo.annio])
-    return <Card className="calendario-mes">
-        <Box style={{ flex:1}}>
-        <Box>
-            <Select 
-                value={periodo.mes}
-                onChange={(event) => { // buscar el tipo correcto
-                    setPeriodo({mes:Number(event.target.value), annio:periodo.annio});
-                }}
+  const getPrimerDia = (mes: number, annio: number) => {
+    const diaSemana = new Date(annio, mes - 1, 1).getDay();
+    return diaSemana === 0 ? 6 : diaSemana - 1;
+  };
+
+  const DiaContainer = ({ dia, cod_nov }: { dia: number | null; cod_nov?: string }) => {
+    return useMemo(
+      () => (
+        <>
+          <span className="calendario-extendido-dia-numero">{dia ?? ""}</span>
+          <span className="calendario-extendido-dia-contenido">{cod_nov ?? ""}</span>
+        </>
+      ),
+      [dia, cod_nov]
+    );
+  };
+
+  const Dia = ({
+    dia,
+    tipo_dia,
+    cod_nov,
+    isSelected,
+    onClick,
+  }: {
+    dia: number | null;
+    tipo_dia: string;
+    cod_nov?: string;
+    isSelected: boolean;
+    onClick: () => void;
+  }) => {
+    return useMemo(
+      () => (
+        <div
+          className={`calendario-extendido-dia tipo-dia-${tipo_dia || ""} ${
+            isSelected ? "calendario-extendido-dia-seleccionado" : ""
+          }`}
+          onClick={onClick}
+        >
+          <DiaContainer dia={dia} cod_nov={cod_nov} />
+        </div>
+      ),
+      [dia, tipo_dia, cod_nov, isSelected]
+    );
+  };
+
+  const handleNavigation = (direction: 'prev' | 'next') => {
+    if (direction === 'prev') {
+      if (periodo.mes === 1) {
+        setPeriodo({ mes: 12, annio: periodo.annio - 1 });
+      } else {
+        setPeriodo({ mes: periodo.mes - 1, annio: periodo.annio });
+      }
+    } else if (direction === 'next') {
+      if (periodo.mes === 12) {
+        setPeriodo({ mes: 1, annio: periodo.annio + 1 });
+      } else {
+        setPeriodo({ mes: periodo.mes + 1, annio: periodo.annio });
+      }
+    }
+  };
+
+  useEffect(() => {
+    my.ajax.table_data({ table: "annios", fixedFields: [], paramfun: {} }).then((data: Annio[]) => {
+      setAnnios(data);
+    });
+
+    if (idper) {
+      const primerDia = getPrimerDia(periodo.mes, periodo.annio);
+      const totalDias = 42;
+
+      const actualizarCalendario = new Array(totalDias).fill({
+        dia: null,
+        tipo_dia: "",
+        cod_nov: "",
+      });
+
+      my.ajax.calendario_persona({ idper, ...periodo }).then((dias: CalendarioResult[]) => {
+        dias.forEach((dia, index) => {
+          actualizarCalendario[primerDia + index] = dia;
+        });
+
+        setCalendario(actualizarCalendario);
+      });
+    }
+  }, [idper, periodo.mes, periodo.annio]);
+
+  return (
+    <Card className="calendario-extendido-mes">
+      <Box style={{ flex: 1 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Box display="flex" alignItems="center">
+            <Select
+              value={periodo.mes}
+              onChange={(event) =>
+                setPeriodo({ mes: Number(event.target.value), annio: periodo.annio })
+              }
+              style={{ marginRight: '1rem' }}
             >
-                {meses.map((mes) => (
-                    <MenuItem key={mes.value} value={mes.value}>
-                        {mes.name}
-                    </MenuItem>
-                ))}
+              {meses.map((mes) => (
+                <MenuItem key={mes.value} value={mes.value}>
+                  {mes.name}
+                </MenuItem>
+              ))}
             </Select>
-            <Select 
-                value={periodo.annio}
-                onChange={(event) => { // buscar el tipo correcto
-                    setPeriodo({mes:periodo.mes, annio:Number(event.target.value)});
-                }}
+            <Select
+              value={periodo.annio}
+              onChange={(event) =>
+                setPeriodo({ mes: periodo.mes, annio: Number(event.target.value) })
+              }
             >
-                {
-                    // @ts-ignore
-                    annios.map((annio:Annio) => (
-                    <MenuItem key={annio.annio} value={annio.annio}>
-                        {annio.annio.toString()}
-                    </MenuItem>
-                ))
+              {// @ts-ignore
+              annios.map((annio) => (
+                <MenuItem key={annio.annio} value={annio.annio}>
+                  {annio.annio.toString()}
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
+
+          <Box display="flex">
+            <Button variant="outlined" onClick={() => handleNavigation('prev')} style={{ marginRight: '0.5rem' }}>
+              Atras
+            </Button>
+            <Button variant="outlined" onClick={() => handleNavigation('next')}>
+              Adelante
+            </Button>
+          </Box>
+        </Box>
+
+        <Box className="calendario-extendido-header">
+          <div>Lun</div>
+          <div>Mar</div>
+          <div>Mié</div>
+          <div>Jue</div>
+          <div>Vie</div>
+          <div>Sáb</div>
+          <div>Dom</div>
+        </Box>
+
+        <Box className="calendario-extendido-grid">
+          {Array.from({ length: 6 }).map((_, s) => (
+            <Box key={s} className="calendario-extendido-semana">
+              {Array.from({ length: 7 }).map((_, d) => {
+                const index = s * 7 + d;
+                const dia = calendario[index];
+
+                return (
+                  <Dia
+                    key={index}
+                    dia={dia?.dia}
+                    tipo_dia={dia?.tipo_dia || ""}
+                    cod_nov={dia?.cod_nov}
+                    isSelected={
+                      diaSeleccionado.dia === dia?.dia &&
+                      diaSeleccionado.mes === periodo.mes &&
+                      diaSeleccionado.annio === periodo.annio
                     }
-            </Select>
+                    onClick={() =>
+                      dia?.dia &&
+                      setDiaSeleccionado({
+                        dia: dia.dia,
+                        mes: periodo.mes,
+                        annio: periodo.annio,
+                        cod_nov: dia.cod_nov,
+                      })
+                    }
+                  />
+                );
+              })}
+            </Box>
+          ))}
         </Box>
-        <Box className="calendario-semana">
-            <div className="calendario-nombre-dia tipo-dia-no-laborable">dom</div>
-            <div className="calendario-nombre-dia">lun</div>
-            <div className="calendario-nombre-dia">mar</div>
-            <div className="calendario-nombre-dia">mié</div>
-            <div className="calendario-nombre-dia">jue</div>
-            <div className="calendario-nombre-dia">vie</div>
-            <div className="calendario-nombre-dia tipo-dia-no-laborable">sáb</div>
-        </Box>
-        {calendario.map(semana => <Box className="calendario-semana">
-            {semana.map(dia => <div className={`calendario-dia tipo-dia-${dia.tipo_dia} ${
-                diaSeleccionado.dia === dia.dia && diaSeleccionado.mes === periodo.mes && diaSeleccionado.annio === periodo.annio? 'calendario-dia-seleccionado' : ''
-              }`}
-              onClick={() => setDiaSeleccionado({ dia: dia.dia, mes: periodo.mes, annio: periodo.annio, cod_nov: dia.cod_nov })}
-              >
-                <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
-                <span className="calendario-dia-contenido">{dia.cod_nov ?? ''}</span>
-            </div>)}
-        </Box>)}
-        </Box>
-        <Box>
+      </Box>
+
+      <Box>
         {diaSeleccionado.cod_nov && (
           <div>
-            <p><strong>Codigo:</strong> {diaSeleccionado.cod_nov}</p>
+            <p>
+              <strong>Codigo:</strong> {diaSeleccionado.cod_nov}
+            </p>
           </div>
         )}
       </Box>
     </Card>
+  );
 }
+
+// function Calendario(props: { idper: string }) {
+//     const { idper } = props;
+//     const [annios, setAnnios] = useState<Annio[]>([]);
+//     const [periodo, setPeriodo] = useState({
+//       mes: new Date().getMonth() + 1,
+//       annio: new Date().getFullYear(),
+//     });
+//     const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
+//     const [diaSeleccionado, setDiaSeleccionado] = useState<{
+//       dia: number | null;
+//       mes: number | null;
+//       annio: number | null;
+//       cod_nov?: string;
+//     }>({ dia: null, mes: null, annio: null });
+  
+//     useEffect(function () {
+//       setCalendario([]);
+//       my.ajax.table_data({ table: "annios", fixedFields: [], paramfun: {} }).then((_annios) => {
+//         setAnnios(_annios);
+//       });
+//       if (idper != null)
+//         my.ajax.calendario_persona({ idper, ...periodo }).then((dias) => {
+//           let semanas: any[] = [];
+//           let semana: any[] = [];
+  
+//           const primer = dias[0].dds === 0 ? 7 : dias[0].dds;
+  
+//           for (let i = 1; i < primer; i++) {
+//             semana.push({});
+//           }
+  
+//           for (let dia of dias) {
+//             semana.push(dia);
+//             if (dia.dds === 0) {
+//               semanas.push(semana);
+//               semana = [];
+//             }
+//           }
+  
+//           if (semana.length > 0 && semana.length < 7) {
+//             for (let i = semana.length; i < 7; i++) {
+//               semana.push({});
+//             }
+//             semanas.push(semana);
+//           }
+  
+//           setCalendario(semanas);
+//         });
+//     }, [idper, periodo.mes, periodo.annio]);
+  
+//     return (
+//       <Card className="calendario-extendido-mes">
+//         <Box style={{ flex: 1 }}>
+//           <Box display="flex" justifyContent="space-between" mb={2}>
+//             <Select
+//               value={periodo.mes}
+//               onChange={(event) =>
+//                 setPeriodo({ mes: Number(event.target.value), annio: periodo.annio })
+//               }
+//             >
+//               {meses.map((mes) => (
+//                 <MenuItem key={mes.value} value={mes.value}>
+//                   {mes.name}
+//                 </MenuItem>
+//               ))}
+//             </Select>
+//             <Select
+//               value={periodo.annio}
+//               onChange={(event) =>
+//                 setPeriodo({ mes: periodo.mes, annio: Number(event.target.value) })
+//               }
+//             >
+//               {// @ts-ignore
+//               annios.map((annio) => (
+//                 <MenuItem key={annio.annio} value={annio.annio}>
+//                   {annio.annio.toString()}
+//                 </MenuItem>
+//               ))}
+//             </Select>
+//           </Box>
+  
+//           <Box className="calendario-extendido-header">
+//             <div>Lun</div>
+//             <div>Mar</div>
+//             <div>Mié</div>
+//             <div>Jue</div>
+//             <div>Vie</div>
+//             <div>Sáb</div>
+//             <div>Dom</div>
+//           </Box>
+  
+//           <Box className="calendario-extendido-grid">
+//             {calendario.map((semana, weekIndex) => (
+//               <Box key={weekIndex} className="calendario-extendido-semana">
+//                 {semana.map((dia, dayIndex) => (
+//                   <div
+//                     key={dayIndex}
+//                     className={`calendario-extendido-dia tipo-dia-${dia.tipo_dia || ""} ${
+//                       diaSeleccionado.dia === dia.dia &&
+//                       diaSeleccionado.mes === periodo.mes &&
+//                       diaSeleccionado.annio === periodo.annio
+//                         ? "calendario-extendido-dia-seleccionado"
+//                         : ""
+//                     }`}
+//                     onClick={() =>
+//                       dia.dia &&
+//                       setDiaSeleccionado({
+//                         dia: dia.dia,
+//                         mes: periodo.mes,
+//                         annio: periodo.annio,
+//                         cod_nov: dia.cod_nov,
+//                       })
+//                     }
+//                   >
+//                     <span className="calendario-extendido-dia-numero">{dia.dia ?? ""}</span>
+//                     <span className="calendario-extendido-dia-contenido">{dia.cod_nov ?? ""}</span>
+//                   </div>
+//                 ))}
+//               </Box>
+//             ))}
+//           </Box>
+//         </Box>
+  
+//         <Box>
+//           {diaSeleccionado.cod_nov && (
+//             <div>
+//               <p>
+//                 <strong>Codigo:</strong> {diaSeleccionado.cod_nov}
+//               </p>
+//             </div>
+//           )}
+//         </Box>
+//       </Card>
+//     );
+// }
+  
+export default Calendario;
+  
 
 function LicenciaResumenPersona(props:{idper:string}){
     const {idper} = props;
@@ -275,7 +520,7 @@ function NovedadesPendientes(props:{idper:string}){
     </Card>
 }
 
-function StatusPersonalDisplay(props: { table: string, fixedFields: RowType, conn: Connector }) {
+export function StatusPersonalDisplay(props: { table: string, fixedFields: RowType, conn: Connector }) {
     //@ts-ignore
     const {table, fixedFields, conn} = props;
     const idper = Array.isArray(fixedFields) ? fixedFields.find(f => f.fieldName === 'idper') ?? null : null;
@@ -299,80 +544,85 @@ function StatusPersonalDisplay(props: { table: string, fixedFields: RowType, con
         <Box
       sx={{
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'row',
         height: '100vh',
       }}
     >
-      <Box
-        sx={{
-          width: '100%',
-          height: '200px',
-        }}
-      >
-        detalle general persona
-        <LicenciaResumenPersona idper={idper.value}/>
-      </Box>
-  
-      <Box
-        sx={{
-          display: 'flex',
-          flexGrow: 1,
-        }}
-      >
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-
-          }}
-        >
-            solicitar novedad
-            {/* generar un componente form asociado a una tabla?  */}
-            {/* <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
-                <GenericField {...f.cod_nov} />
-                <GenericField {...f.cod_novedades__novedad} />
+        <Box             
+            sx={{
+                width: '20%',
+                height: '200px',
+            }}>
+            <Box
+            sx={{
+                width: '100%',
+                height: '200px',
+            }}
+            >
+            detalle general persona
+            <LicenciaResumenPersona idper={idper.value}/>
             </Box>
-    
-            <Box>
-                <GenericField {...f.desde} />
-                <GenericField {...f.hasta} />
-                {c_dds ? (
-                <>
-                    <GenericField {...f.dds1} />
-                    <GenericField {...f.dds2} />
-                    <GenericField {...f.dds3} />
-                    <GenericField {...f.dds4} />
-                    <GenericField {...f.dds5} />
-                </>
-                ) : null}
-            </Box> */}
-    
-            {/* <Box>
-                <DiasHabiles novedad={novedad} />
-            </Box> */}
-    
-            <Button variant="contained" onClick={() => toggleCalendario(true)}>
-                Calendario
-            </Button>
-            <Button variant="contained" onClick={() => toggleHistorico(true)}>
-                Historico
-            </Button>
+            <Box
+                sx={{
+                display: 'flex',
+                flexGrow: 1,
+                }}
+            >
+                <Box
+                sx={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'row',
+
+                }}
+                >
+                    solicitar novedad
+                    {/* generar un componente form asociado a una tabla?  */}
+                    {/* <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+                        <GenericField {...f.cod_nov} />
+                        <GenericField {...f.cod_novedades__novedad} />
+                    </Box>
+            
+                    <Box>
+                        <GenericField {...f.desde} />
+                        <GenericField {...f.hasta} />
+                        {c_dds ? (
+                        <>
+                            <GenericField {...f.dds1} />
+                            <GenericField {...f.dds2} />
+                            <GenericField {...f.dds3} />
+                            <GenericField {...f.dds4} />
+                            <GenericField {...f.dds5} />
+                        </>
+                        ) : null}
+                    </Box> */}
+            
+                    {/* <Box>
+                        <DiasHabiles novedad={novedad} />
+                    </Box> */}
+            
+                    <Button variant="contained" onClick={() => toggleCalendario(true)}>
+                        Calendario
+                    </Button>
+                    <Button variant="contained" onClick={() => toggleHistorico(true)}>
+                        Historico
+                    </Button>
+                </Box>
+
+            </Box>
         </Box>
-  
         <Box
-          sx={{
-            flex: 2,
-          }}
-        >
-          solicitudes/novedades
-          <NovedadesPendientes idper={idper.value} />
+                sx={{
+                width: '80%',
+                height: '200px',
+            }}>
+            <Calendario idper={idper.value} />
         </Box>
-      </Box>
     </Box>
   
     <Drawer anchor="right" open={isCalendarioOpen} onClose={() => toggleCalendario(false)}>
       <Calendario idper={idper.value} />
+      <NovedadesPendientes idper={idper.value} />
     </Drawer>
     <Drawer anchor="right" open={isHistoricoOpen} onClose={() => toggleHistorico(false)}>
       <Historico idper={idper.value} />

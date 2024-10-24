@@ -105,8 +105,8 @@ export class AppSiper extends AppBackend{
             { type: 'js', module: 'frontend-plus', file:'frontend-plus.js'},
             { type: 'css', file: 'menu.css' },
             { type: 'js', file: 'common/contracts.js' },
-            { type: 'js', file: 'client/ws-novedades_registradas.js' },
             { type: 'js', file: 'client/ws-status_persona.js' },
+            { type: 'js', file: 'client/ws-novedades_registradas.js' },
             ... menuedResources
         ] satisfies ClientModuleDefinition[];
         return list;
