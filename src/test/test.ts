@@ -604,13 +604,13 @@ describe("connected", function(){
         it("no puede cargarse una novedad (registrada) cuando el codigo de novedad NO indica TOTAL", async function(){
             await enNuevaPersona(26, {}, async (persona, {}) => {
                 await expectError( async () => {
-                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov:COD_VACACIONES, total:false}, 'update');
+                    const cod_nov = '10003';
+                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA intengo agregar no total', total: false }, 'new')
                     await rrhhAdminSession.saveRecord(
                         ctts.novedades_registradas, 
-                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov, idper: persona.idper},
                         'new'
                     );
-                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov:COD_VACACIONES, total:true}, 'update');
                 }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_TOTAL);
             })
         })
