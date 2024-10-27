@@ -8,7 +8,8 @@ import {
 import { 
     Connector,
     ICON,
-    renderConnectedApp
+    renderConnectedApp,
+    RowType
 } from "frontend-plus";
 
 import {
@@ -31,13 +32,32 @@ import { date, RealDate } from "best-globals";
 import { CalendarioResult, Annio, meses } from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 
-// @ts-ignore 
-var my=myOwn;
-
 export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string}){
     return <Paper className={"componente-" + props.componentType}>
         {props.children}
     </Paper>
+}
+
+export function ValueDB(props:{value:any}){
+    var {value} = props
+    switch(typeof value){
+        case "object": if (value == null) return <span/>;
+            else if (value instanceof Date) {
+                if (
+                    // @ts-ignore
+                    value.isRealDate
+                ) {
+                    return <span>{(value as RealDate).toDmy()}</span>
+                } else {
+                    return <span className="error-valor">{value.toString()}</span>
+                }
+            } else {
+                return <span className="error-valor">{JSON.stringify(value)}</span> 
+            }
+        case "string": return <span>{value}</span>
+        case "number": return <span>{value}</span>
+        default: return <span className="error-valor">{value}</span> 
+    }
 }
 
 export const DDS = {
@@ -206,9 +226,30 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string}){
     </Componente>
 }
 
-function NovedadesRegistradas(_props:{idper:string}){
+function NovedadesRegistradas(props:{conn: Connector, idper:string}){
+    const {idper, conn} = props;
+    const [novedades, setNovedades] = useState<RowType[]>([]);
+    useEffect(function(){
+        conn.ajax.table_data({
+            table: 'novedades_registradas',
+            fixedFields: [{fieldName:'idper', value:idper}],
+            paramfun: {}
+        }).then(function(novedadesRegistradas){
+            setNovedades(novedadesRegistradas);
+        })
+    },[idper])
     return <Componente componentType="novedades-registradas">
-        esto
+        <table>
+        {novedades.map(n => 
+            <tr>
+                <td><ValueDB value={n.desde}/></td>
+                <td><ValueDB value={n.hasta}/></td>
+                <td><ValueDB value={n.cod_nov}/></td>
+                <td><ValueDB value={n.cod_novedades__novedad}/></td>
+                <td><ValueDB value={n.detalles}/></td>
+            </tr>
+        )}
+        </table>
     </Componente>
 }
 
@@ -248,8 +289,8 @@ function DemoDeComponentes(props: {conn: Connector}){
                         <Box><Typography>Horario <Button onClick={_=>setQue("horario")}>Ver</Button></Typography></Box>
                 </Card>,
             "calendario": () => <Calendario idper="AR8"/>,
-            "personas": () => <ListaPersonasEditables conn = {conn} sector="MS"/>,
-            "novedades-registradas": () => <NovedadesRegistradas idper="AR8"/>,
+            "personas": () => <ListaPersonasEditables conn={conn} sector="MS"/>,
+            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper="AR8"/>,
             "horario": () => <Horario idper="AR8" fecha={date.today()}/>
         })[que]()}
     </Paper>
