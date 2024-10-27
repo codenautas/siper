@@ -4,7 +4,7 @@ import {
     useEffect, useState, useMemo
 } from "react";
 //@ts-ignore
-import { CardEditorConnected, Connector, GenericField, GenericFieldProperties, MenuH, OptionsInfo, renderConnectedApp, RowType } from "frontend-plus";
+import { CardEditorConnected, Connector, FixedFields, GenericField, GenericFieldProperties, MenuH, OptionsInfo, renderConnectedApp, RowType } from "frontend-plus";
 
 import { 
     Card, 
@@ -520,7 +520,7 @@ function NovedadesPendientes(props:{idper:string}){
     </Card>
 }
 
-export function StatusPersonalDisplay(props: { table: string, fixedFields: RowType, conn: Connector }) {
+export function StatusPersonalDisplay(props: { table: string, fixedFields: FixedFields, conn: Connector }) {
     //@ts-ignore
     const {table, fixedFields, conn} = props;
     const idper = Array.isArray(fixedFields) ? fixedFields.find(f => f.fieldName === 'idper') ?? null : null;

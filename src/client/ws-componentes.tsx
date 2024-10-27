@@ -7,7 +7,7 @@ import {
 import { 
     Connector,
     ICON,
-    renderConnectedApp, 
+    renderConnectedApp
 } from "frontend-plus";
 
 import {
@@ -17,7 +17,12 @@ import {
     Select, 
     MenuItem, 
     Button, 
-    Paper
+    Paper,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    List,
+    ListItemButton
 } from "@mui/material";
 
 import { date } from "best-globals";
@@ -128,16 +133,58 @@ function Calendario(props:{idper:string}){
     </Card>
 }
 
-function DemoDeComponentes(props: { conn: Connector }){
-    var conn = { props };
-    var [que, setQue] = useState<""|"calendario">("");
-    console.log(conn);
+type ProvisorioPersonas = {sector:string, idper:string, apellido:string, nombres:string};
+type ProvisorioSectores = {sector:string, nombre_sector:string};
+
+function ListaPersonasEditables(props: {conn: Connector, sector:string}){
+    const {conn} = props;
+    const [sector, _setSector] = useState(props.sector);
+    const [sectores, setSectores] = useState<ProvisorioSectores[]>([]);
+    const [_abanicoPersonas, setAvanicoPersonas] = useState<Partial<Record<string, ProvisorioPersonas[]>>>({});
+    useEffect(function(){
+        conn.ajax.table_data<ProvisorioPersonas>({
+            table: 'personas',
+            fixedFields: [],
+            paramfun: {}
+        }).then(async (personas) => {
+            var abanico = Object.groupBy(personas, p => p.sector);
+            setAvanicoPersonas(abanico);
+        })
+        conn.ajax.table_data<ProvisorioSectores>({
+            table: 'sectores',
+            fixedFields: [],
+            paramfun: {}
+        }).then(async (sectores) => {
+            setSectores(sectores);
+        })
+    },[]);
+    return <Paper>
+        {sectores.map(s =>
+            <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector}>
+                <AccordionSummary id = {s.sector}>{s.sector} <ICON.ChevronLeft/> {s.nombre_sector} </AccordionSummary>
+                <AccordionDetails>
+                    <List>
+                        {_abanicoPersonas[s.sector]?.map(p=>
+                            <ListItemButton key = {p.idper}>{p.idper}: {p.apellido}, {p.nombres}</ListItemButton>
+                        )}
+                    </List>
+                </AccordionDetails>
+            </Accordion>
+        )}
+    </Paper>
+}
+
+function DemoDeComponentes(props: {conn: Connector}){
+    var {conn} = props;
+    var [que, setQue] = useState<""|"calendario"|"personas">("");
     return <Paper>
         {({
             "": () => <Card>
-                        <Box><Typography>Calendario </Typography><Button onClick={_=>setQue("calendario")}>Ver</Button></Box>
+                        <Box><Typography>Calendario <Button onClick={_=>setQue("calendario")}>Ver</Button></Typography></Box>
+                        <Box><Typography>Lista de personas <Button onClick={_=>setQue("personas")}>Ver</Button></Typography></Box>
                 </Card>,
             "calendario": () => <Calendario idper="AR8"/>,
+            "personas": () => <ListaPersonasEditables conn = {conn} sector="MS"/>,
         })[que]()}
     </Paper>
 }

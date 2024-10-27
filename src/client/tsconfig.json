@@ -2,7 +2,8 @@
     "compilerOptions": {
         "outDir": "../../dist/client",
         "typeRoots" : ["node_modules/@types", "../../node_modules/types.d.ts/modules"],
-        "lib": ["dom", "ES2023"],
+        "lib": ["dom", "ESNext"],
+        "target": "ESNext",
         "module": "UMD",
         "jsx": "react",
         "strict": true,
