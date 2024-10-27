@@ -68,6 +68,9 @@ export class AppSiper extends AppBackend{
                     {menuType:'table', name:'novedades_importadas'},
                     {menuType:'table', name:'nov_per_importado'},
                 ]},
+                {menuType:'menu', name:'devel', menuContent:[
+                    {menuType:'componentesSiper', name:'componentes'},
+                ]},
                 {menuType:'menu', name:'config', label:'configurar', menuContent:[
                     {menuType:'table', name:'fechas'        },
                     {menuType:'table', name:'cod_novedades' },
@@ -105,6 +108,7 @@ export class AppSiper extends AppBackend{
             { type: 'js', module: 'frontend-plus', file:'frontend-plus.js'},
             { type: 'css', file: 'menu.css' },
             { type: 'js', file: 'common/contracts.js' },
+            { type: 'js', file: 'client/ws-componentes.js' },
             { type: 'js', file: 'client/ws-status_persona.js' },
             { type: 'js', file: 'client/ws-novedades_registradas.js' },
             ... menuedResources
