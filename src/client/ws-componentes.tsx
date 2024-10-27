@@ -136,7 +136,7 @@ function Calendario(props:{idper:string}){
 
 type ProvisorioPersonas = {sector:string, idper:string, apellido:string, nombres:string};
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string};
-type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>}
+type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, nivel:number}
 
 function ListaPersonasEditables(props: {conn: Connector, sector:string}){
     const {conn} = props;
@@ -149,7 +149,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string}){
             fixedFields: [],
             paramfun: {}
         }).then(async (personas) => {
-            var abanico = Object.groupBy(personas, p => p.sector);
+            const abanico = Object.groupBy(personas, p => p.sector);
             setAvanicoPersonas(abanico);
         })
         conn.ajax.table_data<ProvisorioSectores>({
@@ -157,15 +157,16 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string}){
             fixedFields: [],
             paramfun: {}
         }).then(async (sectores) => {
-            var idxSectores = createIndex(sectores, 'sector');
-            var sectoresAumentados = sectores.map(s => ({...s, perteneceA:{[s.sector]: true} as Record<string, boolean>}));
+            const idxSectores = createIndex(sectores, 'sector');
+            const sectoresAumentados = sectores.map(s => ({...s, nivel:0, perteneceA:{[s.sector]: true} as Record<string, boolean>}));
             sectoresAumentados.forEach(s => {
                 var {pertenece_a} = s;
-                var sigoBuscando = 100
-                while (pertenece_a != null && --sigoBuscando) {
+                var nivel = 0
+                while (pertenece_a != null && ++nivel < 100) {
                     s.perteneceA[pertenece_a] = true;
                     pertenece_a = idxSectores[pertenece_a].pertenece_a
                 }
+                s.nivel = nivel;
             })
             setSectores(sectoresAumentados);
         })
@@ -173,11 +174,17 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string}){
     return <Paper>
         {sectores.filter(s => s.perteneceA[sector]).map(s =>
             <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector}>
-                <AccordionSummary id = {s.sector}>{s.sector} <ICON.ChevronLeft/> {s.nombre_sector} </AccordionSummary>
+                <AccordionSummary id = {s.sector} expandIcon={<ICON.NavigationDown />} > 
+                    <span className="box-id" style={{paddingLeft: s.nivel+"em", paddingRight:"1em"}}> {s.sector} </span>  
+                    {s.nombre_sector} 
+                </AccordionSummary>
                 <AccordionDetails>
                     <List>
                         {_abanicoPersonas[s.sector]?.map(p=>
-                            <ListItemButton key = {p.idper}>{p.idper}: {p.apellido}, {p.nombres}</ListItemButton>
+                            <ListItemButton key = {p.idper}>
+                                <span className="box-id" style={{minWidth:'3.5em'}}> {p.idper} </span>   
+                                {p.apellido}, {p.nombres}
+                            </ListItemButton>
                         )}
                     </List>
                 </AccordionDetails>
