@@ -28,6 +28,7 @@ import {
 import { date } from "best-globals";
 
 import { CalendarioResult, Annio, meses } from "../common/contracts"
+import { createIndex } from "like-ar";
 
 // @ts-ignore 
 var my=myOwn;
@@ -134,12 +135,13 @@ function Calendario(props:{idper:string}){
 }
 
 type ProvisorioPersonas = {sector:string, idper:string, apellido:string, nombres:string};
-type ProvisorioSectores = {sector:string, nombre_sector:string};
+type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string};
+type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>}
 
 function ListaPersonasEditables(props: {conn: Connector, sector:string}){
     const {conn} = props;
     const [sector, _setSector] = useState(props.sector);
-    const [sectores, setSectores] = useState<ProvisorioSectores[]>([]);
+    const [sectores, setSectores] = useState<ProvisorioSectoresAumentados[]>([]);
     const [_abanicoPersonas, setAvanicoPersonas] = useState<Partial<Record<string, ProvisorioPersonas[]>>>({});
     useEffect(function(){
         conn.ajax.table_data<ProvisorioPersonas>({
@@ -155,11 +157,21 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string}){
             fixedFields: [],
             paramfun: {}
         }).then(async (sectores) => {
-            setSectores(sectores);
+            var idxSectores = createIndex(sectores, 'sector');
+            var sectoresAumentados = sectores.map(s => ({...s, perteneceA:{[s.sector]: true} as Record<string, boolean>}));
+            sectoresAumentados.forEach(s => {
+                var {pertenece_a} = s;
+                var sigoBuscando = 100
+                while (pertenece_a != null && --sigoBuscando) {
+                    s.perteneceA[pertenece_a] = true;
+                    pertenece_a = idxSectores[pertenece_a].pertenece_a
+                }
+            })
+            setSectores(sectoresAumentados);
         })
     },[]);
     return <Paper>
-        {sectores.map(s =>
+        {sectores.filter(s => s.perteneceA[sector]).map(s =>
             <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector}>
                 <AccordionSummary id = {s.sector}>{s.sector} <ICON.ChevronLeft/> {s.nombre_sector} </AccordionSummary>
                 <AccordionDetails>
