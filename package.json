@@ -16,7 +16,7 @@
   },  
   "dependencies": {
     "backend-plus": "^2.0.4",
-    "frontend-plus": "^0.0.5",
+    "frontend-plus": "^0.0.6",
     "like-ar": "^0.5.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.9",
-    "@types/node": "^22.7.7",
+    "@types/node": "^22.8.1",
     "guarantee-type": "^0.2.0-rc.1",
     "json4all": "^1.4.0",
     "mixin-patch": "^0.4.1",

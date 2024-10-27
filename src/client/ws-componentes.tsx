@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import {
+    ReactNode,
     useEffect, useState, 
 } from "react";
 
@@ -25,13 +26,29 @@ import {
     ListItemButton
 } from "@mui/material";
 
-import { date } from "best-globals";
+import { date, RealDate } from "best-globals";
 
 import { CalendarioResult, Annio, meses } from "../common/contracts"
-import { createIndex } from "like-ar";
+import { strict as likeAr, createIndex } from "like-ar";
 
 // @ts-ignore 
 var my=myOwn;
+
+export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string}){
+    return <Paper className={"componente-" + props.componentType}>
+        {props.children}
+    </Paper>
+}
+
+export const DDS = {
+    0: {abr:'dom', habil:true , nombre:'domingo'  },
+    1: {abr:'lun', habil:true , nombre:'lunes'    },
+    2: {abr:'mar', habil:true , nombre:'martes'   },
+    3: {abr:'mié', habil:true , nombre:'miércoles'},
+    4: {abr:'jue', habil:true , nombre:'jueves'   },
+    5: {abr:'vie', habil:true , nombre:'viernes'  },
+    6: {abr:'sáb', habil:true , nombre:'sábado'   },
+}
 
 function Calendario(props:{idper:string}){
     const {idper} = props;
@@ -71,7 +88,7 @@ function Calendario(props:{idper:string}){
         })
 
     },[idper, periodo.mes, periodo.annio])
-    return <Card className="calendario-mes">
+    return <Componente componentType="calendario-mes">
         <Box style={{ flex:1}}>
         <Box>
             <Button onClick={_ => setPeriodo(retrocederUnMes)}><ICON.ChevronLeft/></Button>
@@ -105,13 +122,9 @@ function Calendario(props:{idper:string}){
             </Select>
         </Box>
         <Box className="calendario-semana">
-            <div className="calendario-nombre-dia tipo-dia-no-laborable">dom</div>
-            <div className="calendario-nombre-dia">lun</div>
-            <div className="calendario-nombre-dia">mar</div>
-            <div className="calendario-nombre-dia">mié</div>
-            <div className="calendario-nombre-dia">jue</div>
-            <div className="calendario-nombre-dia">vie</div>
-            <div className="calendario-nombre-dia tipo-dia-no-laborable">sáb</div>
+            {likeAr(DDS).map(dds =>
+                <div className={"calendario-nombre-dia " + (dds.habil ? "" : "tipo-dia-no-laborable")}>{dds.abr}</div>
+            ).array()}
         </Box>
         {calendario.map(semana => <Box className="calendario-semana">
             {semana.map(dia => <div className={`calendario-dia tipo-dia-${dia.tipo_dia} ${
@@ -131,7 +144,7 @@ function Calendario(props:{idper:string}){
           </div>
         )}
       </Box>
-    </Card>
+    </Componente>
 }
 
 type ProvisorioPersonas = {sector:string, idper:string, apellido:string, nombres:string};
@@ -171,7 +184,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string}){
             setSectores(sectoresAumentados);
         })
     },[]);
-    return <Paper>
+    return <Componente componentType="lista-personas">
         {sectores.filter(s => s.perteneceA[sector]).map(s =>
             <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector}>
                 <AccordionSummary id = {s.sector} expandIcon={<ICON.NavigationDown />} > 
@@ -190,20 +203,54 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string}){
                 </AccordionDetails>
             </Accordion>
         )}
-    </Paper>
+    </Componente>
+}
+
+function NovedadesRegistradas(_props:{idper:string}){
+    return <Componente componentType="novedades-registradas">
+        esto
+    </Componente>
+}
+
+function Horario(props:{idper:string, fecha:RealDate}){
+    // datos de ejemplo, TODO traerlos de la base
+    const {fecha} = props
+    const desdeFecha = fecha.sub({days:14});
+    const hastaFecha = fecha.add({days:34});
+    const horario = [
+        {dds:0, trabaja:false, hora_desde:null, hora_hasta:null, cod_nov:null},
+        {dds:1, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
+        {dds:2, trabaja:true , hora_desde:'10:00', hora_hasta:'17:00', cod_nov:1},
+        {dds:3, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
+        {dds:4, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
+        {dds:5, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
+        {dds:6, trabaja:false, hora_desde:null, hora_hasta:null, cod_nov:null},
+    ]
+    return <Componente componentType="horario">
+        <div>Horario vigente del {desdeFecha.toDmy()} al {hastaFecha.toDmy()}.</div>
+        {horario.filter(h => h.trabaja).map(h =>
+            <div className={"linea-horario " + (h.trabaja ? "" : "tipo-dia-no-laborable")}>
+                {DDS[h.dds as 0|1|2|3|4|5|6].nombre} de {h.hora_desde} a {h.hora_hasta}, novedad {h.cod_nov}
+            </div>
+        )}
+    </Componente>
 }
 
 function DemoDeComponentes(props: {conn: Connector}){
     var {conn} = props;
-    var [que, setQue] = useState<""|"calendario"|"personas">("");
+    var [que, setQue] = useState<""|"calendario"|"personas"|"novedades-registradas"|"horario">("");
     return <Paper>
         {({
             "": () => <Card>
                         <Box><Typography>Calendario <Button onClick={_=>setQue("calendario")}>Ver</Button></Typography></Box>
                         <Box><Typography>Lista de personas <Button onClick={_=>setQue("personas")}>Ver</Button></Typography></Box>
+                        <Box><Typography>Novedades registradas <Button onClick={_=>setQue("novedades-registradas")}>Ver</Button></Typography></Box>
+                        <Box><Typography>Horario <Button onClick={_=>setQue("horario")}>Ver</Button></Typography></Box>
                 </Card>,
             "calendario": () => <Calendario idper="AR8"/>,
             "personas": () => <ListaPersonasEditables conn = {conn} sector="MS"/>,
+            "novedades-registradas": () => <NovedadesRegistradas idper="AR8"/>,
+            "horario": () => <Horario idper="AR8" fecha={date.today()}/>
         })[que]()}
     </Paper>
 }
