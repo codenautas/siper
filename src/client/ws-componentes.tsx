@@ -15,7 +15,7 @@ import {
 import {
     Accordion, AccordionSummary, AccordionDetails, AppBar,
     Box, Button, 
-    Card, 
+    Card, CircularProgress,
     IconButton,
     List, ListItemButton,
     MenuItem, 
@@ -168,8 +168,10 @@ type ProvisorioPersonas = {sector:string, idper:string, apellido:string, nombres
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, nivel:number}
 
-function ListaPersonasEditables(props: {conn: Connector, sector:string}){
-    const {conn} = props;
+type IdperFuncionCambio = (idper:string)=>void
+
+function ListaPersonasEditables(props: {conn: Connector, sector:string, onIdper?:IdperFuncionCambio}){
+    const {conn, onIdper} = props;
     const [sector, _setSector] = useState(props.sector);
     const [sectores, setSectores] = useState<ProvisorioSectoresAumentados[]>([]);
     const [_abanicoPersonas, setAvanicoPersonas] = useState<Partial<Record<string, ProvisorioPersonas[]>>>({});
@@ -211,7 +213,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string}){
                 <AccordionDetails>
                     <List>
                         {_abanicoPersonas[s.sector]?.map(p=>
-                            <ListItemButton key = {p.idper}>
+                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p.idper)}}>
                                 <span className="box-id" style={{minWidth:'3.5em'}}> {p.idper} </span>   
                                 {p.apellido}, {p.nombres}
                             </ListItemButton>
@@ -298,19 +300,51 @@ function DatosPersonales(props:{conn: Connector, idper:string}){
     </Componente>
 }
 
+
+type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate};
+
+/*
+namespace "front-end" {
+    interface BEAPI {
+        info_usuario: (params: {
+            table: string;
+        }) => Promise<ProvisorioInfoUsuario>;
+    }
+}
+*/
+
 function Persona(props:{conn: Connector, idper:string, fecha:RealDate}){
     return <Paper className="componente-persona">
         <DatosPersonales {...props}/>
         <Horario {...props}/>
         <Calendario {...props}/>
         <NovedadesRegistradas {...props}/>
-        <NovedadesRegistradas {...props}/>
+        <NovedadesRegistradas {/* TODO: Tendría que ser NovedadesVigentes */ ...props }/>
     </Paper>
+}
+
+function Pantalla1(props:{conn: Connector}){
+    const {conn} = props;
+    const [infoUsuario, setInfoUsuario] = useState({} as ProvisorioInfoUsuario);
+    const [idper, setIdper] = useState("");
+    useEffect(function(){
+        // @ts-ignore
+        conn.ajax.info_usuario().then(function(infoUsuario:ProvisorioInfoUsuario){
+            setIdper(infoUsuario.idper);
+            setInfoUsuario(infoUsuario);
+        })
+    },[])
+    return infoUsuario.sector == null ?  
+            <CircularProgress />
+        : <Paper className="componente-pantalla-1">
+            <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} onIdper={idper=>setIdper(idper)}/>
+            <Persona conn={conn} idper={idper} fecha={infoUsuario.fecha}/>
+        </Paper>;
 }
 
 function DemoDeComponentes(props: {conn: Connector}){
     const {conn} = props;
-    type QUE = ""|"calendario"|"personas"|"novedades-registradas"|"horario"|"persona"|"datos-personales"
+    type QUE = ""|"calendario"|"personas"|"novedades-registradas"|"horario"|"persona"|"datos-personales"|"pantalla-1"
     const [que, setQue] = useState<QUE>("");
     const UnComponente = (props:{titulo:string, que:QUE}) =>
         <Box><Typography>{props.titulo}<Button onClick={_=>setQue(props.que)}>Ver</Button></Typography></Box>
@@ -343,13 +377,15 @@ function DemoDeComponentes(props: {conn: Connector}){
                     <UnComponente titulo="Horario" que="horario"/>
                     <UnComponente titulo="Datos personales" que="datos-personales"/>
                     <UnComponente titulo="Info de una persona" que="persona"/>
+                    <UnComponente titulo="Pantalla 1 (primera total)" que="pantalla-1"/>
                 </Card>,
             "calendario": () => <Calendario idper="AR8"/>,
             "personas": () => <ListaPersonasEditables conn={conn} sector="MS"/>,
             "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper="AR8"/>,
             "horario": () => <Horario conn={conn} idper="AR8" fecha={date.today()}/>,
             "datos-personales": () => <DatosPersonales conn={conn} idper="AR8"/>,
-            "persona": () => <Persona conn={conn} idper="AR8" fecha={date.today()}/>
+            "persona": () => <Persona conn={conn} idper="AR8" fecha={date.today()}/>,
+            "pantalla-1": () => <Pantalla1 conn={conn}/>
         })[que]()}
     </Paper>
 }

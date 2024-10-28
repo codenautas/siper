@@ -135,5 +135,19 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             ).fetchAll();
             return info.rows
         }
+    },
+    {
+        action: 'info_usuario',
+        parameters: [
+        ],
+        coreFunction: async function(context: ProcedureContext, _params:any){
+            const info = await context.client.query(
+                `select idper, sector, current_date as fecha
+                    from usuarios left join personas using (idper)
+                    where usuario = $1`,
+                [context.username]
+            ).fetchUniqueRow();
+            return info.row;
+        }
     }
 ];
