@@ -274,8 +274,33 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     </Componente>
 }
 
+function DatosPersonales(props:{conn: Connector, idper:string}){
+    const {idper, conn} = props;
+    const [persona, setPersona] = useState<RowType>({});
+    useEffect(function(){
+        conn.ajax.table_data({
+            table: 'personas',
+            fixedFields: [{fieldName:'idper', value:idper}],
+            paramfun: {}
+        }).then(function(personas){
+            setPersona(personas[0] ?? {});
+        })
+    },[idper])
+    return <Componente componentType="datos-personales">
+        <table>
+        {["ficha", "cuil", "apellido", "nombres"].map(n => 
+            <tr key={n}>
+                <td>{n}</td>
+                <td><ValueDB value={persona[n]}/></td>
+            </tr>
+        )}
+        </table>
+    </Componente>
+}
+
 function Persona(props:{conn: Connector, idper:string, fecha:RealDate}){
     return <Paper className="componente-persona">
+        <DatosPersonales {...props}/>
         <Horario {...props}/>
         <Calendario {...props}/>
         <NovedadesRegistradas {...props}/>
@@ -285,7 +310,7 @@ function Persona(props:{conn: Connector, idper:string, fecha:RealDate}){
 
 function DemoDeComponentes(props: {conn: Connector}){
     const {conn} = props;
-    type QUE = ""|"calendario"|"personas"|"novedades-registradas"|"horario"|"persona"
+    type QUE = ""|"calendario"|"personas"|"novedades-registradas"|"horario"|"persona"|"datos-personales"
     const [que, setQue] = useState<QUE>("");
     const UnComponente = (props:{titulo:string, que:QUE}) =>
         <Box><Typography>{props.titulo}<Button onClick={_=>setQue(props.que)}>Ver</Button></Typography></Box>
@@ -312,16 +337,18 @@ function DemoDeComponentes(props: {conn: Connector}){
         </AppBar>
         {({
             "": () => <Card>
-                    <UnComponente titulo="Calendario" que="calendario"/>
                     <UnComponente titulo="Lista de personas" que="personas"/>
+                    <UnComponente titulo="Calendario" que="calendario"/>
                     <UnComponente titulo="Novedades registradas" que="novedades-registradas"/>
                     <UnComponente titulo="Horario" que="horario"/>
+                    <UnComponente titulo="Datos personales" que="datos-personales"/>
                     <UnComponente titulo="Info de una persona" que="persona"/>
                 </Card>,
             "calendario": () => <Calendario idper="AR8"/>,
             "personas": () => <ListaPersonasEditables conn={conn} sector="MS"/>,
             "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper="AR8"/>,
             "horario": () => <Horario conn={conn} idper="AR8" fecha={date.today()}/>,
+            "datos-personales": () => <DatosPersonales conn={conn} idper="AR8"/>,
             "persona": () => <Persona conn={conn} idper="AR8" fecha={date.today()}/>
         })[que]()}
     </Paper>
