@@ -13,18 +13,15 @@ import {
 } from "frontend-plus";
 
 import {
-    Box,
+    Accordion, AccordionSummary, AccordionDetails, AppBar,
+    Box, Button, 
     Card, 
-    Typography, 
-    Select, 
+    IconButton,
+    List, ListItemButton,
     MenuItem, 
-    Button, 
     Paper,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    List,
-    ListItemButton
+    Select, 
+    Toolbar, Typography, 
 } from "@mui/material";
 
 import { date, RealDate } from "best-globals";
@@ -278,9 +275,29 @@ function Horario(props:{idper:string, fecha:RealDate}){
 }
 
 function DemoDeComponentes(props: {conn: Connector}){
-    var {conn} = props;
-    var [que, setQue] = useState<""|"calendario"|"personas"|"novedades-registradas"|"horario">("");
+    const {conn} = props;
+    const [que, setQue] = useState<""|"calendario"|"personas"|"novedades-registradas"|"horario">("");
     return <Paper>
+        <AppBar position="static">
+            <Toolbar>
+                {que == "" ?
+                    null
+                : 
+                    <IconButton color="inherit" onClick={()=>setQue("")}><ICON.ChevronLeft/></IconButton>
+                }
+                <Typography flexGrow={2}>
+                    Demo de componentes
+                </Typography>
+                <Typography>
+                    {que}
+                </Typography>
+                {que == "" ?
+                    <IconButton color="inherit" onClick={()=>location.hash="i=devel"}><ICON.ExitToApp/></IconButton>
+                : 
+                    null
+                }
+            </Toolbar>
+        </AppBar>
         {({
             "": () => <Card>
                         <Box><Typography>Calendario <Button onClick={_=>setQue("calendario")}>Ver</Button></Typography></Box>
