@@ -30,9 +30,9 @@ import { CalendarioResult, Annio, meses } from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 
 export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string}){
-    return <Paper className={"componente-" + props.componentType}>
+    return <Card className={"componente-" + props.componentType}>
         {props.children}
-    </Paper>
+    </Card>
 }
 
 export function ValueDB(props:{value:any}){
@@ -250,7 +250,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string}){
     </Componente>
 }
 
-function Horario(props:{idper:string, fecha:RealDate}){
+function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     // datos de ejemplo, TODO traerlos de la base
     const {fecha} = props
     const desdeFecha = fecha.sub({days:14});
@@ -274,9 +274,21 @@ function Horario(props:{idper:string, fecha:RealDate}){
     </Componente>
 }
 
+function Persona(props:{conn: Connector, idper:string, fecha:RealDate}){
+    return <Paper className="componente-persona">
+        <Horario {...props}/>
+        <Calendario {...props}/>
+        <NovedadesRegistradas {...props}/>
+        <NovedadesRegistradas {...props}/>
+    </Paper>
+}
+
 function DemoDeComponentes(props: {conn: Connector}){
     const {conn} = props;
-    const [que, setQue] = useState<""|"calendario"|"personas"|"novedades-registradas"|"horario">("");
+    type QUE = ""|"calendario"|"personas"|"novedades-registradas"|"horario"|"persona"
+    const [que, setQue] = useState<QUE>("");
+    const UnComponente = (props:{titulo:string, que:QUE}) =>
+        <Box><Typography>{props.titulo}<Button onClick={_=>setQue(props.que)}>Ver</Button></Typography></Box>
     return <Paper>
         <AppBar position="static">
             <Toolbar>
@@ -300,17 +312,29 @@ function DemoDeComponentes(props: {conn: Connector}){
         </AppBar>
         {({
             "": () => <Card>
-                        <Box><Typography>Calendario <Button onClick={_=>setQue("calendario")}>Ver</Button></Typography></Box>
-                        <Box><Typography>Lista de personas <Button onClick={_=>setQue("personas")}>Ver</Button></Typography></Box>
-                        <Box><Typography>Novedades registradas <Button onClick={_=>setQue("novedades-registradas")}>Ver</Button></Typography></Box>
-                        <Box><Typography>Horario <Button onClick={_=>setQue("horario")}>Ver</Button></Typography></Box>
+                    <UnComponente titulo="Calendario" que="calendario"/>
+                    <UnComponente titulo="Lista de personas" que="personas"/>
+                    <UnComponente titulo="Novedades registradas" que="novedades-registradas"/>
+                    <UnComponente titulo="Horario" que="horario"/>
+                    <UnComponente titulo="Info de una persona" que="persona"/>
                 </Card>,
             "calendario": () => <Calendario idper="AR8"/>,
             "personas": () => <ListaPersonasEditables conn={conn} sector="MS"/>,
             "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper="AR8"/>,
-            "horario": () => <Horario idper="AR8" fecha={date.today()}/>
+            "horario": () => <Horario conn={conn} idper="AR8" fecha={date.today()}/>,
+            "persona": () => <Persona conn={conn} idper="AR8" fecha={date.today()}/>
         })[que]()}
     </Paper>
+}
+
+// @ts-ignore
+myOwn.wScreens.componentesSiper = function componentesSiper(addrParams:any){
+    renderConnectedApp(
+        myOwn as never as Connector,
+        { ...addrParams, table: 'personas' },
+        document.getElementById('total-layout')!,
+        ({ conn }) => <DemoDeComponentes conn={conn} />
+    )
 }
 
 // @ts-ignore
