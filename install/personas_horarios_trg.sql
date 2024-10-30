@@ -7,9 +7,10 @@ CREATE OR REPLACE FUNCTION personas_horarios_trg()
 AS
 $BODY$
 BEGIN
-  INSERT INTO horarios (idper, dds, hora_desde, hora_hasta, trabaja) 
-    SELECT new.idper, dds, '09:00', '16:00', dds between 1 and 5
-      FROM generate_series(0,6) dds;
+  INSERT INTO horarios (idper, dds, desde, hasta, cod_nov, hora_desde, hora_hasta, trabaja) 
+    SELECT new.idper, dds, fecha_actual, (fecha_actual + interval '1 YEAR' - interval '1 DAY')::date, cod_nov_habitual, 
+      horario_habitual_desde, horario_habitual_hasta, dds between 1 and 5
+      FROM generate_series(0,6) dds join parametros on unico_registro;
   RETURN NEW;
 END;
 $BODY$;
