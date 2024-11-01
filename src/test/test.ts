@@ -614,6 +614,19 @@ describe("connected", function(){
                 }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_TOTAL);
             })
         })
+        it("no puede cargarse un HORARIO cuando el codigo de novedad NO indica CON_HORARIO", async function(){
+            await enNuevaPersona(27, {}, async (persona, {}) => {
+                await expectError( async () => {
+                    const cod_nov = '10004';
+                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA intento agregar NO CON_HORARIO', con_horario: false }, 'new')
+                    await rrhhAdminSession.saveRecord(
+                        ctts.horarios, 
+                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov, idper: persona.idper, dds: 2},
+                        'new'
+                    );
+                }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_CON_HORARIO);
+            })
+        })
     })
     describe("jerarquía de sectores", function(){
         async function pertenceceSector(sector:string, perteneceA:string){

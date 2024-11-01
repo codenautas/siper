@@ -14,6 +14,7 @@ export const cod_nov = {
         con_detalles: is.nullable.boolean,
         total: is.nullable.boolean,
         parcial: is.nullable.boolean,
+        con_horario: is.nullable.boolean,
     })
 }
 
@@ -114,6 +115,23 @@ export const novedades_horarias = {
 } satisfies CommonEntityDefinition
 
 export type NovedadHoraria = DefinedType<typeof novedades_horarias.description>
+
+export const horarios = {
+    table: 'horarios',
+    description: is.object({
+        idper: is.string,
+        dds: is.number,
+        desde: is.Date,
+    },{
+        hora_desde: is.string,
+        hora_hasta: is.string,
+        trabaja:is.boolean,
+        cod_nov: is.string,
+        hasta: is.Date,
+    })
+} satisfies CommonEntityDefinition
+
+export type Horarios = DefinedType<typeof horarios.description>
 
 export const personas = {
     table: 'personas',
@@ -251,6 +269,7 @@ export const ERROR_COD_NOVEDAD_INDICA_CON_DETALLES = 'P1003';
 export const ERROR_COD_NOVEDAD_INDICA_SIN_DETALLES = 'P1004';
 export const ERROR_COD_NOVEDAD_NO_INDICA_TOTAL     = 'P1005';
 export const ERROR_COD_NOVEDAD_NO_INDICA_PARCIAL   = 'P1006';
+export const ERROR_COD_NOVEDAD_NO_INDICA_CON_HORARIO= 'P1007';
 
 //////////// ERRORES POSTGRES:
 export const insufficient_privilege = '42501';

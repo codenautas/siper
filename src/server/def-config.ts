@@ -55,6 +55,7 @@ install:
       - ../install/novedades_registradas_detalles_trg.sql
       - ../install/novedades_horarias_parcial_trg.sql
       - ../install/novedades_registradas_total_trg.sql
+      - ../install/horarios_con_horario_trg.sql
 logo: 
   path: client/img
 `;

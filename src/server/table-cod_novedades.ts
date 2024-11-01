@@ -27,6 +27,7 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {name: 'con_detalles', typeName: 'boolean',                                             },
             {name: 'total'       , typeName: 'boolean',                                             },
             {name: 'parcial'     , typeName: 'boolean',                                             },
+            {name: 'con_horario' , typeName: 'boolean', description:'indica que la novedad puede usarse en el horario de las personas'},
         ],
         primaryKey:[cod_nov.name],
         constraints:[
