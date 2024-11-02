@@ -8,8 +8,11 @@ AS
 $BODY$
 BEGIN
   INSERT INTO horarios (idper, dds, desde, hasta, cod_nov, hora_desde, hora_hasta, trabaja) 
-    SELECT new.idper, dds, fecha_actual, (fecha_actual + interval '1 YEAR' - interval '1 DAY')::date, cod_nov_habitual, 
-      horario_habitual_desde, horario_habitual_hasta, dds between 1 and 5
+    SELECT new.idper, dds, make_date(extract(year from fecha_actual)::integer,1,1), make_date(extract(year from fecha_actual)::integer,12,31), 
+      case when dds between 1 and 5 then cod_nov_habitual else null end, 
+      case when dds between 1 and 5 then horario_habitual_desde else null end, 
+      case when dds between 1 and 5 then horario_habitual_hasta else null end, 
+      dds between 1 and 5
       FROM generate_series(0,6) dds join parametros on unico_registro;
   RETURN NEW;
 END;

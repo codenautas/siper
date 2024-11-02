@@ -22,6 +22,8 @@ import { novedades_horarias   } from './table-novedades_horarias';
 import { novedades_vigentes   } from './table-novedades_vigentes';
 import { per_nov_cant         } from './table-per_nov_cant';
 import { nov_per              } from './table-nov_per';
+import { pautas               } from './table-pautas';
+import { inconsistencias      } from './table-inconsistencias';
 import { usuarios             } from './table-usuarios';
 import { parametros           } from "./table-parametros";
 import { horarios             } from "./table-horarios";
@@ -137,6 +139,8 @@ export class AppSiper extends AppBackend{
             novedades_vigentes   ,
             per_nov_cant         ,
             nov_per              ,
+            pautas               ,
+            inconsistencias      ,  
             usuarios             ,
             parametros           ,
             horarios             ,
