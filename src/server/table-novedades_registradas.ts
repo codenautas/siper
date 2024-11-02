@@ -85,6 +85,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {name: 'dds5'     , typeName: 'boolean', title:'viernes'                    },
             {name: 'dds6'     , typeName: 'boolean', title:'sabado'                     },
             {...año, editable:false, generatedAs:`extract(year from desde)`},
+            {name: 'cancela'  , typeName: 'boolean', description:'cancelación de novedades'},
             {name: 'detalles' , typeName: 'text'   ,                                    },
         ],         
         primaryKey: [idper.name, 'desde', idr.name],
@@ -96,7 +97,8 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {references: 'fechas', fields: [{source:'hasta', target:'fecha'}], alias:'hasta'},
         ],
         constraints: [
-            {constraintType:'check', consName:'desde y hasta deben ser del mismo annio', expr:`extract(year from desde) is not distinct from extract(year from desde)`}
+            {constraintType:'check', consName:'desde y hasta deben ser del mismo annio', expr:`extract(year from desde) is not distinct from extract(year from desde)`},
+            {constraintType:'check', consName:'cod_nov obligatorio si no cancela', expr:'(cod_nov is null) = (cancela is true)'},
         ],
         hiddenColumns: [idr.name],
         sql:{

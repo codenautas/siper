@@ -85,10 +85,11 @@ export const novedades_registradas = {
     table: 'novedades_registradas',
     description: is.object({
         idper: is.string,
-        cod_nov: is.string,
         desde: is.Date,
         hasta: is.Date,
     },{
+        cod_nov: is.string,
+        cancela: is.boolean,
         dds0: is.boolean,
         dds1: is.boolean,
         dds2: is.boolean,

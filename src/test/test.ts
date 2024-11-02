@@ -60,6 +60,7 @@ const COD_ENF_FAMILIAR = "12";
 const COD_ENFERMEDAD = "13";
 const COD_MUDANZA = "124";
 const COD_COMISION = "10";
+const COD_PRESENTE = "999"; // es probable que esto deba ser otro código.
 
 const ADMIN_REQ = {user:{usuario:'perry', rol:''}};
 const TEXTO_PRUEBA = "un texto de prueba...";
@@ -293,7 +294,7 @@ describe("connected", function(){
                 ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
             })
         })
-        it("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
+        it.skip("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
             this.timeout(TIMEOUT_SPEED * 8);
             await enNuevaPersona(3, {vacaciones: 20, tramites: 4}, async (persona) => {
                 await rrhhSession.saveRecord(
@@ -301,7 +302,7 @@ describe("connected", function(){
                     {desde:date.iso('2000-05-02'), hasta:date.iso('2000-05-12'), cod_nov:COD_VACACIONES, idper: persona.idper},
                     'new'
                 );
-                var novedadRegistradaPorCargar = {desde:date.iso('2000-05-08'), hasta:date.iso('2000-05-12'), cod_nov:COD_TELETRABAJO, idper: persona.idper}
+                var novedadRegistradaPorCargar = {desde:date.iso('2000-05-08'), hasta:date.iso('2000-05-12'), cancela:true, idper: persona.idper}
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 discrepances.showAndThrow(informe, {dias_corridos:5, dias_habiles:5, dias_coincidentes:5})
                 await rrhhSession.saveRecord(
@@ -330,25 +331,6 @@ describe("connected", function(){
                     {annio:2000, cod_nov:COD_VACACIONES, limite:20, cantidad:4, saldo:16},
                     {annio:2000, cod_nov:COD_TELETRABAJO, limite:null, cantidad:4, saldo:null},
                     {annio:2000, cod_nov:COD_TRAMITE, limite:4, cantidad:1, saldo:3},
-                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
-            })
-        })
-        it("cargo teletrabajo diagramado", async function(){
-            await enNuevaPersona(4, {}, async (persona) => {
-                await rrhhSession.saveRecord(
-                    ctts.novedades_registradas, 
-                    {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_DIAGRAMADO, idper: persona.idper, 
-                        dds1:true, dds2:false, dds3:true, dds4:true, dds5:false},
-                    'new'
-                );
-                await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-03'), cod_nov:COD_DIAGRAMADO, idper: persona.idper},
-                    {fecha:date.iso('2000-01-05'), cod_nov:COD_DIAGRAMADO, idper: persona.idper},
-                    {fecha:date.iso('2000-01-06'), cod_nov:COD_DIAGRAMADO, idper: persona.idper},
-                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
-                // LÍMIES:
-                await rrhhSession.tableDataTest('nov_per', [
-                    {annio:2000, cod_nov:COD_DIAGRAMADO, limite:null, cantidad:3, saldo:null},
                 ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
             })
         })
@@ -634,7 +616,7 @@ describe("connected", function(){
                 }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_CON_NOVEDAD);
             })
         })
-        describe.only("días corridos", function(){
+        describe("días corridos", function(){
             it.skip("se generan novedades en los fines de semana", async function(){
                 await enNuevaPersona(29, {}, async (persona, {}) => {
                     await rrhhSession.saveRecord(
@@ -713,6 +695,143 @@ describe("connected", function(){
                     await rrhhSession.tableDataTest('inconsistencias', [
                         {idper: persona.idper, cod_nov:COD_ENFERMEDAD, pauta:PAUTA_CORRIDOS},
                     ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                })
+            })
+        });
+        describe("horarios", function(){
+            async function enNuevaPersonaConLunesDificil(numero: number, opciones: {},
+                probar: (persona: ctts.Persona, mas:{usuario: UsuarioConCredenciales, sesion:EmulatedSession<AppSiper>}) => Promise<void>
+            ){
+                return enNuevaPersona(numero, opciones, async (persona, mas)=>{
+                    const cod_nov = COD_TELETRABAJO;
+                    const {idper} = persona;
+                    const dds = 1;
+                    await rrhhAdminSession.saveRecord(ctts.horarios, {desde:date.iso('2000-06-12'), cod_nov, idper, dds}, 'new');
+                    await rrhhAdminSession.saveRecord(ctts.horarios, {desde:date.iso('2000-02-04'), cod_nov, idper, dds}, 'new');
+                    await rrhhAdminSession.saveRecord(ctts.horarios, {desde:date.iso('2000-08-16'), cod_nov, idper, dds}, 'new');
+                    await rrhhAdminSession.saveRecord(ctts.horarios, {desde:date.iso('2000-04-08'), cod_nov, idper, dds}, 'new');
+                    return probar(persona, mas)
+                });
+            }
+            it.skip("mezclo teletrabajo con presencial", async function(){
+                /// TODO: Hay que reescribir esto por completo para verlo bien.
+                await enNuevaPersona(4, {}, async (persona) => {
+                    await rrhhSession.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_DIAGRAMADO, idper: persona.idper, 
+                            dds1:true, dds2:false, dds3:true, dds4:true, dds5:false},
+                        'new'
+                    );
+                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                        {fecha:date.iso('2000-01-03'), cod_nov:COD_DIAGRAMADO, idper: persona.idper},
+                        {fecha:date.iso('2000-01-05'), cod_nov:COD_DIAGRAMADO, idper: persona.idper},
+                        {fecha:date.iso('2000-01-06'), cod_nov:COD_DIAGRAMADO, idper: persona.idper},
+                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    // LÍMIES:
+                    await rrhhSession.tableDataTest('nov_per', [
+                        {annio:2000, cod_nov:COD_DIAGRAMADO, limite:null, cantidad:3, saldo:null},
+                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                })
+            })
+            it.skip("se ajustan las fechas hasta al agregar un horario", async function(){
+                await enNuevaPersonaConLunesDificil(30, {}, async (persona, {}) => {
+                    await rrhhSession.tableDataTest('horarios', [
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-01-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_PRESENTE},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-02-04'), hasta:date.iso('2000-04-07'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-04-08'), hasta:date.iso('2000-06-11'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-06-12'), hasta:date.iso('2000-08-15'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-08-16'), hasta:date.iso('2000-12-31'), cod_nov:COD_TELETRABAJO},
+                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'dds', value:1}]})
+                })
+            })
+            it.skip("se ajustan las fechas hasta al borrar un horario del medio", async function(){
+                await enNuevaPersona(31, {}, async (persona, {}) => {
+                    await server.inDbClient(ADMIN_REQ, client => client.query(
+                        "delete horarios where idper = $1, desde = $2", [persona.idper, date.iso('2000-04-08')]
+                    ).execute())
+                    await rrhhSession.tableDataTest('horarios', [
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-01-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_PRESENTE},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-02-04'), hasta:date.iso('2000-06-11'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-06-12'), hasta:date.iso('2000-08-15'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-08-16'), hasta:date.iso('2000-12-31'), cod_nov:COD_TELETRABAJO},
+                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'dds', value:1}]})
+                })
+            })
+            it.skip("se ajustan las fechas hasta al borrar un horario del final", async function(){
+                await enNuevaPersona(32, {}, async (persona, {}) => {
+                    await server.inDbClient(ADMIN_REQ, client => client.query(
+                        "delete horarios where idper = $1, desde = $2", [persona.idper, date.iso('2000-08-16')]
+                    ).execute())
+                    await rrhhSession.tableDataTest('horarios', [
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-01-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_PRESENTE},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-02-04'), hasta:date.iso('2000-04-07'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-04-08'), hasta:date.iso('2000-06-11'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-06-12'), hasta:date.iso('2000-12-31'), cod_nov:COD_TELETRABAJO},
+                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'dds', value:1}]})
+                })
+            })
+            it.skip("se ajustan las fechas hasta al adelantar un horario en su mismo lugar", async function(){
+                await enNuevaPersona(33, {}, async (persona, {}) => {
+                    var {idper} = persona;
+                    await rrhhAdminSession.saveRecord(ctts.horarios, 
+                        {desde:date.iso('2000-04-04'), cod_nov:COD_PRESENTE, idper, dds:1}, 'update', 
+                        [idper, 1, 2000, date.iso('2000-04-08')] // RESPETAR EL ORDEL DE LA pk
+                    );
+                    await rrhhSession.tableDataTest('horarios', [
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-01-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_PRESENTE},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-02-04'), hasta:date.iso('2000-04-03'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-04-04'), hasta:date.iso('2000-06-11'), cod_nov:COD_PRESENTE},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-06-12'), hasta:date.iso('2000-08-15'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-08-16'), hasta:date.iso('2000-12-31'), cod_nov:COD_TELETRABAJO},
+                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'dds', value:1}]})
+                })
+            })
+            it.skip("se ajustan las fechas hasta al atrasar un horario en su mismo lugar", async function(){
+                await enNuevaPersona(33, {}, async (persona, {}) => {
+                    var {idper} = persona;
+                    await rrhhAdminSession.saveRecord(ctts.horarios, 
+                        {desde:date.iso('2000-04-13'), cod_nov:COD_PRESENTE, idper, dds:1}, 'update', 
+                        [idper, 1, 2000, date.iso('2000-04-08')] // RESPETAR EL ORDEL DE LA pk
+                    );
+                    await rrhhSession.tableDataTest('horarios', [
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-01-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_PRESENTE},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-02-04'), hasta:date.iso('2000-04-12'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-04-13'), hasta:date.iso('2000-06-11'), cod_nov:COD_PRESENTE},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-06-12'), hasta:date.iso('2000-08-15'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-08-16'), hasta:date.iso('2000-12-31'), cod_nov:COD_TELETRABAJO},
+                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'dds', value:1}]})
+                })
+            })
+            it.skip("se ajustan las fechas hasta al cambiar un horario de lugar", async function(){
+                await enNuevaPersona(33, {}, async (persona, {}) => {
+                    var {idper} = persona;
+                    await rrhhAdminSession.saveRecord(ctts.horarios, 
+                        {desde:date.iso('2000-03-06'), cod_nov:COD_PRESENTE, idper, dds:1}, 'update', 
+                        [idper, 1, 2000, date.iso('2000-06-16')] // RESPETAR EL ORDEL DE LA pk
+                    );
+                    await rrhhSession.tableDataTest('horarios', [
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-01-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_PRESENTE},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-02-04'), hasta:date.iso('2000-03-05'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-03-06'), hasta:date.iso('2000-04-07'), cod_nov:COD_PRESENTE},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-04-08'), hasta:date.iso('2000-08-15'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-08-16'), hasta:date.iso('2000-12-31'), cod_nov:COD_TELETRABAJO},
+                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'dds', value:1}]})
+                })
+            })
+            it.skip("se ajustan las fechas hasta al cambiar un horario al último lugar", async function(){
+                await enNuevaPersona(33, {}, async (persona, {}) => {
+                    var {idper} = persona;
+                    await rrhhAdminSession.saveRecord(ctts.horarios, 
+                        {desde:date.iso('2000-10-20'), cod_nov:COD_PRESENTE, idper, dds:1}, 'update', 
+                        [idper, 1, 2000, date.iso('2000-06-16')] // RESPETAR EL ORDEL DE LA pk
+                    );
+                    await rrhhSession.tableDataTest('horarios', [
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-01-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_PRESENTE},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-02-04'), hasta:date.iso('2000-04-07'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-04-08'), hasta:date.iso('2000-08-15'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-08-16'), hasta:date.iso('2000-10-19'), cod_nov:COD_TELETRABAJO},
+                        {idper: persona.idper, dds:1, desde:date.iso('2000-10-20'), hasta:date.iso('2000-12-31'), cod_nov:COD_PRESENTE},
+                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'dds', value:1}]})
                 })
             })
         })

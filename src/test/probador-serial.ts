@@ -119,8 +119,8 @@ export class EmulatedSession<TApp extends AppBackend>{
     }
     // @ts-ignore
     async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:DefinedType<NoInfer<T>>, status:'new'):Promise<DefinedType<T>>
-    async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:Partial<DefinedType<NoInfer<T>>>, status:'update'):Promise<DefinedType<T>>
-    async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:DefinedType<NoInfer<T>>, status:'new'|'update'):Promise<DefinedType<T>>{
+    async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:Partial<DefinedType<NoInfer<T>>>, status:'update', primaryKeyValues?:any[]):Promise<DefinedType<T>>
+    async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:DefinedType<NoInfer<T>>, status:'new'|'update', primaryKeyValues?:any[]):Promise<DefinedType<T>>{
         var context = this.server.getContextForDump();
         const {table, description} = target
         var tableDef = this.server.tableStructures[table](context);
@@ -128,7 +128,7 @@ export class EmulatedSession<TApp extends AppBackend>{
             path:'/table_record_save',
             payload:{
                 table,
-                primaryKeyValues: JSON4all.stringify(tableDef.primaryKey.map(f => rowToSave[f])),
+                primaryKeyValues: JSON4all.stringify(primaryKeyValues ?? tableDef.primaryKey.map(f => rowToSave[f])),
                 newRow: JSON4all.stringify(rowToSave),
                 oldRow: JSON4all.stringify({}),
                 status
