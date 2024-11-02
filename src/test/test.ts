@@ -56,7 +56,8 @@ const COD_VACACIONES = "1";
 const COD_TELETRABAJO = "106";
 const COD_TRAMITE = "121";
 const COD_DIAGRAMADO = "101";
-const COD_ENFERMEDAD = "12";
+const COD_ENF_FAMILIAR = "12";
+const COD_ENFERMEDAD = "13";
 const COD_MUDANZA = "124";
 const COD_COMISION = "10";
 const ADMIN_REQ = {user:{usuario:'perry', rol:''}};
@@ -496,19 +497,9 @@ describe("connected", function(){
             await enNuevaPersona(19, {}, async (persona, {}) => {
                 await expectError( async () => {
                     await rrhhAdminSession.saveRecord(
-                        ctts.cod_nov, 
-                        {cod_nov:COD_ENFERMEDAD, con_detalles:true}, 
-                        'update'
-                    );
-                    await rrhhAdminSession.saveRecord(
                         ctts.novedades_registradas, 
-                        {desde:date.iso('2000-02-09'), hasta:date.iso('2000-02-09'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
+                        {desde:date.iso('2000-02-09'), hasta:date.iso('2000-02-09'), cod_nov:COD_ENF_FAMILIAR, idper: persona.idper},
                         'new'
-                    );
-                    await rrhhAdminSession.saveRecord(
-                        ctts.cod_nov, 
-                        {cod_nov:COD_ENFERMEDAD, con_detalles:null}, 
-                        'update'
                     );
                 }, ctts.ERROR_COD_NOVEDAD_INDICA_CON_DETALLES);
             })
@@ -638,6 +629,44 @@ describe("connected", function(){
                         'new'
                     );
                 }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_CON_NOVEDAD);
+            })
+        })
+        describe.only("días corridos", function(){
+            it.skip("se generan novedades en los fines de semana", async function(){
+                await enNuevaPersona(29, {}, async (persona, {}) => {
+                    await rrhhSession.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-07'), cod_nov: COD_ENFERMEDAD, idper: persona.idper},
+                        'new'
+                    );
+                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                        {fecha:date.iso('2000-02-04'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
+                        {fecha:date.iso('2000-02-05'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
+                        {fecha:date.iso('2000-02-06'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
+                        {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
+                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                })
+            })
+            it.skip("se ve una inconsistencia si se cargan partidas", async function(){
+                await enNuevaPersona(29, {}, async (persona, {}) => {
+                    await rrhhSession.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-04'), cod_nov: COD_ENFERMEDAD, idper: persona.idper},
+                        'new'
+                    );
+                    await rrhhSession.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-02-07'), hasta:date.iso('2000-02-07'), cod_nov: COD_ENFERMEDAD, idper: persona.idper},
+                        'new'
+                    );
+                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                        {fecha:date.iso('2000-02-04'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
+                        {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
+                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    await rrhhSession.tableDataTest('inconsistencias', [
+                        {idper: persona.idper, cod_nov:COD_ENFERMEDAD, pauta:PAUTA_CORRIDOS},
+                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                })
             })
         })
     })

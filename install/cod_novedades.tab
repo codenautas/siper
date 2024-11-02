@@ -1,37 +1,37 @@
-cod_nov|novedad|clase|c_dds|total|con_horario|con_novedad
-1|Art. 18 Descanso anual remunerado|I||true||true
-2|Licencia ordinaria no controlada|||true||true
-5|Licencia por afecciones comunes (Art. 19)|||true||true
-7|Ausente|||true||true
-8|Cargo de mayor jerarquia|||true||true
-9|Cesantia en tramite|||true||true
-10|Comision de servicios|||true||true
-12|Enfermedad familiar (Art. 20)|||true||true
-13|Licencia por enfermedad largo tratamiento (Art. 21)|||true||true
-19|Licencia por Maternidad|S||true||true
-21|Licencia por examen (Art. 25)|||true||true
-22|Licencia sin goce de sueldo|||true||true
-23|Licencia por matrimonio (Art. 27)|C||true||true
-24|Licencia por nacimiento de hijo (Art. 26)|U||true||true
-26|Renuncia en tramite|||true||true
-35|Afecciones comunes pendiente de justificar|||true||true
-37|Tarde|||true||true
-38|Tarde+|||true||true
-41|Feriado religioso|||true||true
-59|Abandono de servicio (Sin fichada de salida o Ficho antes)|||true||true
-85|Autorizado a no fichar|||true||true
-89|Encuestador y/o supervisor|||true||true
-99|Presente (justificado por personal)|||true||true
-101|Teletrabajo Diagramado||true|true||true
-102|AI Ausente injustificado|||true||true
-103|Franco Diagramado||true|true||true
-106|Teletrabajo|||true||true
-116|Ley 360|||true||true
-121|CC 09/10 Art. 67 c Tramites particulares|U||true||true
-124|CC 09/10 Art. 67 d Mudanza|||true||true
-126|Art 30 ter Licencia esp.l para controles de prev.|||true||true
-140|Autoridades superiores|P||true||true
-154|Ley 6025, Art. 12. Licencia con goce de haberes por nacimiento de hijo/a (30 corridos - no gestante)|||true||true
-156|Fallecimiento de Conyuge/Padre/Madre/Hno/Nieto|||true||true
-158|Violencia de Genero|||true||true
-999|Presente(Horario Flexible)|||true|true|
+cod_nov|novedad|clase|c_dds|total|con_horario|con_novedad|con_detalles|corridos
+1|Art. 18 Descanso anual remunerado|I||true||true||
+2|Licencia ordinaria no controlada|||true||true||
+5|Licencia por afecciones comunes (Art. 19)|||true||true||
+7|Ausente|||true||true||
+8|Cargo de mayor jerarquia|||true||true||
+9|Cesantia en tramite|||true||true||
+10|Comision de servicios|||true||true||
+12|Enfermedad familiar (Art. 20)|||true||true|true|
+13|Licencia por enfermedad largo tratamiento (Art. 21)|||true||true||true
+19|Licencia por Maternidad|S||true||true||
+21|Licencia por examen (Art. 25)|||true||true||
+22|Licencia sin goce de sueldo|||true||true||
+23|Licencia por matrimonio (Art. 27)|C||true||true||
+24|Licencia por nacimiento de hijo (Art. 26)|U||true||true||
+26|Renuncia en tramite|||true||true||
+35|Afecciones comunes pendiente de justificar|||true||true||
+37|Tarde|||true||true||
+38|Tarde+|||true||true||
+41|Feriado religioso|||true||true||
+59|Abandono de servicio (Sin fichada de salida o Ficho antes)|||true||true||
+85|Autorizado a no fichar|||true||true||
+89|Encuestador y/o supervisor|||true||true||
+99|Presente (justificado por personal)|||true||true||
+101|Teletrabajo Diagramado||true|true||true||
+102|AI Ausente injustificado|||true||true||
+103|Franco Diagramado||true|true||true||
+106|Teletrabajo|||true||true||
+116|Ley 360|||true||true||
+121|CC 09/10 Art. 67 c Tramites particulares|U||true||true||
+124|CC 09/10 Art. 67 d Mudanza|||true||true||
+126|Art 30 ter Licencia esp.l para controles de prev.|||true||true||
+140|Autoridades superiores|P||true||true||
+154|Ley 6025, Art. 12. Licencia con goce de haberes por nacimiento de hijo/a (30 corridos - no gestante)|||true||true||
+156|Fallecimiento de Conyuge/Padre/Madre/Hno/Nieto|||true||true||
+158|Violencia de Genero|||true||true||
+999|Presente(Horario Flexible)|||true|true|||

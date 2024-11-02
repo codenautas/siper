@@ -8,7 +8,7 @@ export const cod_nov: FieldDefinition = {
     name: 'cod_nov', 
     typeName: 'text', 
     title: 'cód nov', 
-    description: 'códiog de novedad', 
+    description: 'código de novedad', 
     postInput: soloDigitosPostConfig
 };
 
@@ -27,8 +27,9 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {name: 'con_detalles', typeName: 'boolean',                                             },
             {name: 'total'       , typeName: 'boolean',                                             },
             {name: 'parcial'     , typeName: 'boolean',                                             },
-            {name: 'con_horario' , typeName: 'boolean', description:'indica que la novedad puede usarse en el horario de las personas'},
-            {name: 'con_novedad' , typeName: 'boolean', description:'indica que la novedad puede usarse en el registro de novedades'},
+            {name: 'con_horario' , typeName: 'boolean', description:'la novedad puede usarse en el horario de las personas'},
+            {name: 'con_novedad' , typeName: 'boolean', description:'la novedad puede usarse en el registro de novedades'},
+            {name: 'corridos'    , typeName: 'boolean', description:'días corridos (incluye feriados y fines de semana)'},
         ],
         primaryKey:[cod_nov.name],
         constraints:[
