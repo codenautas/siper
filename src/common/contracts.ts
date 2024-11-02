@@ -15,6 +15,7 @@ export const cod_nov = {
         total: is.nullable.boolean,
         parcial: is.nullable.boolean,
         con_horario: is.nullable.boolean,
+        con_novedad: is.nullable.boolean,
     })
 }
 
@@ -270,6 +271,7 @@ export const ERROR_COD_NOVEDAD_INDICA_SIN_DETALLES = 'P1004';
 export const ERROR_COD_NOVEDAD_NO_INDICA_TOTAL     = 'P1005';
 export const ERROR_COD_NOVEDAD_NO_INDICA_PARCIAL   = 'P1006';
 export const ERROR_COD_NOVEDAD_NO_INDICA_CON_HORARIO= 'P1007';
+export const ERROR_COD_NOVEDAD_NO_INDICA_CON_NOVEDAD= 'P1008';
 
 //////////// ERRORES POSTGRES:
 export const insufficient_privilege = '42501';

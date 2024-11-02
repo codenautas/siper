@@ -213,7 +213,7 @@ describe("connected", function(){
         try {
             var persona1 = await crearNuevaPersona(numero1);
             var persona2 = await crearNuevaPersona(numero2);
-            await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA agregar feriado', total:true }, 'new')
+            await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA agregar feriado', total:true, con_novedad: true }, 'new')
             haciendo = 'poniendo el feriado'
             await rrhhAdminSession.saveRecord(
                 ctts.fecha, 
@@ -605,7 +605,7 @@ describe("connected", function(){
             await enNuevaPersona(26, {}, async (persona, {}) => {
                 await expectError( async () => {
                     const cod_nov = '10003';
-                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA intengo agregar no total', total: false }, 'new')
+                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA intengo agregar no total', total: false, con_novedad: true }, 'new')
                     await rrhhAdminSession.saveRecord(
                         ctts.novedades_registradas, 
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov, idper: persona.idper},
@@ -625,6 +625,19 @@ describe("connected", function(){
                         'new'
                     );
                 }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_CON_HORARIO);
+            })
+        })
+        it("no puede cargarse una NOVEDAD cuando el codigo de novedad NO indica CON_NOVEDAD", async function(){
+            await enNuevaPersona(28, {}, async (persona, {}) => {
+                await expectError( async () => {
+                    const cod_nov = '10005';
+                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA intento agregar NO CON_NOVEDAD', total: true, con_novedad: false }, 'new')
+                    await rrhhAdminSession.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov, idper: persona.idper},
+                        'new'
+                    );
+                }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_CON_NOVEDAD);
             })
         })
     })
