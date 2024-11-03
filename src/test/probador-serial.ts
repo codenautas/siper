@@ -166,7 +166,7 @@ export class EmulatedSession<TApp extends AppBackend>{
                 try{
                     discrepances.showAndThrow(filteredReponseRows, rows);
                 } catch (err) {
-                    console.log('======================================',filteredReponseRows, rows)
+                    // console.log('======================================',rows.length == 0 ? response : filteredReponseRows, rows)
                     throw err;
                 }
             break;

@@ -80,59 +80,70 @@ describe("connected", function(){
     var server: AppSiper;
     var rrhhSession: EmulatedSession<AppSiper>;
     var rrhhAdminSession: EmulatedSession<AppSiper>; // no cualquier rrhh
+    var borradoExitoso: boolean = false;
     before(async function(){
-        this.timeout(TIMEOUT_SPEED * 20);
-        server = await startServer(AppSiper);
-        // @ts-expect-error: todavía no está en el config tests-can-delete-db
-        if (server.config.devel['tests-can-delete-db']) {
-            await server.inDbClient(ADMIN_REQ, async client=>{
-                await client.executeSentences([
-                    `delete from per_nov_cant where ${AÑOS_DE_PRUEBA}`,
-                    `delete from nov_gru where ${AÑOS_DE_PRUEBA}`,
-                    `delete from novedades_vigentes where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
-                    `delete from novedades_registradas where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
-                    `delete from novedades_horarias where ${IDPER_DE_PRUEBA}`,
-                    `delete from usuarios where ${IDPER_DE_PRUEBA}`,
-                    `delete from horarios where ${IDPER_DE_PRUEBA}`,
-                    `delete from personas where ${IDPER_DE_PRUEBA}`,
-                    `delete from grupos where ${IDPER_DE_PRUEBA.replace('idper', 'grupo')}`,
-                    `delete from fechas where ${AÑOS_DE_PRUEBA}`,
-                    `delete from annios where ${AÑOS_DE_PRUEBA}`,
-                    `delete from cod_novedades where novedad like 'PRUEBA AUTOM_TICA%'`,
-                    `update parametros set fecha_actual = '${FECHA_ACTUAL.toYmd()}' where unico_registro`,
-                    `insert into annios (annio) select * from generate_series(${DESDE_AÑO}, ${HASTA_AÑO}) d`,
-                    `insert into fechas (fecha) select date_trunc('day', d) from generate_series(cast('${DESDE_AÑO}-01-01' as timestamp), cast('${HASTA_AÑO}-12-31' as timestamp), cast('1 day' as interval)) d`,
-                    `update fechas set laborable = false, repite = false, inamovible = false where fecha in (
-                        '2000-03-06', 
-                        '2000-03-07',
-                        '2000-03-24',
-                        '2000-04-20',
-                        '2000-04-21');
-                    `,
-                    `delete from sectores where nombre_sector like 'PRUEBA AUTOM_TICA%'`,
-                    `insert into sectores (sector, nombre_sector, pertenece_a) values
-                        ('PRA1'   , 'PRUEBA AUTOMATICA 1'      , null    ),
-                        ('PRA11'  , 'PRUEBA AUTOMATICA 1.1'    , 'PRA1'  ),
-                        ('PRA111' , 'PRUEBA AUTOMATICA 1.1.1'  , 'PRA11' ),
-                        ('PRA1111', 'PRUEBA AUTOMATICA 1.1.1.1', 'PRA111'),
-                        ('PRA12'  , 'PRUEBA AUTOMATICA 1.2'    , 'PRA1'  );
-                    `,
-                ])
-            })
-            console.log("Borrado y listo!")
-        } else {
-            throw new Error("no se puede probar sin setear devel: tests-can-delete-db: true")
+        try{
+            this.timeout(TIMEOUT_SPEED * 20);
+            server = await startServer(AppSiper);
+            console.log('/// comienzo del borrado', new Date())
+            // @ts-expect-error: todavía no está en el config tests-can-delete-db
+            if (server.config.devel['tests-can-delete-db']) {
+                await server.inDbClient(ADMIN_REQ, async client=>{
+                    console.log('/// comienzo del borrado efectivo', new Date())
+                    await client.executeSentences([
+                        `delete from per_nov_cant where ${AÑOS_DE_PRUEBA}`,
+                        `delete from nov_gru where ${AÑOS_DE_PRUEBA}`,
+                        `delete from novedades_vigentes where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
+                        `delete from horarios where ${IDPER_DE_PRUEBA}`,
+                        `delete from novedades_registradas where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
+                        `delete from novedades_horarias where ${IDPER_DE_PRUEBA}`,
+                        `delete from novedades_vigentes where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
+                        `delete from usuarios where ${IDPER_DE_PRUEBA}`,
+                        `delete from personas where ${IDPER_DE_PRUEBA}`,
+                        `delete from grupos where ${IDPER_DE_PRUEBA.replace('idper', 'grupo')}`,
+                        `delete from fechas where ${AÑOS_DE_PRUEBA}`,
+                        `delete from annios where ${AÑOS_DE_PRUEBA}`,
+                        `delete from cod_novedades where novedad like 'PRUEBA AUTOM_TICA%'`,
+                        `update parametros set fecha_actual = '${FECHA_ACTUAL.toYmd()}' where unico_registro`,
+                        `insert into annios (annio) select * from generate_series(${DESDE_AÑO}, ${HASTA_AÑO}) d`,
+                        `insert into fechas (fecha) select date_trunc('day', d) from generate_series(cast('${DESDE_AÑO}-01-01' as timestamp), cast('${HASTA_AÑO}-12-31' as timestamp), cast('1 day' as interval)) d`,
+                        `update fechas set laborable = false, repite = false, inamovible = false where fecha in (
+                            '2000-03-06', 
+                            '2000-03-07',
+                            '2000-03-24',
+                            '2000-04-20',
+                            '2000-04-21');
+                        `,
+                        `delete from sectores where nombre_sector like 'PRUEBA AUTOM_TICA%'`,
+                        `insert into sectores (sector, nombre_sector, pertenece_a) values
+                            ('PRA1'   , 'PRUEBA AUTOMATICA 1'      , null    ),
+                            ('PRA11'  , 'PRUEBA AUTOMATICA 1.1'    , 'PRA1'  ),
+                            ('PRA111' , 'PRUEBA AUTOMATICA 1.1.1'  , 'PRA11' ),
+                            ('PRA1111', 'PRUEBA AUTOMATICA 1.1.1.1', 'PRA111'),
+                            ('PRA12'  , 'PRUEBA AUTOMATICA 1.2'    , 'PRA1'  );
+                        `,
+                    ])
+                })
+                console.log("Borrado y listo!")
+                borradoExitoso = true;
+            } else {
+                throw new Error("no se puede probar sin setear devel: tests-can-delete-db: true")
+            }
+            console.log('/// fin del borrado', new Date())
+            rrhhAdminSession = new EmulatedSession(server, PORT || server.config.server.port);
+            await rrhhAdminSession.login({
+                username: 'perry',
+                password: 'white',
+            });
+            rrhhSession = new EmulatedSession(server, PORT || server.config.server.port);
+            await rrhhSession.login({
+                username: 'jimmi',
+                password: 'olsen',
+            });
+        } catch(err) {
+            console.log(err);
+            throw err;
         }
-        rrhhAdminSession = new EmulatedSession(server, PORT || server.config.server.port);
-        await rrhhAdminSession.login({
-            username: 'perry',
-            password: 'white',
-        });
-        rrhhSession = new EmulatedSession(server, PORT || server.config.server.port);
-        await rrhhSession.login({
-            username: 'jimmi',
-            password: 'olsen',
-        });
     })
     async function crearUsuario(nuevoUsuario: {numero:number, rol:string, idper:string}){
         const {numero, rol, idper} = nuevoUsuario;
@@ -345,16 +356,17 @@ describe("connected", function(){
             })
         })
         it("cargo un día de trámite", async function(){
-            await enNuevaPersona(5, {}, async (persona) => {
+            await enNuevaPersona(5, {}, async ({idper}) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper: persona.idper, 
-                        dds1:true, dds2:false, dds3:true, dds4:true, dds5:false},
+                    {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper},
                     'new'
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper: persona.idper},
-                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    {fecha:date.iso('2000-01-05'), cod_nov:COD_PRESENTE, idper, con_novedad:null , trabajable:true},
+                    {fecha:date.iso('2000-01-06'), cod_nov:COD_TRAMITE , idper, con_novedad:true , trabajable:true},
+                    {fecha:date.iso('2000-01-07'), cod_nov:COD_PRESENTE, idper, con_novedad:null , trabajable:true},
+                ], 'all', {fixedFields:{idper, fecha:['2000-01-05','2000-01-07']}})
             })
         })
         it("intento de cargar novedades sin permiso", async function(){
@@ -369,18 +381,18 @@ describe("connected", function(){
             })
         })
         it("intento ver novedades de otra persona", async function(){
-            await enNuevaPersona(7, {}, async (persona) => {
+            await enNuevaPersona(7, {}, async ({idper}) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-01-03'), hasta:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, idper: persona.idper},
+                    {desde:date.iso('2000-01-03'), hasta:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, idper},
                     'new'
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, idper: persona.idper},
-                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    {fecha:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, idper},
+                ], 'all', {fixedFields:{idper, fecha:'2000-01-03'}})
                 // el usuario básico no debería ver los datos de otra persona:
                 await basicoSession.tableDataTest('novedades_vigentes', [
-                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                ], 'all', {fixedFields:{idper, fecha:'2000-01-03'}})
             })
         })
         it("quito un feriado y veo que hay más novedades", async function(){
@@ -402,7 +414,7 @@ describe("connected", function(){
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
                     {fecha:date.iso('2000-01-10'), cod_nov, idper: persona2.idper},
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
-                ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
+                ], 'all', {fixedFields:{cod_nov}})
            })
         })
         // agrego delete en calcular_novedades_vigentes e incorporo este test
@@ -421,21 +433,21 @@ describe("connected", function(){
                 )
                 /* Verifico que esos días no tengan novedades vigentes */
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
+                ], 'all', {fixedFields:{cod_nov}})
            })
         })
         it("un usuario común puede ver sus novedades pasadas (y rrhh las puede cargar)", async function(){
-            await enNuevaPersona(12, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async (persona, {sesion}) => {
+            await enNuevaPersona(12, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async ({idper}, {sesion}) => {
                 await rrhhAdminSession.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
                     'new'
                 );
                 await sesion.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, idper},
+                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, idper},
+                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
+                ], 'all', {fixedFields:{idper, fecha:['2000-02-01', '2000-02-03']}})
             })
         })
         it("un usuario común no puede cargar novedades pasadas", async function(){
@@ -450,31 +462,31 @@ describe("connected", function(){
             })
         })
         it("un jefe puede cargar a alguien de su equipo", async function(){
-            await enNuevaPersona(15, {usuario:{sector:'PRA11'}}, async (persona) => {
+            await enNuevaPersona(15, {usuario:{sector:'PRA11'}}, async ({idper}) => {
                 await jefe11Session.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
                     'new'
                 );
                 await jefe11Session.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, idper},
+                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, idper},
+                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
+                ], 'all', {fixedFields:{idper, fecha:['2000-02-01','2000-02-03']}})
             })
         })
         it("un jefe puede cargar a alguien de un equipo perteneciente", async function(){
-            await enNuevaPersona(16, {usuario:{sector:'PRA1111'}}, async (persona) => {
+            await enNuevaPersona(16, {usuario:{sector:'PRA1111'}}, async ({idper}) => {
                 await jefe11Session.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
                     'new'
                 );
                 await jefe11Session.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, idper},
+                    {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, idper},
+                    {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
+                ], 'all', {fixedFields:{idper, fecha:['2000-02-01','2000-02-03']}})
             })
         })
         it("un jefe no puede cargar a alguien de un equipo no perteneciente", async function(){
@@ -521,22 +533,22 @@ describe("connected", function(){
             })
         })
         it("un detalle para una novedad se copia en novedades_vigentes", async function(){
-            await enNuevaPersona(23, {}, async (persona) => {
+            await enNuevaPersona(23, {}, async ({idper}) => {
                     await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov:COD_MUDANZA, con_detalles:null}, 'update');
                     await rrhhAdminSession.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-02-10'), hasta:date.iso('2000-02-10'), cod_nov:COD_MUDANZA, idper: persona.idper, detalles:TEXTO_PRUEBA},
+                    {desde:date.iso('2000-02-10'), hasta:date.iso('2000-02-10'), cod_nov:COD_MUDANZA, idper, detalles:TEXTO_PRUEBA},
                     'new'
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-02-10'), cod_nov:COD_MUDANZA, idper: persona.idper, detalles:TEXTO_PRUEBA},
-                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    {fecha:date.iso('2000-02-10'), cod_nov:COD_MUDANZA, idper, detalles:TEXTO_PRUEBA},
+                ], 'all', {fixedFields:{idper, fecha:'2000-02-10'}})
             })
         })
         it("un usuario común puede ver SOLO SUS novedades pasadas", async function(){
             await enNuevaPersona(21,
                 {usuario:{sector:'PRA11',sesion:true}, hoy:date.iso('2000-02-02')},
-                async (_, {sesion}
+                async (persona, {sesion}
             ) => {
                 var otrapersona = await crearNuevaPersona(22);
                 await rrhhSession.saveRecord(ctts.personas,{idper:otrapersona.idper,sector:'PRA11'}, 'update')
@@ -545,15 +557,17 @@ describe("connected", function(){
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: otrapersona.idper},
                     'new'
                 );
-                await sesion.tableDataTest('novedades_vigentes', [], 'all')
+                await sesion.tableDataTest('novedades_vigentes', [
+                    {fecha:date.iso('2000-02-01'), cod_nov:COD_PRESENTE, idper: persona.idper, con_novedad: null},
+                ], 'all', {fixedFields:{fecha:'2000-02-01'}})
             })
         })
         it("un usuario no puede cargarse novedades a sí mismo", async function(){
-            await enNuevaPersona(18, {usuario:{sector:'PRA12', sesion:true}}, async (persona, {sesion}) => {
+            await enNuevaPersona(18, {usuario:{sector:'PRA12', sesion:true}}, async ({idper}, {sesion}) => {
                 await expectError( async () => {
                     await sesion.saveRecord(
                         ctts.novedades_registradas, 
-                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
                         'new'
                     );
                 }, ctts.insufficient_privilege);
@@ -896,77 +910,81 @@ describe("connected", function(){
         })
     })
     after(async function(){
-        this.timeout(TIMEOUT_SPEED * 12);
         var error: Error|null = null;
-        try {
-            /**
-             * Podría ocurrir que haya algún problema al recalcular. 
-             * 
-             * Además queremos tener registro de cuánto demoran los tests en las máquinas locales
-             * Para incluir una máquina de desarrollo en el cálculo de tiempos hay que setear
-             * la variable de ambiente BP_TEST_BENCHMARKS a un nombre de máquina.
-             * 
-             * Esta secuencia saca una foto del resultado de todos los test y vuelve a recalcular
-             * sobre lo ya calculado, luego borrando todo 3 veces en cada una de esas 3 veces
-             * primero calcula todo junto, luego fecha por fecha y finalmente persona por persona
-             */
-            const sqlTraerNovedades = `SELECT string_agg(concat_ws(' ',fecha,idper,cod_nov), chr(10) order by fecha, idper) FROM novedades_vigentes WHERE ${FECHAS_DE_PRUEBA} AND ${IDPER_DE_PRUEBA}`
-            const emptyBenchmarkDay = {
-                date: date.today(),
-                tiempos: []
+        if (!borradoExitoso) {
+            console.log('se saltea la comprobación final porque no se pudo borrar las pruebas de la corrida anterior')
+        } else {
+            this.timeout(TIMEOUT_SPEED * 12);
+            try {
+                /**
+                 * Podría ocurrir que haya algún problema al recalcular. 
+                 * 
+                 * Además queremos tener registro de cuánto demoran los tests en las máquinas locales
+                 * Para incluir una máquina de desarrollo en el cálculo de tiempos hay que setear
+                 * la variable de ambiente BP_TEST_BENCHMARKS a un nombre de máquina.
+                 * 
+                 * Esta secuencia saca una foto del resultado de todos los test y vuelve a recalcular
+                 * sobre lo ya calculado, luego borrando todo 3 veces en cada una de esas 3 veces
+                 * primero calcula todo junto, luego fecha por fecha y finalmente persona por persona
+                 */
+                const sqlTraerNovedades = `SELECT string_agg(concat_ws(' ',fecha,idper,cod_nov), chr(10) order by fecha, idper) FROM novedades_vigentes WHERE ${FECHAS_DE_PRUEBA} AND ${IDPER_DE_PRUEBA}`
+                const emptyBenchmarkDay = {
+                    date: date.today(),
+                    tiempos: []
+                }
+                var benchmarkDelDia = await loadLocalFile(emptyBenchmarkDay);
+                if (benchmarkDelDia.date != emptyBenchmarkDay.date) {
+                    benchmarkDelDia = emptyBenchmarkDay;
+                }
+                const comienzo = new Date();
+                await server.inDbClient(ADMIN_REQ, async client => {
+                    const {row: tamannio} = await client.query(`select count(*) as personas from personas where ${IDPER_DE_PRUEBA}`).fetchUniqueRow();
+                    const benchmark = {
+                        tamannio,
+                        duracion: null as number|null
+                    }
+                    const todasLasNovedadesGeneradas = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
+                    await client.query(sqlCalcularNovedades).execute();
+                    console.log('calculando novedadesRecalculadasEncima')
+                    const novedadesRecalculadasEncima = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
+                    await fs.writeFile('local-recalculadas.json',novedadesRecalculadasEncima,'utf8')
+                    await fs.writeFile('local-generadas.json',todasLasNovedadesGeneradas,'utf8')
+                    discrepances.showAndThrow(novedadesRecalculadasEncima, todasLasNovedadesGeneradas);
+                    console.log('calculando novedadesRecalculadasEnBlanco')
+                    await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
+                    await client.query(sqlCalcularNovedades).execute();
+                    const novedadesRecalculadasEnBlanco = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
+                    discrepances.showAndThrow(novedadesRecalculadasEnBlanco, todasLasNovedadesGeneradas)
+                    console.log('calculando novedadesRecalculadasPorFecha')
+                    var fechas = (await client.query(`select distinct fecha from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
+                    await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
+                    for(var row of fechas) {
+                        await client.query(`SELECT calcular_novedades_vigentes($1, $2)`, [row.fecha, row.fecha]).execute();
+                    }
+                    const novedadesRecalculadasPorFecha = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
+                    discrepances.showAndThrow(novedadesRecalculadasPorFecha, todasLasNovedadesGeneradas);
+                    console.log('calculando novedadesRecalculadasPorCuit')
+                    var cuits = (await client.query(`select distinct idper from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
+                    await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
+                    for(var row of cuits) {
+                        await client.query(`SELECT calcular_novedades_vigentes_idper('${DESDE_AÑO}-01-01', '${HASTA_AÑO}-12-31', $1)`, [row.idper]).execute();
+                    }
+                    const novedadesRecalculadasPorCuit = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
+                    benchmark.duracion = Number(
+                        // @ts-ignore   
+                        new Date() - comienzo
+                    );
+                    // @ts-ignore
+                    benchmarkDelDia.tiempos.push(benchmark); 
+                    await saveLocalFile(benchmarkDelDia);
+                    await benchmarksSave(benchmarkDelDia);
+                    discrepances.showAndThrow(novedadesRecalculadasPorCuit, todasLasNovedadesGeneradas)
+                })
+            } catch(err) {
+                console.log("****************** ERROR AL FINAL VERIFICANDO QUE SE PUEDA REGENERAR *******************")
+                console_log(err);
+                error = err as Error;
             }
-            var benchmarkDelDia = await loadLocalFile(emptyBenchmarkDay);
-            if (benchmarkDelDia.date != emptyBenchmarkDay.date) {
-                benchmarkDelDia = emptyBenchmarkDay;
-            }
-            const comienzo = new Date();
-            await server.inDbClient(ADMIN_REQ, async client => {
-                const {row: tamannio} = await client.query(`select count(*) as personas from personas where ${IDPER_DE_PRUEBA}`).fetchUniqueRow();
-                const benchmark = {
-                    tamannio,
-                    duracion: null as number|null
-                }
-                const todasLasNovedadesGeneradas = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
-                await client.query(sqlCalcularNovedades).execute();
-                console.log('calculando novedadesRecalculadasEncima')
-                const novedadesRecalculadasEncima = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
-                await fs.writeFile('local-recalculadas.json',novedadesRecalculadasEncima,'utf8')
-                await fs.writeFile('local-generadas.json',todasLasNovedadesGeneradas,'utf8')
-                discrepances.showAndThrow(novedadesRecalculadasEncima, todasLasNovedadesGeneradas);
-                console.log('calculando novedadesRecalculadasEnBlanco')
-                await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
-                await client.query(sqlCalcularNovedades).execute();
-                const novedadesRecalculadasEnBlanco = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
-                discrepances.showAndThrow(novedadesRecalculadasEnBlanco, todasLasNovedadesGeneradas)
-                console.log('calculando novedadesRecalculadasPorFecha')
-                var fechas = (await client.query(`select distinct fecha from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
-                await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
-                for(var row of fechas) {
-                    await client.query(`SELECT calcular_novedades_vigentes($1, $2)`, [row.fecha, row.fecha]).execute();
-                }
-                const novedadesRecalculadasPorFecha = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
-                discrepances.showAndThrow(novedadesRecalculadasPorFecha, todasLasNovedadesGeneradas);
-                console.log('calculando novedadesRecalculadasPorCuit')
-                var cuits = (await client.query(`select distinct idper from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
-                await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
-                for(var row of cuits) {
-                    await client.query(`SELECT calcular_novedades_vigentes_idper('${DESDE_AÑO}-01-01', '${HASTA_AÑO}-12-31', $1)`, [row.idper]).execute();
-                }
-                const novedadesRecalculadasPorCuit = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
-                benchmark.duracion = Number(
-                    // @ts-ignore   
-                    new Date() - comienzo
-                );
-                // @ts-ignore
-                benchmarkDelDia.tiempos.push(benchmark); 
-                await saveLocalFile(benchmarkDelDia);
-                await benchmarksSave(benchmarkDelDia);
-                discrepances.showAndThrow(novedadesRecalculadasPorCuit, todasLasNovedadesGeneradas)
-            })
-        } catch(err) {
-            console.log("****************** ERROR AL FINAL VERIFICANDO QUE SE PUEDA REGENERAR *******************")
-            console_log(err);
-            error = err as Error;
         }
         await server.shutdownBackend()
         console.log('server down!');
