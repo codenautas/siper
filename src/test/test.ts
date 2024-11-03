@@ -47,7 +47,7 @@ import * as from "node-fetch";
 import * as FormData from "form-data";
 */
 
-const FECHA_ACTUAL = date.iso('2000-01-01');
+const FECHA_ACTUAL = date.iso('2000-01-04');
 const DESDE_AÑO = `2000`;
 const HASTA_AÑO = `2000`;
 const AÑOS_DE_PRUEBA = `annio BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
@@ -113,6 +113,9 @@ describe("connected", function(){
                             '2000-03-24',
                             '2000-04-20',
                             '2000-04-21');
+                        `,
+                        `update fechas set laborable = false, repite = true, inamovible = true where fecha in (
+                            '2000-05-01');
                         `,
                         `delete from sectores where nombre_sector like 'PRUEBA AUTOM_TICA%'`,
                         `insert into sectores (sector, nombre_sector, pertenece_a) values
@@ -315,15 +318,15 @@ describe("connected", function(){
                 ], 'all', {fixedFields:{idper}})
             })
         })
-        it.skip("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
+        it("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
             this.timeout(TIMEOUT_SPEED * 8);
-            await enNuevaPersona(3, {vacaciones: 20, tramites: 4}, async (persona) => {
+            await enNuevaPersona(3, {vacaciones: 20, tramites: 4}, async ({idper}) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-05-02'), hasta:date.iso('2000-05-12'), cod_nov:COD_VACACIONES, idper: persona.idper},
+                    {desde:date.iso('2000-05-01'), hasta:date.iso('2000-05-12'), cod_nov:COD_VACACIONES, idper},
                     'new'
                 );
-                var novedadRegistradaPorCargar = {desde:date.iso('2000-05-08'), hasta:date.iso('2000-05-12'), cancela:true, idper: persona.idper}
+                var novedadRegistradaPorCargar = {desde:date.iso('2000-05-08'), hasta:date.iso('2000-05-12'), cancela:true, idper}
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 discrepances.showAndThrow(informe, {dias_corridos:5, dias_habiles:5, dias_coincidentes:5})
                 await rrhhSession.saveRecord(
@@ -333,26 +336,28 @@ describe("connected", function(){
                 );
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
-                    {desde:date.iso('2000-05-11'), hasta:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, idper: persona.idper},
+                    {desde:date.iso('2000-05-11'), hasta:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, idper},
                     'new'
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-05-02'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    {fecha:date.iso('2000-05-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    {fecha:date.iso('2000-05-04'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    {fecha:date.iso('2000-05-05'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    {fecha:date.iso('2000-05-08'), cod_nov:COD_TELETRABAJO, idper: persona.idper},
-                    {fecha:date.iso('2000-05-09'), cod_nov:COD_TELETRABAJO, idper: persona.idper},
-                    {fecha:date.iso('2000-05-10'), cod_nov:COD_TELETRABAJO, idper: persona.idper},
-                    {fecha:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, idper: persona.idper},
-                    {fecha:date.iso('2000-05-12'), cod_nov:COD_TELETRABAJO, idper: persona.idper},
-                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    {fecha:date.iso('2000-05-01'), cod_nov:null           , idper},
+                    {fecha:date.iso('2000-05-02'), cod_nov:COD_VACACIONES , idper},
+                    {fecha:date.iso('2000-05-03'), cod_nov:COD_VACACIONES , idper},
+                    {fecha:date.iso('2000-05-04'), cod_nov:COD_VACACIONES , idper},
+                    {fecha:date.iso('2000-05-05'), cod_nov:COD_VACACIONES , idper},
+                    {fecha:date.iso('2000-05-06'), cod_nov:null           , idper},
+                    {fecha:date.iso('2000-05-07'), cod_nov:null           , idper},
+                    {fecha:date.iso('2000-05-08'), cod_nov:COD_PRESENTE   , idper},
+                    {fecha:date.iso('2000-05-09'), cod_nov:COD_PRESENTE   , idper},
+                    {fecha:date.iso('2000-05-10'), cod_nov:COD_PRESENTE   , idper},
+                    {fecha:date.iso('2000-05-11'), cod_nov:COD_TRAMITE    , idper},
+                    {fecha:date.iso('2000-05-12'), cod_nov:COD_PRESENTE   , idper},
+                ], 'all', {fixedFields:{idper, fecha:['2000-05-01', '2000-05-12']}})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
                     {annio:2000, cod_nov:COD_VACACIONES, limite:20, cantidad:4, saldo:16},
-                    {annio:2000, cod_nov:COD_TELETRABAJO, limite:null, cantidad:4, saldo:null},
                     {annio:2000, cod_nov:COD_TRAMITE, limite:4, cantidad:1, saldo:3},
-                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                ], 'all', {fixedFields:{idper}})
             })
         })
         it("cargo un día de trámite", async function(){
@@ -378,6 +383,18 @@ describe("connected", function(){
                         'new'
                     );
                 }, ctts.insufficient_privilege);
+            })
+        })
+        it("intento de cargar novedades en el pasado", async function(){
+            await enNuevaPersona(34, {}, async ({idper}) => {
+                // TODO ESPERAR EL ERROR
+                //await expectError( async () => {
+                    await rrhhSession.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper},
+                        'new'
+                    );
+                //}, ctts.ERROR_NO_SE_PUEDE_CARGAR_EN_EL_PASADO);
             })
         })
         it("intento ver novedades de otra persona", async function(){
