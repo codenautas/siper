@@ -16,14 +16,14 @@ $BODY$
       idper, ficha, fecha, 
       COALESCE(
         CASE WHEN trabajable OR nr_corridos THEN nr_cod_nov ELSE null END, -- si la última novedad registrada no es una anulación
-        CASE WHEN tiene_horario_declarado THEN h_cod_nov ELSE cod_nov_habitual END
+        CASE WHEN not trabajable THEN null WHEN tiene_horario_declarado THEN h_cod_nov ELSE cod_nov_habitual END
       ) as cod_nov, 
       null as ent_fich, null as sal_fich, sector, annio,
-      con_novedad, trabajable, detalles
+      con_novedad AND CASE WHEN trabajable OR nr_corridos THEN true ELSE false END as con_novedad, trabajable, detalles
     FROM (
       SELECT p.idper, p.ficha, f.fecha, 
           h.idper IS NOT NULL as tiene_horario_declarado,
-          CASE WHEN h.idper IS NOT NULL THEN h.trabaja ELSE f.dds BETWEEN 1 AND 5 END as trabajable,
+          CASE WHEN h.idper IS NOT NULL THEN h.trabaja ELSE f.dds BETWEEN 1 AND 5 END AND (laborable is not false OR inamovible is not true AND f.dds NOT BETWEEN 1 AND 5) as trabajable,
           p.sector, f.annio, nr.detalles,
           nr.cod_nov as nr_cod_nov,
           nr.corridos as nr_corridos,

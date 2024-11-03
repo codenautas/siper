@@ -39,9 +39,13 @@ export async function startServer<T extends AppBackend>(AppConstructor: Construc
     return server;
 }
 
+export type AnyValue = string|number|Date|boolean|null
 export type Row = Record<string, any>
 
 export type Credentials = {username:string, password:string}
+
+export type FixedFields = {fieldName:string, value:any, until?:AnyValue}[]
+export type EasyFixedFields = null|undefined|FixedFields|Record<string,AnyValue|[AnyValue, AnyValue]>
 
 export class EmulatedSession<TApp extends AppBackend>{
     private connstr:string
@@ -138,14 +142,20 @@ export class EmulatedSession<TApp extends AppBackend>{
         discrepances.showAndThrow(command, discrepances.test(x => x=='INSERT' || x=='UPDATE'));
         return row;
     }
-    async tableDataTest(table:string, rows:Row[], compare:'all',opts?:{fixedFields?:{fieldName:string, value:any, until?:any}[]}){
+    toFixedField(param:EasyFixedFields): FixedFields{
+        if (param == null) return [];
+        if (param instanceof Array) return param;
+        const result = Object.keys(param).map(fieldName => {var value = param[fieldName]; return value instanceof Array ? {fieldName, value:value[0], until:value[1]} : {fieldName, value}})
+        return result;
+    }
+    async tableDataTest(table:string, rows:Row[], compare:'all',opts?:{fixedFields?:EasyFixedFields}){
         var result = await this.request({
             path:'/table_data',
             payload:{
                 table,
                 paramFun:'{}',
                 ...opts,
-                fixedFields:JSON.stringify(opts?.fixedFields??[])
+                fixedFields:JSON.stringify(this.toFixedField(opts?.fixedFields))
             }
         })
         var response = guarantee({array:is.object({},{})}, result);
