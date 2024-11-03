@@ -658,19 +658,19 @@ describe("connected", function(){
             })
         })
         describe("días corridos", function(){
-            it.skip("se generan novedades en los fines de semana", async function(){
-                await enNuevaPersona(29, {}, async (persona, {}) => {
+            it("se generan novedades en los fines de semana", async function(){
+                await enNuevaPersona(29, {}, async ({idper}) => {
                     await rrhhSession.saveRecord(
                         ctts.novedades_registradas, 
-                        {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-07'), cod_nov: COD_ENFERMEDAD, idper: persona.idper},
+                        {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-07'), cod_nov: COD_ENFERMEDAD, idper},
                         'new'
                     );
                     await rrhhSession.tableDataTest('novedades_vigentes', [
-                        {fecha:date.iso('2000-02-04'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
-                        {fecha:date.iso('2000-02-05'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
-                        {fecha:date.iso('2000-02-06'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
-                        {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                        {fecha:date.iso('2000-02-04'), cod_nov:COD_ENFERMEDAD, idper, con_novedad:true},
+                        {fecha:date.iso('2000-02-05'), cod_nov:COD_ENFERMEDAD, idper, con_novedad:true},
+                        {fecha:date.iso('2000-02-06'), cod_nov:COD_ENFERMEDAD, idper, con_novedad:true},
+                        {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper, con_novedad:true},
+                    ], 'all', {fixedFields:{idper, fecha:['2000-02-04', '2000-02-07']}})
                 })
             })
             it.skip("se ve una inconsistencia si se cargan partidas", async function(){
