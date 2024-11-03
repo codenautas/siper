@@ -57,7 +57,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                                 and laborable is not false
                                 and (c_dds is not true or cast(($5::jsonb) -> ('dds' || extract(dow from f.fecha)) as boolean))
                         ) as dias_habiles,
-                        count(*) filter (where v.fecha is not null) as dias_coincidentes
+                        count(*) filter (where v.con_novedad) as dias_coincidentes
                     from fechas f
                         left join novedades_vigentes v on v.fecha = f.fecha and v.idper = $4
                         left join (select * from cod_novedades where cod_nov = $3) c on true

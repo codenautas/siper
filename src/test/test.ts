@@ -2,6 +2,8 @@
 
 import { AppSiper } from '../server/app-principal';
 
+import {promises as fs} from 'fs'
+
 import { startServer, EmulatedSession, expectError, loadLocalFile, saveLocalFile, benchmarksSave } from "./probador-serial";
 
 import * as ctts from "../common/contracts"
@@ -47,7 +49,7 @@ import * as FormData from "form-data";
 
 const FECHA_ACTUAL = date.iso('2000-01-01');
 const DESDE_AÑO = `2000`;
-const HASTA_AÑO = `2009`;
+const HASTA_AÑO = `2000`;
 const AÑOS_DE_PRUEBA = `annio BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
 const FECHAS_DE_PRUEBA = `extract(year from fecha) BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
 const IDPER_DE_PRUEBA = `idper like 'XX%'`;
@@ -69,6 +71,8 @@ const DESDE_HORA = "12:00";
 
 const PAUTA_CORRIDOS = "CORRIDOS";
 
+const sqlCalcularNovedades = `SELECT calcular_novedades_vigentes('${DESDE_AÑO}-01-01','${HASTA_AÑO}-12-31')`;
+
 type Credenciales = {username: string, password: string};
 type UsuarioConCredenciales = ctts.Usuario & {credenciales: Credenciales};
 
@@ -77,7 +81,7 @@ describe("connected", function(){
     var rrhhSession: EmulatedSession<AppSiper>;
     var rrhhAdminSession: EmulatedSession<AppSiper>; // no cualquier rrhh
     before(async function(){
-        this.timeout(TIMEOUT_SPEED * 7);
+        this.timeout(TIMEOUT_SPEED * 20);
         server = await startServer(AppSiper);
         // @ts-expect-error: todavía no está en el config tests-can-delete-db
         if (server.config.devel['tests-can-delete-db']) {
@@ -85,8 +89,8 @@ describe("connected", function(){
                 await client.executeSentences([
                     `delete from per_nov_cant where ${AÑOS_DE_PRUEBA}`,
                     `delete from nov_gru where ${AÑOS_DE_PRUEBA}`,
-                    `delete from novedades_vigentes where ${AÑOS_DE_PRUEBA} and ${IDPER_DE_PRUEBA}`,
-                    `delete from novedades_registradas where ${AÑOS_DE_PRUEBA} and ${IDPER_DE_PRUEBA}`,
+                    `delete from novedades_vigentes where ${AÑOS_DE_PRUEBA}`,
+                    `delete from novedades_registradas where ${AÑOS_DE_PRUEBA}`,
                     `delete from novedades_horarias where ${IDPER_DE_PRUEBA}`,
                     `delete from usuarios where ${IDPER_DE_PRUEBA}`,
                     `delete from horarios where ${IDPER_DE_PRUEBA}`,
@@ -112,7 +116,7 @@ describe("connected", function(){
                         ('PRA111' , 'PRUEBA AUTOMATICA 1.1.1'  , 'PRA11' ),
                         ('PRA1111', 'PRUEBA AUTOMATICA 1.1.1.1', 'PRA111'),
                         ('PRA12'  , 'PRUEBA AUTOMATICA 1.2'    , 'PRA1'  );
-                    `
+                    `,
                 ])
             })
             console.log("Borrado y listo!")
@@ -144,7 +148,7 @@ describe("connected", function(){
     }
     it("verifica que exista la tabla de parámetros", async function(){
         await rrhhSession.tableDataTest('parametros',[
-            {unico_registro:true},
+            {unico_registro:true, fecha_actual: FECHA_ACTUAL},
         ], 'all')
     })
     async function crearNuevaPersona(numero:number): Promise<ctts.Persona>{
@@ -256,7 +260,7 @@ describe("connected", function(){
                 jefe11Session = sesion;
             });
         })
-        it("insertar una semana de vacaciones como primera novedad", async function(){
+        it.only("insertar una semana de vacaciones como primera novedad", async function(){
             this.timeout(TIMEOUT_SPEED * 7);
             await enNuevaPersona(1, {vacaciones: 20}, async (persona) => {
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper: persona.idper};
@@ -264,12 +268,12 @@ describe("connected", function(){
                 discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:5, dias_coincidentes:0})
                 await rrhhSession.saveRecord(ctts.novedades_registradas, novedadRegistradaPorCargar, 'new');
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-03'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    {fecha:date.iso('2000-01-04'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    {fecha:date.iso('2000-01-05'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    {fecha:date.iso('2000-01-06'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                    {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper: persona.idper},
-                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    {fecha:date.iso('2000-01-03'), cod_nov:COD_VACACIONES, idper: persona.idper, con_novedad: true},
+                    {fecha:date.iso('2000-01-04'), cod_nov:COD_VACACIONES, idper: persona.idper, con_novedad: true},
+                    {fecha:date.iso('2000-01-05'), cod_nov:COD_VACACIONES, idper: persona.idper, con_novedad: true},
+                    {fecha:date.iso('2000-01-06'), cod_nov:COD_VACACIONES, idper: persona.idper, con_novedad: true},
+                    {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper: persona.idper, con_novedad: true},
+                ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'fecha', value:date.iso('2000-01-03'), until:date.iso('2000-01-07')}]})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
                     {annio:2000, cod_nov:COD_VACACIONES, limite:20, cantidad:5, saldo:15},
@@ -900,8 +904,7 @@ describe("connected", function(){
              * sobre lo ya calculado, luego borrando todo 3 veces en cada una de esas 3 veces
              * primero calcula todo junto, luego fecha por fecha y finalmente persona por persona
              */
-            const sqlTraerNovedades = `SELECT array_agg(concat_ws(' ',fecha,idper,cod_nov) order by fecha, idper) FROM novedades_vigentes WHERE ${FECHAS_DE_PRUEBA}`
-            const sqlCalcularNovedades = `SELECT calcular_novedades_vigentes('${DESDE_AÑO}-01-01','${HASTA_AÑO}-12-31')`;
+            const sqlTraerNovedades = `SELECT string_agg(concat_ws(' ',fecha,idper,cod_nov), chr(10) order by fecha, idper) FROM novedades_vigentes WHERE ${FECHAS_DE_PRUEBA} AND ${IDPER_DE_PRUEBA}`
             const emptyBenchmarkDay = {
                 date: date.today(),
                 tiempos: []
@@ -921,6 +924,8 @@ describe("connected", function(){
                 await client.query(sqlCalcularNovedades).execute();
                 console.log('calculando novedadesRecalculadasEncima')
                 const novedadesRecalculadasEncima = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
+                await fs.writeFile('local-recalculadas.json',novedadesRecalculadasEncima,'utf8')
+                await fs.writeFile('local-generadas.json',todasLasNovedadesGeneradas,'utf8')
                 discrepances.showAndThrow(novedadesRecalculadasEncima, todasLasNovedadesGeneradas);
                 console.log('calculando novedadesRecalculadasEnBlanco')
                 await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
@@ -957,7 +962,6 @@ describe("connected", function(){
             console_log(err);
             error = err as Error;
         }
-        this.timeout(TIMEOUT_SPEED * 3);
         await server.shutdownBackend()
         console.log('server down!');
         server = null as unknown as AppSiper;

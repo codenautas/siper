@@ -13,25 +13,39 @@ $BODY$
   SELECT 
 -- ¡ATENCIÓN! NO MODIFICAR MANUALMENTE ESTA FUNCIÓN FUE GENERADA CON EL SCRIPT novedades_calculadas.sql
 -- Otras funciones que comienzan con el nombre novedades_calculadas se generaron junto a esta!
-      idper, ficha, fecha, cod_nov, ent_fich, sal_fich, sector, annio, detalles
+      idper, ficha, fecha, 
+      COALESCE(
+        CASE WHEN trabajable OR nr_corridos THEN nr_cod_nov ELSE null END, -- si la última novedad registrada no es una anulación
+        CASE WHEN tiene_horario_declarado THEN h_cod_nov ELSE cod_nov_habitual END
+      ) as cod_nov, 
+      null as ent_fich, null as sal_fich, sector, annio,
+      con_novedad, trabajable, detalles
     FROM (
-      SELECT nr.idper, p.ficha, f.fecha, nr.cod_nov, null as ent_fich, null as sal_fich, p.sector, nr.annio, nr.detalles,
-             rank() over (PARTITION BY nr.idper, f.fecha ORDER BY nr.idr DESC) as prioridad
-        FROM novedades_registradas nr 
-          INNER JOIN fechas f ON f.fecha between desde and hasta
-          INNER JOIN horarios h ON nr.idper = h.idper and f.dds = h.dds
-          INNER JOIN cod_novedades cn ON cn.cod_nov = nr.cod_nov
-          INNER JOIN personas p ON nr.idper = p.idper
-        WHERE nr.desde <= f.fecha AND f.fecha <= nr.hasta
-          AND p_desde <= f.fecha AND f.fecha <= p_hasta
-          AND h.trabaja 
-          AND f.laborable IS NOT false
-          AND (cn.c_dds IS NOT TRUE -- FILTRO PARA DIAGRAMADO POR DIA DE SEMANA:
-               OR CASE extract(DOW from f.fecha) WHEN 0 THEN dds0 WHEN 1 THEN dds1 WHEN 2 THEN dds2 WHEN 3 THEN dds3 WHEN 4 THEN dds4 WHEN 5 THEN dds5 WHEN 6 THEN dds6 ELSE false END
-               )
+      SELECT p.idper, p.ficha, f.fecha, 
+          h.idper IS NOT NULL as tiene_horario_declarado,
+          CASE WHEN h.idper IS NOT NULL THEN h.trabaja ELSE f.dds BETWEEN 1 AND 5 END as trabajable,
+          p.sector, f.annio, nr.detalles,
+          nr.cod_nov as nr_cod_nov,
+          nr.corridos as nr_corridos,
+          h.cod_nov as h_cod_nov,
+          cod_nov_habitual,
+          nr.con_novedad
+        FROM fechas f CROSS JOIN personas p CROSS JOIN parametros
+          LEFT JOIN LATERAL (
+            SELECT *
+              FROM horarios h 
+              WHERE p.idper = h.idper AND f.fecha BETWEEN h.desde AND h.hasta AND f.dds = h.dds AND f.annio = h.annio
+          ) h ON true
+          LEFT JOIN LATERAL (
+            SELECT nr.cod_nov, cn.corridos, nr.detalles, cn.con_novedad 
+              FROM novedades_registradas nr LEFT JOIN cod_novedades cn ON nr.cod_nov = cn.cod_nov
+              WHERE f.fecha BETWEEN nr.desde AND nr.hasta
+                AND p.idper = nr.idper
+              ORDER BY nr.idr DESC LIMIT 1
+          ) nr ON true
+        WHERE f.fecha BETWEEN p_desde AND p_hasta
           /*idper**AND p.idper = p_idper**idper*/
       ) x
-    WHERE prioridad = 1
 $BODY$;
 
 $SQL_CON_TAG$;
@@ -40,3 +54,14 @@ BEGIN
   execute replace(replace(v_sql,'/*idper**',''),'**idper*/','');
 END;
 $CREATOR$;
+
+/*
+select * from novedades_registradas;
+select * from personas;
+select * from HORARIOS;
+SELECT * FROM FECHAS ORDER BY FECHA ASC;
+insert into fechas (fecha) select date_trunc('day', d) from generate_series(cast('2000-01-01' as timestamp), cast('2000-12-31' as timestamp), cast('1 day' as interval)) d
+insert into novedades_registradas (idper, cod_nov, desde, hasta)  values ('AR8', '121', '2000-01-01', '2000-01-04');
+select * from novedades_calculadas_idper('2000-01-01'::date, '2000-01-11'::date, 'AR8'::text);
+select * from novedades_vigentes WHERE idper = 'AR8';
+*/

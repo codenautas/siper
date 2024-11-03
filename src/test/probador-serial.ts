@@ -138,7 +138,7 @@ export class EmulatedSession<TApp extends AppBackend>{
         discrepances.showAndThrow(command, discrepances.test(x => x=='INSERT' || x=='UPDATE'));
         return row;
     }
-    async tableDataTest(table:string, rows:Row[], compare:'all',opts?:{fixedFields?:{fieldName:string, value:any}[]}){
+    async tableDataTest(table:string, rows:Row[], compare:'all',opts?:{fixedFields?:{fieldName:string, value:any, until?:any}[]}){
         var result = await this.request({
             path:'/table_data',
             payload:{
@@ -152,7 +152,13 @@ export class EmulatedSession<TApp extends AppBackend>{
         var existColumn = LikeAr(rows[0]).map(_ => true).plain();
         var filteredReponseRows = response.map(row => LikeAr(row).filter((_,k) => existColumn[k]).plain());
         switch(compare){
-            case 'all': discrepances.showAndThrow(filteredReponseRows, rows);
+            case 'all': 
+                try{
+                    discrepances.showAndThrow(filteredReponseRows, rows);
+                } catch (err) {
+                    console.log('======================================',filteredReponseRows, rows)
+                    throw err;
+                }
             break;
             default:
                 throw new Error('mode not recognized '+compare);

@@ -37,6 +37,7 @@ export function nov_per(_context: TableContext): TableDefinition {
                         inner join cod_novedades cn using(cod_nov)
                         inner join personas p using(idper)
                         left join per_nov_cant using(annio, idper, cod_nov)
+                    where n.con_novedad
                     group by annio, cod_nov, idper, cantidad
             )`
         }
