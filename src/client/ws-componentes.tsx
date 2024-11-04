@@ -320,6 +320,7 @@ function Persona(props:{conn: Connector, idper:string, fecha:RealDate}){
         <DatosPersonales {...props}/>
         <Horario {...props}/>
         <Calendario {...props}/>
+        <RegistrarNovedades {...props}/>
         <NovedadesRegistradas {...props}/>
         <NovedadesRegistradas {/* TODO: Tendría que ser NovedadesVigentes */ ...props }/>
     </Paper>
@@ -348,56 +349,56 @@ function Pantalla1(props:{conn: Connector}){
 function RegistrarNovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
     const {fieldsProps /*, optionsInfo*/} = props;
     const f = createIndex(fieldsProps, f => f.fd.name)
+    const [forEdit, setForEdit] = useState(true)
     // const rowsCodNov = optionsInfo.tables!.cod_novedades;
     if (f.idper == null) return <Card> <Typography>Cargando...</Typography> </Card>
     // const novedad = likeAr(f).filter((_, name) => !(/__/.test(name as string))).map(f => f.value).plain() as Partial<any>
-
+    console.log(setForEdit)
     return <Card style={{ width: 'auto' }}>
         <Box
             sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                height: '100vh',
+                height: '20em',
             }}
         >
             <Box
                 sx={{
                     width: '100%',
-                    height: '100px',
                 }}
             >
-            <Box>
-                <GenericField {...f.idper} />
-                <GenericField {...f.personas__ficha} />
-                <GenericField {...f.personas__apellido} />
-                <GenericField {...f.personas__nombres} />
+                <Box>
+                    <GenericField {...f.idper } forEdit={false} />
+                    <GenericField {...f.personas__ficha} />
+                    <GenericField {...f.personas__apellido} />
+                    <GenericField {...f.personas__nombres} />
+                </Box>
             </Box>
-        </Box>
-    
-        <Box
-            sx={{
-                display: 'flex',
-                flexGrow: 1,
-            }}
-        >
+        
             <Box
                 sx={{
-                    flex: 1,
                     display: 'flex',
-                    flexDirection: 'column',
-
+                    flexGrow: 1,
                 }}
             >
-                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
-                    <GenericField {...f.cod_nov} />
-                    <GenericField {...f.cod_novedades__novedad} />
-                </Box>
-        
-                <Box>
-                    <GenericField {...f.desde} />
-                    <GenericField {...f.hasta} />
-                </Box>
-        
+                <Box
+                    sx={{
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+
+                    }}
+                >
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+                        <GenericField {...f.cod_nov} forEdit={forEdit}/>
+                        <GenericField {...f.cod_novedades__novedad} />
+                    </Box>
+            
+                    <Box>
+                        <GenericField {...f.desde} forEdit={forEdit}/>
+                        <GenericField {...f.hasta} forEdit={forEdit}/>
+                    </Box>
+            
                 </Box>
             </Box>
         </Box>
@@ -408,7 +409,7 @@ function RegistrarNovedades(props:{conn: Connector, idper:string}){
     const {idper, conn} = props;
     return CardEditorConnected({
         table:'novedades_registradas', 
-        fixedFields:[{fieldName:'idper', value:idper}], 
+        fixedFields:[{fieldName:'idper', value:idper}/*, {fieldName:'desde', value:null}*/], 
         conn, 
         CardDisplay: RegistrarNovedadesDisplay
     });
