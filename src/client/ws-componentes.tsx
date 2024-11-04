@@ -6,8 +6,10 @@ import {
 } from "react";
 
 import { 
-    Connector,
+    CardEditorConnected, Connector,
+    GenericField, GenericFieldProperties,
     ICON,
+    OptionsInfo,
     renderConnectedApp,
     RowType
 } from "frontend-plus";
@@ -342,12 +344,82 @@ function Pantalla1(props:{conn: Connector}){
         </Paper>;
 }
 
+
+function RegistrarNovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
+    const {fieldsProps /*, optionsInfo*/} = props;
+    const f = createIndex(fieldsProps, f => f.fd.name)
+    // const rowsCodNov = optionsInfo.tables!.cod_novedades;
+    if (f.idper == null) return <Card> <Typography>Cargando...</Typography> </Card>
+    // const novedad = likeAr(f).filter((_, name) => !(/__/.test(name as string))).map(f => f.value).plain() as Partial<any>
+
+    return <Card style={{ width: 'auto' }}>
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100vh',
+            }}
+        >
+            <Box
+                sx={{
+                    width: '100%',
+                    height: '100px',
+                }}
+            >
+            <Box>
+                <GenericField {...f.idper} />
+                <GenericField {...f.personas__ficha} />
+                <GenericField {...f.personas__apellido} />
+                <GenericField {...f.personas__nombres} />
+            </Box>
+        </Box>
+    
+        <Box
+            sx={{
+                display: 'flex',
+                flexGrow: 1,
+            }}
+        >
+            <Box
+                sx={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+
+                }}
+            >
+                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+                    <GenericField {...f.cod_nov} />
+                    <GenericField {...f.cod_novedades__novedad} />
+                </Box>
+        
+                <Box>
+                    <GenericField {...f.desde} />
+                    <GenericField {...f.hasta} />
+                </Box>
+        
+                </Box>
+            </Box>
+        </Box>
+    </Card>
+}
+
+function RegistrarNovedades(props:{conn: Connector, idper:string}){
+    const {idper, conn} = props;
+    return CardEditorConnected({
+        table:'novedades_registradas', 
+        fixedFields:[{fieldName:'idper', value:idper}], 
+        conn, 
+        CardDisplay: RegistrarNovedadesDisplay
+    });
+}
+
 function DemoDeComponentes(props: {conn: Connector}){
     const {conn} = props;
-    type QUE = ""|"calendario"|"personas"|"novedades-registradas"|"horario"|"persona"|"datos-personales"|"pantalla-1"
+    type QUE = ""|"calendario"|"personas"|"novedades-registradas"|"horario"|"persona"|"datos-personales"|"pantalla-1"|"registrar-novedades"
     const [que, setQue] = useState<QUE>("");
     const UnComponente = (props:{titulo:string, que:QUE}) =>
-        <Box><Typography>{props.titulo}<Button onClick={_=>setQue(props.que)}>Ver</Button></Typography></Box>
+        <Box><Typography><Button onClick={_=>setQue(props.que)}>Ver:</Button> {props.titulo}</Typography></Box>
     return <Paper>
         <AppBar position="static">
             <Toolbar>
@@ -371,11 +443,15 @@ function DemoDeComponentes(props: {conn: Connector}){
         </AppBar>
         {({
             "": () => <Card>
+                    <Typography>♪ Componentes invididuales</Typography>
                     <UnComponente titulo="Lista de personas" que="personas"/>
                     <UnComponente titulo="Calendario" que="calendario"/>
                     <UnComponente titulo="Novedades registradas" que="novedades-registradas"/>
                     <UnComponente titulo="Horario" que="horario"/>
                     <UnComponente titulo="Datos personales" que="datos-personales"/>
+                    <UnComponente titulo="Registrar novedades" que="registrar-novedades"/>
+                    <hr/>
+                    <Typography>🎼 Composición de componentes</Typography>
                     <UnComponente titulo="Info de una persona" que="persona"/>
                     <UnComponente titulo="Pantalla 1 (primera total)" que="pantalla-1"/>
                 </Card>,
@@ -384,6 +460,7 @@ function DemoDeComponentes(props: {conn: Connector}){
             "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper="AR8"/>,
             "horario": () => <Horario conn={conn} idper="AR8" fecha={date.today()}/>,
             "datos-personales": () => <DatosPersonales conn={conn} idper="AR8"/>,
+            "registrar-novedades": () => <RegistrarNovedades conn={conn} idper="AR8"/>,
             "persona": () => <Persona conn={conn} idper="AR8" fecha={date.today()}/>,
             "pantalla-1": () => <Pantalla1 conn={conn}/>
         })[que]()}
