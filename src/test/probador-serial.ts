@@ -204,7 +204,7 @@ export function expectError(action: ()=>void|Promise<void>, check: string): void
         if (result instanceof Promise) {
             return result.then(itDidntFail).catch(checkExpected)
         }
-        itDidntFail();
+        return itDidntFail();
     } catch (err) {
         checkExpected(err);
     }

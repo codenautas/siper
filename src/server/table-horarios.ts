@@ -23,6 +23,7 @@ export function horarios(context: TableContext): TableDefinition{
             {name:'trabaja'          , typeName:'boolean' , nullable:false ,defaultValue:false},
             {name:'hora_desde'       , typeName:'time'                      },
             {name:'hora_hasta'       , typeName:'time'                      },
+            {name:'lapso_fechas'     , typeName:'daterange', editable:false, generatedAs:'daterange(desde, coalesce(hasta, make_date(extract(year from desde)::integer, 12, 31)))'},
         ],
         primaryKey: [idper.name,'dds', año.name, 'desde'],
         foreignKeys: [
@@ -32,6 +33,7 @@ export function horarios(context: TableContext): TableDefinition{
         ],
         constraints: [
             {constraintType: 'check', consName:'dia de la semana entre 0 y 6', expr: 'dds between 0 and 6'},
+            {constraintType:'exclude', consName:'sin superponer fechas', using:'GIST', fields:[idper.name, 'dds', {fieldName:'lapso_fechas', operator:'&&'}]}
         ]
     };
 }

@@ -7,6 +7,7 @@ DECLARE
   v_sql text := $SQL_CON_TAG$
 
 CREATE OR REPLACE FUNCTION calcular_novedades_vigentes/*idper**_idper**idper*/(p_desde date, p_hasta date/*idper**, p_idper text**idper*/) RETURNS void
+  SECURITY DEFINER
   LANGUAGE PLPGSQL
 AS
 $BODY$

@@ -1,7 +1,5 @@
 -- EJECUTAR LOCALMENTE, NO DESCOMENTAR Y COMMITEAR:
 -- SET search_path = siper; SET ROLE siper_owner;
--- EJECUTAR LOCALMENTE, NO DESCOMENTAR Y COMMITEAR:
--- SET search_path = siper; SET ROLE siper_owner;
 CREATE OR REPLACE FUNCTION horarios_novedades_trg()
   RETURNS TRIGGER
   LANGUAGE PLPGSQL

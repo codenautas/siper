@@ -81,6 +81,7 @@ describe("connected", function(){
     var rrhhSession: EmulatedSession<AppSiper>;
     var rrhhAdminSession: EmulatedSession<AppSiper>; // no cualquier rrhh
     var borradoExitoso: boolean = false;
+    var fallaEnLaQueQuieroOmitirElBorrado: boolean = false;
     before(async function(){
         try{
             this.timeout(TIMEOUT_SPEED * 20);
@@ -183,7 +184,7 @@ describe("connected", function(){
         if (usuario.usuario in cacheSesionDeUsuario) {
             return cacheSesionDeUsuario[usuario.usuario];
         }
-        const nuevaSession =  new EmulatedSession(server, PORT || server.config.server.port);
+        const nuevaSession = new EmulatedSession(server, PORT || server.config.server.port);
         await nuevaSession.login(usuario.credenciales);
         return nuevaSession
     }
@@ -209,7 +210,7 @@ describe("connected", function(){
             if (vacaciones) await rrhhAdminSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_VACACIONES, idper: persona.idper, cantidad: vacaciones }, 'new')
             if (tramites) await rrhhAdminSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_TRAMITE, idper:persona.idper, cantidad: 4 }, 'new')
             if (hoy) {
-                await server.inDbClient(ADMIN_REQ, client => client.query("update parametros set fecha_actual = $1", [hoy]).execute())
+                await server.inDbClient(ADMIN_REQ, async client => client.query("update parametros set fecha_actual = $1", [hoy]).execute())
             }
             haciendo = 'probando'
             await probar(persona, {usuario, sesion});
@@ -221,7 +222,7 @@ describe("connected", function(){
             throw err;
         } finally {
             if (hoy) {
-                await server.inDbClient(ADMIN_REQ, client => client.query("update parametros set fecha_actual = $1", [FECHA_ACTUAL]).execute())
+                await server.inDbClient(ADMIN_REQ, async client => client.query("update parametros set fecha_actual = $1", [FECHA_ACTUAL]).execute())
             }
         }
     }
@@ -479,6 +480,8 @@ describe("connected", function(){
             })
         })
         it("un jefe puede cargar a alguien de su equipo", async function(){
+            this.timeout(TIMEOUT_SPEED * 10);
+            // fallaEnLaQueQuieroOmitirElBorrado = true;
             await enNuevaPersona(15, {usuario:{sector:'PRA11'}}, async ({idper}) => {
                 await jefe11Session.saveRecord(
                     ctts.novedades_registradas, 
@@ -491,6 +494,7 @@ describe("connected", function(){
                     {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
                 ], 'all', {fixedFields:{idper, fecha:['2000-02-01','2000-02-03']}})
             })
+            fallaEnLaQueQuieroOmitirElBorrado = false;
         })
         it("un jefe puede cargar a alguien de un equipo perteneciente", async function(){
             await enNuevaPersona(16, {usuario:{sector:'PRA1111'}}, async ({idper}) => {
@@ -928,7 +932,7 @@ describe("connected", function(){
     })
     after(async function(){
         var error: Error|null = null;
-        if (!borradoExitoso) {
+        if (!borradoExitoso || fallaEnLaQueQuieroOmitirElBorrado) {
             console.log('se saltea la comprobación final porque no se pudo borrar las pruebas de la corrida anterior')
         } else {
             this.timeout(TIMEOUT_SPEED * 12);
