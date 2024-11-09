@@ -758,24 +758,24 @@ describe("connected", function(){
                     return probar(persona, mas)
                 });
             }
-            it.skip("mezclo teletrabajo con presencial", async function(){
+            it("mezclo teletrabajo con presencial", async function(){
                 /// TODO: Hay que reescribir esto por completo para verlo bien.
-                await enNuevaPersona(4, {}, async (persona) => {
-                    await rrhhSession.saveRecord(
-                        ctts.novedades_registradas, 
-                        {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_DIAGRAMADO, idper: persona.idper, 
-                            dds1:true, dds2:false, dds3:true, dds4:true, dds5:false},
-                        'new'
-                    );
+                await enNuevaPersona(4, {}, async ({idper}) => {
+                    for (var dds of [1,3,4]) {
+                        await rrhhAdminSession.saveRecord(
+                            ctts.horarios, 
+                            {desde:date.iso('2000-01-01'), dds, idper, cod_nov:COD_DIAGRAMADO},
+                            'update',
+                            [idper, dds, 2000, date.iso('2000-01-01')]
+                        );
+                    }
                     await rrhhSession.tableDataTest('novedades_vigentes', [
-                        {fecha:date.iso('2000-01-03'), cod_nov:COD_DIAGRAMADO, idper: persona.idper},
-                        {fecha:date.iso('2000-01-05'), cod_nov:COD_DIAGRAMADO, idper: persona.idper},
-                        {fecha:date.iso('2000-01-06'), cod_nov:COD_DIAGRAMADO, idper: persona.idper},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
-                    // LÍMIES:
-                    await rrhhSession.tableDataTest('nov_per', [
-                        {annio:2000, cod_nov:COD_DIAGRAMADO, limite:null, cantidad:3, saldo:null},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                        {fecha:date.iso('2000-01-03'), cod_nov:COD_DIAGRAMADO, idper},
+                        {fecha:date.iso('2000-01-04'), cod_nov:COD_PRESENTE  , idper},
+                        {fecha:date.iso('2000-01-05'), cod_nov:COD_DIAGRAMADO, idper},
+                        {fecha:date.iso('2000-01-06'), cod_nov:COD_DIAGRAMADO, idper},
+                        {fecha:date.iso('2000-01-07'), cod_nov:COD_PRESENTE  , idper},
+                    ], 'all', {fixedFields:{idper, fecha:['2000-01-03','2000-01-07']}})
                 })
             })
             it.skip("se ajustan las fechas hasta al agregar un horario", async function(){
