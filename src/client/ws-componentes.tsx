@@ -194,14 +194,6 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     const attributosBuscables:(keyof ProvisorioPersonas)[] = ['apellido', 'nombres', 'cuil', 'ficha', 'idmeta4', 'idper', APELLIDOYNOMBRES]
     useEffect(function(){
         var f = filtro.replace(/[^A-Z0-9 ]+/gi,'');
-        /*
-        switch(filtro.length){
-            case 1: var regExp = new RegExp('^'+f, 'i'); break;
-            case 2: var regExp = new RegExp(f, 'i'); break;
-            case 3: var regExp = new RegExp(f.split('').join('\\w*'), 'i'); break;
-            default: var regExp = new RegExp(f.split('').join('(\\w| )*'), 'i'); break;
-        }
-        */
         var regExp = new RegExp(f.replace(/\s+/, '(\\w* \\w*)+'), 'i');
         const personasFiltradas = f == "" ? listaPersonas : (
             listaPersonas.filter(p => attributosBuscables.some(a => regExp.test(p[a])))
@@ -237,7 +229,6 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
             setSectores(sectoresAumentados);
         })
     },[]);
-    // {...(filtro ? {expanded:!!abanicoPersonas[s.sector]?.length} : {})}
     return <Componente componentType="lista-personas">
         <SearchBox onChange={setFiltro}/>
         {sectores.filter(s => s.perteneceA[sector]).map(s =>
