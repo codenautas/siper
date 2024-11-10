@@ -18,7 +18,7 @@ import {
     Accordion, AccordionSummary, AccordionDetails, AppBar,
     Box, Button, 
     Card, CircularProgress,
-    IconButton,
+    IconButton, InputBase,
     List, ListItemButton,
     MenuItem, 
     Paper,
@@ -166,25 +166,57 @@ function Calendario(props:{idper:string}){
     </Componente>
 }
 
-type ProvisorioPersonas = {sector:string, idper:string, apellido:string, nombres:string};
+type ProvisorioPersonas = {sector:string, idper:string, apellido:string, nombres:string, cuil:string, ficha:string, idmeta4:string};
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, nivel:number}
 
 type IdperFuncionCambio = (idper:string)=>void
 
+function SearchBox(props: {onChange:(newValue:string)=>void}){
+    var [textToSearch, setTextToSearch] = useState("");
+    return <Paper sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+        <ICON.Search/>
+        <InputBase 
+            value = {textToSearch} 
+            onChange = {(event)=>{ var newValue = event.target.value; props.onChange(newValue); setTextToSearch(newValue)}}
+        />
+    </Paper>;
+}
+
 function ListaPersonasEditables(props: {conn: Connector, sector:string, onIdper?:IdperFuncionCambio}){
     const {conn, onIdper} = props;
     const [sector, _setSector] = useState(props.sector);
     const [sectores, setSectores] = useState<ProvisorioSectoresAumentados[]>([]);
-    const [_abanicoPersonas, setAvanicoPersonas] = useState<Partial<Record<string, ProvisorioPersonas[]>>>({});
+    const [listaPersonas, setListaPersonas] = useState<ProvisorioPersonas[]>([]);
+    const [abanicoPersonas, setAbanicoPersonas] = useState<Partial<Record<string, ProvisorioPersonas[]>>>({});
+    const [filtro, setFiltro] = useState("");
+    const APELLIDOYNOMBRES = 'apellidoynombres' as keyof ProvisorioPersonas
+    const attributosBuscables:(keyof ProvisorioPersonas)[] = ['apellido', 'nombres', 'cuil', 'ficha', 'idmeta4', 'idper', APELLIDOYNOMBRES]
+    useEffect(function(){
+        var f = filtro.replace(/[^A-Z0-9 ]+/gi,'');
+        /*
+        switch(filtro.length){
+            case 1: var regExp = new RegExp('^'+f, 'i'); break;
+            case 2: var regExp = new RegExp(f, 'i'); break;
+            case 3: var regExp = new RegExp(f.split('').join('\\w*'), 'i'); break;
+            default: var regExp = new RegExp(f.split('').join('(\\w| )*'), 'i'); break;
+        }
+        */
+        var regExp = new RegExp(f.split('').join('(\\w* \\w*)*'), 'i');
+        const personasFiltradas = f == "" ? listaPersonas : (
+            listaPersonas.filter(p => attributosBuscables.some(a => regExp.test(p[a])))
+        )
+        var abanico = Object.groupBy(personasFiltradas, p => p.sector);
+        setAbanicoPersonas(abanico);
+    }, [listaPersonas, filtro])
     useEffect(function(){
         conn.ajax.table_data<ProvisorioPersonas>({
             table: 'personas',
             fixedFields: [],
             paramfun: {}
         }).then(async (personas) => {
-            const abanico = Object.groupBy(personas, p => p.sector);
-            setAvanicoPersonas(abanico);
+            personas.forEach(p => p[APELLIDOYNOMBRES] = p.apellido+' '+p.nombres+' '+p.apellido)
+            setListaPersonas(personas);
         })
         conn.ajax.table_data<ProvisorioSectores>({
             table: 'sectores',
@@ -205,16 +237,19 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, onIdper?
             setSectores(sectoresAumentados);
         })
     },[]);
+    // {...(filtro ? {expanded:!!abanicoPersonas[s.sector]?.length} : {})}
     return <Componente componentType="lista-personas">
+        <SearchBox onChange={setFiltro}/>
         {sectores.filter(s => s.perteneceA[sector]).map(s =>
-            <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector}>
+            filtro && !abanicoPersonas[s.sector]?.length ? null :
+            <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector} >
                 <AccordionSummary id = {s.sector} expandIcon={<ICON.NavigationDown />} > 
                     <span className="box-id" style={{paddingLeft: s.nivel+"em", paddingRight:"1em"}}> {s.sector} </span>  
                     {s.nombre_sector} 
                 </AccordionSummary>
                 <AccordionDetails>
                     <List>
-                        {_abanicoPersonas[s.sector]?.map(p=>
+                        {abanicoPersonas[s.sector]?.map(p=>
                             <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p.idper)}}>
                                 <span className="box-id" style={{minWidth:'3.5em'}}> {p.idper} </span>   
                                 {p.apellido}, {p.nombres}
