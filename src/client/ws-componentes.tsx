@@ -169,6 +169,7 @@ function Calendario(props:{idper:string}){
 type ProvisorioPersonas = {sector:string, idper:string, apellido:string, nombres:string, cuil:string, ficha:string, idmeta4:string};
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, nivel:number}
+type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
 type IdperFuncionCambio = (idper:string)=>void
 
@@ -183,6 +184,15 @@ function SearchBox(props: {onChange:(newValue:string)=>void}){
     </Paper>;
 }
 
+function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof T)[]){
+    if (filter == "") return function(){ return true }
+    var f = filter.replace(/[^A-Z0-9 ]+/gi,'');
+    var regExp = new RegExp(f.replace(/\s+/, '(\\w* \\w*)+'), 'i');
+    return function(row: T){
+        return attributteList.some(a => regExp.test(row[a]+''))
+    }
+}
+
 function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:string, onIdper?:IdperFuncionCambio}){
     const {conn, idper, onIdper} = props;
     const [sector, _setSector] = useState(props.sector);
@@ -193,11 +203,8 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     const APELLIDOYNOMBRES = 'apellidoynombres' as keyof ProvisorioPersonas
     const attributosBuscables:(keyof ProvisorioPersonas)[] = ['apellido', 'nombres', 'cuil', 'ficha', 'idmeta4', 'idper', APELLIDOYNOMBRES]
     useEffect(function(){
-        var f = filtro.replace(/[^A-Z0-9 ]+/gi,'');
-        var regExp = new RegExp(f.replace(/\s+/, '(\\w* \\w*)+'), 'i');
-        const personasFiltradas = f == "" ? listaPersonas : (
-            listaPersonas.filter(p => attributosBuscables.some(a => regExp.test(p[a])))
-        )
+        const recordFilter = GetRecordFilter<ProvisorioPersonas>(filtro, attributosBuscables);
+        const personasFiltradas = listaPersonas.filter(recordFilter)
         var abanico = Object.groupBy(personasFiltradas, p => p.sector);
         setAbanicoPersonas(abanico);
     }, [listaPersonas, filtro])
@@ -328,6 +335,36 @@ function DatosPersonales(props:{conn: Connector, idper:string}){
     </Componente>
 }
 
+function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, paraCargar:boolean, onCodNov?:(codNov:string)=>void}){
+    const {idper, cod_nov, onCodNov, conn} = props;
+    const [codNovedades, setCodNovedades] = useState<ProvisorioCodNovedades[]>([]);
+    const [codNovedadesFiltradas, setCodNovedadesFiltradas] = useState<ProvisorioCodNovedades[]>([]);
+    const [filtro, setFiltro] = useState("");
+    useEffect(function(){
+        conn.ajax.table_data<ProvisorioCodNovedades>({
+            table: 'cod_novedades',
+            fixedFields: [],
+            paramfun: {}
+        }).then(function(cod_novedades){
+            setCodNovedades(cod_novedades);
+        })
+    },[idper])
+    useEffect(function(){
+        const recordFilter = GetRecordFilter<ProvisorioCodNovedades>(filtro,['cod_nov', 'novedad']);
+        setCodNovedadesFiltradas(codNovedades.filter(recordFilter))
+    },[codNovedades, filtro])
+    return <Componente componentType="codigo-novedades">
+        <SearchBox onChange={setFiltro}/>
+        <List>
+            {codNovedadesFiltradas.map(c=>
+                <ListItemButton key = {c.cod_nov} onClick={() => {if (onCodNov != null) onCodNov(c.cod_nov)}} className={`${c.cod_nov == cod_nov ? ' seleccionado' : ''}`}>
+                    <span className="box-id"> {c.cod_nov} </span>   
+                    {c.novedad}
+                </ListItemButton>
+            )}
+        </List>
+    </Componente>
+}
 
 type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate};
 
@@ -346,9 +383,7 @@ function Persona(props:{conn: Connector, idper:string, fecha:RealDate}){
         <DatosPersonales {...props}/>
         <Horario {...props}/>
         <Calendario {...props}/>
-        <RegistrarNovedades {...props}/>
         <NovedadesRegistradas {...props}/>
-        <NovedadesRegistradas {/* TODO: Tendría que ser NovedadesVigentes */ ...props }/>
     </Paper>
 }
 
@@ -368,6 +403,7 @@ function Pantalla1(props:{conn: Connector}){
         : <Paper className="componente-pantalla-1">
             <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} onIdper={idper=>setIdper(idper)}/>
             <Persona conn={conn} idper={idper} fecha={infoUsuario.fecha}/>
+            <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov=""/>
         </Paper>;
 }
 
@@ -441,9 +477,11 @@ function RegistrarNovedades(props:{conn: Connector, idper:string}){
     });
 }
 
+const IDPER_DEMO = "AR8"
+
 function DemoDeComponentes(props: {conn: Connector}){
     const {conn} = props;
-    type QUE = ""|"calendario"|"personas"|"novedades-registradas"|"horario"|"persona"|"datos-personales"|"pantalla-1"|"registrar-novedades"
+    type QUE = ""|"calendario"|"personas"|"novedades-registradas"|"horario"|"persona"|"datos-personales"|"pantalla-1"|"registrar-novedades"|"novedades-per"
     const [que, setQue] = useState<QUE>("");
     const UnComponente = (props:{titulo:string, que:QUE}) =>
         <Box><Typography><Button onClick={_=>setQue(props.que)}>Ver:</Button> {props.titulo}</Typography></Box>
@@ -476,19 +514,20 @@ function DemoDeComponentes(props: {conn: Connector}){
                     <UnComponente titulo="Novedades registradas" que="novedades-registradas"/>
                     <UnComponente titulo="Horario" que="horario"/>
                     <UnComponente titulo="Datos personales" que="datos-personales"/>
-                    <UnComponente titulo="Registrar novedades" que="registrar-novedades"/>
+                    <UnComponente titulo="Novedades de Personas" que="novedades-per"/>
                     <hr/>
                     <Typography>🎼 Composición de componentes</Typography>
                     <UnComponente titulo="Info de una persona" que="persona"/>
                     <UnComponente titulo="Pantalla 1 (primera total)" que="pantalla-1"/>
                 </Card>,
-            "calendario": () => <Calendario idper="AR8"/>,
-            "personas": () => <ListaPersonasEditables conn={conn} sector="MS"/>,
-            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper="AR8"/>,
-            "horario": () => <Horario conn={conn} idper="AR8" fecha={date.today()}/>,
-            "datos-personales": () => <DatosPersonales conn={conn} idper="AR8"/>,
-            "registrar-novedades": () => <RegistrarNovedades conn={conn} idper="AR8"/>,
-            "persona": () => <Persona conn={conn} idper="AR8" fecha={date.today()}/>,
+            "calendario": () => <Calendario idper={IDPER_DEMO}/>,
+            "personas": () => <ListaPersonasEditables conn={conn} sector="MS" idper={IDPER_DEMO}/>,
+            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO}/>,
+            "horario": () => <Horario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
+            "datos-personales": () => <DatosPersonales conn={conn} idper={IDPER_DEMO}/>,
+            "registrar-novedades": () => <RegistrarNovedades conn={conn} idper={IDPER_DEMO}/>,
+            "novedades-per": () => <NovedadesPer conn={conn} idper={IDPER_DEMO} cod_nov="101" paraCargar={false}/>,
+            "persona": () => <Persona conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
             "pantalla-1": () => <Pantalla1 conn={conn}/>
         })[que]()}
     </Paper>
