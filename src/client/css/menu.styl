@@ -58,8 +58,11 @@ div.tipo-dia-no-laborable
 div.tipo-dia-no-trabaja
   background-color #ED9
 
-div.calendario-dia-seleccionado
-  background-color #ffcc00
+div.calendario-dia-seleccionado, div.seleccionado
+  &:hover
+    background-color #eee488
+  background-color #fff4aa
+  font-weight bold
 
 .calendario-extendido-mes
   margin 2em
@@ -171,3 +174,6 @@ span.box-id
 
 .componente-pantalla-1
   display flex
+
+.persona-id
+  min-width 3.5em

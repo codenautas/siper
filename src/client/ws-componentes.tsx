@@ -183,8 +183,8 @@ function SearchBox(props: {onChange:(newValue:string)=>void}){
     </Paper>;
 }
 
-function ListaPersonasEditables(props: {conn: Connector, sector:string, onIdper?:IdperFuncionCambio}){
-    const {conn, onIdper} = props;
+function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:string, onIdper?:IdperFuncionCambio}){
+    const {conn, idper, onIdper} = props;
     const [sector, _setSector] = useState(props.sector);
     const [sectores, setSectores] = useState<ProvisorioSectoresAumentados[]>([]);
     const [listaPersonas, setListaPersonas] = useState<ProvisorioPersonas[]>([]);
@@ -202,7 +202,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, onIdper?
             default: var regExp = new RegExp(f.split('').join('(\\w| )*'), 'i'); break;
         }
         */
-        var regExp = new RegExp(f.split('').join('(\\w* \\w*)*'), 'i');
+        var regExp = new RegExp(f.replace(/\s+/, '(\\w* \\w*)+'), 'i');
         const personasFiltradas = f == "" ? listaPersonas : (
             listaPersonas.filter(p => attributosBuscables.some(a => regExp.test(p[a])))
         )
@@ -250,8 +250,8 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, onIdper?
                 <AccordionDetails>
                     <List>
                         {abanicoPersonas[s.sector]?.map(p=>
-                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p.idper)}}>
-                                <span className="box-id" style={{minWidth:'3.5em'}}> {p.idper} </span>   
+                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p.idper)}} className={`${p.idper == idper ? ' seleccionado' : ''}`}>
+                                <span className="box-id persona-id"> {p.idper} </span>   
                                 {p.apellido}, {p.nombres}
                             </ListItemButton>
                         )}
@@ -375,7 +375,7 @@ function Pantalla1(props:{conn: Connector}){
     return infoUsuario.sector == null ?  
             <CircularProgress />
         : <Paper className="componente-pantalla-1">
-            <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} onIdper={idper=>setIdper(idper)}/>
+            <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} onIdper={idper=>setIdper(idper)}/>
             <Persona conn={conn} idper={idper} fecha={infoUsuario.fecha}/>
         </Paper>;
 }
