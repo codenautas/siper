@@ -69,8 +69,8 @@ export const DDS = {
     6: {abr:'sáb', habil:true , nombre:'sábado'   },
 }
 
-function Calendario(props:{idper:string}){
-    const {idper} = props;
+function Calendario(props:{conn:Connector, idper:string, fecha:RealDate, onFecha?:(fecha:RealDate)=>void}){
+    const {conn, fecha, idper} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     type Periodo = {mes:number, annio:number} 
     const [periodo, setPeriodo] = useState<Periodo>({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
@@ -79,14 +79,14 @@ function Calendario(props:{idper:string}){
     // var retrocederUnMes = (s:Periodo)=>({mes: (s.mes == 1 ? 12 : 5), annio: (s.annio - (s.mes == 1  ? 1 : 0 ))})
     // var avanzarUnMes    = (s:Periodo)=>({mes: (s.mes == 12 ? 1 : 5), annio: (s.annio + (s.mes == 12 ? 1 : 0 ))})
     const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
-    const [diaSeleccionado, setDiaSeleccionado] = useState<{ dia: number | null, mes: number | null, annio: number | null, cod_nov?: string }>({ dia: null, mes: null, annio: null });
     useEffect(function(){
         setCalendario([]);
         // ver async
-        my.ajax.table_data({table: 'annios', fixedFields: [],paramfun:{} }).then(_annios => {
-            setAnnios(_annios);
+        // @ts-ignore infinito
+        conn.ajax.table_data<Annio>({table: 'annios', fixedFields: [],paramfun:{} }).then(annios => {
+            setAnnios(annios);
         });
-        if (idper != null) my.ajax.calendario_persona({idper, ...periodo}).then(dias => {
+        if (idper != null) conn.ajax.calendario_persona({idper, ...periodo}).then(dias => {
             var semanas = [];
             var semana = [];
             for(var i = 0; i < dias[0].dds; i++) {
@@ -109,60 +109,53 @@ function Calendario(props:{idper:string}){
     },[idper, periodo.mes, periodo.annio])
     return <Componente componentType="calendario-mes">
         <Box style={{ flex:1}}>
-        <Box>
-            <Button onClick={_ => setPeriodo(retrocederUnMes)}><ICON.ChevronLeft/></Button>
-            <Button onClick={_ => setPeriodo(avanzarUnMes)}><ICON.ChevronRight/></Button>
-            <Select 
-                value={periodo.mes}
-                onChange={(event) => { // buscar el tipo correcto
-                    setPeriodo({mes:Number(event.target.value), annio:periodo.annio});
-                }}
-            >
-                {meses.map((mes) => (
-                    <MenuItem key={mes.value} value={mes.value}>
-                        {mes.name}
-                    </MenuItem>
-                ))}
-            </Select>
-            <Select 
-                value={periodo.annio}
-                onChange={(event) => { // buscar el tipo correcto
-                    setPeriodo({mes:periodo.mes, annio:Number(event.target.value)});
-                }}
-            >
-                {
-                    // @ts-ignore
-                    annios.map((annio:Annio) => (
-                    <MenuItem key={annio.annio} value={annio.annio}>
-                        {annio.annio.toString()}
-                    </MenuItem>
-                ))
-                    }
-            </Select>
+            <Box>
+                <Button onClick={_ => setPeriodo(retrocederUnMes)}><ICON.ChevronLeft/></Button>
+                <Button onClick={_ => setPeriodo(avanzarUnMes)}><ICON.ChevronRight/></Button>
+                <Select 
+                    value={periodo.mes}
+                    onChange={(event) => { // buscar el tipo correcto
+                        setPeriodo({mes:Number(event.target.value), annio:periodo.annio});
+                    }}
+                >
+                    {meses.map((mes) => (
+                        <MenuItem key={mes.value} value={mes.value}>
+                            {mes.name}
+                        </MenuItem>
+                    ))}
+                </Select>
+                <Select 
+                    value={periodo.annio}
+                    onChange={(event) => { // buscar el tipo correcto
+                        setPeriodo({mes:periodo.mes, annio:Number(event.target.value)});
+                    }}
+                >
+                    {
+                        // @ts-ignore
+                        annios.map((annio:Annio) => (
+                        <MenuItem key={annio.annio} value={annio.annio}>
+                            {annio.annio.toString()}
+                        </MenuItem>
+                    ))
+                        }
+                </Select>
+            </Box>
+            <Box className="calendario-semana">
+                {likeAr(DDS).map(dds =>
+                    <div className={"calendario-nombre-dia " + (dds.habil ? "" : "tipo-dia-no-laborable")}>{dds.abr}</div>
+                ).array()}
+            </Box>
+            {calendario.map(semana => <Box className="calendario-semana">
+                {semana.map(dia => 
+                    <div 
+                        className={`calendario-dia tipo-dia-${dia.tipo_dia} ${fecha.getDate() == dia.dia && fecha.getMonth()+1 == periodo.mes && fecha.getFullYear() == periodo.annio? 'calendario-dia-seleccionado' : ''}`}
+                onClick={() => { if (dia.dia && props.onFecha) props.onFecha(date.ymd(periodo.annio, periodo.mes as 1|2|3|4|5|6|7|8|9|10|11|12, dia.dia))}}
+                >
+                    <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
+                    <span className="calendario-dia-contenido">{dia.cod_nov ?? ''}</span>
+                </div>)}
+            </Box>)}
         </Box>
-        <Box className="calendario-semana">
-            {likeAr(DDS).map(dds =>
-                <div className={"calendario-nombre-dia " + (dds.habil ? "" : "tipo-dia-no-laborable")}>{dds.abr}</div>
-            ).array()}
-        </Box>
-        {calendario.map(semana => <Box className="calendario-semana">
-            {semana.map(dia => <div className={`calendario-dia tipo-dia-${dia.tipo_dia} ${
-                diaSeleccionado.dia === dia.dia && diaSeleccionado.mes === periodo.mes && diaSeleccionado.annio === periodo.annio? 'calendario-dia-seleccionado' : ''
-              }`}
-              onClick={() => setDiaSeleccionado({ dia: dia.dia, mes: periodo.mes, annio: periodo.annio, cod_nov: dia.cod_nov })}
-              >
-                <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
-                <span className="calendario-dia-contenido">{dia.cod_nov ?? ''}</span>
-            </div>)}
-        </Box>)}
-        </Box>
-        <Box>
-        {diaSeleccionado.cod_nov && (
-          <div>
-            <p><strong>Codigo:</strong> {diaSeleccionado.cod_nov}</p>
-          </div>
-        )}
-      </Box>
     </Componente>
 }
 
@@ -177,10 +170,11 @@ function SearchBox(props: {onChange:(newValue:string)=>void}){
     var [textToSearch, setTextToSearch] = useState("");
     return <Paper sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
         <ICON.Search/>
-        <InputBase 
+        <InputBase
             value = {textToSearch} 
             onChange = {(event)=>{ var newValue = event.target.value; props.onChange(newValue); setTextToSearch(newValue)}}
         />
+        <Button onClick={_=>{props.onChange(""); setTextToSearch("")}}><ICON.BackspaceOutlined/></Button>
     </Paper>;
 }
 
@@ -368,15 +362,16 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
 
 type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate};
 
-/*
-namespace "front-end" {
+declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: (params: {
             table: string;
         }) => Promise<ProvisorioInfoUsuario>;
+        calendario_persona: (params:{
+
+        }) => Promise<any>
     }
 }
-*/
 
 function Persona(props:{conn: Connector, idper:string, fecha:RealDate}){
     return <Paper className="componente-persona">
@@ -391,6 +386,11 @@ function Pantalla1(props:{conn: Connector}){
     const {conn} = props;
     const [infoUsuario, setInfoUsuario] = useState({} as ProvisorioInfoUsuario);
     const [idper, setIdper] = useState("");
+    const [cod_nov, setCodNov] = useState("");
+    const [fecha, setFecha] = useState<RealDate>(date.today());
+    const [hasta, setHasta] = useState<RealDate>(date.today());
+    const [registrandoNovedad, setRegistrandoNovedad] = useState(false);
+    const [error, setError] = useState<Error|null>(null);
     useEffect(function(){
         // @ts-ignore
         conn.ajax.info_usuario().then(function(infoUsuario:ProvisorioInfoUsuario){
@@ -398,12 +398,36 @@ function Pantalla1(props:{conn: Connector}){
             setInfoUsuario(infoUsuario);
         })
     },[])
+    function registrarNovedad(){
+        setRegistrandoNovedad(true);
+        conn.ajax.table_record_save({
+            table:'novedades_registradas',
+            primaryKeyValues:[],
+            newRow:{idper, desde:fecha, hasta, cod_nov},
+            oldRow:{},
+            status:'new'
+        }).then(function(result){
+            console.log(result)
+        }).catch(setError).finally(()=>setRegistrandoNovedad(false));
+    }
     return infoUsuario.sector == null ?  
             <CircularProgress />
         : <Paper className="componente-pantalla-1">
             <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} onIdper={idper=>setIdper(idper)}/>
-            <Persona conn={conn} idper={idper} fecha={infoUsuario.fecha}/>
-            <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov=""/>
+            <Paper>
+                <Box>
+                    {idper}
+                </Box>
+                <Calendario conn={conn} idper={idper} fecha={fecha} onFecha={setFecha}/>
+                <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/>
+                <Box>{cod_nov && idper && fecha && hasta && !registrandoNovedad ?
+                    <Button key="button" onClick={() => registrarNovedad()}>Registrar Novedad</Button>
+                : null}</Box>
+                <Box>{registrandoNovedad || error ?
+                    <Typography>{error?.message ?? (registrandoNovedad && "registrando..." || "error")}</Typography>
+                : null}</Box>
+            </Paper>
+            <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={setCodNov}/>
         </Paper>;
 }
 
@@ -520,7 +544,7 @@ function DemoDeComponentes(props: {conn: Connector}){
                     <UnComponente titulo="Info de una persona" que="persona"/>
                     <UnComponente titulo="Pantalla 1 (primera total)" que="pantalla-1"/>
                 </Card>,
-            "calendario": () => <Calendario idper={IDPER_DEMO}/>,
+            "calendario": () => <Calendario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
             "personas": () => <ListaPersonasEditables conn={conn} sector="MS" idper={IDPER_DEMO}/>,
             "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO}/>,
             "horario": () => <Horario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,

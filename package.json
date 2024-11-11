@@ -31,7 +31,9 @@
     "typescript": "^5.6.3",
     "types.d.ts": "^0.6.21"
   },
-  "mixin-patch": {},
+  "mixin-patch": {
+    "patch": false
+  },
   "scripts": {
     "prepare": "tsc -p tsconfig-client.json && tsc -p tsconfig-server.json && tsc -p tsconfig-unlogged.json && mixin-patch",
     "build-ignore-error": "(tsc -p tsconfig-client.json || echo \"continue w/error\") && (tsc -p tsconfig-server.json  || echo \"continue w/error\") && (tsc -p tsconfig-unlogged.json || echo \"continue w/error\") && mixin-patch",
