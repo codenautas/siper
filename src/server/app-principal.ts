@@ -29,6 +29,7 @@ import { parametros           } from "./table-parametros";
 import { horarios             } from "./table-horarios";
 import { fichadas             } from "./table-fichadas";
 import { historial_contrataciones} from "./table-historial_contrataciones";
+import { capacitaciones       } from "./table-capacitaciones";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -148,6 +149,7 @@ export class AppSiper extends AppBackend{
             horarios             ,
             fichadas             ,
             historial_contrataciones,
+            capacitaciones       ,
         }
     }       
 }
