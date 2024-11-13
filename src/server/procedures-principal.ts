@@ -2,7 +2,7 @@
 
 import {strict as likeAr, createIndex} from 'like-ar';
 import { ProcedureDef, ProcedureContext } from './types-principal';
-import { NovedadRegistrada, calendario_persona, historico_persona } from '../common/contracts';
+import { NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles } from '../common/contracts';
 
 import { date } from 'best-globals'
 import { DefinedType } from 'guarantee-type';
@@ -112,6 +112,35 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     where v.fecha between $2 and ($2 + interval '1 month' - interval '1 day') and v.idper = $1
                     order by v.fecha`,
                 [idper, desde]
+            ).fetchAll();
+            return info.rows
+        }
+    },
+    {
+        action: 'novedades_disponibles',
+        parameters: [
+            {name:'idper'      , typeName:'text'   },
+            // {name:'annio'     , typeName:'integer'},
+        ],
+        coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof novedades_disponibles.parameters>){
+            const {idper} = params;
+            const info = await context.client.query(
+                `select cn.cod_nov, cn.novedad, coalesce(v.cantidad, 0) as cantidad, 
+                    coalesce(v.limite, 0) as limite, 
+                    coalesce(v.saldo, 0) as saldo, 
+                    (coalesce(v.saldo, 0) > 0 or coalesce(v.limite, 0) = 0) as cargable 
+                    from cod_novedades cn
+                    left join
+                    (select annio, cod_nov, idper, max(origen) as origen, count(*) as cantidad, cantidad as limite, cantidad - count(*) as saldo
+                                    from novedades_vigentes n
+                                        inner join cod_novedades cn using(cod_nov)
+                                        inner join personas p using(idper)
+                                        left join per_nov_cant using(annio, idper, cod_nov)
+                                    where n.con_novedad and idper = $1
+                                    group by annio, cod_nov, idper, cantidad
+                ) v on v.cod_nov = cn.cod_nov
+                where cn.cod_nov is not null`,
+                [idper]
             ).fetchAll();
             return info.rows
         }

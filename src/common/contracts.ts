@@ -205,6 +205,23 @@ export const si_cargara_novedad = {
     },{})
 }
 
+export const novedades_disponibles = {
+    procedure: 'novedades_disponibles',
+    parameters: is.object({
+        idper: is.string,
+    }),
+    result: is.object({
+        cod_nov: is.string,
+        novedad: is.nullable.string,
+        cantidad: is.number,
+        limite: is.number,
+        saldo: is.number,
+        cargable: is.boolean,
+    })
+}
+
+export type NovedadesDisponiblesResult = DefinedType<typeof novedades_disponibles.result>
+
 export const calendario_persona = {
     procedure: 'calendario_persona',
     parameters: is.object({

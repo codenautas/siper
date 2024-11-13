@@ -28,7 +28,7 @@ import {
 
 import { date, RealDate } from "best-globals";
 
-import { CalendarioResult, Annio, meses } from "../common/contracts"
+import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult } from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 
 export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string}){
@@ -162,6 +162,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha:RealDate, onFecha
 type ProvisorioPersonas = {sector:string, idper:string, apellido:string, nombres:string, cuil:string, ficha:string, idmeta4:string};
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, nivel:number}
+// @ts-ignore
 type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
 type IdperFuncionCambio = (idper:string)=>void
@@ -330,30 +331,34 @@ function DatosPersonales(props:{conn: Connector, idper:string}){
 }
 
 function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, paraCargar:boolean, onCodNov?:(codNov:string)=>void}){
+    // @ts-ignore
     const {idper, cod_nov, onCodNov, conn} = props;
-    const [codNovedades, setCodNovedades] = useState<ProvisorioCodNovedades[]>([]);
-    const [codNovedadesFiltradas, setCodNovedadesFiltradas] = useState<ProvisorioCodNovedades[]>([]);
+    const [codNovedades, setCodNovedades] = useState<NovedadesDisponiblesResult[]>([]);
+    const [codNovedadesFiltradas, setCodNovedadesFiltradas] = useState<NovedadesDisponiblesResult[]>([]);
     const [filtro, setFiltro] = useState("");
+
     useEffect(function(){
-        conn.ajax.table_data<ProvisorioCodNovedades>({
-            table: 'cod_novedades',
-            fixedFields: [],
-            paramfun: {}
-        }).then(function(cod_novedades){
-            setCodNovedades(cod_novedades);
-        })
+        setCodNovedades([])
+        if (idper != null) {
+            conn.ajax.novedades_disponibles({ idper }).then(novedades => {
+                setCodNovedades(novedades);
+            });
+        }
     },[idper])
     useEffect(function(){
-        const recordFilter = GetRecordFilter<ProvisorioCodNovedades>(filtro,['cod_nov', 'novedad']);
+        const recordFilter = GetRecordFilter<NovedadesDisponiblesResult>(filtro,['cod_nov', 'novedad']);
         setCodNovedadesFiltradas(codNovedades.filter(recordFilter))
     },[codNovedades, filtro])
     return <Componente componentType="codigo-novedades">
         <SearchBox onChange={setFiltro}/>
         <List>
             {codNovedadesFiltradas.map(c=>
-                <ListItemButton key = {c.cod_nov} onClick={() => {if (onCodNov != null) onCodNov(c.cod_nov)}} className={`${c.cod_nov == cod_nov ? ' seleccionado' : ''}`}>
+                <ListItemButton key = {c.cod_nov} 
+                    onClick={() => {if (onCodNov != null && c.cargable) onCodNov(c.cod_nov)}} 
+                    className={`${c.cod_nov == cod_nov ? 'seleccionado' : ''} ${!c.cargable ? 'deshabilitado' : ''}`}
+                    disabled={!c.cargable}>
                     <span className="box-id"> {c.cod_nov} </span>   
-                    {c.novedad}
+                    {c.novedad} {c.cantidad > 0 ? `(${c.limite} - ${c.cantidad} = ${c.saldo})`: ''}
                 </ListItemButton>
             )}
         </List>
@@ -368,6 +373,9 @@ declare module "frontend-plus" {
             table: string;
         }) => Promise<ProvisorioInfoUsuario>;
         calendario_persona: (params:{
+
+        }) => Promise<any>;
+        novedades_disponibles: (params:{
 
         }) => Promise<any>
     }
@@ -417,6 +425,9 @@ function Pantalla1(props:{conn: Connector}){
             <Paper>
                 <Box>
                     {idper}
+                </Box>
+                <Box>
+                    {cod_nov}
                 </Box>
                 <Calendario conn={conn} idper={idper} fecha={fecha} onFecha={setFecha}/>
                 <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/>
