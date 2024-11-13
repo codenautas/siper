@@ -27,6 +27,7 @@ import { inconsistencias      } from './table-inconsistencias';
 import { usuarios             } from './table-usuarios';
 import { parametros           } from "./table-parametros";
 import { horarios             } from "./table-horarios";
+import { fichadas             } from "./table-fichadas";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -144,6 +145,7 @@ export class AppSiper extends AppBackend{
             usuarios             ,
             parametros           ,
             horarios             ,
+            fichadas             ,
         }
     }       
 }
