@@ -28,7 +28,7 @@ import {
 
 import { date, RealDate } from "best-globals";
 
-import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult } from "../common/contracts"
+import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult } from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 
 export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string}){
@@ -159,6 +159,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha:RealDate, onFecha
     </Componente>
 }
 
+// @ts-ignore
 type ProvisorioPersonas = {sector:string, idper:string, apellido:string, nombres:string, cuil:string, ficha:string, idmeta4:string};
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, nivel:number}
@@ -192,26 +193,31 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     const {conn, idper, onIdper} = props;
     const [sector, _setSector] = useState(props.sector);
     const [sectores, setSectores] = useState<ProvisorioSectoresAumentados[]>([]);
-    const [listaPersonas, setListaPersonas] = useState<ProvisorioPersonas[]>([]);
-    const [abanicoPersonas, setAbanicoPersonas] = useState<Partial<Record<string, ProvisorioPersonas[]>>>({});
+    const [listaPersonas, setListaPersonas] = useState<PersonasNovedadActualResult[]>([]);
+    const [abanicoPersonas, setAbanicoPersonas] = useState<Partial<Record<string, PersonasNovedadActualResult[]>>>({});
     const [filtro, setFiltro] = useState("");
-    const APELLIDOYNOMBRES = 'apellidoynombres' as keyof ProvisorioPersonas
-    const attributosBuscables:(keyof ProvisorioPersonas)[] = ['apellido', 'nombres', 'cuil', 'ficha', 'idmeta4', 'idper', APELLIDOYNOMBRES]
+    const APELLIDOYNOMBRES = 'apellidoynombres' as keyof PersonasNovedadActualResult
+    const attributosBuscables:(keyof PersonasNovedadActualResult)[] = ['apellido', 'nombres', 'cuil', 'ficha', 'idmeta4', 'idper', APELLIDOYNOMBRES]
     useEffect(function(){
-        const recordFilter = GetRecordFilter<ProvisorioPersonas>(filtro, attributosBuscables);
+        console.log(listaPersonas)
+        const recordFilter = GetRecordFilter<PersonasNovedadActualResult>(filtro, attributosBuscables);
         const personasFiltradas = listaPersonas.filter(recordFilter)
         var abanico = Object.groupBy(personasFiltradas, p => p.sector);
         setAbanicoPersonas(abanico);
     }, [listaPersonas, filtro])
     useEffect(function(){
-        conn.ajax.table_data<ProvisorioPersonas>({
-            table: 'personas',
-            fixedFields: [],
-            paramfun: {}
-        }).then(async (personas) => {
-            personas.forEach(p => p[APELLIDOYNOMBRES] = p.apellido+' '+p.nombres+' '+p.apellido)
+        // conn.ajax.table_data<ProvisorioPersonas>({
+        //     table: 'personas',
+        //     fixedFields: [],
+        //     paramfun: {}
+        // }).then(async (personas) => {
+        //     personas.forEach(p => p[APELLIDOYNOMBRES] = p.apellido+' '+p.nombres+' '+p.apellido)
+        //     setListaPersonas(personas);
+        // })
+        setListaPersonas([])
+        conn.ajax.personas_novedad_actual().then(personas => {
             setListaPersonas(personas);
-        })
+        });
         conn.ajax.table_data<ProvisorioSectores>({
             table: 'sectores',
             fixedFields: [],
@@ -244,8 +250,19 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                     <List>
                         {abanicoPersonas[s.sector]?.map(p=>
                             <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p.idper)}} className={`${p.idper == idper ? ' seleccionado' : ''}`}>
-                                <span className="box-id persona-id"> {p.idper} </span>   
-                                {p.apellido}, {p.nombres}
+                                <span className="box-id"> {p.cod_nov} </span>
+                                <div style={{ display: 'flex', flexDirection: 'column'}}>
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                        <span className="box-id persona-id">{p.idper}</span>
+                                        <span>
+                                            {p.apellido}, {p.nombres}
+                                        </span>
+                                    </div>
+                                    
+                                    <div>
+                                        <span>Ficha: {p.ficha}</span> - <span>CUIL: {p.cuil}</span>
+                                    </div>
+                                </div>
                             </ListItemButton>
                         )}
                     </List>
@@ -377,7 +394,8 @@ declare module "frontend-plus" {
         }) => Promise<any>;
         novedades_disponibles: (params:{
 
-        }) => Promise<any>
+        }) => Promise<any>;
+        personas_novedad_actual: () => Promise<any>;
     }
 }
 

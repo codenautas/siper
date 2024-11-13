@@ -222,6 +222,24 @@ export const novedades_disponibles = {
 
 export type NovedadesDisponiblesResult = DefinedType<typeof novedades_disponibles.result>
 
+export const personas_novedad_actual = {
+    procedure: 'personas_novedad_actual',
+    result: is.object({
+        cod_nov: is.string,
+        novedad: is.nullable.string,
+        idper: is.string,
+        cuil: is.nullable.string,
+        ficha: is.nullable.string,
+        idmeta4: is.nullable.string,
+        apellido: is.nullable.string,
+        nombres: is.nullable.string,
+        sector: is.string,
+    })
+}
+
+export type PersonasNovedadActualResult = DefinedType<typeof personas_novedad_actual.result>
+
+
 export const calendario_persona = {
     procedure: 'calendario_persona',
     parameters: is.object({

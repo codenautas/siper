@@ -146,6 +146,20 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         }
     },
     {
+        action: 'personas_novedad_actual',
+        parameters: [],
+        coreFunction: async function(context: ProcedureContext, _params:any){
+            const info = await context.client.query(
+                `select idper, cuil, pe.ficha, idmeta4, apellido, nombres, pe.sector, cod_nov, novedad 
+                    from personas pe
+                    inner join novedades_vigentes nv using(idper)
+                    inner join cod_novedades cn using(cod_nov)
+                    inner join parametros pa on pa.fecha_actual = nv.fecha`
+            ).fetchAll();
+            return info.rows
+        }
+    },
+    {
         action: 'novedades_pendientes',
         parameters: [
             {name:'idper'      , typeName:'text'   }
