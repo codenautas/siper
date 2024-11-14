@@ -26,6 +26,8 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'categoria', typeName: 'text',               title:'categoría'                 },
             {name: 'registra_novedades_desde', typeName: 'date'                                   },
             {name: 'para_antiguedad_relativa', typeName: 'date'                                   },
+            {name: 'activo'                  , typeName: 'boolean'                                },
+            {name: 'ultimo_dia_trabajo'      , typeName: 'date'                                   },
         ],
         primaryKey: [idper.name],
         foreignKeys: [
