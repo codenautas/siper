@@ -148,6 +148,7 @@ export const personas = {
         sector:    is.string,
         categoria: is.string,
         registra_novedades_desde: is.Date,
+        para_antiguedad_relativa: is.Date,
     })
 } satisfies CommonEntityDefinition
 
