@@ -232,6 +232,7 @@ export const novedades_disponibles = {
     result: is.object({
         cod_nov: is.string,
         novedad: is.nullable.string,
+        con_detalles: is.boolean,
         cantidad: is.number,
         limite: is.number,
         saldo: is.number,

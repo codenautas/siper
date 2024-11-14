@@ -125,7 +125,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof novedades_disponibles.parameters>){
             const {idper} = params;
             const info = await context.client.query(
-                `select cn.cod_nov, cn.novedad, coalesce(v.cantidad, 0) as cantidad, 
+                `select cn.cod_nov, cn.novedad, coalesce(cn.con_detalles, FALSE) as con_detalles, coalesce(v.cantidad, 0) as cantidad, 
                     coalesce(v.limite, 0) as limite, 
                     coalesce(v.saldo, 0) as saldo, 
                     (coalesce(v.saldo, 0) > 0 or coalesce(v.limite, 0) = 0) as cargable 
