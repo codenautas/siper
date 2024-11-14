@@ -69,8 +69,8 @@ export const DDS = {
     6: {abr:'sáb', habil:true , nombre:'sábado'   },
 }
 
-function Calendario(props:{conn:Connector, idper:string, fecha:RealDate, onFecha?:(fecha:RealDate)=>void}){
-    const {conn, fecha, idper} = props;
+function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void}){
+    const {conn, fecha, fechaHasta, idper} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     type Periodo = {mes:number, annio:number} 
     const [periodo, setPeriodo] = useState<Periodo>({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
@@ -107,6 +107,13 @@ function Calendario(props:{conn:Connector, idper:string, fecha:RealDate, onFecha
         })
 
     },[idper, periodo.mes, periodo.annio])
+
+    const isInRange = (dia: number, mes: number, annio: number) => {
+        if (!fecha || !fechaHasta || !Number.isInteger(dia) || dia <= 0) return false;
+        const current = date.ymd(annio, mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia);
+        return current >= fecha && current <= fechaHasta;
+    };
+
     return <Componente componentType="calendario-mes">
         <Box style={{ flex:1}}>
             <Box>
@@ -147,10 +154,24 @@ function Calendario(props:{conn:Connector, idper:string, fecha:RealDate, onFecha
             </Box>
             {calendario.map(semana => <Box className="calendario-semana">
                 {semana.map(dia => 
-                    <div 
-                        className={`calendario-dia tipo-dia-${dia.tipo_dia} ${fecha.getDate() == dia.dia && fecha.getMonth()+1 == periodo.mes && fecha.getFullYear() == periodo.annio? 'calendario-dia-seleccionado' : ''}`}
-                onClick={() => { if (dia.dia && props.onFecha) props.onFecha(date.ymd(periodo.annio, periodo.mes as 1|2|3|4|5|6|7|8|9|10|11|12, dia.dia))}}
-                >
+                <div 
+                    className={`calendario-dia tipo-dia-${dia.tipo_dia} 
+                        ${fecha && dia.dia === fecha.getDate() && periodo.mes === fecha.getMonth() + 1 && periodo.annio === fecha.getFullYear() ? 'calendario-dia-seleccionado' : ''}
+                        ${fechaHasta && dia.dia === fechaHasta.getDate() && periodo.mes === fechaHasta.getMonth() + 1 && periodo.annio === fechaHasta.getFullYear() ? 'calendario-dia-seleccionado' : ''}
+                        ${isInRange(dia.dia, periodo.mes, periodo.annio) ? 'calendario-dia-seleccionado' : ''}`}
+                        
+                        onClick={() => {
+                            if (!dia.dia || !props.onFecha || !props.onFechaHasta) return;
+                            const selectedDate = date.ymd(periodo.annio, periodo.mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia.dia);
+                            if (!props.fecha || selectedDate < props.fecha) {
+                                props.onFecha(selectedDate);
+                            } else if (props.fechaHasta && selectedDate > props.fecha && selectedDate < props.fechaHasta) {
+                                props.onFecha(selectedDate);
+                            } else if (selectedDate > props.fecha) {
+                                props.onFechaHasta(selectedDate);
+                            }
+                        }}
+                    >
                     <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
                     <span className="calendario-dia-contenido">{dia.cod_nov ?? ''}</span>
                 </div>)}
@@ -447,8 +468,8 @@ function Pantalla1(props:{conn: Connector}){
                 <Box>
                     {cod_nov}
                 </Box>
-                <Calendario conn={conn} idper={idper} fecha={fecha} onFecha={setFecha}/>
-                <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/>
+                <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta}/>
+                {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
                 <Box>{cod_nov && idper && fecha && hasta && !registrandoNovedad ?
                     <Button key="button" onClick={() => registrarNovedad()}>Registrar Novedad</Button>
                 : null}</Box>
