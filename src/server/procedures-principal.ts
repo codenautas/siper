@@ -125,7 +125,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof novedades_disponibles.parameters>){
             const {idper} = params;
             const info = await context.client.query(
-                `select cn.cod_nov, cn.novedad, coalesce(v.cantidad, 0) as cantidad, 
+                `select cn.cod_nov, cn.novedad, coalesce(cn.con_detalles, FALSE) as con_detalles, coalesce(v.cantidad, 0) as cantidad, 
                     coalesce(v.limite, 0) as limite, 
                     coalesce(v.saldo, 0) as saldo, 
                     (coalesce(v.saldo, 0) > 0 or coalesce(v.limite, 0) = 0) as cargable 
@@ -152,9 +152,9 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const info = await context.client.query(
                 `select idper, cuil, pe.ficha, idmeta4, apellido, nombres, pe.sector, cod_nov, novedad 
                     from personas pe
-                    inner join novedades_vigentes nv using(idper)
-                    inner join cod_novedades cn using(cod_nov)
-                    inner join parametros pa on pa.fecha_actual = nv.fecha`
+                    left join novedades_vigentes nv using(idper)
+                    left join cod_novedades cn using(cod_nov)
+                    left join parametros pa on pa.fecha_actual = nv.fecha`
             ).fetchAll();
             return info.rows
         }

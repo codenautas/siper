@@ -23,7 +23,7 @@ import {
     MenuItem, 
     Paper,
     Select, 
-    Toolbar, Typography, 
+    Toolbar, Typography, TextField
 } from "@mui/material";
 
 import { date, RealDate } from "best-globals";
@@ -110,8 +110,12 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 
     const isInRange = (dia: number, mes: number, annio: number) => {
         if (!fecha || !fechaHasta || !Number.isInteger(dia) || dia <= 0) return false;
-        const current = date.ymd(annio, mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia);
-        return current >= fecha && current <= fechaHasta;
+        try {
+            const current = date.ymd(annio, mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia);
+            return current >= fecha && current <= fechaHasta;
+        } catch (error) {
+            return false;
+        }
     };
 
     return <Componente componentType="calendario-mes">
@@ -163,6 +167,9 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         onClick={() => {
                             if (!dia.dia || !props.onFecha || !props.onFechaHasta) return;
                             const selectedDate = date.ymd(periodo.annio, periodo.mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia.dia);
+                            const hoy = date.today();
+                            if (selectedDate < hoy) return;
+                        
                             if (!fechaHasta || selectedDate <= fechaHasta) {
                                 props.onFecha(selectedDate);
                                 props.onFechaHasta(selectedDate);
@@ -368,7 +375,7 @@ function DatosPersonales(props:{conn: Connector, idper:string}){
     </Componente>
 }
 
-function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, paraCargar:boolean, onCodNov?:(codNov:string)=>void}){
+function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean)=>void}){
     // @ts-ignore
     const {idper, cod_nov, onCodNov, conn} = props;
     const [codNovedades, setCodNovedades] = useState<NovedadesDisponiblesResult[]>([]);
@@ -392,7 +399,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
         <List>
             {codNovedadesFiltradas.map(c=>
                 <ListItemButton key = {c.cod_nov} 
-                    onClick={() => {if (onCodNov != null && c.cargable) onCodNov(c.cod_nov)}} 
+                    onClick={() => {if (onCodNov != null && c.cargable) onCodNov(c.cod_nov, c.con_detalles)}} 
                     className={`${c.cod_nov == cod_nov ? 'seleccionado' : ''} ${!c.cargable ? 'deshabilitado' : ''}`}
                     disabled={!c.cargable}>
                     <span className="box-id"> {c.cod_nov} </span>   
@@ -434,6 +441,8 @@ function Pantalla1(props:{conn: Connector}){
     const [infoUsuario, setInfoUsuario] = useState({} as ProvisorioInfoUsuario);
     const [idper, setIdper] = useState("");
     const [cod_nov, setCodNov] = useState("");
+    const [detalles, setDetalles] = useState("");
+    const [conDetalles, setConDetalles] = useState(false);
     const [fecha, setFecha] = useState<RealDate>(date.today());
     const [hasta, setHasta] = useState<RealDate>(date.today());
     const [registrandoNovedad, setRegistrandoNovedad] = useState(false);
@@ -450,13 +459,19 @@ function Pantalla1(props:{conn: Connector}){
         conn.ajax.table_record_save({
             table:'novedades_registradas',
             primaryKeyValues:[],
-            newRow:{idper, desde:fecha, hasta, cod_nov},
+            newRow:{idper, desde:fecha, hasta, cod_nov, detalles},
             oldRow:{},
             status:'new'
         }).then(function(result){
             console.log(result)
         }).catch(setError).finally(()=>setRegistrandoNovedad(false));
     }
+    function handleCodNovChange(codNov: string, conDetalles: boolean) {
+        setCodNov(codNov);
+        console.log(conDetalles)
+        setConDetalles(conDetalles);
+    }
+
     return infoUsuario.sector == null ?  
             <CircularProgress />
         : <Paper className="componente-pantalla-1">
@@ -470,6 +485,19 @@ function Pantalla1(props:{conn: Connector}){
                 </Box>
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta}/>
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
+                <Box>
+                    <TextField
+                        label="Detalles"
+                        placeholder={conDetalles ? "Obligatorio" : ""}
+                        multiline
+                        rows={4}
+                        value={detalles}
+                        onChange={(e) => setDetalles(e.target.value)}
+                        required={conDetalles}
+                        error={conDetalles && !detalles}
+                        helperText={conDetalles && !detalles ? "El campo es obligatorio." : ""}
+                    />
+                </Box>
                 <Box>{cod_nov && idper && fecha && hasta && !registrandoNovedad ?
                     <Button key="button" onClick={() => registrarNovedad()}>Registrar Novedad</Button>
                 : null}</Box>
@@ -477,7 +505,7 @@ function Pantalla1(props:{conn: Connector}){
                     <Typography>{error?.message ?? (registrandoNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
             </Paper>
-            <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={setCodNov}/>
+            <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov, conDetalles) => handleCodNovChange(codNov, conDetalles)}/>
         </Paper>;
 }
 
