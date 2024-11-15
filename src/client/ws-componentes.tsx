@@ -110,8 +110,12 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 
     const isInRange = (dia: number, mes: number, annio: number) => {
         if (!fecha || !fechaHasta || !Number.isInteger(dia) || dia <= 0) return false;
-        const current = date.ymd(annio, mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia);
-        return current >= fecha && current <= fechaHasta;
+        try {
+            const current = date.ymd(annio, mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia);
+            return current >= fecha && current <= fechaHasta;
+        } catch (error) {
+            return false;
+        }
     };
 
     return <Componente componentType="calendario-mes">

@@ -152,9 +152,9 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const info = await context.client.query(
                 `select idper, cuil, pe.ficha, idmeta4, apellido, nombres, pe.sector, cod_nov, novedad 
                     from personas pe
-                    inner join novedades_vigentes nv using(idper)
-                    inner join cod_novedades cn using(cod_nov)
-                    inner join parametros pa on pa.fecha_actual = nv.fecha`
+                    left join novedades_vigentes nv using(idper)
+                    left join cod_novedades cn using(cod_nov)
+                    left join parametros pa on pa.fecha_actual = nv.fecha`
             ).fetchAll();
             return info.rows
         }
