@@ -79,9 +79,12 @@ export class AppSiper extends AppBackend{
                 ]},
                 {menuType:'menu', name:'config', label:'configurar', menuContent:[
                     {menuType:'table', name:'fechas'        },
+                    {menuType:'menu', name:'ref personas'   , description:'tablas referenciales de personas', menuContent:[
+                        {menuType:'table', name:'sectores'         },
+                        {menuType:'table', name:'situacion_revista', label: 'sit. revista' },
+                        {menuType:'table', name:'clases'           },
+                    ]},
                     {menuType:'table', name:'cod_novedades' },
-                    {menuType:'table', name:'sectores'      },
-                    {menuType:'table', name:'clases'        },
                     {menuType:'table', name:'usuarios'      },
                     {menuType:'table', name:'horarios'      },
                 ]}
