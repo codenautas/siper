@@ -150,7 +150,7 @@ export const personas = {
         registra_novedades_desde: is.Date,
         para_antiguedad_relativa: is.Date,
         activo:    is.nullable.boolean,
-        ultimo_dia_trabajo: is.Date,
+        fecha_egreso: is.Date,
     })
 } satisfies CommonEntityDefinition
 

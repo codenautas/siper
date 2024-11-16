@@ -28,7 +28,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'registra_novedades_desde', typeName: 'date'                                   },
             {name: 'para_antiguedad_relativa', typeName: 'date'                                   },
             {name: 'activo'                  , typeName: 'boolean'                                },
-            {name: 'ultimo_dia_trabajo'      , typeName: 'date'                                   },
+            {name: 'fecha_egreso'            , typeName: 'date'                                   },
             {name: 'nacionalidad'            , typeName: 'text', title: 'nacionalidad'            },
             {name: 'jerarquia'               , typeName: 'text', title: 'jerarquia'               },
             {name: 'cargo_/atgc'             , typeName: 'text', title: 'cargo /ATGC'             },
