@@ -49,7 +49,6 @@ install:
       - ../install/actualizar_novedades_vigentes.sql
       - ../install/novedades_registradas_trg.sql
       - ../install/novedades_horarias_trg.sql
-      - ../install/personas_horarios_trg.sql
       - ../install/fechas_nov_trg.sql
       - ../install/sectores_circulares_trg.sql
       - ../install/novedades_registradas_detalles_trg.sql
