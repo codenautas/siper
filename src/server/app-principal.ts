@@ -10,6 +10,7 @@ import { cod_novedades        } from './table-cod_novedades';
 import { fechas               } from './table-fechas';
 import { clases               } from './table-clases';
 import { grupos               } from './table-grupos';
+import { situacion_revista    } from './table-situacion_revista';
 import { sectores             } from './table-sectores';
 import { personas             } from './table-personas';
 import { personas_importadas  } from './table-personas-importadas';
@@ -131,6 +132,7 @@ export class AppSiper extends AppBackend{
             sectores             ,
             clases               ,
             grupos               ,
+            situacion_revista    ,
             personas             ,
             per_gru              ,
             nov_gru              ,

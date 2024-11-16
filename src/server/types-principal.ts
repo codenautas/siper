@@ -24,6 +24,7 @@ declare module "backend-plus"{
 }
 
 export const soloDigitosPostConfig = 'soloDigitos' as PostInputOptions
+export const sinMinusculasNiAcentos = 'sinMinusculasNiAcentos' as PostInputOptions
 
 export function soloDigitosCons(fieldName: string):Constraint{
     return {
@@ -38,6 +39,14 @@ export function soloCodigo(fieldName: string):Constraint{
         constraintType:'check', 
         consName:`palabra corta y solo mayusculas en ${fieldName}`, 
         expr: `${fieldName} similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\\d{0,10}'`
+    }
+}
+
+export function soloMayusculas(fieldName: string):Constraint{
+    return {
+        constraintType:'check', 
+        consName:`Solo mayusculas en ${fieldName}`, 
+        expr: `${fieldName} similar to '[A-Z][A-Z0-9 ]*'`
     }
 }
 

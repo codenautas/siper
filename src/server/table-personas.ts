@@ -1,6 +1,8 @@
 "use strict";
 
-import {FieldDefinition, TableDefinition, TableContext, soloDigitosCons, soloDigitosPostConfig, soloCodigo} from "./types-principal";
+import {FieldDefinition, TableDefinition, TableContext, soloDigitosCons, soloDigitosPostConfig, soloCodigo, soloMayusculas} from "./types-principal";
+
+import { s_revista  } from "./table-situacion_revista";
 
 export const idper: FieldDefinition = {
     name: 'idper', 
@@ -25,6 +27,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'nombres'  , typeName: 'text', isName:true , nullable:false                    },
             {name: 'sector'   , typeName: 'text',                                                 },
             {name: 'categoria', typeName: 'text',               title:'categoría'                 },
+            s_revista,
             {name: 'registra_novedades_desde', typeName: 'date'                                   },
             {name: 'para_antiguedad_relativa', typeName: 'date'                                   },
             {name: 'activo'                  , typeName: 'boolean'                                },
@@ -42,7 +45,8 @@ export function personas(context: TableContext): TableDefinition {
         ],
         primaryKey: [idper.name],
         foreignKeys: [
-            {references: 'sectores', fields:['sector']}
+            {references: 'sectores'         , fields:['sector']       },
+            {references: 'situacion_revista', fields:[s_revista.name] },
         ],
         constraints: [
             soloCodigo(idper.name),
@@ -50,6 +54,7 @@ export function personas(context: TableContext): TableDefinition {
             soloDigitosCons('documento'),
             soloDigitosCons('ficha'  ),
             soloDigitosCons('idmeta4'),
+            soloMayusculas(s_revista.name),
             {constraintType:'unique', consName:'nombre y apellidos sin repetir', fields:['apellido', 'nombres']}
         ],
         detailTables: [
