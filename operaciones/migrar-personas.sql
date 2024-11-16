@@ -18,6 +18,12 @@ ALTER TABLE temp_personas_a_importar ADD PRIMARY KEY (cuil);
 
 INSERT INTO situacion_revista (situacion_revista) SELECT DISTINCT situacion_de_revista FROM temp_personas_a_importar;
 
+INSERT INTO sectores (nombre_sector, sector) 
+  SELECT DISTINCT oficina, ultimo_numero + row_number() over ()
+    FROM temp_personas_a_importar x left join sectores s on x.oficina = s.nombre_sector, 
+        (SELECT COALESCE(max(sector::bigint), 0) as ultimo_numero FROM sectores WHERE sector ~ '^\d+$') un
+    WHERE nombre_sector is null;
+
 INSERT INTO personas(
 	cuil, ficha, idmeta4, apellido, nombres, categoria, documento, fecha_ingreso, fecha_egreso, 
     nacionalidad, jerarquia, cargo_atgc, situacion_revista)
@@ -36,7 +42,7 @@ UPDATE personas p
     AND s.nombre_sector = x.oficina;
 
 UPDATE personas p 
-  SET activo = fecha_egreso is null;
-  
+  SET activo = fecha_egreso is null,
+      registra_novedades_desde = fecha_ingreso;
 
 select * from personas limit 10;
