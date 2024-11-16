@@ -11,7 +11,7 @@ export function horarios(context: TableContext): TableDefinition{
     return {
         name: 'horarios',
         elementName: 'horario',
-        title: 'Horarios del personal',
+        title: 'horarios del personal',
         editable: admin,
         fields: [
             {...idper, editable:admin},

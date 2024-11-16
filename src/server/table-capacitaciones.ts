@@ -10,7 +10,7 @@ export function capacitaciones(context: TableContext): TableDefinition{
     return {
         name: 'capacitaciones',
         elementName: 'capacitacion',
-        title: 'Capacitaciones',
+        title: 'capacitaciones',
         editable: admin,
         fields: [
             {...idper, editable:admin},

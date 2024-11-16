@@ -9,7 +9,7 @@ export function historial_contrataciones(context: TableContext): TableDefinition
     return {
         name: 'historial_contrataciones',
         elementName: 'historial_contratacion',
-        title: 'Historial de contrataciones',
+        title: 'historial de contrataciones',
         editable: admin,
         fields: [
             {...idper, editable:admin},
