@@ -18,7 +18,7 @@ export function horarios(context: TableContext): TableDefinition{
             {name:'dds'              , typeName:'integer'                   },
             {...año, editable:false, generatedAs:`extract(year from desde)` },
             {name: 'desde'           , typeName: 'date'   , nullable:false  },
-            {name: 'hasta'           , typeName: 'date'   , nullable:false  },
+            {name: 'hasta'           , typeName: 'date'   /*, nullable:false*/  },
             cod_nov,
             {name:'trabaja'          , typeName:'boolean' , nullable:false ,defaultValue:false},
             {name:'hora_desde'       , typeName:'time'    , nullable:false  },
