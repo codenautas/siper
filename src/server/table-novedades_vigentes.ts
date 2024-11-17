@@ -17,10 +17,10 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
         editable:admin,
         fields: [
             idper,
-            {name: 'ficha'    , typeName: 'text'   ,                                    },
             fecha,
-            {name: 'dds'      , typeName: 'text'   , inTable:false, serverSide:true, editable:false },
+            {name: 'ddsn'     , typeName: 'text'   , inTable:false, serverSide:true, editable:false },
             {name: 'cod_nov'  , typeName: 'text'   ,                                    },
+            {name: 'ficha'    , typeName: 'text'   ,                                    },
             /* campos de sistemas externos: */
             {name: 'ent_fich' , typeName: 'text'   , title:'entrada - fichada'          },
             {name: 'sal_fich' , typeName: 'text'   , title:'salida - fichada'           },
@@ -41,7 +41,7 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
         ],
         sql: {
             fields: {
-                dds:{ expr:`case extract(dow from novedades_vigentes.fecha) when 0 then 'domingo' when 1 then 'lunes' when 2 then 'martes' when 3 then 'miércoles' when 4 then 'jueves'when 5 then 'viernes' when 6 then 'sábado' end`},
+                ddsn:{ expr:`case extract(dow from novedades_vigentes.fecha) when 0 then 'domingo' when 1 then 'lunes' when 2 then 'martes' when 3 then 'miércoles' when 4 then 'jueves'when 5 then 'viernes' when 6 then 'sábado' end`},
             },
             policies: politicaNovedades('novedades_vigentes','fecha'),
         },
