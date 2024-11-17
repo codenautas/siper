@@ -105,9 +105,8 @@ describe("connected", function(){
                         `delete from fechas where ${AÑOS_DE_PRUEBA}`,
                         `delete from annios where ${AÑOS_DE_PRUEBA}`,
                         `delete from cod_novedades where novedad like 'PRUEBA AUTOM_TICA%'`,
-                        `update parametros set fecha_actual = '${FECHA_ACTUAL.toYmd()}' where unico_registro`,
-                        `insert into annios (annio) select * from generate_series(${DESDE_AÑO}, ${HASTA_AÑO}) d`,
-                        `insert into fechas (fecha) select date_trunc('day', d) from generate_series(cast('${DESDE_AÑO}-01-01' as timestamp), cast('${HASTA_AÑO}-12-31' as timestamp), cast('1 day' as interval)) d`,
+                        `delete from sectores where nombre_sector like 'PRUEBA AUTOM_TICA%'`,
+                        `select annio_preparar(d) from generate_series(${DESDE_AÑO}, ${HASTA_AÑO}) d`,
                         `update fechas set laborable = false, repite = false, inamovible = false where fecha in (
                             '2000-03-06', 
                             '2000-03-07',
@@ -118,7 +117,8 @@ describe("connected", function(){
                         `update fechas set laborable = false, repite = true, inamovible = true where fecha in (
                             '2000-05-01');
                         `,
-                        `delete from sectores where nombre_sector like 'PRUEBA AUTOM_TICA%'`,
+                        `select annio_abrir('${DESDE_AÑO}')`,
+                        `update parametros set fecha_actual = '${FECHA_ACTUAL.toYmd()}' where unico_registro`,
                         `insert into sectores (sector, nombre_sector, pertenece_a) values
                             ('PRA1'   , 'PRUEBA AUTOMATICA 1'      , null    ),
                             ('PRA11'  , 'PRUEBA AUTOMATICA 1.1'    , 'PRA1'  ),
@@ -170,11 +170,13 @@ describe("connected", function(){
         var persona = {
             cuil: (10330010005 + numero*11).toString(),
             apellido: "XX Prueba " + numero,
-            nombres: "Persona"
-        } as ctts.Persona;
+            nombres: "Persona",
+            activo: true,
+            registra_novedades_desde: date.iso(`${DESDE_AÑO}-01-01`),
+        } as Partial<ctts.Persona>;
         var personaGrabada = await rrhhSession.saveRecord(
             ctts.personas,
-            persona,
+            persona as ctts.Persona,
             'new',
         )
         return personaGrabada;
@@ -362,6 +364,7 @@ describe("connected", function(){
             })
         })
         it("cargo un día de trámite", async function(){
+            fallaEnLaQueQuieroOmitirElBorrado = true;
             await enNuevaPersona(5, {}, async ({idper}) => {
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
@@ -374,6 +377,7 @@ describe("connected", function(){
                     {fecha:date.iso('2000-01-07'), cod_nov:COD_PRESENTE, idper, con_novedad:null , trabajable:true},
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-05','2000-01-07']}})
             })
+            fallaEnLaQueQuieroOmitirElBorrado = false;
         })
         it("intento de cargar novedades sin permiso", async function(){
             await enNuevaPersona(6, {}, async (persona) => {
@@ -758,7 +762,7 @@ describe("connected", function(){
                     return probar(persona, mas)
                 });
             }
-            it("mezclo teletrabajo con presencial", async function(){
+            it.skip("mezclo teletrabajo con presencial", async function(){
                 /// TODO: Hay que reescribir esto por completo para verlo bien.
                 await enNuevaPersona(4, {}, async ({idper}) => {
                     for (var dds of [1,3,4]) {

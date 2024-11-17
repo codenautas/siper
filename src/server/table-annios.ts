@@ -14,7 +14,7 @@ export function annios(context:TableContext):TableDefinition{
         editable:admin,
         fields:[
             año,
-            {name: 'cerrado', typeName: 'boolean'},
+            {name: 'abierto'            , typeName: 'boolean', nullable: false, defaultValue: false, editable: false},
         ],
         primaryKey: [año.name],
         detailTables:[
