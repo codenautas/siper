@@ -30,7 +30,7 @@ $BODY$
           h.cod_nov as h_cod_nov,
           cod_nov_habitual,
           nr.con_novedad
-        FROM fechas f CROSS JOIN personas p CROSS JOIN parametros
+        FROM fechas f INNER JOIN annios a USING (annio) CROSS JOIN personas p
           LEFT JOIN LATERAL (
             SELECT *
               FROM horarios h 

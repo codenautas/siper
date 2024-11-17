@@ -55,7 +55,6 @@ const FECHAS_DE_PRUEBA = `extract(year from fecha) BETWEEN ${DESDE_AÑO} AND ${H
 const IDPER_DE_PRUEBA = `idper like 'XX%'`;
 
 const COD_VACACIONES = "1";
-const COD_TELETRABAJO = "106";
 const COD_TRAMITE = "121";
 const COD_DIAGRAMADO = "101";
 const COD_ENF_FAMILIAR = "12";
@@ -71,7 +70,7 @@ const DESDE_HORA = "12:00";
 
 const PAUTA_CORRIDOS = "CORRIDOS";
 
-const sqlCalcularNovedades = `SELECT calcular_novedades_vigentes('${DESDE_AÑO}-01-01','${HASTA_AÑO}-12-31')`;
+const sqlCalcularNovedades = `CALL actualizar_novedades_vigentes('${DESDE_AÑO}-01-01'::date,'${HASTA_AÑO}-12-31'::date)`;
 
 type Credenciales = {username: string, password: string};
 type UsuarioConCredenciales = ctts.Usuario & {credenciales: Credenciales};
@@ -117,6 +116,7 @@ describe("connected", function(){
                         `update fechas set laborable = false, repite = true, inamovible = true where fecha in (
                             '2000-05-01');
                         `,
+                        `update annios set horario_habitual_desde = '10:00', horario_habitual_hasta = '17:00', cod_nov_habitual = 999 where annio = '${DESDE_AÑO}'`,
                         `select annio_abrir('${DESDE_AÑO}')`,
                         `update parametros set fecha_actual = '${FECHA_ACTUAL.toYmd()}' where unico_registro`,
                         `insert into sectores (sector, nombre_sector, pertenece_a) values
@@ -748,29 +748,15 @@ describe("connected", function(){
             })
         });
         describe("horarios", function(){
-            async function enNuevaPersonaConLunesDificil(numero: number, opciones: {},
-                probar: (persona: ctts.Persona, mas:{usuario: UsuarioConCredenciales, sesion:EmulatedSession<AppSiper>}) => Promise<void>
-            ){
-                return enNuevaPersona(numero, opciones, async (persona, mas)=>{
-                    const cod_nov = COD_TELETRABAJO;
-                    const {idper} = persona;
-                    const dds = 1;
-                    await rrhhAdminSession.saveRecord(ctts.horarios, {desde:date.iso('2000-06-12'), cod_nov, idper, dds}, 'new');
-                    await rrhhAdminSession.saveRecord(ctts.horarios, {desde:date.iso('2000-02-04'), cod_nov, idper, dds}, 'new');
-                    await rrhhAdminSession.saveRecord(ctts.horarios, {desde:date.iso('2000-08-16'), cod_nov, idper, dds}, 'new');
-                    await rrhhAdminSession.saveRecord(ctts.horarios, {desde:date.iso('2000-04-08'), cod_nov, idper, dds}, 'new');
-                    return probar(persona, mas)
-                });
-            }
-            it.skip("mezclo teletrabajo con presencial", async function(){
+            it("mezclo teletrabajo con presencial", async function(){
                 /// TODO: Hay que reescribir esto por completo para verlo bien.
                 await enNuevaPersona(4, {}, async ({idper}) => {
                     for (var dds of [1,3,4]) {
                         await rrhhAdminSession.saveRecord(
                             ctts.horarios, 
-                            {desde:date.iso('2000-01-01'), dds, idper, cod_nov:COD_DIAGRAMADO},
-                            'update',
-                            [idper, dds, 2000, date.iso('2000-01-01')]
+                            {desde:date.iso('2000-01-01'), hasta:date.iso('2000-12-31'), dds, idper, trabaja:true, hora_desde:'09:00', hora_hasta:'16:00', cod_nov:COD_DIAGRAMADO},
+                            'new',
+                            // [idper, dds, 2000, date.iso('2000-01-01')]
                         );
                     }
                     await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -780,107 +766,6 @@ describe("connected", function(){
                         {fecha:date.iso('2000-01-06'), cod_nov:COD_DIAGRAMADO, idper},
                         {fecha:date.iso('2000-01-07'), cod_nov:COD_PRESENTE  , idper},
                     ], 'all', {fixedFields:{idper, fecha:['2000-01-03','2000-01-07']}})
-                })
-            })
-            it.skip("se ajustan las fechas hasta al agregar un horario", async function(){
-                await enNuevaPersonaConLunesDificil(30, {}, async (persona, {}) => {
-                    await rrhhSession.tableDataTest('horarios', [
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-01-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_PRESENTE},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-02-04'), hasta:date.iso('2000-04-07'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-04-08'), hasta:date.iso('2000-06-11'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-06-12'), hasta:date.iso('2000-08-15'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-08-16'), hasta:date.iso('2000-12-31'), cod_nov:COD_TELETRABAJO},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'dds', value:1}]})
-                })
-            })
-            it.skip("se ajustan las fechas hasta al borrar un horario del medio", async function(){
-                await enNuevaPersona(31, {}, async (persona, {}) => {
-                    await server.inDbClient(ADMIN_REQ, client => client.query(
-                        "delete horarios where idper = $1, desde = $2", [persona.idper, date.iso('2000-04-08')]
-                    ).execute())
-                    await rrhhSession.tableDataTest('horarios', [
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-01-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_PRESENTE},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-02-04'), hasta:date.iso('2000-06-11'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-06-12'), hasta:date.iso('2000-08-15'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-08-16'), hasta:date.iso('2000-12-31'), cod_nov:COD_TELETRABAJO},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'dds', value:1}]})
-                })
-            })
-            it.skip("se ajustan las fechas hasta al borrar un horario del final", async function(){
-                await enNuevaPersona(32, {}, async (persona, {}) => {
-                    await server.inDbClient(ADMIN_REQ, client => client.query(
-                        "delete horarios where idper = $1, desde = $2", [persona.idper, date.iso('2000-08-16')]
-                    ).execute())
-                    await rrhhSession.tableDataTest('horarios', [
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-01-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_PRESENTE},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-02-04'), hasta:date.iso('2000-04-07'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-04-08'), hasta:date.iso('2000-06-11'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-06-12'), hasta:date.iso('2000-12-31'), cod_nov:COD_TELETRABAJO},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'dds', value:1}]})
-                })
-            })
-            it.skip("se ajustan las fechas hasta al adelantar un horario en su mismo lugar", async function(){
-                await enNuevaPersona(33, {}, async (persona, {}) => {
-                    var {idper} = persona;
-                    await rrhhAdminSession.saveRecord(ctts.horarios, 
-                        {desde:date.iso('2000-04-04'), cod_nov:COD_PRESENTE, idper, dds:1}, 'update', 
-                        [idper, 1, 2000, date.iso('2000-04-08')] // RESPETAR EL ORDEL DE LA pk
-                    );
-                    await rrhhSession.tableDataTest('horarios', [
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-01-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_PRESENTE},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-02-04'), hasta:date.iso('2000-04-03'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-04-04'), hasta:date.iso('2000-06-11'), cod_nov:COD_PRESENTE},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-06-12'), hasta:date.iso('2000-08-15'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-08-16'), hasta:date.iso('2000-12-31'), cod_nov:COD_TELETRABAJO},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'dds', value:1}]})
-                })
-            })
-            it.skip("se ajustan las fechas hasta al atrasar un horario en su mismo lugar", async function(){
-                await enNuevaPersona(33, {}, async (persona, {}) => {
-                    var {idper} = persona;
-                    await rrhhAdminSession.saveRecord(ctts.horarios, 
-                        {desde:date.iso('2000-04-13'), cod_nov:COD_PRESENTE, idper, dds:1}, 'update', 
-                        [idper, 1, 2000, date.iso('2000-04-08')] // RESPETAR EL ORDEL DE LA pk
-                    );
-                    await rrhhSession.tableDataTest('horarios', [
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-01-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_PRESENTE},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-02-04'), hasta:date.iso('2000-04-12'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-04-13'), hasta:date.iso('2000-06-11'), cod_nov:COD_PRESENTE},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-06-12'), hasta:date.iso('2000-08-15'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-08-16'), hasta:date.iso('2000-12-31'), cod_nov:COD_TELETRABAJO},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'dds', value:1}]})
-                })
-            })
-            it.skip("se ajustan las fechas hasta al cambiar un horario de lugar", async function(){
-                await enNuevaPersona(33, {}, async (persona, {}) => {
-                    var {idper} = persona;
-                    await rrhhAdminSession.saveRecord(ctts.horarios, 
-                        {desde:date.iso('2000-03-06'), cod_nov:COD_PRESENTE, idper, dds:1}, 'update', 
-                        [idper, 1, 2000, date.iso('2000-06-16')] // RESPETAR EL ORDEL DE LA pk
-                    );
-                    await rrhhSession.tableDataTest('horarios', [
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-01-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_PRESENTE},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-02-04'), hasta:date.iso('2000-03-05'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-03-06'), hasta:date.iso('2000-04-07'), cod_nov:COD_PRESENTE},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-04-08'), hasta:date.iso('2000-08-15'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-08-16'), hasta:date.iso('2000-12-31'), cod_nov:COD_TELETRABAJO},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'dds', value:1}]})
-                })
-            })
-            it.skip("se ajustan las fechas hasta al cambiar un horario al último lugar", async function(){
-                await enNuevaPersona(33, {}, async (persona, {}) => {
-                    var {idper} = persona;
-                    await rrhhAdminSession.saveRecord(ctts.horarios, 
-                        {desde:date.iso('2000-10-20'), cod_nov:COD_PRESENTE, idper, dds:1}, 'update', 
-                        [idper, 1, 2000, date.iso('2000-06-16')] // RESPETAR EL ORDEL DE LA pk
-                    );
-                    await rrhhSession.tableDataTest('horarios', [
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-01-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_PRESENTE},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-02-04'), hasta:date.iso('2000-04-07'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-04-08'), hasta:date.iso('2000-08-15'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-08-16'), hasta:date.iso('2000-10-19'), cod_nov:COD_TELETRABAJO},
-                        {idper: persona.idper, dds:1, desde:date.iso('2000-10-20'), hasta:date.iso('2000-12-31'), cod_nov:COD_PRESENTE},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}, {fieldName:'dds', value:1}]})
                 })
             })
         })
@@ -984,7 +869,7 @@ describe("connected", function(){
                     var fechas = (await client.query(`select distinct fecha from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
                     await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
                     for(var row of fechas) {
-                        await client.query(`SELECT calcular_novedades_vigentes($1, $2)`, [row.fecha, row.fecha]).execute();
+                        await client.query(`CALL actualizar_novedades_vigentes($1::date, $2::date)`, [row.fecha, row.fecha]).execute();
                     }
                     const novedadesRecalculadasPorFecha = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
                     discrepances.showAndThrow(novedadesRecalculadasPorFecha, todasLasNovedadesGeneradas);
@@ -992,7 +877,7 @@ describe("connected", function(){
                     var cuits = (await client.query(`select distinct idper from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
                     await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
                     for(var row of cuits) {
-                        await client.query(`SELECT calcular_novedades_vigentes_idper('${DESDE_AÑO}-01-01', '${HASTA_AÑO}-12-31', $1)`, [row.idper]).execute();
+                        await client.query(`CALL actualizar_novedades_vigentes_idper('${DESDE_AÑO}-01-01'::date, '${HASTA_AÑO}-12-31'::date, $1)`, [row.idper]).execute();
                     }
                     const novedadesRecalculadasPorCuit = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
                     benchmark.duracion = Number(

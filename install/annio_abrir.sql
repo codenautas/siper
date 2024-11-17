@@ -9,7 +9,7 @@ BEGIN
   UPDATE annios 
     SET abierto = true
     WHERE annio = p_annio;
-  PERFORM calcular_novedades_vigentes(make_date(p_annio,1,1), make_date(p_annio,12,31));
+  CALL actualizar_novedades_vigentes(make_date(p_annio,1,1), make_date(p_annio,12,31));
 END;
 $BODY$;
 

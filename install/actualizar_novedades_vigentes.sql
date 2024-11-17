@@ -6,7 +6,7 @@ $CREATOR$
 DECLARE
   v_sql text := $SQL_CON_TAG$
 
-CREATE OR REPLACE FUNCTION calcular_novedades_vigentes/*idper**_idper**idper*/(p_desde date, p_hasta date/*idper**, p_idper text**idper*/) RETURNS void
+CREATE OR REPLACE PROCEDURE actualizar_novedades_vigentes/*idper**_idper**idper*/(p_desde date, p_hasta date/*idper**, p_idper text**idper*/)
   SECURITY DEFINER
   LANGUAGE PLPGSQL
 AS

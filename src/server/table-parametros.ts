@@ -10,9 +10,6 @@ export function parametros(context: TableContext): TableDefinition {
         fields:[
             {name: 'unico_registro'              , typeName: 'boolean', editable: false                                },
             {name: 'fecha_actual'                , typeName: 'date'   , nullable: false                                }, // solo se va a cambiar en modo test
-            {name: 'horario_habitual_desde'      , typeName: 'time'                                                    },
-            {name: 'horario_habitual_hasta'      , typeName: 'time'                                                    },
-            {name: 'cod_nov_habitual'            , typeName: 'text', title: 'cód nov', description: 'código de novedad'},
         ],
         primaryKey: ['unico_registro'],
         foreignKeys: [
