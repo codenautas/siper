@@ -13,12 +13,12 @@ $BODY$
   SELECT 
 -- ¡ATENCIÓN! NO MODIFICAR MANUALMENTE ESTA FUNCIÓN FUE GENERADA CON EL SCRIPT novedades_calculadas.sql
 -- Otras funciones que comienzan con el nombre novedades_calculadas se generaron junto a esta!
-      idper, ficha, fecha, 
+      idper, fecha, 
       COALESCE(
         CASE WHEN trabajable OR nr_corridos THEN nr_cod_nov ELSE null END, -- si la última novedad registrada no es una anulación
         CASE WHEN not trabajable THEN null WHEN tiene_horario_declarado THEN h_cod_nov ELSE cod_nov_habitual END
       ) as cod_nov, 
-      null as ent_fich, null as sal_fich, sector, annio,
+      ficha, null as ent_fich, null as sal_fich, sector, annio,
       con_novedad AND CASE WHEN trabajable OR nr_corridos THEN true ELSE false END as con_novedad, trabajable, detalles
     FROM (
       SELECT p.idper, p.ficha, f.fecha, 
