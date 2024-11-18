@@ -44,6 +44,8 @@ $BODY$
               ORDER BY nr.idr DESC LIMIT 1
           ) nr ON true
         WHERE f.fecha BETWEEN p_desde AND p_hasta
+          AND f.fecha <= COALESCE(p.fecha_egreso, '2999-12-31'::date)
+          AND f.fecha >= p.registra_novedades_desde 
           /*idper**AND p.idper = p_idper**idper*/
       ) x
 $BODY$;

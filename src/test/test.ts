@@ -4,7 +4,7 @@ import { AppSiper } from '../server/app-principal';
 
 import {promises as fs} from 'fs'
 
-import { startServer, EmulatedSession, expectError, loadLocalFile, saveLocalFile, benchmarksSave } from "./probador-serial";
+import { startServer, EmulatedSession, expectError, loadLocalFile, saveLocalFile, benchmarksSave, someTestFails } from "./probador-serial";
 
 import * as ctts from "../common/contracts"
 
@@ -670,6 +670,13 @@ describe("connected", function(){
                 }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_CON_NOVEDAD);
             })
         })
+        it("genera novedades desde registra_novedades_desde", async function(){
+            await enNuevaPersona(this.test?.title!, {registra_novedades_desde: date.iso('2000-01-04')}, async ({idper}) => {
+                await rrhhSession.tableDataTest('novedades_vigentes', [
+                    {fecha:date.iso('2000-01-04'), cod_nov:COD_PRESENTE, idper},
+                ], 'all', {fixedFields:{idper, fecha:['2000-01-01','2000-01-04']}})
+            })
+        })
         describe("días corridos", function(){
             it("se generan novedades en los fines de semana", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
@@ -826,8 +833,10 @@ describe("connected", function(){
     })
     after(async function(){
         var error: Error|null = null;
-        if (!borradoExitoso || fallaEnLaQueQuieroOmitirElBorrado) {
+        if (!borradoExitoso || fallaEnLaQueQuieroOmitirElBorrado || someTestFails(this)) {
             console.log('se saltea la comprobación final porque no se pudo borrar las pruebas de la corrida anterior')
+            // console.log('test', this.test)
+            // console.log('this', this)
         } else {
             this.timeout(TIMEOUT_SPEED * 12);
             try {
@@ -852,6 +861,20 @@ describe("connected", function(){
                     benchmarkDelDia = emptyBenchmarkDay;
                 }
                 const comienzo = new Date();
+                async function avisarDiferencias(data:Record<string, string>){
+                    const DIR_NAME = "local-test-results";
+                    await fs.mkdir(DIR_NAME, {recursive:true});
+                    var nombres = Object.keys(data);
+                    if (nombres.length != 2) {
+                        throw new Error("avisarDiferencias usado con un objeto que no tiene exactamente dos atributos");
+                    }
+                    if (data[nombres[0]] != data[nombres[1]]) {
+                        console.error('ERROR DIFERENCIA DE DATOS ENTRE ',nombres.join(' y '));
+                        await Promise.all(nombres.map(n =>
+                            fs.writeFile(`${DIR_NAME}/${n}.txt`,data[n],'utf8')
+                        ))
+                    }
+                }
                 await server.inDbClient(ADMIN_REQ, async client => {
                     const {row: tamannio} = await client.query(`select count(*) as personas from personas where ${IDPER_DE_PRUEBA}`).fetchUniqueRow();
                     const benchmark = {
@@ -862,14 +885,12 @@ describe("connected", function(){
                     await client.query(sqlCalcularNovedades).execute();
                     console.log('calculando novedadesRecalculadasEncima')
                     const novedadesRecalculadasEncima = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
-                    await fs.writeFile('local-recalculadas.json',novedadesRecalculadasEncima,'utf8')
-                    await fs.writeFile('local-generadas.json',todasLasNovedadesGeneradas,'utf8')
-                    discrepances.showAndThrow(novedadesRecalculadasEncima, todasLasNovedadesGeneradas);
+                    avisarDiferencias({novedadesRecalculadasEncima, todasLasNovedadesGeneradas});
                     console.log('calculando novedadesRecalculadasEnBlanco')
                     await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
                     await client.query(sqlCalcularNovedades).execute();
                     const novedadesRecalculadasEnBlanco = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
-                    discrepances.showAndThrow(novedadesRecalculadasEnBlanco, todasLasNovedadesGeneradas)
+                    avisarDiferencias({novedadesRecalculadasEnBlanco, todasLasNovedadesGeneradas})
                     console.log('calculando novedadesRecalculadasPorFecha')
                     var fechas = (await client.query(`select distinct fecha from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
                     await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
@@ -877,7 +898,7 @@ describe("connected", function(){
                         await client.query(`CALL actualizar_novedades_vigentes($1::date, $2::date)`, [row.fecha, row.fecha]).execute();
                     }
                     const novedadesRecalculadasPorFecha = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
-                    discrepances.showAndThrow(novedadesRecalculadasPorFecha, todasLasNovedadesGeneradas);
+                    avisarDiferencias({novedadesRecalculadasPorFecha, todasLasNovedadesGeneradas});
                     console.log('calculando novedadesRecalculadasPorCuit')
                     var cuits = (await client.query(`select distinct idper from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
                     await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
@@ -893,7 +914,7 @@ describe("connected", function(){
                     benchmarkDelDia.tiempos.push(benchmark); 
                     await saveLocalFile(benchmarkDelDia);
                     await benchmarksSave(benchmarkDelDia);
-                    discrepances.showAndThrow(novedadesRecalculadasPorCuit, todasLasNovedadesGeneradas)
+                    avisarDiferencias({novedadesRecalculadasPorCuit, todasLasNovedadesGeneradas})
                 })
             } catch(err) {
                 console.log("****************** ERROR AL FINAL VERIFICANDO QUE SE PUEDA REGENERAR *******************")
