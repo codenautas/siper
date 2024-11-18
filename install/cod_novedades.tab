@@ -19,7 +19,7 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|con_horario|con_novedad|c
 38|Tarde+||||True|||True|||
 41|Feriado religioso||||True|||True||True|True
 59|Abandono de servicio (Sin fichada de salida o Ficho antes)||||True|||True|||
-85|Autorizado a no fichar||||True|||True|||True
+85|Autorizado a no fichar||||True||True||||True
 89|Encuestador y/o supervisor||||True|||True|||True
 99|Presente (justificado por personal)||||True|||True|||True
 101|Teletrabajo Diagramado||True||True||True|||True|True
@@ -30,7 +30,7 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|con_horario|con_novedad|c
 121|CC 09/10 Art. 67 c Tramites particulares|U|||True|||True|||True
 124|CC 09/10 Art. 67 d Mudanza||||True|||True|||True
 126|Art 30 ter Licencia esp.l para controles de prev.||||True|||True|||True
-140|Autoridades superiores|P|||True|||True|||True
+140|Autoridades superiores|P|||True||True||||True
 154|Ley 6025, Art. 12. Licencia con goce de haberes por nacimiento de hijo/a (30 corridos - no gestante)||||True|||True|||True
 156|Fallecimiento de Conyuge/Padre/Madre/Hno/Nieto||||True|||True|||True
 158|Violencia de Genero||||True|||True|||True

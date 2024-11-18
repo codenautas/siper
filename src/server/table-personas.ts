@@ -60,7 +60,8 @@ export function personas(context: TableContext): TableDefinition {
         detailTables: [
             {table:'novedades_vigentes'   , fields:[idper.name], abr:'N'},
             {table:'novedades_registradas', fields:[idper.name], abr:'R'},
-            {table:'nov_per'              , fields:[idper.name], abr:'#'}
+            {table:'fichadas'             , fields:[idper.name], abr:'F'},
+            {table:'nov_per'              , fields:[idper.name], abr:'#'},
         ]
     };
 }
