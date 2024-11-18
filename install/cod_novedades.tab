@@ -20,7 +20,7 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|con_horario|con_novedad|c
 41|Feriado religioso||||True|||True||True|True
 59|Abandono de servicio (Sin fichada de salida o Ficho antes)||||True|||True|||
 85|Autorizado a no fichar||||True||True||||True
-89|Encuestador y/o supervisor||||True|||True|||True
+89|Encuestador y/o supervisor||||True||True||||True
 99|Presente (justificado por personal)||||True|||True|||True
 101|Teletrabajo Diagramado||True||True||True|||True|True
 102|AI Ausente injustificado||||True|||True|||True
@@ -102,3 +102,10 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|con_horario|con_novedad|c
 265|Tramites Particulares- Modalidades||||True|||True|||
 266|Tramites por Adopción||||True|||True|||
 267|Transferencia en trámite||||True|||True|||True
+268|Inspector||||True||True||||
+269|Abandono de Servicio(Ficho antes)|||||True|True||||
+270|Cargo de mayor jerarquia||||True||True||||
+271|Abandono de Servicio (Sin fichada de salida)|||||True|True||||
+272|Censista||||True||True||||
+273|Abandono de servicio (Sin fichada de salida)|||||True|True||||
+274|Comision por capacitacion||||True||True||||
