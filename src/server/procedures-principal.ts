@@ -147,14 +147,16 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     },
     {
         action: 'personas_novedad_actual',
-        parameters: [],
-        coreFunction: async function(context: ProcedureContext, _params:any){
+        parameters: [
+            {name:'fecha',    typeName:'date'}
+        ],
+        coreFunction: async function(context: ProcedureContext, params:any){
             const info = await context.client.query(
-                `select idper, cuil, pe.ficha, idmeta4, apellido, nombres, pe.sector, cod_nov, novedad 
+                `select pe.idper, cuil, pe.ficha, idmeta4, apellido, nombres, pe.sector, cod_nov, novedad 
                     from personas pe
-                    left join novedades_vigentes nv using(idper)
-                    left join cod_novedades cn using(cod_nov)
-                    left join parametros pa on pa.fecha_actual = nv.fecha`
+                    left join novedades_vigentes nv on nv.idper = pe.idper and nv.fecha = $1
+                    left join cod_novedades cn using(cod_nov)`
+                , [params.fecha]
             ).fetchAll();
             return info.rows
         }
@@ -185,7 +187,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         ],
         coreFunction: async function(context: ProcedureContext, _params:any){
             const info = await context.client.query(
-                `select idper, sector, current_date as fecha
+                `select idper, sector, current_date as fecha, usuario
                     from usuarios left join personas using (idper)
                     where usuario = $1`,
                 [context.username]

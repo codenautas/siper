@@ -4,7 +4,7 @@ SET search_path = siper; SET ROLE siper_owner;
 select * from novedades_importadas limit 10;
 */
 
-/* -- NO ELIMINAR ESTE BLOQUE
+-- /* -- NO ELIMINAR ESTE BLOQUE
 delete from fichadas;
 delete from novedades_vigentes;
 delete from novedades_registradas;
@@ -49,7 +49,7 @@ select *
 insert into novedades_registradas (idper, cod_nov, desde, hasta, detalles)
   select idper, cod_nov, min(desde), max(hasta), case when con_detalles then 'migración' else null end
     from (
-      select p.idper, fecha, x.cod_nov, c.novedad, con_detalles,
+      select p.idper, x.cod_nov, c.novedad, con_detalles,
              min(fecha) over (partition by idper, x.cod_nov order by fecha) as desde,
              max(fecha) over (partition by idper, x.cod_nov order by fecha) as hasta,
              ROW_NUMBER() OVER (ORDER BY idper, fecha) - ROW_NUMBER() OVER (PARTITION BY idper, x.cod_nov ORDER BY fecha) AS grupo,
@@ -58,6 +58,6 @@ insert into novedades_registradas (idper, cod_nov, desde, hasta, detalles)
             inner join cod_novedades c on c.cod_nov = x.cod_nov
           order by idper, fecha
       ) x
-    group by grupo, idper, fecha, cod_nov, novedad, con_detalles;
+    group by grupo, idper, cod_nov, novedad, con_detalles;
 
   
