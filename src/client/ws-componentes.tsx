@@ -277,7 +277,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                                 <span className="box-names">
                                     {p.apellido}, {p.nombres}
                                 </span>
-                                <span className="box-info"> {p.cod_nov} </span>
+                                <span className="box-info"> {p.cod_nov ? p.cod_nov : 'S/N' } </span>
                             </ListItemButton>
                         )}
                     </List>
