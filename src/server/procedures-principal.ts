@@ -187,8 +187,12 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         ],
         coreFunction: async function(context: ProcedureContext, _params:any){
             const info = await context.client.query(
-                `select idper, sector, current_date as fecha, usuario
-                    from usuarios left join personas using (idper)
+                `select idper, sector, current_date as fecha, usuario, 
+                        coalesce(p.apellido, u.apellido) as apellido,
+                        coalesce(p.nombres, u.nombre) as nombres,
+                        p.cuil,
+                        p.ficha
+                    from usuarios u left join personas p using (idper)
                     where usuario = $1`,
                 [context.username]
             ).fetchUniqueRow();

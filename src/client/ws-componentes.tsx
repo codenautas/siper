@@ -194,13 +194,13 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 }
 
 // @ts-ignore
-type ProvisorioPersonas = {sector:string, idper:string, apellido:string, nombres:string, cuil:string, ficha:string, idmeta4:string};
+type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string};
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, nivel:number}
 // @ts-ignore
 type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
-type IdperFuncionCambio = (idper:string)=>void
+type IdperFuncionCambio = (persona:ProvisorioPersonas)=>void
 
 function SearchBox(props: {onChange:(newValue:string)=>void}){
     var [textToSearch, setTextToSearch] = useState("");
@@ -275,7 +275,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                 <AccordionDetails>
                     <List>
                         {abanicoPersonas[s.sector]?.map(p=>
-                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p.idper)}} className={`${p.idper == idper ? ' seleccionado' : ''}`}>
+                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p as ProvisorioPersonas)}} className={`${p.idper == idper ? ' seleccionado' : ''}`}>
                                 <span className="box-id persona-id">{p.idper}</span>
                                 <span className="box-names">
                                     {p.apellido}, {p.nombres}
@@ -401,7 +401,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
     </Componente>
 }
 
-type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate, usuario:string};
+type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate, usuario:string, apellido:string, nombres:string, cuil:string, ficha:string};
 
 declare module "frontend-plus" {
     interface BEAPI {
@@ -432,7 +432,7 @@ function Persona(props:{conn: Connector, idper:string, fecha:RealDate}){
 function Pantalla1(props:{conn: Connector}){
     const {conn} = props;
     const [infoUsuario, setInfoUsuario] = useState({} as ProvisorioInfoUsuario);
-    const [idper, setIdper] = useState("");
+    const [persona, setPersona] = useState({} as ProvisorioPersonas);
     const [cod_nov, setCodNov] = useState("");
     const [detalles, setDetalles] = useState("");
     const [conDetalles, setConDetalles] = useState(false);
@@ -440,10 +440,11 @@ function Pantalla1(props:{conn: Connector}){
     const [hasta, setHasta] = useState<RealDate>(date.today());
     const [registrandoNovedad, setRegistrandoNovedad] = useState(false);
     const [error, setError] = useState<Error|null>(null);
+    const {idper} = persona
     useEffect(function(){
         // @ts-ignore
         conn.ajax.info_usuario().then(function(infoUsuario:ProvisorioInfoUsuario){
-            setIdper(infoUsuario.idper);
+            setPersona(infoUsuario as ProvisorioPersonas);
             setInfoUsuario(infoUsuario);
         }).catch(logError)
     },[])
@@ -470,14 +471,24 @@ function Pantalla1(props:{conn: Connector}){
         : infoUsuario.idper == null ?
             <Typography>El usuario <b>{infoUsuario.usuario}</b> no tiene una persona asociada</Typography>
         : <Paper className="componente-pantalla-1">
-            <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={idper=>setIdper(idper)}/>
+            <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)}/>
             <Paper>
-                <Box>
-                    {idper}
-                </Box>
-                <Box>
-                    {cod_nov}
-                </Box>
+                <div className="box-line">
+                    <span className="box-id">
+                        {idper}
+                    </span>
+                    <span className="box-names">
+                        {persona.apellido}, {persona.nombres}
+                    </span>
+                </div>
+                <div className="box-line">
+                    <span className="box-names">
+                        CUIL: {persona.cuil}
+                    </span>
+                    <span className="box-names">
+                        FICHA: {persona.ficha}
+                    </span>
+                </div>
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta}/>
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
                 <Box>

@@ -249,11 +249,11 @@ export const personas_novedad_actual = {
         cod_nov: is.string,
         novedad: is.nullable.string,
         idper: is.string,
-        cuil: is.nullable.string,
+        cuil: is.string,
         ficha: is.nullable.string,
         idmeta4: is.nullable.string,
-        apellido: is.nullable.string,
-        nombres: is.nullable.string,
+        apellido: is.string,
+        nombres: is.string,
         sector: is.string,
     })
 }
