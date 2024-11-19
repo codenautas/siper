@@ -173,9 +173,6 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         onClick={() => {
                             if (!dia.dia || !props.onFecha || !props.onFechaHasta) return;
                             const selectedDate = date.ymd(periodo.annio, periodo.mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia.dia);
-                            const hoy = date.today();
-                            if (selectedDate < hoy) return;
-                        
                             if (!fechaHasta || selectedDate <= fechaHasta) {
                                 props.onFecha(selectedDate);
                                 props.onFechaHasta(selectedDate);
