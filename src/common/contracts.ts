@@ -279,6 +279,25 @@ export const calendario_persona = {
 
 export type CalendarioResult = DefinedType<typeof calendario_persona.result>
 
+export const horario_semana_vigente = {
+    procedure: 'horario_semana_vigente',
+    parameters: is.object({
+        idper: is.string,
+        fecha: is.string,
+    }),
+    result: is.object({
+        dds: is.number,
+        trabaja: is.boolean,
+        desde: is.Date,
+        hasta: is.Date,
+        hora_desde: is.nullable.string,
+        hora_hasta: is.nullable.string,
+        cod_nov: is.nullable.string,
+    }),
+};
+
+export type HorarioSemanaVigenteResult = DefinedType<typeof horario_semana_vigente.result>;
+
 export const historico_persona = {
     procedure: 'historico_persona',
     parameters: is.object({

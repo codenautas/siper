@@ -28,7 +28,7 @@ import {
 
 import { date, RealDate } from "best-globals";
 
-import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult } from "../common/contracts"
+import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, HorarioSemanaVigenteResult } from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 
 export function logError(error:Error){
@@ -316,20 +316,34 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string}){
 
 function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     // datos de ejemplo, TODO traerlos de la base
-    const {fecha} = props
-    const desdeFecha = fecha.sub({days:14});
-    const hastaFecha = fecha.add({days:34});
-    const horario = [
-        {dds:0, trabaja:false, hora_desde:null, hora_hasta:null, cod_nov:null},
-        {dds:1, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-        {dds:2, trabaja:true , hora_desde:'10:00', hora_hasta:'17:00', cod_nov:1},
-        {dds:3, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-        {dds:4, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-        {dds:5, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-        {dds:6, trabaja:false, hora_desde:null, hora_hasta:null, cod_nov:null},
-    ]
+    const {fecha, idper, conn} = props
+    const [horario, setHorario] = useState<HorarioSemanaVigenteResult[]>([]);
+    // const desdeFecha = fecha.sub({days:14});
+    // const hastaFecha = fecha.add({days:34});
+    // const horario = [
+    //     {dds:0, trabaja:false, hora_desde:null, hora_hasta:null, cod_nov:null},
+    //     {dds:1, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
+    //     {dds:2, trabaja:true , hora_desde:'10:00', hora_hasta:'17:00', cod_nov:1},
+    //     {dds:3, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
+    //     {dds:4, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
+    //     {dds:5, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
+    //     {dds:6, trabaja:false, hora_desde:null, hora_hasta:null, cod_nov:null},
+    // ]
+
+    useEffect(function(){
+        setHorario([])
+        if (idper != null) {
+            conn.ajax.horario_semana_vigente({ idper, fecha }).then(result => {
+                setHorario(result);
+            }).catch(logError);
+        }
+    },[idper, fecha])
+
+    const desdeFecha = horario[0]?.desde ?  (horario[0].desde as RealDate).toDmy() : '';
+    const hastaFecha = horario[0]?.hasta ? (horario[0].hasta as RealDate).toDmy() : '';
+    
     return <Componente componentType="horario">
-        <div>Horario vigente del {desdeFecha.toDmy()} al {hastaFecha.toDmy()}.</div>
+        <div>Horario vigente del {desdeFecha} al {hastaFecha}.</div>
         {horario.filter(h => h.trabaja).map(h =>
             <div className={"linea-horario " + (h.trabaja ? "" : "tipo-dia-no-laborable")}>
                 {DDS[h.dds as 0|1|2|3|4|5|6].nombre} de {h.hora_desde} a {h.hora_hasta}, novedad {h.cod_nov}
@@ -414,6 +428,9 @@ declare module "frontend-plus" {
         personas_novedad_actual: (params:{
             fecha: Date
         }) => Promise<PersonasNovedadActualResult[]>;
+        horario_semana_vigente: (params:{
+
+        }) => Promise<any>;
     }
 }
 
