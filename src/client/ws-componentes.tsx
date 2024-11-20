@@ -353,7 +353,7 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
                     className={`${h.trabaja ? '' : 'tipo-dia-no-laborable'}`}
                 >
                     <div className="horario-dia">
-                        {DDS[h.dds as 0 | 1 | 2 | 3 | 4 | 5 | 6]?.abr || '-'}
+                        {DDS[h.dds as 0 | 1 | 2 | 3 | 4 | 5 | 6].nombre}
                     </div>
                     <div className="horario-dia">
                         {h.trabaja ? (
