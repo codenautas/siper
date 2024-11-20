@@ -343,12 +343,34 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     const hastaFecha = horario[0]?.hasta ? (horario[0].hasta as RealDate).toDmy() : '';
     
     return <Componente componentType="horario">
-        <div>Horario vigente del {desdeFecha} al {hastaFecha}.</div>
-        {horario.filter(h => h.trabaja).map(h =>
-            <div className={"linea-horario " + (h.trabaja ? "" : "tipo-dia-no-laborable")}>
-                {DDS[h.dds as 0|1|2|3|4|5|6].nombre} de {h.hora_desde} a {h.hora_hasta}, novedad {h.cod_nov}
-            </div>
-        )}
+        <div className="horario-vigente">
+            Horario vigente desde {desdeFecha} hasta {hastaFecha || 'la actualidad'}.
+        </div>
+        <div className="horario-contenedor">
+            {horario.map((h, index) => (
+                <div 
+                    key={index} 
+                    className={`${h.trabaja ? '' : 'tipo-dia-no-laborable'}`}
+                >
+                    <div className="horario-dia">
+                        {DDS[h.dds as 0 | 1 | 2 | 3 | 4 | 5 | 6]?.abr || '-'}
+                    </div>
+                    <div className="horario-dia">
+                        {h.trabaja ? (
+                            <>
+                                <div>{h.hora_desde || '-'}</div>
+                                <div>{h.hora_hasta || '-'}</div>
+                            </>
+                        ) : (
+                            <div>-</div>
+                        )}
+                    </div>
+                    <div className="horario-dia">
+                        {h.cod_nov || '-'}
+                    </div>
+                </div>
+            ))}
+        </div>
     </Componente>
 }
 
