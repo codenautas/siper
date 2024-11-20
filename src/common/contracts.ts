@@ -189,15 +189,33 @@ export type Usuario = DefinedType<typeof usuarios.description>
 export const capacitacion = {
     table: 'capacitaciones',
     description: is.object({
-        idper:      is.string,
-        año: is.number,
         editable: is.boolean
     },{
-        estudio: is.nullable.string,
+        capacitacion: is.nullable.string,
+        modalidad: is.nullable.string,
         tipo: is.nullable.string,
         puntos: is.nullable.number,
         duracion: is.nullable.string,
-        dictado_por: is.nullable.string
+        dictado_por: is.nullable.string,
+        fecha_inicio: is.nullable.Date,
+        fecha_fin: is.nullable.Date
+    })
+}
+
+export const per_capa = {
+    table: 'capacitaciones',
+    description: is.object({
+        idper:      is.string,
+        //año: is.number,
+        editable: is.boolean
+    },{
+        capacitacion: is.nullable.string,
+        modalidad: is.nullable.string,
+        tipo: is.nullable.string,
+        fecha_inicio: is.nullable.Date,
+        fecha_fin: is.nullable.Date,
+        inscripcion: is.nullable.string,
+        calificacion: is.nullable.string,
     })
 }
 
