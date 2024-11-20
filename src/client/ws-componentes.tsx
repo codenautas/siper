@@ -74,8 +74,8 @@ export const DDS = {
     6: {abr:'sáb', habil:true , nombre:'sábado'   },
 }
 
-function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void}){
-    const {conn, fecha, fechaHasta, idper} = props;
+function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, refreshCalendario?: boolean}){
+    const {conn, fecha, fechaHasta, idper, refreshCalendario} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     type Periodo = {mes:number, annio:number} 
     const [periodo, setPeriodo] = useState<Periodo>({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
@@ -112,7 +112,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 setCalendario(semanas)
             }).catch(logError)
         }
-    },[idper, periodo.mes, periodo.annio])
+    },[idper, periodo.mes, periodo.annio, refreshCalendario])
 
     const isInRange = (dia: number, mes: number, annio: number) => {
         if (!fecha || !fechaHasta || !Number.isInteger(dia) || dia <= 0) return false;
@@ -455,6 +455,7 @@ function Pantalla1(props:{conn: Connector}){
     const [registrandoNovedad, setRegistrandoNovedad] = useState(false);
     const [error, setError] = useState<Error|null>(null);
     const {idper} = persona
+    const [refreshCalendario, setRefreshCalendario] = useState(false);
     useEffect(function(){
         // @ts-ignore
         conn.ajax.info_usuario().then(function(infoUsuario:ProvisorioInfoUsuario){
@@ -472,11 +473,11 @@ function Pantalla1(props:{conn: Connector}){
             status:'new'
         }).then(function(result){
             console.log(result)
+            setRefreshCalendario(prev => !prev);
         }).catch(setError).finally(()=>setRegistrandoNovedad(false));
     }
     function handleCodNovChange(codNov: string, conDetalles: boolean) {
         setCodNov(codNov);
-        console.log(conDetalles)
         setConDetalles(conDetalles);
     }
 
@@ -503,7 +504,7 @@ function Pantalla1(props:{conn: Connector}){
                         FICHA: {persona.ficha}
                     </span>
                 </div>
-                <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta}/>
+                <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} refreshCalendario={refreshCalendario}/>
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
                 <Box>
                     <TextField
