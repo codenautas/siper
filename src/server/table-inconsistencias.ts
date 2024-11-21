@@ -54,6 +54,17 @@ export function inconsistencias(_context: TableContext): TableDefinition{
                      SELECT idper, 'ANULCONULT' pauta 
                        FROM personas
                        WHERE activo IS NULL AND fecha_egreso IS NOT NULL
+                     UNION
+                     select pe.idper, 'ANTCOMVSRE' pauta /*,q.fecha_actual-pe.para_antiguedad_relativa, q.antiguedad*/
+                       from personas pe 
+                       join(select idper, fecha_actual, sum(coalesce(hasta,fecha_actual)-desde) antiguedad
+                           /*case when hasta is null then current_date else hasta end*/
+                           from historial_contrataciones h
+                           join parametros p on unico_registro
+                           group by idper, fecha_actual
+	                         ) q1
+                       on pe.idper = q1.idper
+                       where pe.activo and q1.fecha_actual-pe.para_antiguedad_relativa <> /*IS DISTINCT FROM*/ q1.antiguedad
                      ) q
             )`
         }

@@ -69,6 +69,7 @@ const HASTA_HORA = "14:00";
 const DESDE_HORA = "12:00";
 
 const PAUTA_CORRIDOS = "CORRIDOS";
+const PAUTA_ANTCOMVSRE = "ANTCOMVSRE";
 
 const sqlCalcularNovedades = `CALL actualizar_novedades_vigentes('${DESDE_AÑO}-01-01'::date,'${HASTA_AÑO}-12-31'::date)`;
 
@@ -168,7 +169,7 @@ describe("connected", function(){
             {unico_registro:true, fecha_actual: FECHA_ACTUAL},
         ], 'all')
     })
-    async function crearNuevaPersona(nombre:string, opts:{registra_novedades_desde?:Date}): Promise<ctts.Persona>{
+    async function crearNuevaPersona(nombre:string, opts:{registra_novedades_desde?:Date, para_antiguedad_relativa?:Date}): Promise<ctts.Persona>{
         var numero = autoNumero++;
         var persona = {
             cuil: (10330010005 + numero*11).toString(),
@@ -176,6 +177,7 @@ describe("connected", function(){
             nombres: nombre,
             activo: true,
             registra_novedades_desde: opts.registra_novedades_desde ?? date.iso(`${DESDE_AÑO}-01-01`),
+            para_antiguedad_relativa: opts.para_antiguedad_relativa ?? date.iso(`${DESDE_AÑO}-01-01`),
         } as Partial<ctts.Persona>;
         var personaGrabada = await rrhhSession.saveRecord(
             ctts.personas,
@@ -197,13 +199,13 @@ describe("connected", function(){
         nombre: string, 
         opciones: {
             vacaciones?: number, tramites?: number, usuario?:{rol?:string, sector?:string, sesion?:boolean}, hoy?:Date, 
-            registra_novedades_desde?:Date,
+            registra_novedades_desde?:Date, para_antiguedad_relativa?:Date
         },
         probar: (persona: ctts.Persona, mas:{usuario: UsuarioConCredenciales, sesion:EmulatedSession<AppSiper>}) => Promise<void>
     ){
         var haciendo = 'inicializando';
         try {
-            var persona = await crearNuevaPersona(nombre, {registra_novedades_desde: opciones.registra_novedades_desde});
+            var persona = await crearNuevaPersona(nombre, {registra_novedades_desde: opciones.registra_novedades_desde, para_antiguedad_relativa: opciones.para_antiguedad_relativa});
             var {vacaciones, tramites, hoy} = opciones;
             await rrhhAdminSession.saveRecord(ctts.per_gru, {idper: persona.idper, clase: 'U', grupo: 'T'}, 'new');
             var usuario = null as unknown as UsuarioConCredenciales;
@@ -778,6 +780,25 @@ describe("connected", function(){
                         {fecha:date.iso('2000-01-06'), cod_nov:COD_DIAGRAMADO, idper},
                         {fecha:date.iso('2000-01-07'), cod_nov:COD_PRESENTE  , idper},
                     ], 'all', {fixedFields:{idper, fecha:['2000-01-03','2000-01-07']}})
+                })
+            })
+        });
+        describe("inconsistencias de personas", function(){
+            it("Activos, antiguedad por suma de rangos no coincide con días desde para_antiguedad_relativa hasta hoy", async function(){
+                await enNuevaPersona(this.test?.title!, {hoy:date.iso('2024-11-20'), para_antiguedad_relativa: date.iso('2021-10-31')}, async (persona, {}) => {
+                    await rrhhSession.saveRecord(
+                        ctts.historial_contrataciones,
+                        {idper:persona.idper, desde:date.iso('2015-05-05'), hasta:date.iso('2017-05-05'), computa_antiguedad:true},
+                        'new'
+                    );
+                    await rrhhSession.saveRecord(
+                        ctts.historial_contrataciones,
+                        {idper:persona.idper, desde:date.iso('2024-01-01'), computa_antiguedad:true},
+                        'new'
+                    );
+                    await rrhhSession.tableDataTest('inconsistencias', [
+                        {idper: persona.idper, pauta:PAUTA_ANTCOMVSRE},
+                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
                 })
             })
         })

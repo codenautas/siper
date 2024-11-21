@@ -219,6 +219,21 @@ export const per_capa = {
     })
 }
 
+export const historial_contrataciones = {
+    table: 'historial_contrataciones',
+    description: is.object({
+        idper: is.string,
+        desde: is.Date,
+    },{
+        hasta: is.Date,
+        computa_antiguedad:is.boolean,
+        organismo: is.string,
+        observaciones: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type Historial_contratacion = DefinedType<typeof historial_contrataciones.description>
+
 ////////////// PROCEDIMEINTOS
 
 export const si_cargara_novedad = {
