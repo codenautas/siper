@@ -1,3 +1,7 @@
+ @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap')
+$font-primary = 'Montserrat', sans-serif
+
+
 
 [placeholder]:empty::before 
   content attr(placeholder)
@@ -6,6 +10,13 @@
 [my-colname=annio]
   .number-separator
     display none
+
+.titulo-componente
+  font-family $font-primary
+  font-weight 600
+  line-height 1.6
+  font-size 1.2rem
+  margin 0 0 20px 0
 
 .my-grid td[my-colname*=nombre_sector]
   max-width 40em
@@ -60,8 +71,8 @@ div.tipo-dia-no-trabaja
 
 div.calendario-dia-seleccionado, div.seleccionado
   &:hover
-    background-color #eee488
-  background-color #fff4aa
+    background-color #A7C5EF
+  background-color #DFE9FC
   font-weight bold
 
 .calendario-extendido-mes
@@ -144,9 +155,10 @@ div.calendario-dia-seleccionado, div.seleccionado
   height 100% !important
 
 span.box-id
-  font-size 90%
+  font-size 0.8rem
   font-weight bold
-  min-width 3.5em
+  margin-right: 12px
+  color #3e3e3e
 
 .error-valor
   background-color #FAA
@@ -175,12 +187,24 @@ span.box-id
   align-content space-between
 
 .componente-pantalla-1
-  display flex
+  display grid
+  grid-template-columns repeat(4, 1fr)
+  gap 2%
+  margin-left auto
+  margin-right auto
+  @media (max-width: 960px)
+      grid-template-columns: repeat(2, 1fr)
+  @media (max-width: 600px)
+      grid-template-columns: repeat(1, 1fr)  
 
 .componente-codigo-novedades
   min-width 24em
+
+.contenedores-paper
+  padding 30px 22px
 
 .deshabilitado {
     opacity: 0.5;
     pointer-events: none;
 }
+

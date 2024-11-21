@@ -23,7 +23,10 @@ import {
     MenuItem, 
     Paper,
     Select, 
-    Toolbar, Typography, TextField
+    Toolbar, Typography, TextField,
+    Chip,
+    Tooltip,
+    Alert,
 } from "@mui/material";
 
 import { date, RealDate } from "best-globals";
@@ -32,9 +35,9 @@ import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNov
 import { strict as likeAr, createIndex } from "like-ar";
 
 export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string}){
-    return <Card className={"componente-" + props.componentType}>
+    return <Box className={"componente-" + props.componentType}>
         {props.children}
-    </Card>
+    </Box>
 }
 
 export function ValueDB(props:{value:any}){
@@ -194,14 +197,14 @@ type IdperFuncionCambio = (idper:string)=>void
 
 function SearchBox(props: {onChange:(newValue:string)=>void}){
     var [textToSearch, setTextToSearch] = useState("");
-    return <Paper sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+    return <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', border: '1px solid #A4A4A5', padding: '3px 5px', borderRadius: '10px', boxSizing: 'border-box', marginBottom:'15px' }}>
         <ICON.Search/>
-        <InputBase
+        <InputBase fullWidth placeholder="Buscar" style={{marginLeft: '10px'}}
             value = {textToSearch} 
             onChange = {(event)=>{ var newValue = event.target.value; props.onChange(newValue); setTextToSearch(newValue)}}
         />
         <Button onClick={_=>{props.onChange(""); setTextToSearch("")}}><ICON.BackspaceOutlined/></Button>
-    </Paper>;
+    </Box>;
 }
 
 function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof T)[]){
@@ -262,19 +265,21 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
         })
     },[]);
     return <Componente componentType="lista-personas">
+        <Paper className="contenedores-paper">
+        <h6 className="titulo-componente">Sectores y personal</h6>
         <SearchBox onChange={setFiltro}/>
         {sectores.filter(s => s.perteneceA[sector]).map(s =>
             filtro && !abanicoPersonas[s.sector]?.length ? null :
             <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector} >
-                <AccordionSummary id = {s.sector} expandIcon={<ICON.NavigationDown />} > 
-                    <span className="box-id" style={{paddingLeft: s.nivel+"em", paddingRight:"1em"}}> {s.sector} </span>  
+                <AccordionSummary id = {s.sector} expandIcon={<ICON.KeyboardArrowDown />} style={{alignItems: 'center'}}> 
+                    <span className="box-id" style={{paddingLeft: s.nivel+"%"}}>{s.sector}</span>   
                     {s.nombre_sector} 
                 </AccordionSummary>
                 <AccordionDetails>
                     <List>
                         {abanicoPersonas[s.sector]?.map(p=>
-                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p.idper)}} className={`${p.idper == idper ? ' seleccionado' : ''}`}>
-                                <span className="box-id"> {p.cod_nov} </span>
+                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p.idper)}} className={`${p.idper == idper ? ' seleccionado' : ''}`} style={{justifyContent: "space-between"}}>
+                                {/* <span className="box-id"> </span> */}
                                 <div style={{ display: 'flex', flexDirection: 'column'}}>
                                     <div style={{ display: 'flex', alignItems: 'center' }}>
                                         <span className="box-id persona-id">{p.idper}</span>
@@ -287,12 +292,16 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                                         <span>Ficha: {p.ficha}</span> - <span>CUIL: {p.cuil}</span>
                                     </div>
                                 </div>
+                                <Tooltip title="Novedad">
+                                <Chip label={p.cod_nov} /> 
+                                </Tooltip>
                             </ListItemButton>
                         )}
                     </List>
                 </AccordionDetails>
             </Accordion>
         )}
+        </Paper>
     </Componente>
 }
 
@@ -470,7 +479,7 @@ function Pantalla1(props:{conn: Connector}){
 
     return infoUsuario.sector == null ?  
             <CircularProgress />
-        : <Paper className="componente-pantalla-1">
+        : <Box className="componente-pantalla-1" sx={{ padding: 3 }}>
             <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} onIdper={idper=>setIdper(idper)}/>
             <Paper>
                 <Box>
@@ -502,7 +511,7 @@ function Pantalla1(props:{conn: Connector}){
                 : null}</Box>
             </Paper>
             <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov, conDetalles) => handleCodNovChange(codNov, conDetalles)}/>
-        </Paper>;
+        </Box>;
 }
 
 
