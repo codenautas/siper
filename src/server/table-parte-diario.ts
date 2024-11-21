@@ -38,7 +38,8 @@ export function parte_diario(_context: TableContext): TableDefinition{
                     inner join 
                         horarios h 
                         on h.idper = f.idper 
-                        and f.fecha between h.desde and COALESCE(h.hasta, '9999-12-31')
+                        and f.fecha >= h.desde 
+                        and (h.hasta IS NULL OR f.fecha <= h.hasta)
                     left join 
                         novedades_vigentes nv 
                         on nv.idper = f.idper 

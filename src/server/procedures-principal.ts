@@ -190,7 +190,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     FROM dias_semana d
                     LEFT JOIN horarios h 
                         ON h.dds = d.dds
-                        AND d.fecha BETWEEN h.desde AND COALESCE(h.hasta, '9999-12-31')
+                        AND d.fecha >= h.desde 
+                        AND (h.hasta IS NULL OR d.fecha <= h.hasta)
                         AND h.idper = $1
                     LEFT JOIN novedades_vigentes nv 
                         ON nv.fecha = d.fecha
