@@ -16,6 +16,7 @@ export function parte_diario(_context: TableContext): TableDefinition{
             sector,
             cod_nov,
             {name: 'fichada' , typeName: 'text'},
+            {name: 'horario' , typeName: 'text'},
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],
         softForeignKeys: [
@@ -32,7 +33,8 @@ export function parte_diario(_context: TableContext): TableDefinition{
                         f.fecha, 
                         nv.cod_nov,
                         p.sector,
-                        min(f.hora) || ' - ' || max(f.hora) as fichada
+                        min(f.hora) || ' - ' || max(f.hora) as fichada,
+                        h.hora_desde  || ' - ' || h.hora_hasta as horario
                     from 
                         fichadas f
                     inner join 
@@ -51,7 +53,9 @@ export function parte_diario(_context: TableContext): TableDefinition{
                         f.idper, 
                         f.fecha, 
                         nv.cod_nov, 
-                        p.sector
+                        p.sector,
+                        h.hora_desde, 
+                        h.hora_hasta
             )`
         }
     };
