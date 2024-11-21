@@ -1,30 +1,49 @@
 "use strict";
 
-import {TableDefinition, TableContext} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition} from "./types-principal";
 
-import {idper} from "./table-personas"
-import {año} from "./table-annios"
+export const capacitacion:FieldDefinition = {
+    name: 'capacitacion', 
+    typeName: 'text', 
+    postInput: 'upperWithoutDiacritics'
+}
+
+export const modalidad:FieldDefinition = {
+    name: 'modalidad', 
+    typeName: 'text', 
+    postInput: 'upperWithoutDiacritics'
+}
+
+export const tipo:FieldDefinition = {
+    name: 'tipo', 
+    typeName: 'text', 
+    postInput: 'upperWithoutDiacritics'
+}
+
+export const fecha_inicio:FieldDefinition = {
+    name: 'fecha_inicio', 
+    typeName: 'date', 
+}
 
 export function capacitaciones(context: TableContext): TableDefinition{
     var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
     return {
         name: 'capacitaciones',
         elementName: 'capacitacion',
-        title: 'Capacitaciones',
+        title: 'capacitaciones',
         editable: admin,
         fields: [
-            {...idper, editable:admin},
-            {...año, editable:false},
-            {name: 'estudio',typeName:'text' },
+            {name: 'capacitacion',typeName:'text' },
+            {name: 'modalidad',typeName:'text' },
             {name: 'tipo',typeName:'text' },
             {name: 'puntos',typeName:'integer' },
             {name: 'duracion',typeName:'text' },
             {name: 'dictado_por',typeName:'text' },
+            {name: 'fecha_inicio',typeName:'date' },
+            {name: 'fecha_fin',typeName:'date' },
         ],
-        primaryKey: [idper.name, año.name, 'estudio'],
+        primaryKey: ['capacitacion', 'modalidad', 'tipo', 'fecha_inicio'],
         foreignKeys: [
-            {references: 'personas', fields:[idper.name], onDelete:'cascade'},
-            {references: 'annios'  , fields: [año.name], onUpdate: 'no action'},
         ],
         constraints: [
         ]

@@ -147,14 +147,56 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     },
     {
         action: 'personas_novedad_actual',
-        parameters: [],
-        coreFunction: async function(context: ProcedureContext, _params:any){
+        parameters: [
+            {name:'fecha',    typeName:'date'}
+        ],
+        coreFunction: async function(context: ProcedureContext, params:any){
             const info = await context.client.query(
-                `select idper, cuil, pe.ficha, idmeta4, apellido, nombres, pe.sector, cod_nov, novedad 
+                `select pe.idper, cuil, pe.ficha, idmeta4, apellido, nombres, pe.sector, cod_nov, novedad 
                     from personas pe
-                    inner join novedades_vigentes nv using(idper)
-                    inner join cod_novedades cn using(cod_nov)
-                    inner join parametros pa on pa.fecha_actual = nv.fecha`
+                    left join novedades_vigentes nv on nv.idper = pe.idper and nv.fecha = $1
+                    left join cod_novedades cn using(cod_nov)`
+                , [params.fecha]
+            ).fetchAll();
+            return info.rows
+        }
+    },
+    {
+        action: 'horario_semana_vigente',
+        parameters: [
+            {name:'idper',  typeName:'text'},
+            {name:'fecha',  typeName:'date'}
+        ],
+        coreFunction: async function(context: ProcedureContext, params:any){
+            const info = await context.client.query(
+                    `WITH dias_semana AS (
+                        SELECT 
+                            f.fecha,
+                            f.dds
+                        FROM fechas f
+                        WHERE f.dds BETWEEN 1 AND 5
+                        AND f.fecha BETWEEN ($2::DATE - (EXTRACT(DOW FROM $2::DATE)::INTEGER - 1))
+                                        AND ($2::DATE + (5 - EXTRACT(DOW FROM $2::DATE)::INTEGER))
+                    )
+                    SELECT 
+                        d.fecha,
+                        h.dds,
+                        h.desde,
+                        h.hasta,
+                        h.hora_desde,
+                        h.hora_hasta,
+                        h.trabaja,
+                        nv.cod_nov
+                    FROM dias_semana d
+                    LEFT JOIN horarios h 
+                        ON h.dds = d.dds
+                        AND d.fecha BETWEEN h.desde AND COALESCE(h.hasta, '9999-12-31')
+                        AND h.idper = $1
+                    LEFT JOIN novedades_vigentes nv 
+                        ON nv.fecha = d.fecha
+                        AND nv.idper = $1
+                    ORDER BY d.fecha;`
+                , [params.idper, params.fecha]
             ).fetchAll();
             return info.rows
         }
@@ -185,8 +227,12 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         ],
         coreFunction: async function(context: ProcedureContext, _params:any){
             const info = await context.client.query(
-                `select idper, sector, current_date as fecha
-                    from usuarios left join personas using (idper)
+                `select idper, sector, current_date as fecha, usuario, 
+                        coalesce(p.apellido, u.apellido) as apellido,
+                        coalesce(p.nombres, u.nombre) as nombres,
+                        p.cuil,
+                        p.ficha
+                    from usuarios u left join personas p using (idper)
                     where usuario = $1`,
                 [context.username]
             ).fetchUniqueRow();

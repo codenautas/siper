@@ -14,9 +14,15 @@ export function annios(context:TableContext):TableDefinition{
         editable:admin,
         fields:[
             año,
-            {name: 'cerrado', typeName: 'boolean'},
-        ],
+            {name: 'abierto'                     , typeName: 'boolean', nullable: false, defaultValue: false, editable: false},
+            {name: 'horario_habitual_desde'      , typeName: 'time'                                                    },
+            {name: 'horario_habitual_hasta'      , typeName: 'time'                                                    },
+            {name: 'cod_nov_habitual'            , typeName: 'text', title: 'cód nov', description: 'código de novedad'},
+       ],
         primaryKey: [año.name],
+        constraints:[
+            {constraintType: 'check', consName: "annio abierto completo", expr: 'not abierto or (horario_habitual_desde is not null and horario_habitual_hasta is not null and cod_nov_habitual is not null)'}
+        ],
         detailTables:[
             {table: 'fechas'            , fields:[año.name], abr:'f'},
             {table: 'nov_gru'           , fields:[año.name], abr:'n', label:'novedades'},

@@ -10,6 +10,7 @@ import { cod_novedades        } from './table-cod_novedades';
 import { fechas               } from './table-fechas';
 import { clases               } from './table-clases';
 import { grupos               } from './table-grupos';
+import { situacion_revista    } from './table-situacion_revista';
 import { sectores             } from './table-sectores';
 import { personas             } from './table-personas';
 import { personas_importadas  } from './table-personas-importadas';
@@ -30,6 +31,7 @@ import { horarios             } from "./table-horarios";
 import { fichadas             } from "./table-fichadas";
 import { historial_contrataciones} from "./table-historial_contrataciones";
 import { capacitaciones       } from "./table-capacitaciones";
+import { per_capa       } from "./table-per_capa";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -78,9 +80,12 @@ export class AppSiper extends AppBackend{
                 ]},
                 {menuType:'menu', name:'config', label:'configurar', menuContent:[
                     {menuType:'table', name:'fechas'        },
+                    {menuType:'menu', name:'ref personas'   , description:'tablas referenciales de personas', menuContent:[
+                        {menuType:'table', name:'sectores'         },
+                        {menuType:'table', name:'situacion_revista', label: 'sit. revista' },
+                        {menuType:'table', name:'clases'           },
+                    ]},
                     {menuType:'table', name:'cod_novedades' },
-                    {menuType:'table', name:'sectores'      },
-                    {menuType:'table', name:'clases'        },
                     {menuType:'table', name:'usuarios'      },
                     {menuType:'table', name:'horarios'      },
                 ]}
@@ -131,6 +136,7 @@ export class AppSiper extends AppBackend{
             sectores             ,
             clases               ,
             grupos               ,
+            situacion_revista    ,
             personas             ,
             per_gru              ,
             nov_gru              ,
@@ -150,6 +156,7 @@ export class AppSiper extends AppBackend{
             fichadas             ,
             historial_contrataciones,
             capacitaciones       ,
+            per_capa             ,
         }
     }       
 }

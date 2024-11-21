@@ -13,12 +13,12 @@ $BODY$
   SELECT 
 -- ¡ATENCIÓN! NO MODIFICAR MANUALMENTE ESTA FUNCIÓN FUE GENERADA CON EL SCRIPT novedades_calculadas.sql
 -- Otras funciones que comienzan con el nombre novedades_calculadas se generaron junto a esta!
-      idper, ficha, fecha, 
+      idper, fecha, 
       COALESCE(
         CASE WHEN trabajable OR nr_corridos THEN nr_cod_nov ELSE null END, -- si la última novedad registrada no es una anulación
         CASE WHEN not trabajable THEN null WHEN tiene_horario_declarado THEN h_cod_nov ELSE cod_nov_habitual END
       ) as cod_nov, 
-      null as ent_fich, null as sal_fich, sector, annio,
+      ficha, null as ent_fich, null as sal_fich, sector, annio,
       con_novedad AND CASE WHEN trabajable OR nr_corridos THEN true ELSE false END as con_novedad, trabajable, detalles
     FROM (
       SELECT p.idper, p.ficha, f.fecha, 
@@ -30,7 +30,7 @@ $BODY$
           h.cod_nov as h_cod_nov,
           cod_nov_habitual,
           nr.con_novedad
-        FROM fechas f CROSS JOIN personas p CROSS JOIN parametros
+        FROM fechas f INNER JOIN annios a USING (annio) CROSS JOIN personas p
           LEFT JOIN LATERAL (
             SELECT *
               FROM horarios h 
@@ -44,6 +44,8 @@ $BODY$
               ORDER BY nr.idr DESC LIMIT 1
           ) nr ON true
         WHERE f.fecha BETWEEN p_desde AND p_hasta
+          AND f.fecha <= COALESCE(p.fecha_egreso, '2999-12-31'::date)
+          AND f.fecha >= p.registra_novedades_desde 
           /*idper**AND p.idper = p_idper**idper*/
       ) x
 $BODY$;

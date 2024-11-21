@@ -1,9 +1,9 @@
 pauta|descripcion
 CORRIDOS|las novedades de días corridos no pueden tener feriados o fines de semana intermedios sin novedad
-ACTULTDIA|activo con ultimo_dia_trabajo
+ACTULTDIA|activo con fecha_egreso
 ACTREGDES|activo sin registra_novedades_desde
 ACTSINANT|activo sin para_antiguedad_relativa,
-INASINULT|inactivo sin ultimo_dia_trabajo
+INASINULT|inactivo sin fecha_egreso
 ANULREGDES|activo null con registra_novedades_desde
-ANULCONULT|activo null con ultimo_dia_trabajo
+ANULCONULT|activo null con fecha_egreso
 ANTCOMVSRE|Para activos, la antiguedad computada por suma de rangos no coincide con los días transcurridos hasta la fecha de hoy contados desde para_antiguedad_relativa.

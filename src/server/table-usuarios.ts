@@ -9,7 +9,7 @@ export function usuarios(context: TableContext): TableDefinition{
     var admin = context.user.rol==='admin';
     return {
         name: 'usuarios',
-        title: 'Usuarios de la Aplicación',
+        title: 'usuarios de la aplicación',
         editable: admin,
         fields: [
             {name:'usuario'          , typeName:'text'    , nullable:false  },

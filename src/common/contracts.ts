@@ -150,7 +150,8 @@ export const personas = {
         registra_novedades_desde: is.Date,
         para_antiguedad_relativa: is.Date,
         activo:    is.nullable.boolean,
-        ultimo_dia_trabajo: is.Date,
+        fecha_ingreso: is.Date,
+        fecha_egreso : is.Date,
     })
 } satisfies CommonEntityDefinition
 
@@ -188,15 +189,33 @@ export type Usuario = DefinedType<typeof usuarios.description>
 export const capacitacion = {
     table: 'capacitaciones',
     description: is.object({
-        idper:      is.string,
-        año: is.number,
         editable: is.boolean
     },{
-        estudio: is.nullable.string,
+        capacitacion: is.nullable.string,
+        modalidad: is.nullable.string,
         tipo: is.nullable.string,
         puntos: is.nullable.number,
         duracion: is.nullable.string,
-        dictado_por: is.nullable.string
+        dictado_por: is.nullable.string,
+        fecha_inicio: is.nullable.Date,
+        fecha_fin: is.nullable.Date
+    })
+}
+
+export const per_capa = {
+    table: 'capacitaciones',
+    description: is.object({
+        idper:      is.string,
+        //año: is.number,
+        editable: is.boolean
+    },{
+        capacitacion: is.nullable.string,
+        modalidad: is.nullable.string,
+        tipo: is.nullable.string,
+        fecha_inicio: is.nullable.Date,
+        fecha_fin: is.nullable.Date,
+        inscripcion: is.nullable.string,
+        calificacion: is.nullable.string,
     })
 }
 
@@ -248,11 +267,11 @@ export const personas_novedad_actual = {
         cod_nov: is.string,
         novedad: is.nullable.string,
         idper: is.string,
-        cuil: is.nullable.string,
+        cuil: is.string,
         ficha: is.nullable.string,
         idmeta4: is.nullable.string,
-        apellido: is.nullable.string,
-        nombres: is.nullable.string,
+        apellido: is.string,
+        nombres: is.string,
         sector: is.string,
     })
 }
@@ -277,6 +296,25 @@ export const calendario_persona = {
 }
 
 export type CalendarioResult = DefinedType<typeof calendario_persona.result>
+
+export const horario_semana_vigente = {
+    procedure: 'horario_semana_vigente',
+    parameters: is.object({
+        idper: is.string,
+        fecha: is.string,
+    }),
+    result: is.object({
+        dds: is.number,
+        trabaja: is.boolean,
+        desde: is.Date,
+        hasta: is.Date,
+        hora_desde: is.nullable.string,
+        hora_hasta: is.nullable.string,
+        cod_nov: is.nullable.string,
+    }),
+};
+
+export type HorarioSemanaVigenteResult = DefinedType<typeof horario_semana_vigente.result>;
 
 export const historico_persona = {
     procedure: 'historico_persona',

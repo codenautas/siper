@@ -10,10 +10,10 @@ DECLARE
   vcon_horario boolean; 
 BEGIN
   IF tg_op <> 'INSERT' THEN
-    PERFORM calcular_novedades_vigentes_idper(old.desde, old.hasta, old.idper);
+    CALL actualizar_novedades_vigentes_idper(old.desde, old.hasta, old.idper);
   END IF;
   IF tg_op <> 'DELETE' THEN
-    PERFORM calcular_novedades_vigentes_idper(new.desde, new.hasta, new.idper);
+    CALL actualizar_novedades_vigentes_idper(new.desde, new.hasta, new.idper);
   END IF;
   RETURN null;
 END;

@@ -244,3 +244,42 @@ export async function benchmarksSave(benchmark:any){
         await fs.writeFile(fileName, JSON4all.toUrlLines(benchmarks, '\r\n'));
     }
 }
+
+type MochaTypes = Mocha.Suite|Mocha.Suite[]|Mocha.Runnable|Mocha.Test|Mocha.Test[];
+
+function checkVisited<T extends MochaTypes>(visited:MochaTypes[], item:T|undefined): item is undefined{
+    if (item == null) return true;
+    if (visited.includes(item)) return true;
+    visited.push(item);
+    return false;
+}
+
+function isMochaSuite(item:MochaTypes): item is Mocha.Suite{
+    return item.constructor.name == 'Suite';
+}
+
+function checkMochaElementHasError(visited:MochaTypes[], item:MochaTypes|undefined){
+    if (checkVisited(visited, item)) return false;
+    if (item instanceof Array) {
+        for (var element of item) {
+            if (checkMochaElementHasError(visited, element)) return true;
+        }
+        return false;
+    }
+    if (checkMochaElementHasError(visited, item.parent)) return true;
+    if (isMochaSuite(item)) {
+        if (checkMochaElementHasError(visited, item.suites)) return true;
+        if (checkMochaElementHasError(visited, item.tests)) return true;
+        return false;
+    }
+    if (item.state != 'passed' && item.state != 'pending' && item.state != null) {
+        console.log("TEST FAILED", item.state, item.title)
+        return true;
+    }
+    return false;
+}
+
+export function someTestFails(testSuite:Mocha.Context){
+    var visited:MochaTypes[] = [];
+    return checkMochaElementHasError(visited, testSuite.test)
+}

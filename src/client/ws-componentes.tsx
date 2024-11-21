@@ -31,8 +31,13 @@ import {
 
 import { date, RealDate } from "best-globals";
 
-import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult } from "../common/contracts"
+import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, HorarioSemanaVigenteResult } from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
+
+export function logError(error:Error){
+    console.error(error);
+    my.log(error);
+}
 
 export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string}){
     return <Box className={"componente-" + props.componentType}>
@@ -72,8 +77,8 @@ export const DDS = {
     6: {abr:'sáb', habil:true , nombre:'sábado'   },
 }
 
-function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void}){
-    const {conn, fecha, fechaHasta, idper} = props;
+function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, refreshCalendario?: boolean}){
+    const {conn, fecha, fechaHasta, idper, refreshCalendario} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     type Periodo = {mes:number, annio:number} 
     const [periodo, setPeriodo] = useState<Periodo>({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
@@ -88,33 +93,38 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
         // @ts-ignore infinito
         conn.ajax.table_data<Annio>({table: 'annios', fixedFields: [],paramfun:{} }).then(annios => {
             setAnnios(annios);
-        });
-        if (idper != null) conn.ajax.calendario_persona({idper, ...periodo}).then(dias => {
-            var semanas = [];
-            var semana = [];
-            for(var i = 0; i < dias[0].dds; i++) {
-                semana.push({});
-            }
-            for(var dia of dias){
-                if (dia.dds == 0 && dia.dia !=1) {
-                    semanas.push(semana);   
-                    semana = []
+        }).catch(logError);
+        if (idper != null) {
+            conn.ajax.calendario_persona({idper, ...periodo}).then(dias => {
+                var semanas = [];
+                var semana = [];
+                for(var i = 0; i < dias[0].dds; i++) {
+                    semana.push({});
                 }
-                semana.push(dia);
-            }
-            for(var j = dia.dds + 1; j <= 6; j++) {
-                semana.push({});
-            }
-            semanas.push(semana);
-            setCalendario(semanas)
-        })
-
-    },[idper, periodo.mes, periodo.annio])
+                for(var dia of dias){
+                    if (dia.dds == 0 && dia.dia !=1) {
+                        semanas.push(semana);   
+                        semana = []
+                    }
+                    semana.push(dia);
+                }
+                for(var j = dia.dds + 1; j <= 6; j++) {
+                    semana.push({});
+                }
+                semanas.push(semana);
+                setCalendario(semanas)
+            }).catch(logError)
+        }
+    },[idper, periodo.mes, periodo.annio, refreshCalendario])
 
     const isInRange = (dia: number, mes: number, annio: number) => {
         if (!fecha || !fechaHasta || !Number.isInteger(dia) || dia <= 0) return false;
-        const current = date.ymd(annio, mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia);
-        return current >= fecha && current <= fechaHasta;
+        try {
+            const current = date.ymd(annio, mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia);
+            return current >= fecha && current <= fechaHasta;
+        } catch (error) {
+            return false;
+        }
     };
 
     return <Componente componentType="calendario-mes">
@@ -166,9 +176,6 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         onClick={() => {
                             if (!dia.dia || !props.onFecha || !props.onFechaHasta) return;
                             const selectedDate = date.ymd(periodo.annio, periodo.mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia.dia);
-                            const hoy = date.today();
-                            if (selectedDate < hoy) return;
-                        
                             if (!fechaHasta || selectedDate <= fechaHasta) {
                                 props.onFecha(selectedDate);
                                 props.onFechaHasta(selectedDate);
@@ -187,13 +194,13 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 }
 
 // @ts-ignore
-type ProvisorioPersonas = {sector:string, idper:string, apellido:string, nombres:string, cuil:string, ficha:string, idmeta4:string};
+type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string};
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, nivel:number}
 // @ts-ignore
 type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
-type IdperFuncionCambio = (idper:string)=>void
+type IdperFuncionCambio = (persona:ProvisorioPersonas)=>void
 
 function SearchBox(props: {onChange:(newValue:string)=>void}){
     var [textToSearch, setTextToSearch] = useState("");
@@ -216,8 +223,8 @@ function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof
     }
 }
 
-function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:string, onIdper?:IdperFuncionCambio}){
-    const {conn, idper, onIdper} = props;
+function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:string, fecha:RealDate, onIdper?:IdperFuncionCambio}){
+    const {conn, idper, fecha, onIdper} = props;
     const [sector, _setSector] = useState(props.sector);
     const [sectores, setSectores] = useState<ProvisorioSectoresAumentados[]>([]);
     const [listaPersonas, setListaPersonas] = useState<PersonasNovedadActualResult[]>([]);
@@ -233,18 +240,10 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
         setAbanicoPersonas(abanico);
     }, [listaPersonas, filtro])
     useEffect(function(){
-        // conn.ajax.table_data<ProvisorioPersonas>({
-        //     table: 'personas',
-        //     fixedFields: [],
-        //     paramfun: {}
-        // }).then(async (personas) => {
-        //     personas.forEach(p => p[APELLIDOYNOMBRES] = p.apellido+' '+p.nombres+' '+p.apellido)
-        //     setListaPersonas(personas);
-        // })
         setListaPersonas([])
-        conn.ajax.personas_novedad_actual().then(personas => {
+        conn.ajax.personas_novedad_actual({fecha}).then(personas => {
             setListaPersonas(personas);
-        });
+        }).catch(logError);
         conn.ajax.table_data<ProvisorioSectores>({
             table: 'sectores',
             fixedFields: [],
@@ -262,8 +261,8 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                 s.nivel = nivel;
             })
             setSectores(sectoresAumentados);
-        })
-    },[]);
+        }).catch(logError)
+    }, [fecha]);
     return <Componente componentType="lista-personas">
         <Paper className="contenedores-paper">
         <h6 className="titulo-componente">Sectores y personal</h6>
@@ -278,23 +277,12 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                 <AccordionDetails>
                     <List>
                         {abanicoPersonas[s.sector]?.map(p=>
-                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p.idper)}} className={`${p.idper == idper ? ' seleccionado' : ''}`} style={{justifyContent: "space-between"}}>
-                                {/* <span className="box-id"> </span> */}
-                                <div style={{ display: 'flex', flexDirection: 'column'}}>
-                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                        <span className="box-id persona-id">{p.idper}</span>
-                                        <span>
-                                            {p.apellido}, {p.nombres}
-                                        </span>
-                                    </div>
-                                    
-                                    <div>
-                                        <span>Ficha: {p.ficha}</span> - <span>CUIL: {p.cuil}</span>
-                                    </div>
-                                </div>
-                                <Tooltip title="Novedad">
-                                <Chip label={p.cod_nov} /> 
-                                </Tooltip>
+                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p as ProvisorioPersonas)}} className={`${p.idper == idper ? ' seleccionado' : ''}`}>
+                                <span className="box-id persona-id">{p.idper}</span>
+                                <span className="box-names">
+                                    {p.apellido}, {p.nombres}
+                                </span>
+                                <span className="box-info"> {p.cod_nov ? p.cod_nov : 'S/N' } </span>
                             </ListItemButton>
                         )}
                     </List>
@@ -315,7 +303,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string}){
             paramfun: {}
         }).then(function(novedadesRegistradas){
             setNovedades(novedadesRegistradas);
-        })
+        }).catch(logError)
     },[idper])
     return <Componente componentType="novedades-registradas">
         <table>
@@ -334,25 +322,61 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string}){
 
 function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     // datos de ejemplo, TODO traerlos de la base
-    const {fecha} = props
-    const desdeFecha = fecha.sub({days:14});
-    const hastaFecha = fecha.add({days:34});
-    const horario = [
-        {dds:0, trabaja:false, hora_desde:null, hora_hasta:null, cod_nov:null},
-        {dds:1, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-        {dds:2, trabaja:true , hora_desde:'10:00', hora_hasta:'17:00', cod_nov:1},
-        {dds:3, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-        {dds:4, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-        {dds:5, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-        {dds:6, trabaja:false, hora_desde:null, hora_hasta:null, cod_nov:null},
-    ]
+    const {fecha, idper, conn} = props
+    const [horario, setHorario] = useState<HorarioSemanaVigenteResult[]>([]);
+    // const desdeFecha = fecha.sub({days:14});
+    // const hastaFecha = fecha.add({days:34});
+    // const horario = [
+    //     {dds:0, trabaja:false, hora_desde:null, hora_hasta:null, cod_nov:null},
+    //     {dds:1, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
+    //     {dds:2, trabaja:true , hora_desde:'10:00', hora_hasta:'17:00', cod_nov:1},
+    //     {dds:3, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
+    //     {dds:4, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
+    //     {dds:5, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
+    //     {dds:6, trabaja:false, hora_desde:null, hora_hasta:null, cod_nov:null},
+    // ]
+
+    useEffect(function(){
+        setHorario([])
+        if (idper != null) {
+            conn.ajax.horario_semana_vigente({ idper, fecha }).then(result => {
+                setHorario(result);
+            }).catch(logError);
+        }
+    },[idper, fecha])
+
+    const desdeFecha = horario[0]?.desde ?  (horario[0].desde as RealDate).toDmy() : '';
+    const hastaFecha = horario[0]?.hasta ? (horario[0].hasta as RealDate).toDmy() : '';
+    
     return <Componente componentType="horario">
-        <div>Horario vigente del {desdeFecha.toDmy()} al {hastaFecha.toDmy()}.</div>
-        {horario.filter(h => h.trabaja).map(h =>
-            <div className={"linea-horario " + (h.trabaja ? "" : "tipo-dia-no-laborable")}>
-                {DDS[h.dds as 0|1|2|3|4|5|6].nombre} de {h.hora_desde} a {h.hora_hasta}, novedad {h.cod_nov}
-            </div>
-        )}
+        <div className="horario-vigente">
+            Horario vigente desde {desdeFecha} hasta {hastaFecha || 'la actualidad'}.
+        </div>
+        <div className="horario-contenedor">
+            {horario.map((h, index) => (
+                <div 
+                    key={index} 
+                    className={`${h.trabaja ? '' : 'tipo-dia-no-laborable'}`}
+                >
+                    <div className="horario-dia">
+                        {DDS[h.dds as 0 | 1 | 2 | 3 | 4 | 5 | 6].nombre}
+                    </div>
+                    <div className="horario-dia">
+                        {h.trabaja ? (
+                            <>
+                                <div>{h.hora_desde || '-'}</div>
+                                <div>{h.hora_hasta || '-'}</div>
+                            </>
+                        ) : (
+                            <div>-</div>
+                        )}
+                    </div>
+                    <div className="horario-dia">
+                        {h.cod_nov || '-'}
+                    </div>
+                </div>
+            ))}
+        </div>
     </Componente>
 }
 
@@ -366,7 +390,7 @@ function DatosPersonales(props:{conn: Connector, idper:string}){
             paramfun: {}
         }).then(function(personas){
             setPersona(personas[0] ?? {});
-        })
+        }).catch(logError)
     },[idper])
     return <Componente componentType="datos-personales">
         <table>
@@ -392,7 +416,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
         if (idper != null) {
             conn.ajax.novedades_disponibles({ idper }).then(novedades => {
                 setCodNovedades(novedades);
-            });
+            }).catch(logError);
         }
     },[idper])
     useEffect(function(){
@@ -408,14 +432,15 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
                     className={`${c.cod_nov == cod_nov ? 'seleccionado' : ''} ${!c.cargable ? 'deshabilitado' : ''}`}
                     disabled={!c.cargable}>
                     <span className="box-id"> {c.cod_nov} </span>   
-                    {c.novedad} {c.cantidad > 0 ? `(${c.limite} - ${c.cantidad} = ${c.saldo})`: ''}
+                    <span className="box-names"> {c.novedad} </span>
+                    <span className="box-info">{c.cantidad > 0 ? (c.limite > 0 ?`${c.limite} &minus; ${c.cantidad} = ${c.saldo}` : c.cantidad ): ''}</span>
                 </ListItemButton>
             )}
         </List>
     </Componente>
 }
 
-type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate};
+type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate, usuario:string, apellido:string, nombres:string, cuil:string, ficha:string};
 
 declare module "frontend-plus" {
     interface BEAPI {
@@ -428,7 +453,12 @@ declare module "frontend-plus" {
         novedades_disponibles: (params:{
 
         }) => Promise<any>;
-        personas_novedad_actual: () => Promise<any>;
+        personas_novedad_actual: (params:{
+            fecha: Date
+        }) => Promise<PersonasNovedadActualResult[]>;
+        horario_semana_vigente: (params:{
+
+        }) => Promise<any>;
     }
 }
 
@@ -444,7 +474,7 @@ function Persona(props:{conn: Connector, idper:string, fecha:RealDate}){
 function Pantalla1(props:{conn: Connector}){
     const {conn} = props;
     const [infoUsuario, setInfoUsuario] = useState({} as ProvisorioInfoUsuario);
-    const [idper, setIdper] = useState("");
+    const [persona, setPersona] = useState({} as ProvisorioPersonas);
     const [cod_nov, setCodNov] = useState("");
     const [detalles, setDetalles] = useState("");
     const [conDetalles, setConDetalles] = useState(false);
@@ -452,12 +482,14 @@ function Pantalla1(props:{conn: Connector}){
     const [hasta, setHasta] = useState<RealDate>(date.today());
     const [registrandoNovedad, setRegistrandoNovedad] = useState(false);
     const [error, setError] = useState<Error|null>(null);
+    const {idper} = persona
+    const [refreshCalendario, setRefreshCalendario] = useState(false);
     useEffect(function(){
         // @ts-ignore
         conn.ajax.info_usuario().then(function(infoUsuario:ProvisorioInfoUsuario){
-            setIdper(infoUsuario.idper);
+            setPersona(infoUsuario as ProvisorioPersonas);
             setInfoUsuario(infoUsuario);
-        })
+        }).catch(logError)
     },[])
     function registrarNovedad(){
         setRegistrandoNovedad(true);
@@ -469,26 +501,38 @@ function Pantalla1(props:{conn: Connector}){
             status:'new'
         }).then(function(result){
             console.log(result)
+            setRefreshCalendario(prev => !prev);
         }).catch(setError).finally(()=>setRegistrandoNovedad(false));
     }
     function handleCodNovChange(codNov: string, conDetalles: boolean) {
         setCodNov(codNov);
-        console.log(conDetalles)
         setConDetalles(conDetalles);
     }
 
-    return infoUsuario.sector == null ?  
+    return infoUsuario.usuario == null ?  
             <CircularProgress />
-        : <Box className="componente-pantalla-1" sx={{ padding: 3 }}>
-            <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} onIdper={idper=>setIdper(idper)}/>
+        : infoUsuario.idper == null ?
+            <Typography>El usuario <b>{infoUsuario.usuario}</b> no tiene una persona asociada</Typography>
+        : <Paper className="componente-pantalla-1">
+            <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)}/>
             <Paper>
-                <Box>
-                    {idper}
-                </Box>
-                <Box>
-                    {cod_nov}
-                </Box>
-                <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta}/>
+                <div className="box-line">
+                    <span className="box-id">
+                        {idper}
+                    </span>
+                    <span className="box-names">
+                        {persona.apellido}, {persona.nombres}
+                    </span>
+                </div>
+                <div className="box-line">
+                    <span className="box-names">
+                        CUIL: {persona.cuil}
+                    </span>
+                    <span className="box-names">
+                        FICHA: {persona.ficha}
+                    </span>
+                </div>
+                <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} refreshCalendario={refreshCalendario}/>
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
                 <Box>
                     <TextField
@@ -628,7 +672,7 @@ function DemoDeComponentes(props: {conn: Connector}){
                     <UnComponente titulo="Pantalla 1 (primera total)" que="pantalla-1"/>
                 </Card>,
             "calendario": () => <Calendario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
-            "personas": () => <ListaPersonasEditables conn={conn} sector="MS" idper={IDPER_DEMO}/>,
+            "personas": () => <ListaPersonasEditables conn={conn} sector="MS" fecha={date.today()} idper={IDPER_DEMO}/>,
             "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO}/>,
             "horario": () => <Horario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
             "datos-personales": () => <DatosPersonales conn={conn} idper={IDPER_DEMO}/>,

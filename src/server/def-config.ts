@@ -47,9 +47,10 @@ install:
       - ../node_modules/pg-triggers/lib/enance.sql    
       - ../install/novedades_calculadas.sql
       - ../install/actualizar_novedades_vigentes.sql
+      - ../install/annio_abrir.sql
+      - ../install/annio_preparar.sql
       - ../install/novedades_registradas_trg.sql
       - ../install/novedades_horarias_trg.sql
-      - ../install/personas_horarios_trg.sql
       - ../install/fechas_nov_trg.sql
       - ../install/sectores_circulares_trg.sql
       - ../install/novedades_registradas_detalles_trg.sql
@@ -58,6 +59,7 @@ install:
       - ../install/horarios_con_horario_trg.sql
       - ../install/horarios_recalcular_trg.sql
       - ../install/novedades_registradas_con_novedad_trg.sql
+      - ../install/personas_actualizar_novedades_trg.sql
 logo: 
   path: client/img
 `;

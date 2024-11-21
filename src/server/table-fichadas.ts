@@ -20,7 +20,7 @@ export function fichadas(_context: TableContext): TableDefinition{
         ],         
         primaryKey: [idf.name],
         foreignKeys: [
-            {references: 'personas', fields: [idper.name], displayFields:['apellido', 'nombres', 'idmeta4', 'cuil', 'ficha']},
+            {references: 'personas', fields: [idper.name], displayFields:['apellido', 'nombres', 'cuil', 'ficha']},
         ],
         hiddenColumns: [idf.name],
     };
