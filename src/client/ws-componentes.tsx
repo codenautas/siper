@@ -539,10 +539,10 @@ function Pantalla1(props:{conn: Connector}){
                 </Paper>
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} refreshCalendario={refreshCalendario}/>
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
-                <Box sx={{marginTop:'10px', width:'100%'}}>
+                <Box sx={{marginTop:'20px'}}>
                     <TextField
                         label="Detalles"
-                        placeholder={conDetalles ? "Obligatorio" : ""}
+                        placeholder={conDetalles ? "Completá este campo para registrar la novedad" : ""}
                         multiline
                         rows={4}
                         value={detalles}
@@ -553,8 +553,8 @@ function Pantalla1(props:{conn: Connector}){
                         fullWidth
                     />
                 </Box>
-                <Box>{cod_nov && idper && fecha && hasta && !registrandoNovedad ?
-                    <Button key="button" onClick={() => registrarNovedad()}>Registrar Novedad</Button>
+                <Box sx={{marginTop:'20px'}}>{cod_nov && idper && fecha && hasta && !registrandoNovedad ?
+                    <Button key="button" variant="contained" onClick={() => registrarNovedad()} sx={{backgroundColor:'#252663'}}>Registrar Novedad</Button>
                 : null}</Box>
                 <Box>{registrandoNovedad || error ?
                     <Typography>{error?.message ?? (registrandoNovedad && "registrando..." || "error")}</Typography>
