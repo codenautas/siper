@@ -1,7 +1,7 @@
  @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap')
 $font-primary = 'Montserrat', sans-serif
 
-
+@import url('https://cdn.materialdesignicons.com/7.0.96/css/materialdesignicons.min.css')
 
 [placeholder]:empty::before 
   content attr(placeholder)
@@ -10,6 +10,11 @@ $font-primary = 'Montserrat', sans-serif
 [my-colname=annio]
   .number-separator
     display none
+
+span.mdi 
+  font-size 1.4rem
+  margin-right 10px
+  color #252663
 
 .titulo-componente
   font-family $font-primary
@@ -33,6 +38,9 @@ label.fp-fieldname-dds1
 .MuiAutocomplete-root  
   display inline-flex
 
+.selectores
+  margin-right 10px  
+
 div.calendario-mes
   margin 2em
 
@@ -45,15 +53,17 @@ div.calendario-dia, div.calendario-nombre-dia
   flex-direction column
   width 4em
   height 4em
-  border-bottom 0.5px dotted gray
-  border-right 0.5px dotted gray
+  border-bottom 0.5px solid #b1b4c4
+  border-right 0.5px solid #b1b4c4
   padding 2px
 
 div.calendario-nombre-dia
   align-content center
   align-self center
-  height 1em
+  height 1.2rem
   text-align center
+  color #252663
+  
 
 span.calendario-dia-numero
   font-size 80%
@@ -144,7 +154,11 @@ span.box-id
   font-size 0.8rem
   font-weight bold
   margin-right: 12px
-  color #3e3e3e
+  color #252663
+
+span.box-names
+  font-weight bold
+  color #252663
 
 .error-valor
   background-color #FAA
@@ -170,11 +184,11 @@ span.box-id
   display flex
   flex-direction column
   flex-wrap wrap
-  align-content space-between
+  align-content space-between  
 
 .componente-pantalla-1
   display grid
-  grid-template-columns repeat(4, 1fr)
+  grid-template-columns repeat(3, 1fr)
   gap 2%
   margin-left auto
   margin-right auto
@@ -187,7 +201,7 @@ span.box-id
   min-width 24em
 
 .contenedores-paper
-  padding 30px 22px
+  padding 22px
 
 .deshabilitado
   opacity: 0.5
@@ -208,3 +222,12 @@ span.box-id
     margin-bottom: 0.5em
 
 
+.item-novedad
+  display flex
+
+.item-cod
+  min-width 30px 
+  margin-right 10px
+  font-weight bold
+  
+   

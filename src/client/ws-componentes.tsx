@@ -26,7 +26,7 @@ import {
     Toolbar, Typography, TextField,
     Chip,
     Tooltip,
-    Alert,
+
 } from "@mui/material";
 
 import { date, RealDate } from "best-globals";
@@ -129,10 +129,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 
     return <Componente componentType="calendario-mes">
         <Box style={{ flex:1}}>
-            <Box>
-                <Button onClick={_ => setPeriodo(retrocederUnMes)}><ICON.ChevronLeft/></Button>
-                <Button onClick={_ => setPeriodo(avanzarUnMes)}><ICON.ChevronRight/></Button>
-                <Select 
+            <Box sx={{padding: '15px 0'}}>
+                <Select className="selectores"
                     value={periodo.mes}
                     onChange={(event) => { // buscar el tipo correcto
                         setPeriodo({mes:Number(event.target.value), annio:periodo.annio});
@@ -144,7 +142,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         </MenuItem>
                     ))}
                 </Select>
-                <Select 
+                <Select className="selectores"
                     value={periodo.annio}
                     onChange={(event) => { // buscar el tipo correcto
                         setPeriodo({mes:periodo.mes, annio:Number(event.target.value)});
@@ -159,10 +157,12 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                     ))
                         }
                 </Select>
+                <Button onClick={_ => setPeriodo(retrocederUnMes)}><ICON.ChevronLeft/></Button>
+                <Button onClick={_ => setPeriodo(avanzarUnMes)}><ICON.ChevronRight/></Button>
             </Box>
             <Box className="calendario-semana">
                 {likeAr(DDS).map(dds =>
-                    <div className={"calendario-nombre-dia " + (dds.habil ? "" : "tipo-dia-no-laborable")}>{dds.abr}</div>
+                    <div className={"calendario-nombre-dia " + (dds.habil ? "" : "tipo-dia-no-laborable")}><span style={{fontSize:'13px'}}>{dds.abr}</span></div>
                 ).array()}
             </Box>
             {calendario.map(semana => <Box className="calendario-semana">
@@ -277,12 +277,17 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                 <AccordionDetails>
                     <List>
                         {abanicoPersonas[s.sector]?.map(p=>
-                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p as ProvisorioPersonas)}} className={`${p.idper == idper ? ' seleccionado' : ''}`}>
+                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p as ProvisorioPersonas)}} className={`${p.idper == idper ? ' seleccionado' : ''}`} style={{justifyContent:'space-between'}}>
+                                <div className="box-id">
                                 <span className="box-id persona-id">{p.idper}</span>
                                 <span className="box-names">
                                     {p.apellido}, {p.nombres}
                                 </span>
-                                <span className="box-info"> {p.cod_nov ? p.cod_nov : 'S/N' } </span>
+                                </div>
+                                <Tooltip title="Novedad">
+                                <Chip label={p.cod_nov ? p.cod_nov : 'S/N' } /> 
+                                </Tooltip>
+                                {/* <span className="box-info"> {p.cod_nov ? p.cod_nov : 'S/N' } </span> */}
                             </ListItemButton>
                         )}
                     </List>
@@ -424,6 +429,8 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
         setCodNovedadesFiltradas(codNovedades.filter(recordFilter))
     },[codNovedades, filtro])
     return <Componente componentType="codigo-novedades">
+        <Paper className="contenedores-paper">
+        <h6 className="titulo-componente">Novedades</h6>
         <SearchBox onChange={setFiltro}/>
         <List>
             {codNovedadesFiltradas.map(c=>
@@ -431,12 +438,15 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
                     onClick={() => {if (onCodNov != null && c.cargable) onCodNov(c.cod_nov, c.con_detalles)}} 
                     className={`${c.cod_nov == cod_nov ? 'seleccionado' : ''} ${!c.cargable ? 'deshabilitado' : ''}`}
                     disabled={!c.cargable}>
-                    <span className="box-id"> {c.cod_nov} </span>   
-                    <span className="box-names"> {c.novedad} </span>
+                    <div className="item-novedad">
+                    <span className="item-cod"> {c.cod_nov} </span>   
+                    <span> {c.novedad} </span>
+                    </div>
                     <span className="box-info">{c.cantidad > 0 ? (c.limite > 0 ?`${c.limite} &minus; ${c.cantidad} = ${c.saldo}` : c.cantidad ): ''}</span>
                 </ListItemButton>
             )}
         </List>
+        </Paper>
     </Componente>
 }
 
@@ -513,28 +523,23 @@ function Pantalla1(props:{conn: Connector}){
             <CircularProgress />
         : infoUsuario.idper == null ?
             <Typography>El usuario <b>{infoUsuario.usuario}</b> no tiene una persona asociada</Typography>
-        : <Paper className="componente-pantalla-1">
+        : <Box className="componente-pantalla-1" sx={{ padding: 3 }}>
             <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)}/>
-            <Paper>
+            <Box>
+                <Paper className="contenedores-paper">                 
                 <div className="box-line">
-                    <span className="box-id">
-                        {idper}
-                    </span>
+                    <span className="mdi mdi-calendar-edit-outline"></span>
                     <span className="box-names">
-                        {persona.apellido}, {persona.nombres}
-                    </span>
+                        {idper} | {persona.apellido}, {persona.nombres}
+                    </span>            
                 </div>
                 <div className="box-line">
-                    <span className="box-names">
-                        CUIL: {persona.cuil}
-                    </span>
-                    <span className="box-names">
-                        FICHA: {persona.ficha}
-                    </span>
+                    <span>CUIL: {persona.cuil} - FICHA: {persona.ficha}</span>              
                 </div>
+                </Paper>
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} refreshCalendario={refreshCalendario}/>
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
-                <Box>
+                <Box sx={{marginTop:'10px', width:'100%'}}>
                     <TextField
                         label="Detalles"
                         placeholder={conDetalles ? "Obligatorio" : ""}
@@ -545,6 +550,7 @@ function Pantalla1(props:{conn: Connector}){
                         required={conDetalles}
                         error={conDetalles && !detalles}
                         helperText={conDetalles && !detalles ? "El campo es obligatorio." : ""}
+                        fullWidth
                     />
                 </Box>
                 <Box>{cod_nov && idper && fecha && hasta && !registrandoNovedad ?
@@ -553,7 +559,7 @@ function Pantalla1(props:{conn: Connector}){
                 <Box>{registrandoNovedad || error ?
                     <Typography>{error?.message ?? (registrandoNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
-            </Paper>
+            </Box>
             <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov, conDetalles) => handleCodNovChange(codNov, conDetalles)}/>
         </Box>;
 }
