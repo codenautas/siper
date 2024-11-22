@@ -40,7 +40,10 @@ export function fichadas_vigentes(_context: TableContext): TableDefinition{
                         nv.cod_nov,
                         p.sector,
                         min(f.hora) as entrada, 
-                        max(f.hora) as salida,
+                        case 
+                            when count(*) over (partition by f.idper, f.fecha) = 1 then '00:00'
+                            else max(f.hora)
+                        end as salida,
                         h.hora_desde  || ' - ' || h.hora_hasta as horario
                     from 
                         fichadas f
