@@ -33,6 +33,7 @@ import { historial_contrataciones} from "./table-historial_contrataciones";
 import { capacitaciones       } from "./table-capacitaciones";
 import { per_capa       } from "./table-per_capa";
 import { parte_diario         } from "./table-parte-diario";
+import { descanso_anual_remunerado } from "./table-descanso_anual_remunerado";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -75,6 +76,7 @@ export class AppSiper extends AppBackend{
                 ]},
                 {menuType:'menu', name:'listados', menuContent:[
                     {menuType:'table', name:'parte_diario'},
+                    {menuType:'table', name:'descanso_anual_remunerado'},
                 ]},
                 {menuType:'menu', name:'importaciones', menuContent:[
                     {menuType:'table', name:'novedades_importadas'},
@@ -162,7 +164,8 @@ export class AppSiper extends AppBackend{
             historial_contrataciones,
             capacitaciones       ,
             per_capa             ,
-            parte_diario
+            parte_diario         ,
+            descanso_anual_remunerado
         }
     }       
 }

@@ -6,6 +6,8 @@ import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {sector} from "./table-sectores";
 
+// vista para traer las fichadas en el dia. por ahora esta como min(hora) y max(hora) de la fecha. 
+// el nombre no es el mejor. ver si hacer un origen comun para el visor de fichadas
 export function parte_diario(_context: TableContext): TableDefinition{
     return {
         name: 'parte_diario',
@@ -20,7 +22,7 @@ export function parte_diario(_context: TableContext): TableDefinition{
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],
         softForeignKeys: [
-            {references: 'personas', fields: [idper.name], displayFields:['apellido', 'nombres', 'ficha']},
+            {references: 'personas', fields: [idper.name], displayFields:['ficha', 'apellido', 'nombres']},
             {references: 'cod_novedades', fields: [cod_nov.name], displayFields:['novedad']},
             {references: 'sectores', fields: [sector.name], displayFields:['nombre_sector']},
         ],
