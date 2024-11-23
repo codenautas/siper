@@ -172,7 +172,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     `WITH dias_semana AS (
                         SELECT 
                             f.fecha,
-                            f.dds
+                            f.dds,
+                            f.annio
                         FROM fechas f
                         WHERE f.dds BETWEEN 1 AND 5
                         AND f.fecha BETWEEN ($2::DATE - (EXTRACT(DOW FROM $2::DATE)::INTEGER - 1))
@@ -180,22 +181,23 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     )
                     SELECT 
                         d.fecha,
-                        h.dds,
+                        d.dds,
                         h.desde,
                         h.hasta,
-                        h.hora_desde,
-                        h.hora_hasta,
-                        h.trabaja,
+                        coalesce(h.hora_desde, horario_habitual_desde) as hora_desde,
+                        coalesce(h.hora_hasta, horario_habitual_hasta) as hora_hasta,
+                        coalesce(h.trabaja, d.dds BETWEEN 1 AND 5) as trabaja,
                         nv.cod_nov
                     FROM dias_semana d
-                    LEFT JOIN horarios h 
-                        ON h.dds = d.dds
-                        AND d.fecha >= h.desde 
-                        AND (h.hasta IS NULL OR d.fecha <= h.hasta)
-                        AND h.idper = $1
-                    LEFT JOIN novedades_vigentes nv 
-                        ON nv.fecha = d.fecha
-                        AND nv.idper = $1
+                        INNER JOIN annios a USING (annio)
+                        LEFT JOIN horarios h 
+                            ON h.dds = d.dds
+                            AND d.fecha >= h.desde 
+                            AND (h.hasta IS NULL OR d.fecha <= h.hasta)
+                            AND h.idper = $1
+                        LEFT JOIN novedades_vigentes nv 
+                            ON nv.fecha = d.fecha
+                            AND nv.idper = $1
                     ORDER BY d.fecha;`
                 , [params.idper, params.fecha]
             ).fetchAll();
