@@ -74,8 +74,10 @@ export const DDS = {
     6: {abr:'sáb', habil:true , nombre:'sábado'   },
 }
 
-function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, refreshCalendario?: boolean}){
-    const {conn, fecha, fechaHasta, idper, refreshCalendario} = props;
+type ULTIMA_NOVEDAD = number;
+
+function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, ultimaNovedad?: ULTIMA_NOVEDAD}){
+    const {conn, fecha, fechaHasta, idper, ultimaNovedad} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     type Periodo = {mes:number, annio:number} 
     const [periodo, setPeriodo] = useState<Periodo>({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
@@ -112,7 +114,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 setCalendario(semanas)
             }).catch(logError)
         }
-    },[idper, periodo.mes, periodo.annio, refreshCalendario])
+    },[idper, periodo.mes, periodo.annio, ultimaNovedad])
 
     const isInRange = (dia: number, mes: number, annio: number) => {
         if (!fecha || !fechaHasta || !Number.isInteger(dia) || dia <= 0) return false;
@@ -477,7 +479,7 @@ function Pantalla1(props:{conn: Connector}){
     const [registrandoNovedad, setRegistrandoNovedad] = useState(false);
     const [error, setError] = useState<Error|null>(null);
     const {idper} = persona
-    const [refreshCalendario, setRefreshCalendario] = useState(false);
+    const [ultimaNovedad, setUltimaNovedad] = useState(0);
     useEffect(function(){
         // @ts-ignore
         conn.ajax.info_usuario().then(function(infoUsuario:ProvisorioInfoUsuario){
@@ -495,7 +497,7 @@ function Pantalla1(props:{conn: Connector}){
             status:'new'
         }).then(function(result){
             console.log(result)
-            setRefreshCalendario(prev => !prev);
+            setUltimaNovedad(result.row.idr as number);
         }).catch(setError).finally(()=>setRegistrandoNovedad(false));
     }
     function handleCodNovChange(codNov: string, conDetalles: boolean) {
@@ -526,7 +528,7 @@ function Pantalla1(props:{conn: Connector}){
                         FICHA: {persona.ficha}
                     </span>
                 </div>
-                <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} refreshCalendario={refreshCalendario}/>
+                <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}/>
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
                 <Box>
                     <TextField
