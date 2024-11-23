@@ -23,7 +23,7 @@ export function horarios(context: TableContext): TableDefinition{
             {name:'trabaja'          , typeName:'boolean' , nullable:false ,defaultValue:false},
             {name:'hora_desde'       , typeName:'time'    , nullable:false  },
             {name:'hora_hasta'       , typeName:'time'    , nullable:false  },
-            {name:'lapso_fechas'     , typeName:'daterange', editable:false, generatedAs:'daterange(desde, coalesce(hasta, make_date(extract(year from desde)::integer, 12, 31)))'},
+            {name:'lapso_fechas'     , typeName:'daterange', visible:false, generatedAs:'daterange(desde, coalesce(hasta, make_date(extract(year from desde)::integer, 12, 31)))'},
         ],
         primaryKey: [idper.name,'dds', año.name, 'desde'],
         foreignKeys: [
