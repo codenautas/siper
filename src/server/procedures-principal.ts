@@ -273,7 +273,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             var grilla = {
                 tableName:'fichadas_vigentes', 
                 fixedFields: [] as FixedFields, 
-                tableDef:{title:'visor de fichadas'}
+                tableDef:{title:'visor de fichadas', hiddenColumns:[] as string[]}
             }
             if (params.fecha != null) {
                 grilla.fixedFields.push({fieldName:'fecha', value:params.fecha});
@@ -283,6 +283,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 var apeynom = await context.client.query(`select concat_ws(', ', apellido, nombres) from personas where idper = $1 `,[params.idper]).fetchUniqueValue();
                 grilla.fixedFields.push({fieldName:'idper', value:params.idper});
                 grilla.tableDef.title += ' de '+apeynom.value;
+                grilla.tableDef.hiddenColumns.push('sector', 'sectores__nombre_sector')
             }
             if (grilla.fixedFields.length == 0) {
                 throw new Error("debe especificar nombre o fecha")
