@@ -4,7 +4,7 @@ import {strict as likeAr, createIndex} from 'like-ar';
 import { ProcedureDef, ProcedureContext } from './types-principal';
 import { NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles } from '../common/contracts';
 
-import { date } from 'best-globals'
+import { date, datetime } from 'best-globals'
 import { DefinedType } from 'guarantee-type';
 
 export const ProceduresPrincipal:ProcedureDef[] = [
@@ -186,7 +186,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         coalesce(h.hora_desde, horario_habitual_desde) as hora_desde,
                         coalesce(h.hora_hasta, horario_habitual_hasta) as hora_hasta,
                         coalesce(h.trabaja, d.dds BETWEEN 1 AND 5) as trabaja,
-                        coalesce(h.cod_nov, cod_nov_habitual) as cod_nov
+                        coalesce(h.cod_nov, case when d.dds BETWEEN 1 AND 5 then cod_nov_habitual else null end) as cod_nov
                     FROM dias_semana d
                         INNER JOIN annios a USING (annio)
                         LEFT JOIN horarios h 
@@ -241,6 +241,24 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 [context.username]
             ).fetchUniqueRow();
             return info.row;
+        }
+    },
+    {
+        action: 'parte_diario',
+        parameters: [
+            {name:'fecha', typeName:'date', specialDefaultValue: 'current_date'}
+        ],
+        resultOk:'showGrid',
+        coreFunction: async function(context: ProcedureContext, params:any){
+            await context.client.query(
+                `call actualizar_novedades_vigentes($1, $1)`,
+                [params.fecha]
+            ).execute();
+            return {
+                tableName:'parte_diario', 
+                fixedFields:[{fieldName:'fecha', value:params.fecha}], 
+                tableDef:{title:'parte diario del '+params.fecha.toDmy()+' - Generado con información hasta '+datetime.now().toLocaleString()}
+            };
         }
     }
 ];

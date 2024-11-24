@@ -39,6 +39,7 @@ install:
       - ../node_modules/type-store/postgres/time_range.sql
       pre-adapt:
       - ../node_modules/pg-triggers/lib/table-changes.sql
+      - ../install/hora_texto.sql
       - ../install/validad_codigo.sql
       - ../install/sector_pertenece.sql
       - ../install/personas_id_trg.sql

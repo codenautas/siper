@@ -31,34 +31,21 @@ export function parte_diario(_context: TableContext): TableDefinition{
         sql:{
             isTable: false,
             from:`(select 
-                        f.idper, 
+                        p.idper, 
                         f.fecha, 
-                        nv.cod_nov,
+                        coalesce(nv.cod_nov, case when f.dds between 1 and 5 then cod_nov_habitual else null end) as cod_nov,
                         p.sector,
-                        min(f.hora) || ' - ' || max(f.hora) as fichada,
-                        h.hora_desde  || ' - ' || h.hora_hasta as horario
-                    from 
-                        fichadas f
-                    inner join 
-                        horarios h 
-                        on h.idper = f.idper 
-                        and f.fecha >= h.desde 
-                        and (h.hasta IS NULL OR f.fecha <= h.hasta)
-                    left join 
-                        novedades_vigentes nv 
-                        on nv.idper = f.idper 
-                        and nv.fecha = f.fecha
-                    inner join 
-                        personas p 
-                        on p.idper = f.idper
-                    group by 
-                        f.idper, 
-                        f.fecha, 
-                        nv.cod_nov, 
-                        p.sector,
-                        h.hora_desde, 
-                        h.hora_hasta
+                        hora_texto(fi.entrada) || ' - ' || hora_texto(fi.salida) as fichada,
+                        hora_texto(coalesce(h.hora_desde, horario_habitual_desde)) || ' - ' || hora_texto(coalesce(h.hora_hasta, horario_habitual_hasta)) as horario
+                    from
+                        personas p
+                        inner join fechas f on f.fecha between p.registra_novedades_desde and coalesce(p.fecha_egreso, '3000-01-01'::date)
+                        left join annios using (annio)
+                        left join novedades_vigentes nv using(idper, fecha)
+                        left join lateral (select min(hora) as entrada, max(hora) as salida from fichadas where fecha = f.fecha and idper = p.idper) fi on true
+                        left join horarios h on h.idper = p.idper and f.dds = h.dds and f.fecha between h.desde and h.hasta 
             )`
-        }
+        },
+        sortColumns:[{column:'personas__apellido'}, {column:'personas__nombres'}]
     };
 }

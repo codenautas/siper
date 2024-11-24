@@ -67,6 +67,11 @@ export class AppSiper extends AppBackend{
         if(context.user && context.user.rol=="admin"){
             menuContent.push(
                 {menuType:'principal', name:'principal'     },
+                {menuType:'menu', name:'listados', menuContent:[
+                    {menuType:'proc', name:'parte_diario'},
+                    {menuType:'table', name:'descanso_anual_remunerado'},
+                    {menuType:'table', name:'fichadas_vigentes'},
+                ]},
                 {menuType:'table', name:'personas'          },
                 {menuType:'menu', name:'novedades', menuContent:[
                     {menuType:'registroNovedades', name:'registro'},
@@ -75,11 +80,6 @@ export class AppSiper extends AppBackend{
                         {menuType:'table', name:'novedades_vigentes'   },
                         {menuType:'table', name:'novedades_registradas'},
                     ]},
-                ]},
-                {menuType:'menu', name:'listados', menuContent:[
-                    {menuType:'table', name:'parte_diario'},
-                    {menuType:'table', name:'descanso_anual_remunerado'},
-                    {menuType:'table', name:'fichadas_vigentes'},
                 ]},
                 {menuType:'menu', name:'importaciones', menuContent:[
                     {menuType:'table', name:'novedades_importadas'},
