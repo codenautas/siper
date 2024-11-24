@@ -329,8 +329,6 @@ export const horario_semana_vigente = {
     }),
 };
 
-export type HorarioSemanaVigenteResult = DefinedType<typeof horario_semana_vigente.result>;
-
 export const historico_persona = {
     procedure: 'historico_persona',
     parameters: is.object({

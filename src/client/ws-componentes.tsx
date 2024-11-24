@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 
 import {
     ReactNode,
@@ -28,7 +29,7 @@ import {
 
 import { date, RealDate } from "best-globals";
 
-import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, HorarioSemanaVigenteResult } from "../common/contracts"
+import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult } from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 
 export function logError(error:Error){
@@ -203,7 +204,7 @@ type IdperFuncionCambio = (persona:ProvisorioPersonas)=>void
 
 function SearchBox(props: {onChange:(newValue:string)=>void}){
     var [textToSearch, setTextToSearch] = useState("");
-    return <Paper sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+    return <Paper sx={{ display: 'flex', alignItems: 'center', width: '100%' }} className="search-box">
         <ICON.Search/>
         <InputBase
             value = {textToSearch} 
@@ -317,23 +318,11 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string}){
 }
 
 function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
-    // datos de ejemplo, TODO traerlos de la base
     const {fecha, idper, conn} = props
-    const [horario, setHorario] = useState<HorarioSemanaVigenteResult[]>([]);
-    // const desdeFecha = fecha.sub({days:14});
-    // const hastaFecha = fecha.add({days:34});
-    // const horario = [
-    //     {dds:0, trabaja:false, hora_desde:null, hora_hasta:null, cod_nov:null},
-    //     {dds:1, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-    //     {dds:2, trabaja:true , hora_desde:'10:00', hora_hasta:'17:00', cod_nov:1},
-    //     {dds:3, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-    //     {dds:4, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-    //     {dds:5, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-    //     {dds:6, trabaja:false, hora_desde:null, hora_hasta:null, cod_nov:null},
-    // ]
-
+    const horarioVacio:HorarioSemanaVigenteResult = {desde: date.today(), hasta: date.today(), dias:{}}
+    const [horario, setHorario] = useState(horarioVacio);
     useEffect(function(){
-        setHorario([])
+        setHorario(horarioVacio)
         if (idper != null) {
             conn.ajax.horario_semana_vigente({ idper, fecha }).then(result => {
                 setHorario(result);
@@ -341,37 +330,32 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
         }
     },[idper, fecha])
 
-    const desdeFecha = horario[0]?.desde ?  (horario[0].desde as RealDate).toDmy() : '';
-    const hastaFecha = horario[0]?.hasta ? (horario[0].hasta as RealDate).toDmy() : '';
+    const desdeFecha = horario.desde;
+    const hastaFecha = horario.hasta;
+
+    function HorarioRenglon(props:{box:(data:HorarioSemanaVigenteDia) => ReactNode[]|ReactNode}){
+        return <div className="horario-renglon">
+            {Object.keys(horario.dias).map(dds => props.box(horario.dias[dds]))}
+        </div>
+    }
     
     return <Componente componentType="horario">
         <div className="horario-vigente">
-            Horario vigente desde {desdeFecha} hasta {hastaFecha || 'la actualidad'}.
+            Horario vigente desde {desdeFecha.toDmy()} hasta {hastaFecha.toDmy()}.
         </div>
         <div className="horario-contenedor">
-            {horario.map((h, index) => (
-                <div 
-                    key={index} 
-                    className={`${h.trabaja ? '' : 'tipo-dia-no-laborable'}`}
-                >
-                    <div className="horario-dia">
-                        {DDS[h.dds as 0 | 1 | 2 | 3 | 4 | 5 | 6].nombre}
-                    </div>
-                    <div className="horario-dia">
-                        {h.trabaja ? (
-                            <>
-                                <div>{h.hora_desde || '-'}</div>
-                                <div>{h.hora_hasta || '-'}</div>
-                            </>
-                        ) : (
-                            <div>-</div>
-                        )}
-                    </div>
-                    <div className="horario-dia">
-                        {h.cod_nov || '-'}
-                    </div>
-                </div>
-            ))}
+            <HorarioRenglon box={info => <div className="horario-dia calendario-nombre-dia"> {DDS[info.dds].abr}</div> } />
+            <HorarioRenglon box={info => <div className={`horario-dia ${info.trabaja ? '' : 'tipo-dia-no-laborable'}`}> 
+                {info.trabaja ? (
+                    <>
+                        <div>{info.hora_desde}</div>
+                        <div>{info.hora_hasta}</div>
+                    </>
+                ) : (
+                    <div>-</div>
+                )}                
+            </div> } />
+            <HorarioRenglon box={info => <div className={`horario-dia calendario-nombre-dia ${info.trabaja ? '' : 'tipo-dia-no-laborable'}`}> {info.cod_nov}</div> } />
         </div>
     </Componente>
 }
@@ -438,6 +422,10 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
 
 type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate, usuario:string, apellido:string, nombres:string, cuil:string, ficha:string};
 
+type Hora = string;
+
+type HorarioSemanaVigenteDia = {hora_desde:Hora, hora_hasta:Hora, cod_nov:string, trabaja:boolean, dds:0 | 1 | 2 | 3 | 4 | 5 | 6}
+type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, dias:Record<string, HorarioSemanaVigenteDia>}
 declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: (params: {
@@ -453,8 +441,7 @@ declare module "frontend-plus" {
             fecha: Date
         }) => Promise<PersonasNovedadActualResult[]>;
         horario_semana_vigente: (params:{
-
-        }) => Promise<any>;
+        }) => Promise<HorarioSemanaVigenteResult>;
     }
 }
 
@@ -511,45 +498,45 @@ function Pantalla1(props:{conn: Connector}){
             <Typography>El usuario <b>{infoUsuario.usuario}</b> no tiene una persona asociada</Typography>
         : <Paper className="componente-pantalla-1">
             <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)}/>
-            <Paper>
-                <div className="box-line">
-                    <span className="box-id">
-                        {idper}
-                    </span>
-                    <span className="box-names">
-                        {persona.apellido}, {persona.nombres}
-                    </span>
-                </div>
-                <div className="box-line">
-                    <span className="box-names">
-                        CUIL: {persona.cuil}
-                    </span>
-                    <span className="box-names">
-                        FICHA: {persona.ficha}
-                    </span>
-                </div>
+            <Componente componentType="del-medio">
+                <Box>
+                    <div className="box-line">
+                        <span className="box-id">
+                            {idper}
+                        </span>
+                        <span className="box-names">
+                            {persona.apellido}, {persona.nombres}
+                        </span>
+                    </div>
+                    <div className="box-line">
+                        <span className="box-names">
+                            CUIL: {persona.cuil}
+                        </span>
+                        <span className="box-names">
+                            FICHA: {persona.ficha}
+                        </span>
+                    </div>
+                </Box>
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}/>
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
-                <Box>
+                {cod_nov && idper && fecha && hasta && !registrandoNovedad ? <Box>
                     <TextField
+                        className="novedades-detalles"
                         label="Detalles"
                         placeholder={conDetalles ? "Obligatorio" : ""}
-                        multiline
-                        rows={4}
                         value={detalles}
                         onChange={(e) => setDetalles(e.target.value)}
                         required={conDetalles}
                         error={conDetalles && !detalles}
                         helperText={conDetalles && !detalles ? "El campo es obligatorio." : ""}
                     />
-                </Box>
-                <Box>{cod_nov && idper && fecha && hasta && !registrandoNovedad ?
-                    <Button key="button" onClick={() => registrarNovedad()}>Registrar Novedad</Button>
-                : null}</Box>
+                    <Button key="button" variant="outlined" onClick={() => registrarNovedad()}>Registrar Novedad <ICON.Save/></Button>
+                </Box>: null}
                 <Box>{registrandoNovedad || error ?
                     <Typography>{error?.message ?? (registrandoNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
-            </Paper>
+                <Horario conn={conn} idper={idper} fecha={fecha}/>
+            </Componente>
             <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov, conDetalles) => handleCodNovChange(codNov, conDetalles)}/>
         </Paper>;
 }
@@ -626,6 +613,25 @@ function RegistrarNovedades(props:{conn: Connector, idper:string}){
 
 const IDPER_DEMO = "AR8"
 
+function PantallaPrincipal(props: {conn: Connector}){
+    return <Paper>
+        <AppBar position="static">
+            <Toolbar>
+                <IconButton color="inherit" onClick={()=>{
+                    var root = document.getElementById('total-layout');
+                    if (root != null ) ReactDOM.unmountComponentAtNode(root)
+                    location.hash="";
+                }}><ICON.Menu/></IconButton>
+                <Typography flexGrow={2}>
+                    SiPer - Principal - <small>(DEMO)</small>
+                </Typography>
+            </Toolbar>
+        </AppBar>
+        <Pantalla1 conn={props.conn}/>
+    </Paper>
+
+}
+
 function DemoDeComponentes(props: {conn: Connector}){
     const {conn} = props;
     type QUE = ""|"calendario"|"personas"|"novedades-registradas"|"horario"|"persona"|"datos-personales"|"pantalla-1"|"registrar-novedades"|"novedades-per"
@@ -691,11 +697,11 @@ myOwn.wScreens.componentesSiper = function componentesSiper(addrParams:any){
 }
 
 // @ts-ignore
-myOwn.wScreens.componentesSiper = function componentesSiper(addrParams:any){
+myOwn.wScreens.principal = function principal(addrParams:any){
     renderConnectedApp(
         myOwn as never as Connector,
-        { ...addrParams, table: 'personas' },
+        { ...addrParams},
         document.getElementById('total-layout')!,
-        ({ conn }) => <DemoDeComponentes conn={conn} />
+        ({ conn }) => <PantallaPrincipal conn={conn} />
     )
 }

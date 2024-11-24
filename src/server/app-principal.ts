@@ -66,6 +66,7 @@ export class AppSiper extends AppBackend{
         var menuContent:MenuInfoBase[]=[];
         if(context.user && context.user.rol=="admin"){
             menuContent.push(
+                {menuType:'principal', name:'principal'     },
                 {menuType:'table', name:'personas'          },
                 {menuType:'menu', name:'novedades', menuContent:[
                     {menuType:'registroNovedades', name:'registro'},

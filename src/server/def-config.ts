@@ -18,6 +18,7 @@ login:
   activeClausule: activo
   unloggedLandPage: false
   plus:
+    successRedirect: /menu#i=principal
     allowHttpLogin: true
     fileStore: true
     loginForm:

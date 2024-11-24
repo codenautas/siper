@@ -118,10 +118,6 @@ div.calendario-dia-seleccionado, div.seleccionado
 .tipo-dia-no-trabaja
   background-color #ed9
 
-@media (max-width: 600px)
-  .calendario-extendido-dia
-    height 60px
-
 .calendario-extendido-dia-numero, .calendario-extendido-dia-contenido
   font-size 70%
 
@@ -170,6 +166,7 @@ span.box-info
 
 .componente-pantalla-1
   display flex
+  gap 2em
 
 .componente-codigo-novedades
   min-width 24em
@@ -180,16 +177,34 @@ span.box-info
 
 .horario-vigente
   text-align center
-  font-weight bold
   margin-bottom 1em
 
 .horario-contenedor
   display flex
-  justify-content space-around
   align-items flex-start
+  flex-direction column
 
 .horario-dia
-  font-weight bold
-  margin-bottom 0.5em
+  display flex
+  flex-direction column
+  width 4em
+  height 2.5em
+  border-bottom 0.5px dotted gray
+  border-right 0.5px dotted gray
+  padding 2px
 
+.search-box
+  padding-left 0.7em
 
+.componente-del-medio
+  min-width 470px
+  display flex
+  flex-direction column
+  gap 2em  
+
+.novedades-detalles
+  width 100%  
+
+div.horario-renglon
+  display flex
+  flex-direction row

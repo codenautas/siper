@@ -175,19 +175,18 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             f.dds,
                             f.annio
                         FROM fechas f
-                        WHERE f.dds BETWEEN 1 AND 5
-                        AND f.fecha BETWEEN ($2::DATE - (EXTRACT(DOW FROM $2::DATE)::INTEGER - 1))
-                                        AND ($2::DATE + (5 - EXTRACT(DOW FROM $2::DATE)::INTEGER))
+                        WHERE f.fecha BETWEEN ($2::DATE - (EXTRACT(DOW FROM $2::DATE)::INTEGER))
+                                        AND ($2::DATE + (6 - EXTRACT(DOW FROM $2::DATE)::INTEGER))
                     )
+                    ,horarios_semana AS (                    
                     SELECT 
-                        d.fecha,
                         d.dds,
                         h.desde,
                         h.hasta,
                         coalesce(h.hora_desde, horario_habitual_desde) as hora_desde,
                         coalesce(h.hora_hasta, horario_habitual_hasta) as hora_hasta,
                         coalesce(h.trabaja, d.dds BETWEEN 1 AND 5) as trabaja,
-                        nv.cod_nov
+                        coalesce(h.cod_nov, cod_nov_habitual) as cod_nov
                     FROM dias_semana d
                         INNER JOIN annios a USING (annio)
                         LEFT JOIN horarios h 
@@ -195,13 +194,15 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             AND d.fecha >= h.desde 
                             AND (h.hasta IS NULL OR d.fecha <= h.hasta)
                             AND h.idper = $1
-                        LEFT JOIN novedades_vigentes nv 
-                            ON nv.fecha = d.fecha
-                            AND nv.idper = $1
-                    ORDER BY d.fecha;`
+                    ORDER BY d.fecha
+                    )
+                    SELECT coalesce(max(desde), make_date(extract(year from $2)::integer,1,1)) as desde, 
+                            coalesce(min(hasta), make_date(extract(year from $2)::integer,12,31)) as hasta, 
+                            json_object_agg(dds, to_jsonb(hs.*) - 'desde' - 'hasta') as dias
+                        FROM horarios_semana hs;`
                 , [params.idper, params.fecha]
-            ).fetchAll();
-            return info.rows
+            ).fetchUniqueRow();
+            return info.row
         }
     },
     {
