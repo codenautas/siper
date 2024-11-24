@@ -6,6 +6,7 @@ import { NovedadRegistrada, calendario_persona, historico_persona, novedades_dis
 
 import { date, datetime } from 'best-globals'
 import { DefinedType } from 'guarantee-type';
+import { FixedFields } from 'frontend-plus';
 
 export const ProceduresPrincipal:ProcedureDef[] = [
     {
@@ -259,6 +260,34 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 fixedFields:[{fieldName:'fecha', value:params.fecha}], 
                 tableDef:{title:'parte diario del '+params.fecha.toDmy()+' - Generado con información hasta '+datetime.now().toLocaleString()}
             };
+        }
+    },
+    {
+        action: 'visor_de_fichadas',
+        parameters: [
+            {name:'fecha'  , typeName:'date', specialDefaultValue: 'current_date'},
+            {name:'idper'  , typeName:'text', label:'persona', references: 'personas', defaultValue:null}
+        ],
+        resultOk:'showGrid',
+        coreFunction: async function(context: ProcedureContext, params:any){
+            var grilla = {
+                tableName:'fichadas_vigentes', 
+                fixedFields: [] as FixedFields, 
+                tableDef:{title:'visor de fichadas'}
+            }
+            if (params.fecha != null) {
+                grilla.fixedFields.push({fieldName:'fecha', value:params.fecha});
+                grilla.tableDef.title += ' del '+params.fecha.toDmy();
+            }
+            if (params.idper != null) {
+                var apeynom = await context.client.query(`select concat_ws(', ', apellido, nombres) from personas where idper = $1 `,[params.idper]).fetchUniqueValue();
+                grilla.fixedFields.push({fieldName:'idper', value:params.idper});
+                grilla.tableDef.title += ' de '+apeynom.value;
+            }
+            if (grilla.fixedFields.length == 0) {
+                throw new Error("debe especificar nombre o fecha")
+            }
+            return grilla;
         }
     }
 ];
