@@ -479,12 +479,15 @@ function Pantalla1(props:{conn: Connector}){
         conn.ajax.table_record_save({
             table:'novedades_registradas',
             primaryKeyValues:[],
-            newRow:{idper, desde:fecha, hasta, cod_nov, detalles},
+            newRow:{idper, desde:fecha, hasta, cod_nov, detalles: detalles == "" ? null : detalles},
             oldRow:{},
             status:'new'
         }).then(function(result){
             console.log(result)
             setUltimaNovedad(result.row.idr as number);
+            setFecha(date.today());
+            setHasta(date.today());
+            setCodNov("");
         }).catch(setError).finally(()=>setRegistrandoNovedad(false));
     }
     function handleCodNovChange(codNov: string, conDetalles: boolean) {
