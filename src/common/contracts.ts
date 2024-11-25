@@ -186,7 +186,7 @@ export const usuarios = {
 
 export type Usuario = DefinedType<typeof usuarios.description>
 
-export const capacitacion = {
+export const capacitaciones = {
     table: 'capacitaciones',
     description: is.object({
         editable: is.boolean
@@ -203,7 +203,7 @@ export const capacitacion = {
 }
 
 export const per_capa = {
-    table: 'capacitaciones',
+    table: 'per_capa',
     description: is.object({
         idper:      is.string,
         //año: is.number,

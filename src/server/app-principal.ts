@@ -73,6 +73,9 @@ export class AppSiper extends AppBackend{
                     {menuType:'proc', name:'visor_de_fichadas'},
                 ]},
                 {menuType:'table', name:'personas'          },
+                {menuType:'menu', name:'capacitaciones', menuContent:[
+                    {menuType:'table', name:'capacitaciones'},
+                ]},
                 {menuType:'menu', name:'novedades', menuContent:[
                     {menuType:'registroNovedades', name:'registro'},
                     {menuType:'statusPersona', name:'status'},
