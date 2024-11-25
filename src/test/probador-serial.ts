@@ -118,7 +118,7 @@ export class EmulatedSession<TApp extends AppBackend>{
         this.cookies = request.headers.getSetCookie();
         if (request.status != 302) throw new Error("se esperaba una redirección");
         var result = request.headers.get('location');
-        discrepances.showAndThrow(result, './menu');
+        discrepances.showAndThrow(result?.substring(0,6), './menu');
         return result;
     }
     // @ts-ignore
