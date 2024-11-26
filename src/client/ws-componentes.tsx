@@ -384,9 +384,9 @@ function DatosPersonales(props:{conn: Connector, idper:string}){
     </Componente>
 }
 
-function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean)=>void}){
+function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean)=>void, ultimaNovedad?: ULTIMA_NOVEDAD}){
     // @ts-ignore
-    const {idper, cod_nov, onCodNov, conn} = props;
+    const {idper, cod_nov, onCodNov, conn, ultimaNovedad} = props;
     const [codNovedades, setCodNovedades] = useState<NovedadesDisponiblesResult[]>([]);
     const [codNovedadesFiltradas, setCodNovedadesFiltradas] = useState<NovedadesDisponiblesResult[]>([]);
     const [filtro, setFiltro] = useState("");
@@ -398,7 +398,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
                 setCodNovedades(novedades);
             }).catch(logError);
         }
-    },[idper])
+    },[idper, ultimaNovedad])
     useEffect(function(){
         const recordFilter = GetRecordFilter<NovedadesDisponiblesResult>(filtro,['cod_nov', 'novedad']);
         setCodNovedadesFiltradas(codNovedades.filter(recordFilter))
@@ -540,7 +540,7 @@ function Pantalla1(props:{conn: Connector}){
                 : null}</Box>
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
             </Componente>
-            <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov, conDetalles) => handleCodNovChange(codNov, conDetalles)}/>
+            <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov, conDetalles) => handleCodNovChange(codNov, conDetalles)} ultimaNovedad={ultimaNovedad}/>
         </Paper>;
 }
 
