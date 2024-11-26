@@ -46,6 +46,9 @@ export function capacitaciones(context: TableContext): TableDefinition{
         foreignKeys: [
         ],
         constraints: [
+        ],
+        detailTables: [
+            {table:'per_capa'   , fields:[capacitacion.name, modalidad.name, tipo.name, fecha_inicio.name], abr:'P'},
         ]
     };
 }

@@ -64,6 +64,7 @@ export function personas(context: TableContext): TableDefinition {
             {table:'nov_per'              , fields:[idper.name], abr:'#'},
             {table:'historial_contrataciones', fields:[idper.name], abr:'hc'},
             {table:'inconsistencias'      , fields:[idper.name], abr:'⒤'},
+            {table:'per_capa'   , fields:[idper.name], abr:'C'},
         ]
     };
 }
