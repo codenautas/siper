@@ -156,7 +156,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 `select pe.idper, cuil, pe.ficha, idmeta4, apellido, nombres, pe.sector, cod_nov, novedad 
                     from personas pe
                     left join novedades_vigentes nv on nv.idper = pe.idper and nv.fecha = $1
-                    left join cod_novedades cn using(cod_nov)`
+                    left join cod_novedades cn using(cod_nov)
+                    order by apellido, nombres`
                 , [params.fecha]
             ).fetchAll();
             return info.rows
