@@ -354,8 +354,10 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     const hastaFecha = horario[0]?.hasta ? (horario[0].hasta as RealDate).toDmy() : '';
     
     return <Componente componentType="horario">
+        <Paper className="contenedores-paper">
+        <h4 className="titulo-componente-descripcion">Horario vigente</h4>
         <div className="horario-vigente">
-            Horario vigente desde {desdeFecha} hasta {hastaFecha || 'la actualidad'}.
+            Desde {desdeFecha} - Hasta {hastaFecha || 'la actualidad'}.
         </div>
         <div className="horario-contenedor">
             {horario.map((h, index) => (
@@ -382,6 +384,7 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
                 </div>
             ))}
         </div>
+        </Paper>
     </Componente>
 }
 
@@ -398,6 +401,11 @@ function DatosPersonales(props:{conn: Connector, idper:string}){
         }).catch(logError)
     },[idper])
     return <Componente componentType="datos-personales">
+        <Paper className="contenedores-paper">  
+        <h4 className="titulo-componente">Datos personales</h4>
+                        <div className="box-line">
+                    <span>CUIL: </span>              
+                </div>
         <table>
         {["ficha", "cuil", "apellido", "nombres"].map(n => 
             <tr key={n}>
@@ -406,6 +414,7 @@ function DatosPersonales(props:{conn: Connector, idper:string}){
             </tr>
         )}
         </table>
+        </Paper>
     </Componente>
 }
 
