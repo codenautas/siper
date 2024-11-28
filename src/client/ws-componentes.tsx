@@ -311,6 +311,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string}){
         }).catch(logError)
     },[idper])
     return <Componente componentType="novedades-registradas">
+        <h6 className="titulo-componente-descripcion">Novedades registradas</h6>
         <table>
         {novedades.map(n => 
             <tr>
@@ -355,9 +356,9 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     
     return <Componente componentType="horario">
         <Paper className="contenedores-paper">
-        <h4 className="titulo-componente-descripcion">Horario vigente</h4>
+        <h6 className="titulo-componente-descripcion">Horario</h6>
         <div className="horario-vigente">
-            Desde {desdeFecha} - Hasta {hastaFecha || 'la actualidad'}.
+            Vigente desde {desdeFecha} - Hasta {hastaFecha || 'la actualidad'}.
         </div>
         <div className="horario-contenedor">
             {horario.map((h, index) => (
@@ -402,18 +403,41 @@ function DatosPersonales(props:{conn: Connector, idper:string}){
     },[idper])
     return <Componente componentType="datos-personales">
         <Paper className="contenedores-paper">  
-        <h4 className="titulo-componente">Datos personales</h4>
-                        <div className="box-line">
-                    <span>CUIL: </span>              
-                </div>
-        <table>
+        <h6 className="titulo-componente">Datos personales</h6>
+        <div className="box-line">
+        <span><strong> {["apellido"].map(n => 
+            <tr key={n}>
+                <td><ValueDB value={persona[n]}/></td>
+            </tr>
+        )}</strong>
+        </span>
+        <span><strong> {["nombres"].map(n => 
+            <tr key={n}>
+                <td><ValueDB value={persona[n]}/></td>
+            </tr>
+        )}</strong>
+        </span>
+        </div>
+             <div className="box-line">
+             <span>CUIL: </span>  {["cuil"].map(n => 
+            <tr key={n}>
+                <td><ValueDB value={persona[n]}/></td>
+            </tr>
+        )}
+            <span> - FICHA: </span>  {["ficha"].map(n => 
+            <tr key={n}>
+                <td><ValueDB value={persona[n]}/></td>
+            </tr>
+        )}    
+             </div>
+        {/* <table>
         {["ficha", "cuil", "apellido", "nombres"].map(n => 
             <tr key={n}>
                 <td>{n}</td>
                 <td><ValueDB value={persona[n]}/></td>
             </tr>
         )}
-        </table>
+        </table> */}
         </Paper>
     </Componente>
 }
@@ -482,12 +506,22 @@ declare module "frontend-plus" {
 }
 
 function Persona(props:{conn: Connector, idper:string, fecha:RealDate}){
-    return <Paper className="componente-persona">
+    return <Box className="componente-persona" sx={{ padding: 3 }}>
+        <div>
+            <div>
         <DatosPersonales {...props}/>
+        </div>
+        <div style={{ paddingTop: 10 }}>
         <Horario {...props}/>
+        </div>
+            </div>
+            <div>
         <Calendario {...props}/>
+        </div>
+        <div>
         <NovedadesRegistradas {...props}/>
-    </Paper>
+        </div>
+    </Box>
 }
 
 function Pantalla1(props:{conn: Connector}){

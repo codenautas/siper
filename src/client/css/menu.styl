@@ -24,8 +24,11 @@ span.mdi
   margin 0 0 20px 0
 
 .titulo-componente-descripcion
-  margin-bottom 0px
-  color #ffff
+  margin 0 0 0px 0
+  font-family $font-primary
+  font-weight 600
+  line-height 1.6
+  font-size 1.2rem
 
 .my-grid td[my-colname*=nombre_sector]
   max-width 40em
@@ -187,9 +190,9 @@ span.box-names
 .componente-persona
   & > *
     margin 2em
-  display flex
-  flex-direction column
-  flex-wrap wrap
+  display grid
+  grid-template-columns repeat(3, 1fr)
+  gap 2%
   align-content space-between  
 
 .componente-pantalla-1
