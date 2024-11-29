@@ -20,8 +20,8 @@ export function descanso_anual_remunerado(_context: TableContext): TableDefiniti
             año,
             cod_nov,
             {name: 'total', typeName: 'integer'},
-            {name: 'tomadas'   , typeName: 'integer'},
-            {name: 'pedidas'  , typeName: 'integer'},
+            {name: 'pendientes'   , typeName: 'integer'}, //averiguar y cambiar por el nombre que corresponda 
+            {name: 'pedidos'  , typeName: 'integer'},
             {name: 'disponibles'   , typeName: 'integer'},
         ],
         primaryKey: [año.name, cod_nov.name, idper.name],
@@ -34,8 +34,8 @@ export function descanso_anual_remunerado(_context: TableContext): TableDefiniti
         sql: {
             isTable:false,
             from:`(
-                select annio, cod_nov, idper, max(origen) as origen, cantidad as total, count(*) as pedidas, cantidad - count(*) as disponibles,
-                count(*) filter (where fecha < (select fecha_actual from parametros)) as tomadas, p.sector
+                select annio, cod_nov, idper, max(origen) as origen, cantidad as total, count(*) as pedidos, cantidad - count(*) as disponibles,
+                count(*) filter (where fecha > (select fecha_actual from parametros)) as pendientes, p.sector
                     from novedades_vigentes n
                         inner join cod_novedades cn using(cod_nov)
                         inner join personas p using(idper)
