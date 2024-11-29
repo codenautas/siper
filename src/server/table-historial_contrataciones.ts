@@ -3,7 +3,7 @@
 import {TableDefinition, TableContext, soloMayusculas} from "./types-principal";
 
 import {idper} from "./table-personas"
-import { s_revista } from "table-situacion_revista";
+import { s_revista } from "./table-situacion_revista";
 
 export function historial_contrataciones(context: TableContext): TableDefinition{
     var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
