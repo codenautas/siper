@@ -18,6 +18,7 @@ export function situacion_revista(context:TableContext):TableDefinition{
         editable:admin,
         fields:[
             s_revista,
+            {name: 'con_novedades', typeName: 'boolean', description: 'si permite registrar una novedad' },
         ],
         primaryKey:[s_revista.name],
         constraints:[

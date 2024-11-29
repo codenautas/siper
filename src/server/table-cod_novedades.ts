@@ -32,6 +32,7 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {name: 'corridos'    , typeName: 'boolean', description:'días corridos (incluye feriados y fines de semana)'},
             {name: 'registra'    , typeName: 'boolean', description:'novedades que pueden ser registradas por los registras'},
             {name: 'prioritario' , typeName: 'boolean', description:'aparecen en la lista reducida'},
+            {name: 'modalidad'     , typeName: 'text'   },
         ],
         primaryKey:[cod_nov.name],
         constraints:[
