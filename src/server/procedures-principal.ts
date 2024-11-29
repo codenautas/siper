@@ -88,8 +88,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             when 6 then 'no-laborable' 
                             else 
                                 case 
+                                    when cod_nov is not null and con_novedad is null then 'trabaja'
                                     when laborable is false then 'no-laborable' 
-                                    when trabajable is true then 'trabajable'
                                     when cod_nov is not null then 'no-trabaja'
                                     else 'normal' end 
                         end as tipo_dia
@@ -145,7 +145,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                                         inner join cod_novedades cn using(cod_nov)
                                         inner join personas p using(idper)
                                         left join per_nov_cant using(annio, idper, cod_nov)
-                                    where n.con_novedad and idper = $1
+                                    where n.con_novedad and idper = $1 and annio = (select extract(year from fecha_actual) from parametros)
                                     group by annio, cod_nov, idper, cantidad
                 ) v on v.cod_nov = cn.cod_nov
                 where cn.cod_nov is not null`,
@@ -296,6 +296,36 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             }
             if (grilla.fixedFields.length == 0) {
                 throw new Error("debe especificar nombre o fecha")
+            }
+            return grilla;
+        }
+    },
+    {
+        action: 'descanso_anual_remunerado',
+        parameters: [
+            {name:'annio'  , typeName:'integer', label: 'annio', references: 'annios', defaultValue:null},
+            {name:'idper'  , typeName:'text', label:'persona', references: 'personas', defaultValue:null},
+            {name:'sector'  , typeName:'text', label:'sector', references: 'sectores', defaultValue:null}
+        ],
+        resultOk:'showGrid',
+        coreFunction: async function(context: ProcedureContext, params:any){
+            var grilla = {
+                tableName:'descanso_anual_remunerado', 
+                fixedFields: [] as FixedFields, 
+                tableDef:{title:'descanso anual remunerado', hiddenColumns:[] as string[]}
+            }
+            if (params.annio != null) {
+                grilla.fixedFields.push({fieldName:'annio', value:params.annio});
+                grilla.tableDef.title += ' del '+params.annio;
+            }
+            if (params.idper != null) {
+                var apeynom = await context.client.query(`select concat_ws(', ', apellido, nombres) from personas where idper = $1 `,[params.idper]).fetchUniqueValue();
+                grilla.fixedFields.push({fieldName:'idper', value:params.idper});
+                grilla.tableDef.title += ' de '+apeynom.value;
+                grilla.tableDef.hiddenColumns.push('sector', 'sectores__nombre_sector')
+            }
+            if (params.sector != null) {
+                grilla.fixedFields.push({fieldName:'sector', value:params.sector});
             }
             return grilla;
         }

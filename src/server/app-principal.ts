@@ -69,7 +69,7 @@ export class AppSiper extends AppBackend{
                 {menuType:'principal', name:'principal'     },
                 {menuType:'menu', name:'listados', menuContent:[
                     {menuType:'proc', name:'parte_diario'},
-                    {menuType:'table', name:'descanso_anual_remunerado'},
+                    {menuType:'proc', name:'descanso_anual_remunerado'},
                     {menuType:'proc', name:'visor_de_fichadas'},
                 ]},
                 {menuType:'table', name:'personas'          },
