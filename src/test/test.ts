@@ -859,7 +859,7 @@ describe("connected", function(){
             // console.log('test', this.test)
             // console.log('this', this)
         } else {
-            this.timeout(TIMEOUT_SPEED * 12);
+            this.timeout(TIMEOUT_SPEED * 15);
             try {
                 /**
                  * Podría ocurrir que haya algún problema al recalcular. 

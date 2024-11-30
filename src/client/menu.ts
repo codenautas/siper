@@ -18,4 +18,11 @@ TypeStore.type.text.postInputs.sinMinusculasNiAcentos =
             .replace(/[úÚùÙüÜ]/g,'U')
             .replace(/[ñ]/g,'Ñ')
             .replace(/[^A-Z0-9 ]/g,'_');
-    };
+};
+
+    // @ts-expect-error no conoce en este punto el TypeStore
+TypeStore.type.text.postInputs.sinMinusculas = 
+function sinMinusculasNiAcentos(textWithValue: string){
+    return textWithValue.toUpperCase()
+        .replace(/[ñ]/g,'Ñ');
+};

@@ -30,6 +30,7 @@ import { parametros           } from "./table-parametros";
 import { horarios             } from "./table-horarios";
 import { fichadas             } from "./table-fichadas";
 import { historial_contrataciones} from "./table-historial_contrataciones";
+import { capa_modalidades     } from "./table-capa_modalidades";
 import { capacitaciones       } from "./table-capacitaciones";
 import { per_capa       } from "./table-per_capa";
 import { parte_diario         } from "./table-parte-diario";
@@ -75,6 +76,7 @@ export class AppSiper extends AppBackend{
                 {menuType:'table', name:'personas'          },
                 {menuType:'menu', name:'capacitaciones', menuContent:[
                     {menuType:'table', name:'capacitaciones'},
+                    {menuType:'table', name:'modadidades', table:'capa_modalidades'},
                 ]},
                 {menuType:'menu', name:'novedades', menuContent:[
                     {menuType:'registroNovedades', name:'registro'},
@@ -168,6 +170,7 @@ export class AppSiper extends AppBackend{
             horarios             ,
             fichadas             ,
             historial_contrataciones,
+            capa_modalidades       ,
             capacitaciones       ,
             per_capa             ,
             parte_diario         ,

@@ -25,6 +25,7 @@ declare module "backend-plus"{
 
 export const soloDigitosPostConfig = 'soloDigitos' as PostInputOptions
 export const sinMinusculasNiAcentos = 'sinMinusculasNiAcentos' as PostInputOptions
+export const sinMinusculas = 'sinMinusculas' as PostInputOptions
 
 export function soloDigitosCons(fieldName: string):Constraint{
     return {
