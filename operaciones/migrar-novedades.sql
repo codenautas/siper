@@ -16,7 +16,7 @@ delete from novedades_vigentes;
 -- select count(*) from fichadas;
 insert into fichadas (idper, fecha, hora, origen)
   select idper, fecha, 
-    case  
+    case
       when g = 1 then ent_fich::time 
       when g = 2 then sal_fich::time 
       -- grupos 3 y 4 son solo para la DEMO!!!!
@@ -75,3 +75,5 @@ insert into novedades_registradas (idper, cod_nov, desde, hasta, detalles)
     group by grupo, idper, cod_nov, novedad, con_detalles;
 
 select * from novedades_registradas order by idper, desde, hasta;
+
+CALL actualizar_novedades_vigentes('2024-01-01'::date,'2024-12-31'::date);

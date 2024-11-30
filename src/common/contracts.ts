@@ -270,7 +270,7 @@ export const novedades_disponibles = {
         cantidad: is.number,
         limite: is.number,
         saldo: is.number,
-        cargable: is.boolean,
+        con_disponibilidad: is.boolean,
     })
 }
 

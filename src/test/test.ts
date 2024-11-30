@@ -280,7 +280,7 @@ describe("connected", function(){
             await enNuevaPersona("persona para usuario básico de sesión", {usuario:{sesion:true}}, async (_, {sesion}) => {
                 basicoSession = sesion;
             });
-            await enNuevaPersona("persona para usuario jefe de sector 11", {usuario:{sesion:true, rol:'jefe', sector:'PRA11'}}, async (_, {sesion}) => {
+            await enNuevaPersona("persona para usuario jefe de sector 11", {usuario:{sesion:true, rol:'registra', sector:'PRA11'}}, async (_, {sesion}) => {
                 jefe11Session = sesion;
             });
         })

@@ -2,4 +2,4 @@ rol      |puede_cargar_todo|puede_cargar_dependientes|puede_cargar_propio|puede_
 admin    |true             |true                     |true               |true                    
 rrhh     |true             |true                     |true               |false                   
 basico   |false            |false                    |false              |false                   
-jefe     |false            |true                     |false              |false                   
+registra |false            |true                     |false              |false                   

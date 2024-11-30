@@ -135,21 +135,25 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const {idper} = params;
             const info = await context.client.query(
                 `select cn.cod_nov, cn.novedad, coalesce(cn.con_detalles, FALSE) as con_detalles, coalesce(v.cantidad, 0) as cantidad, 
-                    coalesce(v.limite, 0) as limite, 
-                    coalesce(v.saldo, 0) as saldo, 
-                    (coalesce(v.saldo, 0) > 0 or coalesce(v.limite, 0) = 0) as cargable 
-                    from cod_novedades cn
-                    left join
-                    (select annio, cod_nov, idper, max(origen) as origen, count(*) as cantidad, cantidad as limite, cantidad - count(*) as saldo
-                                    from novedades_vigentes n
-                                        inner join cod_novedades cn using(cod_nov)
-                                        inner join personas p using(idper)
-                                        left join per_nov_cant using(annio, idper, cod_nov)
-                                    where n.con_novedad and idper = $1 and annio = (select extract(year from fecha_actual) from parametros)
-                                    group by annio, cod_nov, idper, cantidad
-                ) v on v.cod_nov = cn.cod_nov
-                where cn.cod_nov is not null`,
-                [idper]
+                        coalesce(v.limite, 0) as limite, 
+                        coalesce(v.saldo, 0) as saldo, 
+                        (coalesce(v.saldo, 0) > 0 or v.limite is null) as con_disponibilidad,
+                        (cn.registra and r.puede_cargar_dependientes or puede_cargar_todo) as puede_cargar
+                    from cod_novedades cn 
+                        inner join usuarios u on u.usuario = $2
+                        -- inner join personas pu on pu.idper = u.ipder -- persona conectada
+                        inner join roles r using (rol)
+                        left join
+                            (select annio, cod_nov, idper, max(origen) as origen, count(*) as cantidad, cantidad as limite, cantidad - count(*) as saldo
+                                from novedades_vigentes n
+                                    inner join cod_novedades cn using(cod_nov)
+                                    inner join personas p using(idper)
+                                    left join per_nov_cant using(annio, idper, cod_nov)
+                                where n.con_novedad and idper = $1 and annio = (select extract(year from fecha_actual) from parametros)
+                                group by annio, cod_nov, idper, cantidad
+                            ) v on v.cod_nov = cn.cod_nov
+                    where (cantidad > 0 or cn.registra and r.puede_cargar_dependientes or puede_cargar_todo)`,
+                [idper, context.username]
             ).fetchAll();
             return info.rows
         }

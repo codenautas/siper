@@ -63,46 +63,69 @@ export class AppSiper extends AppBackend{
             ...ProceduresPrincipal
         ].map(be.procedureDefCompleter, be);
     }
+    completeContext(context:Context){
+        context.es = context.es || {}
+        context.es.registra = context.user && context.user.rol=="registra" 
+        context.es.rrhh = context.es.registra || context.user && context.user.rol=="rrhh" 
+        context.es.admin = context.es.rrhh || context.user && context.user.rol=="admin" 
+    }
+    override getContextForDump():Context{
+        var context = super.getContextForDump();
+        this.completeContext(context);
+        return context;
+    }
+    override getContext(req:Request):Context{
+        var context = super.getContext(req);
+        this.completeContext(context);
+        return context;
+    }
     override getMenu(context:Context):MenuDefinition{
+        var {es} = context
         var menuContent:MenuInfoBase[]=[];
-        if(context.user && context.user.rol=="admin"){
-            menuContent.push(
-                {menuType:'principal', name:'principal'     },
+        menuContent.push(
+            {menuType:'principal', name:'principal'     },
+            ...(es.registra ? [
                 {menuType:'menu', name:'listados', menuContent:[
                     {menuType:'proc', name:'parte_diario'},
                     {menuType:'proc', name:'descanso_anual_remunerado'},
                     {menuType:'proc', name:'visor_de_fichadas'},
-                ]},
-                {menuType:'table', name:'personas'          },
-                {menuType:'menu', name:'capacitaciones', menuContent:[
-                    {menuType:'table', name:'capacitaciones'},
-                    {menuType:'table', name:'modadidades', table:'capa_modalidades'},
-                ]},
-                {menuType:'menu', name:'novedades', menuContent:[
-                    {menuType:'registroNovedades', name:'registro'},
-                    {menuType:'statusPersona', name:'status'},
-                    {menuType:'menu', name:'tablas', menuContent:[
-                        {menuType:'table', name:'novedades_vigentes'   },
-                        {menuType:'table', name:'novedades_registradas'},
+                ]}
+            ] : []),
+            {menuType:'table', name:'personas'          },
+            {menuType:'menu', name:'capacitaciones', menuContent:[
+                {menuType:'table', name:'capacitaciones'},
+                ...(es.registra ? [{menuType:'table', name:'modadidades', table:'capa_modalidades'}] : []),
+            ]}
+        );
+        if(es.registra){
+            menuContent.push(
+                {menuType:'menu', name:'en_desarrollo', menuContent:[
+                    {menuType:'menu', name:'novedades', menuContent:[
+                        {menuType:'registroNovedades', name:'registro'},
+                        {menuType:'statusPersona', name:'status'},
+                        {menuType:'menu', name:'tablas', menuContent:[
+                            {menuType:'table', name:'novedades_vigentes'   },
+                            {menuType:'table', name:'novedades_registradas'},
+                        ]},
                     ]},
-                ]},
-                {menuType:'menu', name:'importaciones', menuContent:[
-                    {menuType:'table', name:'novedades_importadas'},
-                    {menuType:'table', name:'nov_per_importado'},
-                ]},
-                {menuType:'menu', name:'devel', menuContent:[
-                    {menuType:'componentesSiper', name:'componentes'},
-                ]},
-                {menuType:'menu', name:'config', label:'configurar', menuContent:[
-                    {menuType:'table', name:'fechas'        },
-                    {menuType:'menu', name:'ref personas'   , description:'tablas referenciales de personas', menuContent:[
-                        {menuType:'table', name:'sectores'         },
-                        {menuType:'table', name:'situacion_revista', label: 'sit. revista' },
-                        {menuType:'table', name:'clases'           },
+                    {menuType:'menu', name:'importaciones', menuContent:[
+                        {menuType:'table', name:'novedades_importadas'},
+                        {menuType:'table', name:'nov_per_importado'},
                     ]},
-                    {menuType:'table', name:'cod_novedades' },
-                    {menuType:'table', name:'usuarios'      },
-                    {menuType:'table', name:'horarios'      },
+                    {menuType:'menu', name:'devel', menuContent:[
+                        {menuType:'componentesSiper', name:'componentes'},
+                    ]},
+                    {menuType:'menu', name:'config', label:'configurar', menuContent:[
+                        {menuType:'table', name:'fechas'        },
+                        {menuType:'menu', name:'ref personas'   , description:'tablas referenciales de personas', menuContent:[
+                            {menuType:'table', name:'sectores'         },
+                            {menuType:'table', name:'situacion_revista', label: 'sit. revista' },
+                            {menuType:'table', name:'clases'           },
+                        ]},
+                        {menuType:'table', name:'cod_novedades' },
+                        {menuType:'table', name:'usuarios'      },
+                        {menuType:'table', name:'horarios'      },
+                    ]}
                 ]}
             );
         }

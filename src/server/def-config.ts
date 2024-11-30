@@ -34,6 +34,7 @@ install:
       owner: siper_owner
       extensions: 
       - gist
+    enances: inline
     scripts:
       prepare:
       - ../node_modules/type-store/postgres/time_range.sql
@@ -45,6 +46,8 @@ install:
       - ../install/personas_id_trg.sql
       - ../install/validar_digito.sql
       post-adapt:
+      - ../node_modules/pg-triggers/lib/recreate-his.sql
+      - ../node_modules/pg-triggers/lib/table-changes.sql
       - ../node_modules/pg-triggers/lib/function-changes-trg.sql
       - ../node_modules/pg-triggers/lib/enance.sql    
       - ../install/novedades_calculadas.sql

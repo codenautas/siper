@@ -36,6 +36,7 @@ export function fichadas_vigentes(_context: TableContext): TableDefinition{
         ],
         sql:{
             isTable: false,
+            skipEnance: true,
             from:`(${sqlParteDiario})`
         }
     };
