@@ -439,6 +439,7 @@ type Hora = string;
 
 type HorarioSemanaVigenteDia = {hora_desde:Hora, hora_hasta:Hora, cod_nov:string, trabaja:boolean, dds:0 | 1 | 2 | 3 | 4 | 5 | 6}
 type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, dias:Record<string, HorarioSemanaVigenteDia>}
+type SiCargaraNovedades = {mensaje:string, con_detalle:boolean}
 declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: (params: {
@@ -455,6 +456,12 @@ declare module "frontend-plus" {
         }) => Promise<PersonasNovedadActualResult[]>;
         horario_semana_vigente: (params:{
         }) => Promise<HorarioSemanaVigenteResult>;
+        si_cargara_novedad: (params:{
+            idper:string,
+            cod_nov:string,
+            desde:Date,
+            hasta:Date
+        }) => Promise<SiCargaraNovedades>;
     }
 }
 
@@ -473,10 +480,11 @@ function Pantalla1(props:{conn: Connector}){
     const [persona, setPersona] = useState({} as ProvisorioPersonas);
     const [cod_nov, setCodNov] = useState("");
     const [detalles, setDetalles] = useState("");
-    const [conDetalles, setConDetalles] = useState(false);
     const [fecha, setFecha] = useState<RealDate>(date.today());
     const [hasta, setHasta] = useState<RealDate>(date.today());
     const [registrandoNovedad, setRegistrandoNovedad] = useState(false);
+    const [siCargaraNovedad, setSiCargaraNovedad] = useState<SiCargaraNovedades|null>(null);
+    const [guarndadoRegistroNovedad, setGuardandoRegistroNovedad] = useState(false);
     const [error, setError] = useState<Error|null>(null);
     const {idper} = persona
     const [ultimaNovedad, setUltimaNovedad] = useState(0);
@@ -487,8 +495,13 @@ function Pantalla1(props:{conn: Connector}){
             setInfoUsuario(infoUsuario);
         }).catch(logError)
     },[])
+    useEffect(function(){
+        setRegistrandoNovedad(false);
+        setSiCargaraNovedad(null);
+        setError(null);
+    },[idper,cod_nov,fecha,hasta])
     function registrarNovedad(){
-        setRegistrandoNovedad(true);
+        setGuardandoRegistroNovedad(true);
         conn.ajax.table_record_save({
             table:'novedades_registradas',
             primaryKeyValues:[],
@@ -501,11 +514,10 @@ function Pantalla1(props:{conn: Connector}){
             setFecha(date.today());
             setHasta(date.today());
             setCodNov("");
-        }).catch(setError).finally(()=>setRegistrandoNovedad(false));
+        }).catch(setError).finally(()=>setGuardandoRegistroNovedad(false));
     }
-    function handleCodNovChange(codNov: string, conDetalles: boolean) {
+    function handleCodNovChange(codNov: string) {
         setCodNov(codNov);
-        setConDetalles(conDetalles);
     }
 
     return infoUsuario.usuario == null ?  
@@ -535,25 +547,36 @@ function Pantalla1(props:{conn: Connector}){
                 </Box>
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}/>
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
-                {cod_nov && idper && fecha && hasta && !registrandoNovedad && persona.cargable ? <Box>
+                {cod_nov && idper && fecha && hasta && !guarndadoRegistroNovedad && !registrandoNovedad && persona.cargable ? <Box key="setSiCargaraNovedad">
+                    <Button key="button" variant="outlined" onClick={() => {
+                        setRegistrandoNovedad(true);
+                        conn.ajax.si_cargara_novedad({idper, cod_nov, desde:fecha, hasta}).then(setSiCargaraNovedad).catch(logError)
+                    }}>Registrar Novedad</Button>
+                </Box>: null}
+                {registrandoNovedad && !siCargaraNovedad ? <Box key="setMensajeRegistroNovedad">
+                    <CircularProgress />
+                </Box>: null}
+                {siCargaraNovedad ? <Box>
                     <TextField
                         className="novedades-detalles"
                         label="Detalles"
-                        placeholder={conDetalles ? "Obligatorio" : ""}
+                        placeholder={siCargaraNovedad.con_detalle ? "Obligatorio" : ""}
                         value={detalles}
                         onChange={(e) => setDetalles(e.target.value)}
-                        required={conDetalles}
-                        error={conDetalles && !detalles}
-                        helperText={conDetalles && !detalles ? "El campo es obligatorio." : ""}
+                        required={siCargaraNovedad.con_detalle}
+                        error={siCargaraNovedad.con_detalle && !detalles}
+                        helperText={siCargaraNovedad.con_detalle && !detalles ? "El campo es obligatorio." : ""}
                     />
-                    <Button key="button" variant="outlined" onClick={() => registrarNovedad()}>Registrar Novedad <ICON.Save/></Button>
+                    <Button className="boton-confirmar-registro-novedades" key="button" variant="outlined" onClick={() => registrarNovedad()}>
+                        {siCargaraNovedad.mensaje}<ICON.Save/>
+                    </Button>
                 </Box>: null}
-                <Box>{registrandoNovedad || error ?
-                    <Typography>{error?.message ?? (registrandoNovedad && "registrando..." || "error")}</Typography>
+                <Box>{guarndadoRegistroNovedad || error ?
+                    <Typography>{error?.message ?? (guarndadoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
             </Componente>
-            <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov, conDetalles) => handleCodNovChange(codNov, conDetalles)} ultimaNovedad={ultimaNovedad}/>
+            <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
         </Paper>;
 }
 
