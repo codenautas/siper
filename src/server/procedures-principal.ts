@@ -161,7 +161,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                                 where n.con_novedad and idper = $1 and annio = (select extract(year from fecha_actual) from parametros)
                                 group by annio, cod_nov, idper, cantidad
                             ) v on v.cod_nov = cn.cod_nov
-                    where (cantidad > 0 or cn.registra and r.puede_cargar_dependientes or puede_cargar_todo)`,
+                    where (cantidad > 0 or cn.registra and r.puede_cargar_dependientes or puede_cargar_todo)
+                    order by cn.cod_nov`,
                 [idper, context.username]
             ).fetchAll();
             return info.rows
@@ -225,7 +226,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     )
                     SELECT coalesce(max(desde), make_date(extract(year from $2)::integer,1,1)) as desde, 
                             coalesce(min(hasta), make_date(extract(year from $2)::integer,12,31)) as hasta, 
-                            json_object_agg(dds, to_jsonb(hs.*) - 'desde' - 'hasta') as dias
+                            json_object_agg(dds, to_jsonb(hs.*) - 'desde' - 'hasta' order by dds) as dias
                         FROM horarios_semana hs;`
                 , [params.idper, params.fecha]
             ).fetchUniqueRow();

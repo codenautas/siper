@@ -19,6 +19,7 @@ import {
     Accordion, AccordionSummary, AccordionDetails, AppBar,
     Box, Button, 
     Card, CircularProgress,
+    Dialog, 
     IconButton, InputBase,
     List, ListItemButton,
     MenuItem, 
@@ -212,6 +213,8 @@ type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<str
 // @ts-ignore
 type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
+type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, detalles:string, idr:number}
+
 type IdperFuncionCambio = (persona:ProvisorioPersonas)=>void
 
 function SearchBox(props: {onChange:(newValue:string)=>void}){
@@ -303,30 +306,55 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     </Componente>
 }
 
-function NovedadesRegistradas(props:{conn: Connector, idper:string}){
-    const {idper, conn} = props;
-    const [novedades, setNovedades] = useState<RowType[]>([]);
+function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number, ultimaNovedad?:number, onBorrado:()=>void}){
+    const {idper, conn, ultimaNovedad} = props;
+    const [novedades, setNovedades] = useState<ProvisorioNovedadesRegistradas[]>([]);
+    const [quiereBorrar, setQuiereBorrar] = useState<ProvisorioNovedadesRegistradas|null>(null);
+    const [eliminando, setEliminando] = useState(false);
     useEffect(function(){
-        conn.ajax.table_data({
+        conn.ajax.table_data<ProvisorioNovedadesRegistradas>({
             table: 'novedades_registradas',
             fixedFields: [{fieldName:'idper', value:idper}],
             paramfun: {}
         }).then(function(novedadesRegistradas){
+            novedadesRegistradas.reverse()
             setNovedades(novedadesRegistradas);
         }).catch(logError)
-    },[idper])
+    },[idper, ultimaNovedad])
     return <Componente componentType="novedades-registradas">
         <table>
         {novedades.map(n => 
-            <tr>
-                <td><ValueDB value={n.desde}/></td>
-                <td><ValueDB value={n.hasta}/></td>
-                <td><ValueDB value={n.cod_nov}/></td>
-                <td><ValueDB value={n.cod_novedades__novedad}/></td>
-                <td><ValueDB value={n.detalles}/></td>
-            </tr>
+            <Box className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar?' por-borrar':''}`}>
+                <div className="fechas">{n.desde.toDmy().replace(/\/\d\d\d\d$/,'') + (n.desde == n.hasta ? '' : ` - ${n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')}`)}</div>
+                <div className="cod_nov">{n.cod_nov}</div>
+                <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' }</div>
+                <div className="borrar">{n.desde > date.today() ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
+            </Box>
         )}
         </table>
+        <Dialog open={quiereBorrar != null}>
+            {quiereBorrar == null ? null : (
+                eliminando ? <div>
+                    <div>Eliminando</div>
+                    <CircularProgress/>
+                </div> : <div>
+                    ¿Confirma el borrado de las novedades registradas entre {quiereBorrar!.desde.toDmy()} y {quiereBorrar!.hasta.toDmy()}?
+                    <Button variant="outlined" onClick={()=>setQuiereBorrar(null)}>Conservar</Button>
+                    <Button variant="outlined" color="error" onClick={()=>{
+                        setEliminando(true);
+                        conn.ajax.table_record_delete({
+                            table: 'novedades_registradas',
+                            primaryKeyValues: [quiereBorrar!.idper, quiereBorrar!.desde, quiereBorrar!.idr]
+                        }).then(()=>{
+                            setQuiereBorrar(null);
+                            setEliminando(false);
+                            props.onBorrado();
+                        }).catch(logError);
+                    }}>Eliminar</Button>
+                    
+                </div>
+            )}
+        </Dialog>
     </Componente>
 }
 
@@ -462,6 +490,10 @@ declare module "frontend-plus" {
             desde:Date,
             hasta:Date
         }) => Promise<SiCargaraNovedades>;
+        table_record_delete: (params:{
+            table: string;
+            primaryKeyValues: any[];    
+        }) => Promise<void>
     }
 }
 
@@ -470,7 +502,6 @@ function Persona(props:{conn: Connector, idper:string, fecha:RealDate}){
         <DatosPersonales {...props}/>
         <Horario {...props}/>
         <Calendario {...props}/>
-        <NovedadesRegistradas {...props}/>
     </Paper>
 }
 
@@ -488,6 +519,7 @@ function Pantalla1(props:{conn: Connector}){
     const [error, setError] = useState<Error|null>(null);
     const {idper} = persona
     const [ultimaNovedad, setUltimaNovedad] = useState(0);
+    const annio = fecha.getFullYear();
     useEffect(function(){
         // @ts-ignore
         conn.ajax.info_usuario().then(function(infoUsuario:ProvisorioInfoUsuario){
@@ -574,6 +606,7 @@ function Pantalla1(props:{conn: Connector}){
                 <Box>{guarndadoRegistroNovedad || error ?
                     <Typography>{error?.message ?? (guarndadoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
+                <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
             </Componente>
             <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
@@ -714,7 +747,7 @@ function DemoDeComponentes(props: {conn: Connector}){
                 </Card>,
             "calendario": () => <Calendario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
             "personas": () => <ListaPersonasEditables conn={conn} sector="MS" fecha={date.today()} idper={IDPER_DEMO}/>,
-            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO}/>,
+            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO} annio={2024}/>,
             "horario": () => <Horario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
             "datos-personales": () => <DatosPersonales conn={conn} idper={IDPER_DEMO}/>,
             "registrar-novedades": () => <RegistrarNovedades conn={conn} idper={IDPER_DEMO}/>,

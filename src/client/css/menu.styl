@@ -253,3 +253,28 @@ div.no-seleccionable
 
 button.boton-confirmar-registro-novedades
   max-width 32em  
+
+div.novedades-renglon
+  display flex
+  flex-direction row
+  min-height 2em
+  align-items center
+  &:hover
+    background-color #f0f0f0
+  .fechas
+    width 6em
+    text-align center
+  .cod_nov
+    width 3em
+    text-align center
+  .razones
+    flex-grow 2
+  .borrar
+    button
+      min-width 1em
+  &.ultima-novedad
+    background-color: #ffffff
+
+.por-borrar
+  text-decoration line-through
+  color #800    
