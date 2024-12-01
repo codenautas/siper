@@ -333,5 +333,46 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             }
             return grilla;
         }
-    }
+    },
+    {
+        action: 'parte_diario_caratula',
+        parameters: [
+            {name:'idper',  typeName:'text'},
+            {name:'fecha',  typeName:'date'}
+        ],
+        coreFunction: async function(context: ProcedureContext, params:any){
+            const info = await context.client.query(
+                    `SELECT SUM (CASE WHEN cod_nov = '101' THEN 1 ELSE 0 END) teletrabajo_diagramado,
+                       SUM (CASE WHEN cod_nov = '1' THEN 1 ELSE 0 END) descanso_anual_remunerado,
+                       SUM (CASE WHEN cod_nov = '140' THEN 1 ELSE 0 END) autoridades_superiores,
+                       SUM (CASE WHEN cod_nov = '999' THEN 1 ELSE 0 END) presente_horario_flexible,
+                       SUM (CASE WHEN cod_nov = '140' THEN 1 ELSE 0 END) + SUM (CASE WHEN cod_nov = '999' THEN 1 ELSE 0 END) subtotal_presentes,
+                       SUM (CASE WHEN cod_nov = '140' THEN 1 ELSE 0 END) + SUM (CASE WHEN cod_nov = '999' THEN 1 ELSE 0 END) total_presentes,
+                       SUM (CASE WHEN cod_nov = '1' THEN 1 ELSE 0 END) subtotal_licencias,
+                       SUM (CASE WHEN cod_nov = '101' THEN 1 ELSE 0 END) subtotal_otros_ausentes_justificados,
+                       SUM (CASE WHEN cod_nov = '101' THEN 1 ELSE 0 END) + SUM (CASE WHEN cod_nov = '1' THEN 1 ELSE 0 END) total_ausentes_justificados,
+                       --total ausentes sin justificar
+                       --total fuera de horario
+                       count(*) total_agentes
+                      FROM (
+                      WITH RECURSIVE hierarchy AS (
+                        SELECT p.idper, p.nombres, p.apellido, s.sector
+                        FROM personas p
+                        JOIN sectores s ON p.sector = s.sector
+                        WHERE p.idper = $1
+                        UNION ALL
+                        SELECT p.idper, p.apellido, p.nombres, s.sector
+                        FROM personas p
+                        JOIN sectores s ON p.sector = s.sector
+                        JOIN hierarchy h ON s.pertenece_a = h.sector
+                      )
+                    SELECT * FROM hierarchy j
+                      LEFT JOIN novedades_vigentes v ON j.idper = v.idper
+                      WHERE fecha = $2
+                    ) q;`
+                , [params.idper, params.fecha]
+            ).fetchUniqueRow();
+            return info.row
+        }
+    },
 ];
