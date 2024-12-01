@@ -88,11 +88,11 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             when 6 then 'no-laborable' 
                             else 
                                 case 
-                                    when cod_nov is not null and con_novedad is null then 'trabaja'
                                     when laborable is false then 'no-laborable' 
-                                    when cod_nov is not null then 'no-trabaja'
-                                    else 'normal' end 
-                        end as tipo_dia
+                                    else 'normal' 
+                                end 
+                        end as tipo_dia,
+                        con_novedad
                     from fechas f
                         left join novedades_vigentes v on v.fecha = f.fecha and v.idper = $1
                     where f.fecha between $2 and ($3::date + interval '1 month'  - interval '1 day')
@@ -165,12 +165,16 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         ],
         coreFunction: async function(context: ProcedureContext, params:any){
             const info = await context.client.query(
-                `select pe.idper, cuil, pe.ficha, idmeta4, apellido, nombres, pe.sector, cod_nov, novedad 
+                `select pe.idper, pe.cuil, pe.ficha, pe.idmeta4, pe.apellido, pe.nombres, pe.sector, cod_nov, novedad,
+                        (puede_cargar_propio or pe.idper is distinct from u.idper) and sr.con_novedad as cargable
                     from personas pe
-                    left join novedades_vigentes nv on nv.idper = pe.idper and nv.fecha = $1
-                    left join cod_novedades cn using(cod_nov)
+                        inner join situacion_revista sr using (situacion_revista)
+                        inner join usuarios u on u.usuario = $2
+                        inner join roles using (rol)
+                        left join novedades_vigentes nv on nv.idper = pe.idper and nv.fecha = $1
+                        left join cod_novedades cn using(cod_nov)
                     order by apellido, nombres`
-                , [params.fecha]
+                , [params.fecha, context.username]
             ).fetchAll();
             return info.rows
         }

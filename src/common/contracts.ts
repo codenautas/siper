@@ -288,6 +288,7 @@ export const personas_novedad_actual = {
         apellido: is.string,
         nombres: is.string,
         sector: is.string,
+        cargable: is.boolean,
     })
 }
 
@@ -307,6 +308,7 @@ export const calendario_persona = {
         semana: is.number,
         cod_nov: is.string,
         tipo_dia: is.string,
+        con_novedad: is.nullable.string
     })
 }
 

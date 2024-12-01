@@ -133,6 +133,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 <Button onClick={_ => setPeriodo(retrocederUnMes)}><ICON.ChevronLeft/></Button>
                 <Button onClick={_ => setPeriodo(avanzarUnMes)}><ICON.ChevronRight/></Button>
                 <Select 
+                    className="selector-mes"
                     value={periodo.mes}
                     onChange={(event) => { // buscar el tipo correcto
                         setPeriodo({mes:Number(event.target.value), annio:periodo.annio});
@@ -145,6 +146,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                     ))}
                 </Select>
                 <Select 
+                    className="selector-annio"
                     value={periodo.annio}
                     onChange={(event) => { // buscar el tipo correcto
                         setPeriodo({mes:periodo.mes, annio:Number(event.target.value)});
@@ -159,6 +161,16 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                     ))
                         }
                 </Select>
+                <Button 
+                    variant="outlined"
+                    className={date.today().sameValue(fecha) ? "es-hoy-si" : "es-hoy-no"} 
+                    onClick={()=>{ 
+                        const hoy = date.today(); 
+                        setPeriodo({mes: hoy.getMonth()+1, annio: hoy.getFullYear()});
+                        props.onFecha && props.onFecha(hoy);
+                        props.onFechaHasta && props.onFechaHasta(hoy);
+                    }}
+                >Hoy</Button>
             </Box>
             <Box className="calendario-semana">
                 {likeAr(DDS).map(dds =>
@@ -184,9 +196,9 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                                 props.onFechaHasta(selectedDate);
                             }
                         }}
-                    >
+                >
                     <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
-                    <span className="calendario-dia-contenido">{dia.cod_nov ?? ''}</span>
+                    <span className={`calendario-dia-contenido ${dia.con_novedad ? 'con_novedad_si' : 'con_novedad_no' }`}>{dia.cod_nov ?? ''}</span>
                 </div>)}
             </Box>)}
         </Box>
@@ -194,7 +206,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 }
 
 // @ts-ignore
-type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string};
+type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean};
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, nivel:number}
 // @ts-ignore
@@ -267,7 +279,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
         <SearchBox onChange={setFiltro}/>
         {sectores.filter(s => s.perteneceA[sector]).map(s =>
             filtro && !abanicoPersonas[s.sector]?.length ? null :
-            <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector} >
+            <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector || !!filtro && !!(abanicoPersonas[s.sector]?.length)} >
                 <AccordionSummary id = {s.sector} expandIcon={<ICON.NavigationDown />} > 
                     <span className="box-id" style={{paddingLeft: s.nivel+"em", paddingRight:"1em"}}> {s.sector} </span>  
                     {s.nombre_sector} 
@@ -275,7 +287,8 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                 <AccordionDetails>
                     <List>
                         {abanicoPersonas[s.sector]?.map(p=>
-                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p as ProvisorioPersonas)}} className={`${p.idper == idper ? ' seleccionado' : ''}`}>
+                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p as ProvisorioPersonas)}} 
+                                    className={`${p.idper == idper ? ' seleccionado' : ''} ${p.cargable ? ' seleccionable' : 'no-seleccionable'}`}>
                                 <span className="box-id persona-id">{p.idper}</span>
                                 <span className="box-names">
                                     {p.apellido}, {p.nombres}
@@ -348,8 +361,8 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
             <HorarioRenglon box={info => <div className={`horario-dia ${info.trabaja ? '' : 'tipo-dia-no-laborable'}`}> 
                 {info.trabaja ? (
                     <>
-                        <div>{info.hora_desde}</div>
-                        <div>{info.hora_hasta}</div>
+                        <div>{info.hora_desde?.replace(/(?<=\d?\d:\d\d):00$/,'')}</div>
+                        <div>{info.hora_hasta?.replace(/(?<=\d?\d:\d\d):00$/,'')}</div>
                     </>
                 ) : (
                     <div>-</div>
@@ -522,7 +535,7 @@ function Pantalla1(props:{conn: Connector}){
                 </Box>
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}/>
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
-                {cod_nov && idper && fecha && hasta && !registrandoNovedad ? <Box>
+                {cod_nov && idper && fecha && hasta && !registrandoNovedad && persona.cargable ? <Box>
                     <TextField
                         className="novedades-detalles"
                         label="Detalles"
