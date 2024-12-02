@@ -333,7 +333,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             var grilla = {
                 tableName:'nov_per', 
                 fixedFields: [{fieldName:'cod_nov', value:1}] as FixedFields, 
-                tableDef:{title:'descanso anual remunerado', hiddenColumns:[] as string[]}
+                tableDef:{title:'descanso anual remunerado', hiddenColumns:['esquema'] as string[]}
             }
             if (params.annio != null) {
                 grilla.fixedFields.push({fieldName:'annio', value:params.annio});

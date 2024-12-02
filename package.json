@@ -15,7 +15,7 @@
     "npm" : ">=10.7"
   },  
   "dependencies": {
-    "backend-plus": "^2.0.8",
+    "backend-plus": "^2.0.9",
     "frontend-plus": "^0.0.9",
     "guarantee-type": "^0.2.0-rc.1",
     "json4all": "^1.4.0",
