@@ -238,8 +238,8 @@ function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof
     }
 }
 
-function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:string, fecha:RealDate, onIdper?:IdperFuncionCambio}){
-    const {conn, idper, fecha, onIdper} = props;
+function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:string, fecha:RealDate, onIdper?:IdperFuncionCambio, infoUsuario:ProvisorioInfoUsuario}){
+    const {conn, idper, fecha, onIdper, infoUsuario} = props;
     const [sector, _setSector] = useState(props.sector);
     const [sectores, setSectores] = useState<ProvisorioSectoresAumentados[]>([]);
     const [listaPersonas, setListaPersonas] = useState<PersonasNovedadActualResult[]>([]);
@@ -280,7 +280,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     }, [fecha]);
     return <Componente componentType="lista-personas">
         <SearchBox onChange={setFiltro}/>
-        {sectores.filter(s => s.perteneceA[sector]).map(s =>
+        {sectores.filter(s => s.perteneceA[sector] || infoUsuario.puede_cargar_todo).map(s =>
             filtro && !abanicoPersonas[s.sector]?.length ? null :
             <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector || !!filtro && !!(abanicoPersonas[s.sector]?.length)} >
                 <AccordionSummary id = {s.sector} expandIcon={<ICON.NavigationDown />} > 
@@ -322,16 +322,14 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
         }).catch(logError)
     },[idper, ultimaNovedad])
     return <Componente componentType="novedades-registradas">
-        <table>
         {novedades.map(n => 
-            <Box className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar?' por-borrar':''}`}>
+            <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar?' por-borrar':''}`}>
                 <div className="fechas">{n.desde.toDmy().replace(/\/\d\d\d\d$/,'') + (n.desde == n.hasta ? '' : ` - ${n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')}`)}</div>
                 <div className="cod_nov">{n.cod_nov}</div>
                 <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' }</div>
                 <div className="borrar">{n.desde > date.today() ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
             </Box>
         )}
-        </table>
         <Dialog open={quiereBorrar != null}>
             {quiereBorrar == null ? null : (
                 eliminando ? <div>
@@ -461,7 +459,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
     </Componente>
 }
 
-type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate, usuario:string, apellido:string, nombres:string, cuil:string, ficha:string};
+type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate, usuario:string, apellido:string, nombres:string, cuil:string, ficha:string, puede_cargar_todo:boolean};
 
 type Hora = string;
 
@@ -557,7 +555,7 @@ function Pantalla1(props:{conn: Connector}){
         : infoUsuario.idper == null ?
             <Typography>El usuario <b>{infoUsuario.usuario}</b> no tiene una persona asociada</Typography>
         : <Paper className="componente-pantalla-1">
-            <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)}/>
+            <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)} infoUsuario={infoUsuario}/>
             <Componente componentType="del-medio">
                 <Box>
                     <div className="box-line">
@@ -746,8 +744,8 @@ function DemoDeComponentes(props: {conn: Connector}){
                     <UnComponente titulo="Pantalla 1 (primera total)" que="pantalla-1"/>
                 </Card>,
             "calendario": () => <Calendario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
-            "personas": () => <ListaPersonasEditables conn={conn} sector="MS" fecha={date.today()} idper={IDPER_DEMO}/>,
-            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO} annio={2024}/>,
+            "personas": () => <ListaPersonasEditables conn={conn} sector="MS" fecha={date.today()} idper={IDPER_DEMO} infoUsuario={{} as ProvisorioInfoUsuario}/>,
+            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO} annio={2024} onBorrado={()=>{}}/>,
             "horario": () => <Horario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
             "datos-personales": () => <DatosPersonales conn={conn} idper={IDPER_DEMO}/>,
             "registrar-novedades": () => <RegistrarNovedades conn={conn} idper={IDPER_DEMO}/>,

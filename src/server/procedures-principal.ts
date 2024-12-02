@@ -263,8 +263,11 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         coalesce(p.apellido, u.apellido) as apellido,
                         coalesce(p.nombres, u.nombre) as nombres,
                         p.cuil,
-                        p.ficha
-                    from usuarios u left join personas p using (idper)
+                        p.ficha,
+                        puede_cargar_todo
+                    from usuarios u 
+                        inner join roles using(rol)
+                        left join personas p using (idper)
                     where usuario = $1`,
                 [context.username]
             ).fetchUniqueRow();
@@ -328,8 +331,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         resultOk:'showGrid',
         coreFunction: async function(context: ProcedureContext, params:any){
             var grilla = {
-                tableName:'descanso_anual_remunerado', 
-                fixedFields: [] as FixedFields, 
+                tableName:'nov_per', 
+                fixedFields: [{fieldName:'cod_nov', value:1}] as FixedFields, 
                 tableDef:{title:'descanso anual remunerado', hiddenColumns:[] as string[]}
             }
             if (params.annio != null) {

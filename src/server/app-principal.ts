@@ -34,7 +34,6 @@ import { capa_modalidades     } from "./table-capa_modalidades";
 import { capacitaciones       } from "./table-capacitaciones";
 import { per_capa       } from "./table-per_capa";
 import { parte_diario         } from "./table-parte-diario";
-import { descanso_anual_remunerado } from "./table-descanso_anual_remunerado";
 import { fichadas_vigentes } from "./table-fichadas_vigentes";
 
 import { ProceduresPrincipal } from './procedures-principal'
@@ -65,9 +64,9 @@ export class AppSiper extends AppBackend{
     }
     completeContext(context:Context){
         context.es = context.es || {}
-        context.es.registra = context.user && context.user.rol=="registra" 
-        context.es.rrhh = context.es.registra || context.user && context.user.rol=="rrhh" 
-        context.es.admin = context.es.rrhh || context.user && context.user.rol=="admin" 
+        context.es.admin = context.user && context.user.rol=="admin" 
+        context.es.rrhh = context.es.admin || context.user && context.user.rol=="rrhh" 
+        context.es.registra = context.es.admin || context.user && context.user.rol=="registra" 
     }
     override getContextForDump():Context{
         var context = super.getContextForDump();
@@ -197,7 +196,6 @@ export class AppSiper extends AppBackend{
             capacitaciones       ,
             per_capa             ,
             parte_diario         ,
-            descanso_anual_remunerado,
             fichadas_vigentes
         }
     }       
