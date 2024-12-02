@@ -324,7 +324,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     {
         action: 'descanso_anual_remunerado',
         parameters: [
-            {name:'annio'  , typeName:'integer', label: 'annio', references: 'annios', defaultValue:null},
+            {name:'annio'  , typeName:'integer', label: 'año', references: 'annios', defaultValue:null},
             {name:'idper'  , typeName:'text', label:'persona', references: 'personas', defaultValue:null},
             {name:'sector'  , typeName:'text', label:'sector', references: 'sectores', defaultValue:null}
         ],
