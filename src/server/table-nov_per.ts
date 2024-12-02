@@ -28,7 +28,9 @@ export function nov_per(_context: TableContext): TableDefinition {
             {references: 'personas'     , fields: [idper.name], displayFields:['ficha', 'cuil', 'apellido', 'nombres']},
             {references: 'sectores'     , fields: [sector.name]},
         ],
-        hiddenColumns: [idper.name, cod_nov.name, sector.name],
+        detailTables: [
+            {table:'novedades_vigentes', fields:[año.name, idper.name, cod_nov.name], abr:'D'}
+        ],
         sql: {
             isTable:false,
             from:`(
@@ -41,12 +43,13 @@ export function nov_per(_context: TableContext): TableDefinition {
                     from novedades_vigentes n
                         inner join cod_novedades cn using(cod_nov)
                         inner join personas p using(idper)
-                        inner join (select annio, idper, cod_nov, sum(cantidad) as total from per_nov_cant group by annio, idper, cod_nov) pn using (annio, idper, cod_nov)
                         inner join parametros on unico_registro
+                        left join (select annio, idper, cod_nov, sum(cantidad) as total from per_nov_cant group by annio, idper, cod_nov) pn using (annio, idper, cod_nov)
                     where n.con_novedad
                     group by annio, cod_nov, idper, 
                         pn.total, p.sector
             )`
-        }
+        },
+        hiddenColumns: [idper.name, cod_nov.name, sector.name],
     };
 }
