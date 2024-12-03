@@ -9,7 +9,7 @@ export * from "pg-promise-strict";
 declare module "backend-plus"{
     interface Context {
         forDump?:boolean
-        es:{admin:boolean, oficina:boolean, puedePares:boolean}
+        es:{admin:boolean, rrhh:boolean, registra:boolean}
     }
     interface ProcedureContext {
         be:AppSiper
@@ -25,6 +25,7 @@ declare module "backend-plus"{
 
 export const soloDigitosPostConfig = 'soloDigitos' as PostInputOptions
 export const sinMinusculasNiAcentos = 'sinMinusculasNiAcentos' as PostInputOptions
+export const sinMinusculas = 'sinMinusculas' as PostInputOptions
 
 export function soloDigitosCons(fieldName: string):Constraint{
     return {

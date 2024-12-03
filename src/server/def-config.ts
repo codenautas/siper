@@ -18,6 +18,7 @@ login:
   activeClausule: activo
   unloggedLandPage: false
   plus:
+    successRedirect: /menu#i=principal
     allowHttpLogin: true
     fileStore: true
     loginForm:
@@ -33,16 +34,20 @@ install:
       owner: siper_owner
       extensions: 
       - gist
+    enances: inline
     scripts:
       prepare:
       - ../node_modules/type-store/postgres/time_range.sql
       pre-adapt:
       - ../node_modules/pg-triggers/lib/table-changes.sql
+      - ../install/hora_texto.sql
       - ../install/validad_codigo.sql
       - ../install/sector_pertenece.sql
       - ../install/personas_id_trg.sql
       - ../install/validar_digito.sql
       post-adapt:
+      - ../node_modules/pg-triggers/lib/recreate-his.sql
+      - ../node_modules/pg-triggers/lib/table-changes.sql
       - ../node_modules/pg-triggers/lib/function-changes-trg.sql
       - ../node_modules/pg-triggers/lib/enance.sql    
       - ../install/novedades_calculadas.sql

@@ -43,6 +43,7 @@ UPDATE personas p
 
 UPDATE personas p 
   SET activo = fecha_egreso is null,
-      registra_novedades_desde = fecha_ingreso;
+      registra_novedades_desde = coalesce(fecha_ingreso, '31-12-1999'),
+      fecha_ingreso = coalesce(fecha_ingreso, '31-12-1999');
 
 select * from personas limit 10;

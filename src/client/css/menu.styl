@@ -88,6 +88,9 @@ div.tipo-dia-no-laborable
 div.tipo-dia-no-trabaja
   background-color #ED9
 
+div.tipo-dia-trabaja
+  background-color rgb(62, 249, 0)
+
 div.calendario-dia-seleccionado, div.seleccionado
   &:hover
     background-color #A7C5EF
@@ -147,10 +150,6 @@ div.calendario-dia-seleccionado, div.seleccionado
 
 .tipo-dia-no-trabaja
   background-color #ed9
-
-@media (max-width: 600px)
-  .calendario-extendido-dia
-    height 60px
 
 .calendario-extendido-dia-numero, .calendario-extendido-dia-contenido
   font-size 70%
@@ -213,21 +212,112 @@ span.box-names
   padding 22px
 
 .deshabilitado
-  opacity: 0.5
-  pointer-events: none
+  opacity 0.5
+  pointer-events none
 
 .horario-vigente
-    margin-bottom: 1em
+  text-align center
+  margin-bottom 1em
 
 .horario-contenedor
-    display: flex
-    justify-content: space-around
-    align-items: flex-start
+  display flex
+  align-items flex-start
+  flex-direction column
 
 .horario-dia
-    font-weight: bold
-    margin-bottom: 0.5em
+  display flex
+  flex-direction column
+  width 4em
+  height 2.5em
+  border-bottom 0.5px dotted gray
+  border-right 0.5px dotted gray
+  padding 2px
+  text-align center
+  font-weight: bold
+  margin-bottom: 0.5em
+  
+.search-box
+  padding-left 0.7em
 
+.componente-del-medio
+  min-width 470px
+  display flex
+  flex-direction column
+  gap 2em  
+
+.novedades-detalles
+  width 100%
+  max-width 32em
+
+div.horario-renglon
+  display flex
+  flex-direction row
+
+.my-grid td[my-colname=capacitacion]
+  max-width 50em
+
+.con_novedad_si
+  color #620
+  font-weight bold
+
+.con_novedad_no
+  color #040
+  font-style italic
+
+selector-normal()
+  margin 3px
+  div
+    padding-top 7px
+    padding-bottom 7px
+
+div.selector-mes
+  width 8em
+  selector-normal()
+
+div.selector-annio
+  selector-normal()
+
+boton-normal()
+  margin 3px
+
+button.es-hoy-si
+  boton-normal()
+  font-weight bold
+
+button.es-hoy-no
+  boton-normal()
+
+div.no-seleccionable
+  color #666
+
+button.boton-confirmar-registro-novedades
+  max-width 32em  
+
+div.novedades-renglon
+  display flex
+  flex-direction row
+  justify-content space-between
+  min-height 2em
+  align-items center
+  &:hover
+    background-color #f0f0f0
+  .fechas
+    width 6em
+    text-align center
+  .cod_nov
+    width 3em
+    text-align center
+  .razones
+    flex-grow 2
+  .borrar
+    button
+      min-width 1em
+  &.ultima-novedad
+    background-color: #ffffff
+
+.por-borrar
+  text-decoration line-through
+  color #800 
 
 .item-novedad
   display flex

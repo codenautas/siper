@@ -4,7 +4,7 @@ import {TableDefinition, TableContext} from "./types-principal";
 
 import {idper} from "./table-personas"
 import {capacitacion} from "./table-capacitaciones";
-import {modalidad} from "./table-capacitaciones";
+import {modalidad} from "./table-capa_modalidades";
 import {tipo} from "./table-capacitaciones";
 import {fecha_inicio} from "./table-capacitaciones";
 
@@ -24,7 +24,7 @@ export function per_capa(context: TableContext): TableDefinition{
             {name: 'inscripcion',typeName:'text' },
             {name: 'calificacion',typeName:'text' },
         ],
-        primaryKey: ['idper', 'capacitacion', 'modalidad', 'tipo', 'fecha_inicio'],
+        primaryKey: [idper.name, capacitacion.name, modalidad.name, 'tipo', 'fecha_inicio'],
         foreignKeys: [
             {references: 'personas'  , fields: [idper.name]},
             {references: 'capacitaciones', fields: [capacitacion.name, modalidad.name, tipo.name, fecha_inicio.name]}

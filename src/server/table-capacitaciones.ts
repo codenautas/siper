@@ -1,23 +1,18 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, sinMinusculas} from "./types-principal";
+
+import {modalidad} from "./table-capa_modalidades";
 
 export const capacitacion:FieldDefinition = {
     name: 'capacitacion', 
     typeName: 'text', 
-    postInput: 'upperWithoutDiacritics'
-}
-
-export const modalidad:FieldDefinition = {
-    name: 'modalidad', 
-    typeName: 'text', 
-    postInput: 'upperWithoutDiacritics'
+    postInput: sinMinusculas
 }
 
 export const tipo:FieldDefinition = {
     name: 'tipo', 
-    typeName: 'text', 
-    postInput: 'upperWithoutDiacritics'
+    typeName: 'text'
 }
 
 export const fecha_inicio:FieldDefinition = {
@@ -33,8 +28,8 @@ export function capacitaciones(context: TableContext): TableDefinition{
         title: 'capacitaciones',
         editable: admin,
         fields: [
-            {name: 'capacitacion',typeName:'text' },
-            {name: 'modalidad',typeName:'text' },
+            capacitacion,
+            modalidad,
             {name: 'tipo',typeName:'text' },
             {name: 'puntos',typeName:'integer' },
             {name: 'duracion',typeName:'text' },
@@ -42,10 +37,14 @@ export function capacitaciones(context: TableContext): TableDefinition{
             {name: 'fecha_inicio',typeName:'date' },
             {name: 'fecha_fin',typeName:'date' },
         ],
-        primaryKey: ['capacitacion', 'modalidad', 'tipo', 'fecha_inicio'],
+        primaryKey: [capacitacion.name, modalidad.name, 'tipo', 'fecha_inicio'],
         foreignKeys: [
+            {references:'capa_modalidades', fields:[modalidad.name]}
         ],
         constraints: [
+        ],
+        detailTables: [
+            {table:'per_capa'   , fields:[capacitacion.name, modalidad.name, tipo.name, fecha_inicio.name], abr:'P'},
         ]
     };
 }

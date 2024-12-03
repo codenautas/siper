@@ -186,7 +186,7 @@ export const usuarios = {
 
 export type Usuario = DefinedType<typeof usuarios.description>
 
-export const capacitacion = {
+export const capacitaciones = {
     table: 'capacitaciones',
     description: is.object({
         editable: is.boolean
@@ -203,7 +203,7 @@ export const capacitacion = {
 }
 
 export const per_capa = {
-    table: 'capacitaciones',
+    table: 'per_capa',
     description: is.object({
         idper:      is.string,
         //año: is.number,
@@ -219,6 +219,21 @@ export const per_capa = {
     })
 }
 
+export const historial_contrataciones = {
+    table: 'historial_contrataciones',
+    description: is.object({
+        idper: is.string,
+        desde: is.Date,
+    },{
+        hasta: is.Date,
+        computa_antiguedad:is.boolean,
+        organismo: is.string,
+        observaciones: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type Historial_contratacion = DefinedType<typeof historial_contrataciones.description>
+
 ////////////// PROCEDIMEINTOS
 
 export const si_cargara_novedad = {
@@ -228,13 +243,6 @@ export const si_cargara_novedad = {
         cod_nov: is.nullable.string,
         desde: is.Date,
         hasta: is.Date,
-        dds0: is.nullable.boolean,
-        dds1: is.nullable.boolean,
-        dds2: is.nullable.boolean,
-        dds3: is.nullable.boolean,
-        dds4: is.nullable.boolean,
-        dds5: is.nullable.boolean,
-        dds6: is.nullable.boolean,
     }),
     result: is.object({
         dias_corridos: is.number,
@@ -255,7 +263,7 @@ export const novedades_disponibles = {
         cantidad: is.number,
         limite: is.number,
         saldo: is.number,
-        cargable: is.boolean,
+        con_disponibilidad: is.boolean,
     })
 }
 
@@ -273,6 +281,7 @@ export const personas_novedad_actual = {
         apellido: is.string,
         nombres: is.string,
         sector: is.string,
+        cargable: is.boolean,
     })
 }
 
@@ -292,6 +301,7 @@ export const calendario_persona = {
         semana: is.number,
         cod_nov: is.string,
         tipo_dia: is.string,
+        con_novedad: is.nullable.string
     })
 }
 
@@ -313,8 +323,6 @@ export const horario_semana_vigente = {
         cod_nov: is.nullable.string,
     }),
 };
-
-export type HorarioSemanaVigenteResult = DefinedType<typeof horario_semana_vigente.result>;
 
 export const historico_persona = {
     procedure: 'historico_persona',

@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 
 import {
     ReactNode,
@@ -18,6 +19,7 @@ import {
     Accordion, AccordionSummary, AccordionDetails, AppBar,
     Box, Button, 
     Card, CircularProgress,
+    Dialog, 
     IconButton, InputBase,
     List, ListItemButton,
     MenuItem, 
@@ -31,7 +33,7 @@ import {
 
 import { date, RealDate } from "best-globals";
 
-import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, HorarioSemanaVigenteResult } from "../common/contracts"
+import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult } from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 
 export function logError(error:Error){
@@ -77,8 +79,10 @@ export const DDS = {
     6: {abr:'sáb', habil:true , nombre:'sábado'   },
 }
 
-function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, refreshCalendario?: boolean}){
-    const {conn, fecha, fechaHasta, idper, refreshCalendario} = props;
+type ULTIMA_NOVEDAD = number;
+
+function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, ultimaNovedad?: ULTIMA_NOVEDAD}){
+    const {conn, fecha, fechaHasta, idper, ultimaNovedad} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     type Periodo = {mes:number, annio:number} 
     const [periodo, setPeriodo] = useState<Periodo>({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
@@ -115,7 +119,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 setCalendario(semanas)
             }).catch(logError)
         }
-    },[idper, periodo.mes, periodo.annio, refreshCalendario])
+    },[idper, periodo.mes, periodo.annio, ultimaNovedad])
 
     const isInRange = (dia: number, mes: number, annio: number) => {
         if (!fecha || !fechaHasta || !Number.isInteger(dia) || dia <= 0) return false;
@@ -130,7 +134,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
     return <Componente componentType="calendario-mes">
         <Box style={{ flex:1}}>
             <Box sx={{padding: '15px 0'}}>
-                <Select className="selectores"
+                <Select className="selectores selector-mes"
                     value={periodo.mes}
                     onChange={(event) => { // buscar el tipo correcto
                         setPeriodo({mes:Number(event.target.value), annio:periodo.annio});
@@ -142,7 +146,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         </MenuItem>
                     ))}
                 </Select>
-                <Select className="selectores"
+                <Select className="selectores selector-annio"
                     value={periodo.annio}
                     onChange={(event) => { // buscar el tipo correcto
                         setPeriodo({mes:periodo.mes, annio:Number(event.target.value)});
@@ -159,6 +163,16 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 </Select>
                 <Button onClick={_ => setPeriodo(retrocederUnMes)}><ICON.ChevronLeft/></Button>
                 <Button onClick={_ => setPeriodo(avanzarUnMes)}><ICON.ChevronRight/></Button>
+                <Button 
+                    variant="outlined"
+                    className={date.today().sameValue(fecha) ? "es-hoy-si" : "es-hoy-no"} 
+                    onClick={()=>{ 
+                        const hoy = date.today(); 
+                        setPeriodo({mes: hoy.getMonth()+1, annio: hoy.getFullYear()});
+                        props.onFecha && props.onFecha(hoy);
+                        props.onFechaHasta && props.onFechaHasta(hoy);
+                    }}
+                >Hoy</Button>
             </Box>
             <Box className="calendario-semana">
                 {likeAr(DDS).map(dds =>
@@ -184,9 +198,9 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                                 props.onFechaHasta(selectedDate);
                             }
                         }}
-                    >
+                >
                     <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
-                    <span className="calendario-dia-contenido">{dia.cod_nov ?? ''}</span>
+                    <span className={`calendario-dia-contenido ${dia.con_novedad ? 'con_novedad_si' : 'con_novedad_no' }`}>{dia.cod_nov ?? ''}</span>
                 </div>)}
             </Box>)}
         </Box>
@@ -194,17 +208,19 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 }
 
 // @ts-ignore
-type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string};
+type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean};
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, nivel:number}
 // @ts-ignore
 type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
+type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, detalles:string, idr:number}
+
 type IdperFuncionCambio = (persona:ProvisorioPersonas)=>void
 
 function SearchBox(props: {onChange:(newValue:string)=>void}){
     var [textToSearch, setTextToSearch] = useState("");
-    return <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', border: '1px solid #A4A4A5', padding: '3px 5px', borderRadius: '10px', boxSizing: 'border-box', marginBottom:'15px' }}>
+    return <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }} className="search-box">
         <ICON.Search/>
         <InputBase fullWidth placeholder="Buscar" style={{marginLeft: '10px'}}
             value = {textToSearch} 
@@ -223,8 +239,8 @@ function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof
     }
 }
 
-function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:string, fecha:RealDate, onIdper?:IdperFuncionCambio}){
-    const {conn, idper, fecha, onIdper} = props;
+function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:string, fecha:RealDate, onIdper?:IdperFuncionCambio, infoUsuario:ProvisorioInfoUsuario}){
+    const {conn, idper, fecha, onIdper, infoUsuario} = props;
     const [sector, _setSector] = useState(props.sector);
     const [sectores, setSectores] = useState<ProvisorioSectoresAumentados[]>([]);
     const [listaPersonas, setListaPersonas] = useState<PersonasNovedadActualResult[]>([]);
@@ -267,9 +283,9 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
         <Paper className="contenedores-paper">
         <h6 className="titulo-componente">Sectores y personal</h6>
         <SearchBox onChange={setFiltro}/>
-        {sectores.filter(s => s.perteneceA[sector]).map(s =>
+        {sectores.filter(s => s.perteneceA[sector] || infoUsuario.puede_cargar_todo).map(s =>
             filtro && !abanicoPersonas[s.sector]?.length ? null :
-            <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector} >
+            <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector || !!filtro && !!(abanicoPersonas[s.sector]?.length)} >
                 <AccordionSummary id = {s.sector} expandIcon={<ICON.KeyboardArrowDown />} style={{alignItems: 'center'}}> 
                     <span className="box-id" style={{paddingLeft: s.nivel+"%"}}>{s.sector}</span>   
                     {s.nombre_sector} 
@@ -277,7 +293,8 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                 <AccordionDetails>
                     <List>
                         {abanicoPersonas[s.sector]?.map(p=>
-                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p as ProvisorioPersonas)}} className={`${p.idper == idper ? ' seleccionado' : ''}`} style={{justifyContent:'space-between'}}>
+                            <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p as ProvisorioPersonas)}} 
+                                    className={`${p.idper == idper ? ' seleccionado' : ''} ${p.cargable ? ' seleccionable' : 'no-seleccionable'}`} style={{justifyContent:'space-between'}}>
                                 <div className="box-id">
                                 <span className="box-id persona-id">{p.idper}</span>
                                 <span className="box-names">
@@ -298,52 +315,63 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     </Componente>
 }
 
-function NovedadesRegistradas(props:{conn: Connector, idper:string}){
-    const {idper, conn} = props;
-    const [novedades, setNovedades] = useState<RowType[]>([]);
+function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number, ultimaNovedad?:number, onBorrado:()=>void}){
+    const {idper, conn, ultimaNovedad} = props;
+    const [novedades, setNovedades] = useState<ProvisorioNovedadesRegistradas[]>([]);
+    const [quiereBorrar, setQuiereBorrar] = useState<ProvisorioNovedadesRegistradas|null>(null);
+    const [eliminando, setEliminando] = useState(false);
     useEffect(function(){
-        conn.ajax.table_data({
+        conn.ajax.table_data<ProvisorioNovedadesRegistradas>({
             table: 'novedades_registradas',
             fixedFields: [{fieldName:'idper', value:idper}],
             paramfun: {}
         }).then(function(novedadesRegistradas){
+            novedadesRegistradas.reverse()
             setNovedades(novedadesRegistradas);
         }).catch(logError)
-    },[idper])
+    },[idper, ultimaNovedad])
     return <Componente componentType="novedades-registradas">
-        <h6 className="titulo-componente-descripcion">Novedades registradas</h6>
-        <table>
+         <h6 className="titulo-componente-descripcion">Novedades registradas</h6>
         {novedades.map(n => 
-            <tr>
-                <td><ValueDB value={n.desde}/></td>
-                <td><ValueDB value={n.hasta}/></td>
-                <td><ValueDB value={n.cod_nov}/></td>
-                <td><ValueDB value={n.cod_novedades__novedad}/></td>
-                <td><ValueDB value={n.detalles}/></td>
-            </tr>
+            <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar?' por-borrar':''}`}>
+                <div className="fechas">{n.desde.toDmy().replace(/\/\d\d\d\d$/,'') + (n.desde == n.hasta ? '' : ` - ${n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')}`)}</div>
+                <div className="cod_nov">{n.cod_nov}</div>
+                <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' }</div>
+                <div className="borrar">{n.desde > date.today() ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
+            </Box>
         )}
-        </table>
+        <Dialog open={quiereBorrar != null}>
+            {quiereBorrar == null ? null : (
+                eliminando ? <div>
+                    <div>Eliminando</div>
+                    <CircularProgress/>
+                </div> : <div>
+                    ¿Confirma el borrado de las novedades registradas entre {quiereBorrar!.desde.toDmy()} y {quiereBorrar!.hasta.toDmy()}?
+                    <Button variant="outlined" onClick={()=>setQuiereBorrar(null)}>Conservar</Button>
+                    <Button variant="outlined" color="error" onClick={()=>{
+                        setEliminando(true);
+                        conn.ajax.table_record_delete({
+                            table: 'novedades_registradas',
+                            primaryKeyValues: [quiereBorrar!.idper, quiereBorrar!.desde, quiereBorrar!.idr]
+                        }).then(()=>{
+                            setQuiereBorrar(null);
+                            setEliminando(false);
+                            props.onBorrado();
+                        }).catch(logError);
+                    }}>Eliminar</Button>
+                    
+                </div>
+            )}
+        </Dialog>
     </Componente>
 }
 
 function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
-    // datos de ejemplo, TODO traerlos de la base
     const {fecha, idper, conn} = props
-    const [horario, setHorario] = useState<HorarioSemanaVigenteResult[]>([]);
-    // const desdeFecha = fecha.sub({days:14});
-    // const hastaFecha = fecha.add({days:34});
-    // const horario = [
-    //     {dds:0, trabaja:false, hora_desde:null, hora_hasta:null, cod_nov:null},
-    //     {dds:1, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-    //     {dds:2, trabaja:true , hora_desde:'10:00', hora_hasta:'17:00', cod_nov:1},
-    //     {dds:3, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-    //     {dds:4, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-    //     {dds:5, trabaja:true , hora_desde: '9:00', hora_hasta:'16:00', cod_nov:1},
-    //     {dds:6, trabaja:false, hora_desde:null, hora_hasta:null, cod_nov:null},
-    // ]
-
+    const horarioVacio:HorarioSemanaVigenteResult = {desde: date.today(), hasta: date.today(), dias:{}}
+    const [horario, setHorario] = useState(horarioVacio);
     useEffect(function(){
-        setHorario([])
+        setHorario(horarioVacio)
         if (idper != null) {
             conn.ajax.horario_semana_vigente({ idper, fecha }).then(result => {
                 setHorario(result);
@@ -351,39 +379,34 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
         }
     },[idper, fecha])
 
-    const desdeFecha = horario[0]?.desde ?  (horario[0].desde as RealDate).toDmy() : '';
-    const hastaFecha = horario[0]?.hasta ? (horario[0].hasta as RealDate).toDmy() : '';
+    const desdeFecha = horario.desde;
+    const hastaFecha = horario.hasta;
+
+    function HorarioRenglon(props:{box:(data:HorarioSemanaVigenteDia) => ReactNode[]|ReactNode}){
+        return <div className="horario-renglon">
+            {Object.keys(horario.dias).map(dds => props.box(horario.dias[dds]))}
+        </div>
+    }
     
     return <Componente componentType="horario">
         <Paper className="contenedores-paper">
         <h6 className="titulo-componente-descripcion">Horario</h6>
         <div className="horario-vigente">
-            Vigente desde {desdeFecha} - Hasta {hastaFecha || 'la actualidad'}.
+            Horario vigente desde {desdeFecha.toDmy()} hasta {hastaFecha.toDmy()}.
         </div>
         <div className="horario-contenedor">
-            {horario.map((h, index) => (
-                <div 
-                    key={index} 
-                    className={`${h.trabaja ? '' : 'tipo-dia-no-laborable'}`}
-                >
-                    <div className="horario-dia">
-                        {DDS[h.dds as 0 | 1 | 2 | 3 | 4 | 5 | 6].nombre}
-                    </div>
-                    <div className="horario-dia">
-                        {h.trabaja ? (
-                            <>
-                                <div>{h.hora_desde || '-'}</div>
-                                <div>{h.hora_hasta || '-'}</div>
-                            </>
-                        ) : (
-                            <div>-</div>
-                        )}
-                    </div>
-                    <div className="horario-dia">
-                        {h.cod_nov || '-'}
-                    </div>
-                </div>
-            ))}
+            <HorarioRenglon box={info => <div className="horario-dia calendario-nombre-dia"> {DDS[info.dds].abr}</div> } />
+            <HorarioRenglon box={info => <div className={`horario-dia ${info.trabaja ? '' : 'tipo-dia-no-laborable'}`}> 
+                {info.trabaja ? (
+                    <>
+                        <div>{info.hora_desde?.replace(/(?<=\d?\d:\d\d):00$/,'')}</div>
+                        <div>{info.hora_hasta?.replace(/(?<=\d?\d:\d\d):00$/,'')}</div>
+                    </>
+                ) : (
+                    <div>-</div>
+                )}                
+            </div> } />
+            <HorarioRenglon box={info => <div className={`horario-dia calendario-nombre-dia ${info.trabaja ? '' : 'tipo-dia-no-laborable'}`}> {info.cod_nov}</div> } />
         </div>
         </Paper>
     </Componente>
@@ -442,9 +465,9 @@ function DatosPersonales(props:{conn: Connector, idper:string}){
     </Componente>
 }
 
-function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean)=>void}){
+function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean)=>void, ultimaNovedad?: ULTIMA_NOVEDAD}){
     // @ts-ignore
-    const {idper, cod_nov, onCodNov, conn} = props;
+    const {idper, cod_nov, onCodNov, conn, ultimaNovedad} = props;
     const [codNovedades, setCodNovedades] = useState<NovedadesDisponiblesResult[]>([]);
     const [codNovedadesFiltradas, setCodNovedadesFiltradas] = useState<NovedadesDisponiblesResult[]>([]);
     const [filtro, setFiltro] = useState("");
@@ -456,7 +479,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
                 setCodNovedades(novedades);
             }).catch(logError);
         }
-    },[idper])
+    },[idper, ultimaNovedad])
     useEffect(function(){
         const recordFilter = GetRecordFilter<NovedadesDisponiblesResult>(filtro,['cod_nov', 'novedad']);
         setCodNovedadesFiltradas(codNovedades.filter(recordFilter))
@@ -468,9 +491,9 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
         <List>
             {codNovedadesFiltradas.map(c=>
                 <ListItemButton key = {c.cod_nov} 
-                    onClick={() => {if (onCodNov != null && c.cargable) onCodNov(c.cod_nov, c.con_detalles)}} 
-                    className={`${c.cod_nov == cod_nov ? 'seleccionado' : ''} ${!c.cargable ? 'deshabilitado' : ''}`}
-                    disabled={!c.cargable}>
+                    onClick={() => {if (onCodNov != null && c.con_disponibilidad) onCodNov(c.cod_nov, c.con_detalles)}} 
+                    className={`${c.cod_nov == cod_nov ? 'seleccionado' : ''} ${!c.con_disponibilidad ? 'deshabilitado' : ''}`}
+                    disabled={!c.con_disponibilidad}>
                     <div className="item-novedad">
                     <span className="item-cod"> {c.cod_nov} </span>   
                     <span> {c.novedad} </span>
@@ -483,8 +506,13 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
     </Componente>
 }
 
-type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate, usuario:string, apellido:string, nombres:string, cuil:string, ficha:string};
+type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate, usuario:string, apellido:string, nombres:string, cuil:string, ficha:string, puede_cargar_todo:boolean};
 
+type Hora = string;
+
+type HorarioSemanaVigenteDia = {hora_desde:Hora, hora_hasta:Hora, cod_nov:string, trabaja:boolean, dds:0 | 1 | 2 | 3 | 4 | 5 | 6}
+type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, dias:Record<string, HorarioSemanaVigenteDia>}
+type SiCargaraNovedades = {mensaje:string, con_detalle:boolean}
 declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: (params: {
@@ -500,8 +528,17 @@ declare module "frontend-plus" {
             fecha: Date
         }) => Promise<PersonasNovedadActualResult[]>;
         horario_semana_vigente: (params:{
-
-        }) => Promise<any>;
+        }) => Promise<HorarioSemanaVigenteResult>;
+        si_cargara_novedad: (params:{
+            idper:string,
+            cod_nov:string,
+            desde:Date,
+            hasta:Date
+        }) => Promise<SiCargaraNovedades>;
+        table_record_delete: (params:{
+            table: string;
+            primaryKeyValues: any[];    
+        }) => Promise<void>
     }
 }
 
@@ -518,9 +555,6 @@ function Persona(props:{conn: Connector, idper:string, fecha:RealDate}){
             <div>
         <Calendario {...props}/>
         </div>
-        <div>
-        <NovedadesRegistradas {...props}/>
-        </div>
     </Box>
 }
 
@@ -530,13 +564,15 @@ function Pantalla1(props:{conn: Connector}){
     const [persona, setPersona] = useState({} as ProvisorioPersonas);
     const [cod_nov, setCodNov] = useState("");
     const [detalles, setDetalles] = useState("");
-    const [conDetalles, setConDetalles] = useState(false);
     const [fecha, setFecha] = useState<RealDate>(date.today());
     const [hasta, setHasta] = useState<RealDate>(date.today());
     const [registrandoNovedad, setRegistrandoNovedad] = useState(false);
+    const [siCargaraNovedad, setSiCargaraNovedad] = useState<SiCargaraNovedades|null>(null);
+    const [guarndadoRegistroNovedad, setGuardandoRegistroNovedad] = useState(false);
     const [error, setError] = useState<Error|null>(null);
     const {idper} = persona
-    const [refreshCalendario, setRefreshCalendario] = useState(false);
+    const [ultimaNovedad, setUltimaNovedad] = useState(0);
+    const annio = fecha.getFullYear();
     useEffect(function(){
         // @ts-ignore
         conn.ajax.info_usuario().then(function(infoUsuario:ProvisorioInfoUsuario){
@@ -544,67 +580,90 @@ function Pantalla1(props:{conn: Connector}){
             setInfoUsuario(infoUsuario);
         }).catch(logError)
     },[])
+    useEffect(function(){
+        setRegistrandoNovedad(false);
+        setSiCargaraNovedad(null);
+        setError(null);
+    },[idper,cod_nov,fecha,hasta])
     function registrarNovedad(){
-        setRegistrandoNovedad(true);
+        setGuardandoRegistroNovedad(true);
         conn.ajax.table_record_save({
             table:'novedades_registradas',
             primaryKeyValues:[],
-            newRow:{idper, desde:fecha, hasta, cod_nov, detalles},
+            newRow:{idper, desde:fecha, hasta, cod_nov, detalles: detalles == "" ? null : detalles},
             oldRow:{},
             status:'new'
         }).then(function(result){
             console.log(result)
-            setRefreshCalendario(prev => !prev);
-        }).catch(setError).finally(()=>setRegistrandoNovedad(false));
+            setUltimaNovedad(result.row.idr as number);
+            setFecha(date.today());
+            setHasta(date.today());
+            setCodNov("");
+        }).catch(setError).finally(()=>setGuardandoRegistroNovedad(false));
     }
-    function handleCodNovChange(codNov: string, conDetalles: boolean) {
+    function handleCodNovChange(codNov: string) {
         setCodNov(codNov);
-        setConDetalles(conDetalles);
     }
 
     return infoUsuario.usuario == null ?  
             <CircularProgress />
         : infoUsuario.idper == null ?
             <Typography>El usuario <b>{infoUsuario.usuario}</b> no tiene una persona asociada</Typography>
-        : <Box className="componente-pantalla-1" sx={{ padding: 3 }}>
-            <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)}/>
-            <Box>
-                <Paper className="contenedores-paper">                 
-                <div className="box-line">
-                    <span className="mdi mdi-calendar-edit-outline"></span>
-                    <span className="box-names">
-                        {idper} | {persona.apellido}, {persona.nombres}
-                    </span>            
-                </div>
-                <div className="box-line">
-                    <span>CUIL: {persona.cuil} - FICHA: {persona.ficha}</span>              
-                </div>
-                </Paper>
-                <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} refreshCalendario={refreshCalendario}/>
+        : <Paper className="componente-pantalla-1">
+            <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)} infoUsuario={infoUsuario}/>
+            <Componente componentType="del-medio">
+                <Box>
+                    <div className="box-line">
+                        <span className="box-id">
+                            {idper}
+                        </span>
+                        <span className="box-names">
+                            {persona.apellido}, {persona.nombres}
+                        </span>
+                    </div>
+                    <div className="box-line">
+                        <span className="box-names">
+                            CUIL: {persona.cuil}
+                        </span>
+                        <span className="box-names">
+                            FICHA: {persona.ficha}
+                        </span>
+                    </div>
+                </Box>
+                <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}/>
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
-                <Box sx={{marginTop:'20px'}}>
+                {cod_nov && idper && fecha && hasta && !guarndadoRegistroNovedad && !registrandoNovedad && persona.cargable ? <Box key="setSiCargaraNovedad">
+                    <Button key="button" variant="outlined" onClick={() => {
+                        setRegistrandoNovedad(true);
+                        conn.ajax.si_cargara_novedad({idper, cod_nov, desde:fecha, hasta}).then(setSiCargaraNovedad).catch(logError)
+                    }}>Registrar Novedad</Button>
+                </Box>: null}
+                {registrandoNovedad && !siCargaraNovedad ? <Box key="setMensajeRegistroNovedad">
+                    <CircularProgress />
+                </Box>: null}
+                {siCargaraNovedad ? <Box>
                     <TextField
+                        className="novedades-detalles"
                         label="Detalles"
-                        placeholder={conDetalles ? "Completá este campo para registrar la novedad" : ""}
-                        multiline
-                        rows={4}
+                        placeholder={siCargaraNovedad.con_detalle ? "Obligatorio" : ""}
                         value={detalles}
                         onChange={(e) => setDetalles(e.target.value)}
-                        required={conDetalles}
-                        error={conDetalles && !detalles}
-                        helperText={conDetalles && !detalles ? "El campo es obligatorio." : ""}
-                        fullWidth
+                        required={siCargaraNovedad.con_detalle}
+                        error={siCargaraNovedad.con_detalle && !detalles}
+                        helperText={siCargaraNovedad.con_detalle && !detalles ? "El campo es obligatorio." : ""}
                     />
-                </Box>
-                <Box sx={{marginTop:'20px'}}>{cod_nov && idper && fecha && hasta && !registrandoNovedad ?
-                    <Button key="button" variant="contained" onClick={() => registrarNovedad()} sx={{backgroundColor:'#252663'}}>Registrar Novedad</Button>
+                    <Button className="boton-confirmar-registro-novedades" key="button" variant="outlined" onClick={() => registrarNovedad()}>
+                        {siCargaraNovedad.mensaje}<ICON.Save/>
+                    </Button>
+                </Box>: null}
+                <Box>{guarndadoRegistroNovedad || error ?
+                    <Typography>{error?.message ?? (guarndadoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
-                <Box>{registrandoNovedad || error ?
-                    <Typography>{error?.message ?? (registrandoNovedad && "registrando..." || "error")}</Typography>
-                : null}</Box>
-            </Box>
-            <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov, conDetalles) => handleCodNovChange(codNov, conDetalles)}/>
-        </Box>;
+                <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>
+                <Horario conn={conn} idper={idper} fecha={fecha}/>
+            </Componente>
+            <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
+        </Paper>;
 }
 
 
@@ -679,6 +738,25 @@ function RegistrarNovedades(props:{conn: Connector, idper:string}){
 
 const IDPER_DEMO = "AR8"
 
+function PantallaPrincipal(props: {conn: Connector}){
+    return <Paper>
+        <AppBar position="static">
+            <Toolbar>
+                <IconButton color="inherit" onClick={()=>{
+                    var root = document.getElementById('total-layout');
+                    if (root != null ) ReactDOM.unmountComponentAtNode(root)
+                    location.hash="";
+                }}><ICON.Menu/></IconButton>
+                <Typography flexGrow={2}>
+                    SiPer - Principal - <small>(DEMO)</small>
+                </Typography>
+            </Toolbar>
+        </AppBar>
+        <Pantalla1 conn={props.conn}/>
+    </Paper>
+
+}
+
 function DemoDeComponentes(props: {conn: Connector}){
     const {conn} = props;
     type QUE = ""|"calendario"|"personas"|"novedades-registradas"|"horario"|"persona"|"datos-personales"|"pantalla-1"|"registrar-novedades"|"novedades-per"
@@ -721,8 +799,8 @@ function DemoDeComponentes(props: {conn: Connector}){
                     <UnComponente titulo="Pantalla 1 (primera total)" que="pantalla-1"/>
                 </Card>,
             "calendario": () => <Calendario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
-            "personas": () => <ListaPersonasEditables conn={conn} sector="MS" fecha={date.today()} idper={IDPER_DEMO}/>,
-            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO}/>,
+            "personas": () => <ListaPersonasEditables conn={conn} sector="MS" fecha={date.today()} idper={IDPER_DEMO} infoUsuario={{} as ProvisorioInfoUsuario}/>,
+            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO} annio={2024} onBorrado={()=>{}}/>,
             "horario": () => <Horario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
             "datos-personales": () => <DatosPersonales conn={conn} idper={IDPER_DEMO}/>,
             "registrar-novedades": () => <RegistrarNovedades conn={conn} idper={IDPER_DEMO}/>,
@@ -744,11 +822,11 @@ myOwn.wScreens.componentesSiper = function componentesSiper(addrParams:any){
 }
 
 // @ts-ignore
-myOwn.wScreens.componentesSiper = function componentesSiper(addrParams:any){
+myOwn.wScreens.principal = function principal(addrParams:any){
     renderConnectedApp(
         myOwn as never as Connector,
-        { ...addrParams, table: 'personas' },
+        { ...addrParams},
         document.getElementById('total-layout')!,
-        ({ conn }) => <DemoDeComponentes conn={conn} />
+        ({ conn }) => <PantallaPrincipal conn={conn} />
     )
 }
