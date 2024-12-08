@@ -183,6 +183,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         inner join roles using (rol)
                         left join novedades_vigentes nv on nv.idper = pe.idper and nv.fecha = $1
                         left join cod_novedades cn using(cod_nov)
+                    ${context.es.registra ? `` : `where u.idper = pe.idper`}
                     order by apellido, nombres`
                 , [params.fecha, context.username]
             ).fetchAll();

@@ -452,7 +452,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
                     disabled={!c.con_disponibilidad}>
                     <span className="box-id"> {c.cod_nov} </span>   
                     <span className="box-names"> {c.novedad} </span>
-                    <span className="box-info">{c.cantidad > 0 ? (c.limite > 0 ?`${c.limite} &minus; ${c.cantidad} = ${c.saldo}` : c.cantidad ): ''}</span>
+                    <span className="box-info">{c.cantidad > 0 ? (c.limite > 0 ?`${c.limite} - ${c.cantidad} = ${c.saldo}` : c.cantidad ): ''}</span>
                 </ListItemButton>
             )}
         </List>
