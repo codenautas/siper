@@ -73,22 +73,21 @@ export class EmulatedSession<TApp extends AppBackend>{
             return this.getResult(request);
         }
     }
-    // @ts-ignore se queja de infinito
     async callProcedure<T extends Description, U extends Description>(
         target:{procedure:string, parameters:T, result:U}, 
         params:PartialOnUndefinedDeep<DefinedType<NoInfer<T>>>
     ):Promise<DefinedType<NoInfer<U>>>{
-        // @ts-ignore
-        var mandatoryParameters = target.parameters.optionals;
+        var mandatoryParameters = target.parameters;
         var result = await this.request({
             path: '/'+target.procedure,
             payload: {
+                // @ts-ignore no logra deducir el null
                 ...(LikeAr(mandatoryParameters).map(_ => null).plain()),
                 ...(LikeAr(params).map(value => JSON4all.stringify(value)).plain())
             }
         })
-        return result;
-        // return guarantee(target.result, result);
+        // return result;
+        return guarantee(target.result, result);
     }
     async getResult(request:Awaited<ReturnType<typeof fetch>>){
         var result = await request.text();
@@ -123,7 +122,6 @@ export class EmulatedSession<TApp extends AppBackend>{
         discrepances.showAndThrow(result?.substring(0,6), './menu');
         return result;
     }
-    // @ts-ignore
     async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:PartialOnUndefinedDeep<DefinedType<NoInfer<T>>>, status:'new'):Promise<DefinedType<T>>
     async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:PartialOnUndefinedDeep<Partial<DefinedType<NoInfer<T>>>>, status:'update', primaryKeyValues?:any[]):Promise<DefinedType<T>>
     async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:PartialOnUndefinedDeep<DefinedType<NoInfer<T>>>, status:'new'|'update', primaryKeyValues?:any[]):Promise<DefinedType<T>>{
@@ -177,9 +175,8 @@ export class EmulatedSession<TApp extends AppBackend>{
                 throw new Error('mode not recognized '+compare);
         }
     }
-    async tableDataSaveAndTest(table:string, rows:Row[], compare:'all', status:'new'|'update'){
+    async tableDataSaveAndTest(table:string, rows:Row[], compare:'all', status:'new'){
         for (var row of rows) {
-            // @ts-ignore
             await this.saveRecord({table, description:is.object({})}, row, status);
         }
         return this.tableDataTest(table, rows, compare);
@@ -242,7 +239,6 @@ export async function benchmarksSave(benchmark:any){
         if (benchmarks.length && sameValue(benchmark.date, benchmarks[benchmarks.length -1].date)) {
             benchmarks.pop();
         }
-        // @ts-ignore
         benchmarks.push(benchmark);
         await fs.writeFile(fileName, JSON4all.toUrlLines(benchmarks, '\r\n'));
     }

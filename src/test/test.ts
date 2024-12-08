@@ -932,10 +932,8 @@ describe("connected", function(){
                     }
                     const novedadesRecalculadasPorCuit = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
                     benchmark.duracion = Number(
-                        // @ts-ignore   
-                        new Date() - comienzo
+                        new Date().getTime() - comienzo.getTime()
                     );
-                    // @ts-ignore
                     benchmarkDelDia.tiempos.push(benchmark); 
                     await saveLocalFile(benchmarkDelDia);
                     await benchmarksSave(benchmarkDelDia);
