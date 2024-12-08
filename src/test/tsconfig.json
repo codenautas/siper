@@ -4,7 +4,8 @@
         "module": "none",
         "target": "es2018",
         "lib":["es2017", "es2015", "es2018"],
-        "baseUrl": ""
+        "baseUrl": "",
+        "strictNullChecks": false
     },
     "include":[
         "."

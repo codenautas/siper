@@ -23,7 +23,7 @@ const TIMEOUT_SPEED = 1000 * (process.env.BP_TIMEOUT_SPEED as unknown as number 
  * 
  * y antes de correr los tests hay que comentar con // la próxima línea (para qu se descomente el PORT = 3333)
  */
-const PORT = null; /*
+const PORT:number|null = null; /*
 const PORT = 3333;
 // */
 
@@ -303,7 +303,7 @@ describe("connected", function(){
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-01', '2000-01-07']}})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
-                    {annio:2000, cod_nov:COD_VACACIONES, limite:20, cantidad:5, saldo:15},
+                    {annio:2000, cod_nov:COD_VACACIONES, total:20, usados:2, pendientes:3, disponibles:15},
                 ], 'all', {fixedFields:{idper}})
             })
         })
@@ -313,7 +313,9 @@ describe("connected", function(){
                 const {idper} = persona;
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-03-06'), hasta:date.iso('2000-03-12'), cod_nov:COD_VACACIONES, idper: persona.idper}
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
-                discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:3, dias_coincidentes:0})
+                discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:3, dias_coincidentes:0, con_detalles:null,
+                    mensaje: discrepances.test((x:string) => /confirma/.test(x)) as string,
+                })
                 await rrhhSession.saveRecord(ctts.novedades_registradas, novedadRegistradaPorCargar, 'new');
                 await rrhhSession.tableDataTest('novedades_vigentes', [
                     {fecha:date.iso('2000-03-07'), cod_nov:null          , idper, con_novedad:false, trabajable:false},
@@ -324,7 +326,7 @@ describe("connected", function(){
                 ], 'all', {fixedFields:{idper, fecha:['2000-03-07','2000-03-11']}})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
-                    {annio:2000, cod_nov:COD_VACACIONES, limite:15, cantidad:3, saldo:12},
+                    {annio:2000, cod_nov:COD_VACACIONES, total:15, usados:0, pendientes:3, disponibles:12},
                 ], 'all', {fixedFields:{idper}})
             })
         })
@@ -338,7 +340,9 @@ describe("connected", function(){
                 );
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-05-08'), hasta:date.iso('2000-05-12'), cancela:true, idper}
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
-                discrepances.showAndThrow(informe, {dias_corridos:5, dias_habiles:5, dias_coincidentes:5})
+                discrepances.showAndThrow(informe, {dias_corridos:5, dias_habiles:5, dias_coincidentes:5, con_detalles: null,
+                    mensaje: discrepances.test((x:string) => /confirma/.test(x)) as string,
+                })
                 await rrhhSession.saveRecord(
                     ctts.novedades_registradas, 
                     novedadRegistradaPorCargar,
@@ -365,8 +369,8 @@ describe("connected", function(){
                 ], 'all', {fixedFields:{idper, fecha:['2000-05-01', '2000-05-12']}})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
-                    {annio:2000, cod_nov:COD_VACACIONES, limite:20, cantidad:4, saldo:16},
-                    {annio:2000, cod_nov:COD_TRAMITE, limite:4, cantidad:1, saldo:3},
+                    {annio:2000, cod_nov:COD_VACACIONES, total:20, usados:0, pendientes:4, disponibles:16},
+                    {annio:2000, cod_nov:COD_TRAMITE   , total:4 , usados:0, pendientes:1, disponibles:3 },
                 ], 'all', {fixedFields:{idper}})
             })
         })
@@ -875,8 +879,8 @@ describe("connected", function(){
                 const sqlTraerNovedades = `SELECT string_agg(concat_ws(' ',fecha,idper,cod_nov), chr(10) order by fecha, idper) FROM novedades_vigentes WHERE ${FECHAS_DE_PRUEBA} AND ${IDPER_DE_PRUEBA}`
                 const emptyBenchmarkDay = {
                     date: date.today(),
-                    tiempos: []
-                }
+                    tiempos: [] as {tamannio:any, duracion: number|null}[]
+                };
                 var benchmarkDelDia = await loadLocalFile(emptyBenchmarkDay);
                 if (benchmarkDelDia.date != emptyBenchmarkDay.date) {
                     benchmarkDelDia = emptyBenchmarkDay;

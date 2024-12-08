@@ -13,6 +13,8 @@ import { Description, guarantee, is, DefinedType } from "guarantee-type";
 import * as JSON4all from 'json4all';
 import { sameValue } from 'best-globals'
 
+import { PartialOnUndefinedDeep } from 'type-fest';
+
 import * as discrepances from 'discrepances';
 
 export type Constructor<T> = new(...args: any[]) => T;
@@ -74,7 +76,7 @@ export class EmulatedSession<TApp extends AppBackend>{
     // @ts-ignore se queja de infinito
     async callProcedure<T extends Description, U extends Description>(
         target:{procedure:string, parameters:T, result:U}, 
-        params:DefinedType<NoInfer<T>>
+        params:PartialOnUndefinedDeep<DefinedType<NoInfer<T>>>
     ):Promise<DefinedType<NoInfer<U>>>{
         // @ts-ignore
         var mandatoryParameters = target.parameters.optionals;
@@ -122,9 +124,9 @@ export class EmulatedSession<TApp extends AppBackend>{
         return result;
     }
     // @ts-ignore
-    async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:DefinedType<NoInfer<T>>, status:'new'):Promise<DefinedType<T>>
-    async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:Partial<DefinedType<NoInfer<T>>>, status:'update', primaryKeyValues?:any[]):Promise<DefinedType<T>>
-    async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:DefinedType<NoInfer<T>>, status:'new'|'update', primaryKeyValues?:any[]):Promise<DefinedType<T>>{
+    async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:PartialOnUndefinedDeep<DefinedType<NoInfer<T>>>, status:'new'):Promise<DefinedType<T>>
+    async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:PartialOnUndefinedDeep<Partial<DefinedType<NoInfer<T>>>>, status:'update', primaryKeyValues?:any[]):Promise<DefinedType<T>>
+    async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:PartialOnUndefinedDeep<DefinedType<NoInfer<T>>>, status:'new'|'update', primaryKeyValues?:any[]):Promise<DefinedType<T>>{
         var context = this.server.getContextForDump();
         const {table, description} = target
         var tableDef = this.server.tableStructures[table](context);
@@ -138,7 +140,8 @@ export class EmulatedSession<TApp extends AppBackend>{
                 status
             }
         })
-        var {command, row} = guarantee(is.object({command: is.string, row:description}), result);
+        var command:string = result.command;
+        var row = guarantee(description, result.row);
         discrepances.showAndThrow(command, discrepances.test(x => x=='INSERT' || x=='UPDATE'));
         return row;
     }
@@ -158,7 +161,7 @@ export class EmulatedSession<TApp extends AppBackend>{
                 fixedFields:JSON.stringify(this.toFixedField(opts?.fixedFields))
             }
         })
-        var response = guarantee({array:is.object({},{})}, result);
+        var response = guarantee({array:is.object({})}, result);
         var existColumn = LikeAr(rows[0]).map(_ => true).plain();
         var filteredReponseRows = response.map(row => LikeAr(row).filter((_,k) => existColumn[k]).plain());
         switch(compare){
