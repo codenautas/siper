@@ -37,6 +37,7 @@ import { capacitaciones       } from "./table-capacitaciones";
 import { per_capa       } from "./table-per_capa";
 import { parte_diario         } from "./table-parte-diario";
 import { fichadas_vigentes } from "./table-fichadas_vigentes";
+import { tipos_documento } from "./table-tipos_documento";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -200,7 +201,8 @@ export class AppSiper extends AppBackend{
             capacitaciones       ,
             per_capa             ,
             parte_diario         ,
-            fichadas_vigentes
+            fichadas_vigentes    ,
+            tipos_documento
         }
     }       
 }

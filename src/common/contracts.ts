@@ -343,8 +343,18 @@ export const annio = {
     })
 } satisfies CommonEntityDefinition
 
-
 export type Annio = DefinedType<typeof annio.description>
+
+export const tipos_documento = {
+    table: 'tipos_documento',
+    description: is.object({
+        tipodocumento: is.string,
+        documento: is.string
+    })
+} satisfies CommonEntityDefinition
+
+
+export type Tipos_documento = DefinedType<typeof tipos_documento.description>
 
 export const meses = [
     {  value:1, name:'enero' },
