@@ -607,16 +607,15 @@ function Pantalla1(props:{conn: Connector}){
             <CircularProgress />
         : infoUsuario.idper == null ?
             <Typography>El usuario <b>{infoUsuario.usuario}</b> no tiene una persona asociada</Typography>
-        : <Paper className="componente-pantalla-1">
+        : <Box className="componente-pantalla-1">
             <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)} infoUsuario={infoUsuario}/>
             <Componente componentType="del-medio">
                 <Box>
+                <Paper className="contenedores-paper">
                     <div className="box-line">
+                    <span className="mdi mdi-calendar-edit-outline"></span>
                         <span className="box-id">
-                            {idper}
-                        </span>
-                        <span className="box-names">
-                            {persona.apellido}, {persona.nombres}
+                            {idper} | {persona.apellido}, {persona.nombres}
                         </span>
                     </div>
                     <div className="box-line">
@@ -627,6 +626,7 @@ function Pantalla1(props:{conn: Connector}){
                             FICHA: {persona.ficha}
                         </span>
                     </div>
+                </Paper>
                 </Box>
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}/>
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
@@ -639,18 +639,18 @@ function Pantalla1(props:{conn: Connector}){
                 {registrandoNovedad && !siCargaraNovedad ? <Box key="setMensajeRegistroNovedad">
                     <CircularProgress />
                 </Box>: null}
-                {siCargaraNovedad ? <Box>
+                {siCargaraNovedad ? <Box sx={{marginTop:'20px'}}>
                     <TextField
                         className="novedades-detalles"
                         label="Detalles"
-                        placeholder={siCargaraNovedad.con_detalle ? "Obligatorio" : ""}
+                        placeholder={siCargaraNovedad.con_detalle ? "Completá este campo para registrar la novedad" : ""}
                         value={detalles}
                         onChange={(e) => setDetalles(e.target.value)}
                         required={siCargaraNovedad.con_detalle}
                         error={siCargaraNovedad.con_detalle && !detalles}
                         helperText={siCargaraNovedad.con_detalle && !detalles ? "El campo es obligatorio." : ""}
                     />
-                    <Button className="boton-confirmar-registro-novedades" key="button" variant="outlined" onClick={() => registrarNovedad()}>
+                    <Button className="boton-confirmar-registro-novedades" key="button" variant="contained" onClick={() => registrarNovedad()}>
                         {siCargaraNovedad.mensaje}<ICON.Save/>
                     </Button>
                 </Box>: null}
@@ -661,7 +661,7 @@ function Pantalla1(props:{conn: Connector}){
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
             </Componente>
             <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
-        </Paper>;
+        </Box>;
 }
 
 
