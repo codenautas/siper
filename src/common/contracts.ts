@@ -353,8 +353,20 @@ export const tipos_documento = {
     })
 } satisfies CommonEntityDefinition
 
-
 export type Tipos_documento = DefinedType<typeof tipos_documento.description>
+
+export const paises = {
+    table : 'paises',
+    descrription: is.object({
+        pais: is.string,
+        codigoagip: is.string,
+        nombre_pais: is.string,
+        gentilicio: is.string,
+        orden: is.number
+    })
+}
+
+export type Paises = DefinedType<typeof paises.descrription>
 
 export const meses = [
     {  value:1, name:'enero' },

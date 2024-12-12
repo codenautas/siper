@@ -38,6 +38,7 @@ import { per_capa       } from "./table-per_capa";
 import { parte_diario         } from "./table-parte-diario";
 import { fichadas_vigentes } from "./table-fichadas_vigentes";
 import { tipos_documento } from "./table-tipos_documento";
+import { paises } from "./table-paises";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -125,6 +126,8 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'sectores'         },
                             {menuType:'table', name:'situacion_revista', label: 'sit. revista' },
                             {menuType:'table', name:'clases'           },
+                            {menuType:'table', name:'paises'           },
+                            {menuType:'table', name:'tipos_documento'  },
                         ]},
                         {menuType:'table', name:'cod_novedades' },
                         {menuType:'table', name:'usuarios'      },
@@ -202,7 +205,8 @@ export class AppSiper extends AppBackend{
             per_capa             ,
             parte_diario         ,
             fichadas_vigentes    ,
-            tipos_documento
+            tipos_documento      ,
+            paises
         }
     }       
 }
