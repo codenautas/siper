@@ -1,6 +1,6 @@
 {
   "name": "siper",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "private": true,
   "license": "MIT",
   "description": "Sistema Integral de Gestión de Agentes, Recursos, Personal y Actividades",
@@ -17,20 +17,21 @@
   "dependencies": {
     "backend-plus": "^2.0.9",
     "frontend-plus": "^0.0.9",
-    "guarantee-type": "^0.2.0-rc.1",
+    "guarantee-type": "^0.2.0",
     "json4all": "^1.4.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "pg-triggers": "^0.3.3"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.9",
-    "@types/node": "^22.9.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.10.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "mixin-patch": "^0.4.1",
-    "mocha": "^10.8.2",
-    "typescript": "^5.6.3",
+    "mocha": "^11.0.1",
+    "type-fest": "4.30.0",
+    "typescript": "^5.7.2",
     "types.d.ts": "^0.6.22"
   },
   "mixin-patch": {

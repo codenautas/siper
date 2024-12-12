@@ -38,12 +38,16 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         action: 'si_cargara_novedad',
         parameters: [
             {name:'idper'     , typeName:'text'   },
-            {name:'cod_nov'   , typeName:'text'   },
+            {name:'cod_nov'   , typeName:'text'   , defaultValue:null},
             {name:'desde'     , typeName:'date'   },
             {name:'hasta'     , typeName:'date'   },
+            {name:'cancela'   , typeName:'boolean', defaultValue:null},
         ],
         coreFunction: async function(context: ProcedureContext, params:Partial<NovedadRegistrada>){
-            const {desde, hasta, cod_nov, idper} = params;
+            const {desde, hasta, cod_nov, idper, cancela} = params;
+            if (cancela == null && cod_nov == null) {
+                throw Error("debe especificar cod_nov or cancela");
+            }
             const info = await context.client.query(
                 `select concat_ws(' ',
                             '¿confirmar el registro de',
@@ -54,10 +58,10 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             '(persona', p.idper,
                             ')?'
                         ) as mensaje,
-                        con_detalles,
-                        *
-                    from personas p, 
-                        cod_novedades cn,
+                        dias_corridos, dias_habiles, dias_coincidentes,
+                        con_detalles
+                    from personas p
+                        left join cod_novedades cn on cn.cod_nov = $3,
                         lateral (
                             select count(*) as dias_corridos,
                                     count(*) filter (
@@ -70,7 +74,6 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                                 where f.fecha between $1 and $2
                         ) x
                     where p.idper = $4
-                        and cn.cod_nov = $3
 `, 
                 [desde, hasta, cod_nov, idper]
             ).fetchUniqueRow();
@@ -183,6 +186,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         inner join roles using (rol)
                         left join novedades_vigentes nv on nv.idper = pe.idper and nv.fecha = $1
                         left join cod_novedades cn using(cod_nov)
+                    ${context.es.registra ? `` : `where u.idper = pe.idper`}
                     order by apellido, nombres`
                 , [params.fecha, context.username]
             ).fetchAll();

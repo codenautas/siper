@@ -491,14 +491,12 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
         <List>
             {codNovedadesFiltradas.map(c=>
                 <ListItemButton key = {c.cod_nov} 
-                    onClick={() => {if (onCodNov != null && c.con_disponibilidad) onCodNov(c.cod_nov, c.con_detalles)}} 
+                    onClick={() => {if (onCodNov != null && c.con_disponibilidad) onCodNov(c.cod_nov, !!c.con_detalles)}} 
                     className={`${c.cod_nov == cod_nov ? 'seleccionado' : ''} ${!c.con_disponibilidad ? 'deshabilitado' : ''}`}
                     disabled={!c.con_disponibilidad}>
-                    <div className="item-novedad">
-                    <span className="item-cod"> {c.cod_nov} </span>   
-                    <span> {c.novedad} </span>
-                    </div>
-                    <span className="box-info">{c.cantidad > 0 ? (c.limite > 0 ?`${c.limite} &minus; ${c.cantidad} = ${c.saldo}` : c.cantidad ): ''}</span>
+                    <span className="box-id"> {c.cod_nov} </span>   
+                    <span className="box-names"> {c.novedad} </span>
+                    <span className="box-info">{c.cantidad! > 0 ? (c.limite! > 0 ?`${c.limite} - ${c.cantidad} = ${c.saldo}` : c.cantidad ): ''}</span>
                 </ListItemButton>
             )}
         </List>

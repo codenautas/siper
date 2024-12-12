@@ -37,6 +37,8 @@ import { capacitaciones       } from "./table-capacitaciones";
 import { per_capa       } from "./table-per_capa";
 import { parte_diario         } from "./table-parte-diario";
 import { fichadas_vigentes } from "./table-fichadas_vigentes";
+import { tipos_documento } from "./table-tipos_documento";
+import { paises } from "./table-paises";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -65,10 +67,11 @@ export class AppSiper extends AppBackend{
         ].map(be.procedureDefCompleter, be);
     }
     completeContext(context:Context){
-        context.es = context.es || {}
-        context.es.admin = context.user && context.user.rol=="admin" 
-        context.es.rrhh = context.es.admin || context.user && context.user.rol=="rrhh" 
-        context.es.registra = context.es.admin || context.user && context.user.rol=="registra" 
+        var es = context.es ?? {} as Context["es"]
+        es.admin = context.user && context.user.rol=="admin" 
+        es.rrhh = es.admin || context.user && context.user.rol=="rrhh" 
+        es.registra = es.admin || context.user && context.user.rol=="registra" 
+        context.es = es;
     }
     override getContextForDump():Context{
         var context = super.getContextForDump();
@@ -123,6 +126,8 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'sectores'         },
                             {menuType:'table', name:'situacion_revista', label: 'sit. revista' },
                             {menuType:'table', name:'clases'           },
+                            {menuType:'table', name:'paises'           },
+                            {menuType:'table', name:'tipos_documento'  },
                         ]},
                         {menuType:'table', name:'cod_novedades' },
                         {menuType:'table', name:'usuarios'      },
@@ -199,7 +204,9 @@ export class AppSiper extends AppBackend{
             capacitaciones       ,
             per_capa             ,
             parte_diario         ,
-            fichadas_vigentes
+            fichadas_vigentes    ,
+            tipos_documento      ,
+            paises
         }
     }       
 }

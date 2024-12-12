@@ -10,7 +10,6 @@ export const cod_nov = {
     description: is.object({
         cod_nov: is.string,
         novedad: is.string,
-    },{
         con_detalles: is.nullable.boolean,
         total: is.nullable.boolean,
         parcial: is.nullable.boolean,
@@ -18,12 +17,12 @@ export const cod_nov = {
         con_novedad: is.nullable.boolean,
     })
 }
+export type CodNovedades = DefinedType<typeof cod_nov.description>
 
 export const fecha = {
     table: 'fechas',
     description: is.object({
         fecha: is.Date,
-    },{
         laborable: is.nullable.boolean,
         repite: is.nullable.boolean,
         inamovible: is.nullable.boolean,
@@ -87,17 +86,16 @@ export const novedades_registradas = {
         idper: is.string,
         desde: is.Date,
         hasta: is.Date,
-    },{
-        cod_nov: is.string,
-        cancela: is.boolean,
-        dds0: is.boolean,
-        dds1: is.boolean,
-        dds2: is.boolean,
-        dds3: is.boolean,
-        dds4: is.boolean,
-        dds5: is.boolean,
-        dds6: is.boolean,
-        detalles: is.string,
+        cod_nov: is.nullable.string,
+        cancela: is.nullable.boolean,
+        dds0: is.nullable.boolean,
+        dds1: is.nullable.boolean,
+        dds2: is.nullable.boolean,
+        dds3: is.nullable.boolean,
+        dds4: is.nullable.boolean,
+        dds5: is.nullable.boolean,
+        dds6: is.nullable.boolean,
+        detalles: is.nullable.string,
     })
 } satisfies CommonEntityDefinition
 
@@ -108,11 +106,10 @@ export const novedades_horarias = {
     description: is.object({
         idper: is.string,
         fecha: is.Date,
-    },{
-        desde_hora: is.string,
-        hasta_hora: is.string,
+        desde_hora: is.nullable.string,
+        hasta_hora: is.nullable.string,
         cod_nov: is.string,
-        detalles: is.string,
+        detalles: is.nullable.string,
     })
 } satisfies CommonEntityDefinition
 
@@ -124,10 +121,9 @@ export const horarios = {
         idper: is.string,
         dds: is.number,
         desde: is.Date,
-    },{
         hora_desde: is.string,
         hora_hasta: is.string,
-        trabaja:is.boolean,
+        trabaja: is.boolean,
         cod_nov: is.string,
         hasta: is.Date,
     })
@@ -138,20 +134,19 @@ export type Horarios = DefinedType<typeof horarios.description>
 export const personas = {
     table: 'personas',
     description: is.object({
-        idper:      is.string,
-    },{
-        ficha:     is.string,
+        idper:     is.string,
+        ficha:     is.nullable.string,
         cuil:      is.string,
-        idmeta4:   is.string,
+        idmeta4:   is.nullable.string,
         apellido:  is.string,
         nombres:   is.string,
-        sector:    is.string,
-        categoria: is.string,
-        registra_novedades_desde: is.Date,
-        para_antiguedad_relativa: is.Date,
+        sector:    is.nullable.string,
+        categoria: is.nullable.string,
+        registra_novedades_desde: is.nullable.Date,
+        para_antiguedad_relativa: is.nullable.Date,
         activo:    is.nullable.boolean,
-        fecha_ingreso: is.Date,
-        fecha_egreso : is.Date,
+        fecha_ingreso: is.nullable.Date,
+        fecha_egreso : is.nullable.Date,
     })
 } satisfies CommonEntityDefinition
 
@@ -189,8 +184,7 @@ export type Usuario = DefinedType<typeof usuarios.description>
 export const capacitaciones = {
     table: 'capacitaciones',
     description: is.object({
-        editable: is.boolean
-    },{
+        editable: is.boolean,
         capacitacion: is.nullable.string,
         modalidad: is.nullable.string,
         tipo: is.nullable.string,
@@ -207,8 +201,7 @@ export const per_capa = {
     description: is.object({
         idper:      is.string,
         //año: is.number,
-        editable: is.boolean
-    },{
+        editable: is.boolean,
         capacitacion: is.nullable.string,
         modalidad: is.nullable.string,
         tipo: is.nullable.string,
@@ -224,11 +217,10 @@ export const historial_contrataciones = {
     description: is.object({
         idper: is.string,
         desde: is.Date,
-    },{
-        hasta: is.Date,
-        computa_antiguedad:is.boolean,
-        organismo: is.string,
-        observaciones: is.string,
+        hasta: is.nullable.Date,
+        computa_antiguedad: is.nullable.boolean,
+        organismo: is.nullable.string,
+        observaciones: is.nullable.string,
     })
 } satisfies CommonEntityDefinition
 
@@ -238,17 +230,20 @@ export type Historial_contratacion = DefinedType<typeof historial_contrataciones
 
 export const si_cargara_novedad = {
     procedure: 'si_cargara_novedad',
-    parameters: is.object({},{
+    parameters: is.object({
         idper: is.nullable.string,
         cod_nov: is.nullable.string,
         desde: is.Date,
         hasta: is.Date,
+        cancela: is.nullable.boolean
     }),
     result: is.object({
+        mensaje: is.string,
         dias_corridos: is.number,
         dias_habiles: is.number,
         dias_coincidentes: is.number,
-    },{})
+        con_detalles: is.nullable.boolean,
+    })
 }
 
 export const novedades_disponibles = {
@@ -259,11 +254,11 @@ export const novedades_disponibles = {
     result: is.object({
         cod_nov: is.string,
         novedad: is.nullable.string,
-        con_detalles: is.boolean,
-        cantidad: is.number,
-        limite: is.number,
-        saldo: is.number,
-        con_disponibilidad: is.boolean,
+        con_detalles: is.nullable.boolean,
+        cantidad: is.nullable.number,
+        limite: is.nullable.number,
+        saldo: is.nullable.number,
+        con_disponibilidad: is.nullable.boolean,
     })
 }
 
@@ -348,8 +343,30 @@ export const annio = {
     })
 } satisfies CommonEntityDefinition
 
-
 export type Annio = DefinedType<typeof annio.description>
+
+export const tipos_documento = {
+    table: 'tipos_documento',
+    description: is.object({
+        tipodocumento: is.string,
+        documento: is.string
+    })
+} satisfies CommonEntityDefinition
+
+export type Tipos_documento = DefinedType<typeof tipos_documento.description>
+
+export const paises = {
+    table : 'paises',
+    descrription: is.object({
+        pais: is.string,
+        codigoagip: is.string,
+        nombre_pais: is.string,
+        gentilicio: is.string,
+        orden: is.number
+    })
+}
+
+export type Paises = DefinedType<typeof paises.descrription>
 
 export const meses = [
     {  value:1, name:'enero' },
