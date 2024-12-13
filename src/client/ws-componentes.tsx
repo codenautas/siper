@@ -133,7 +133,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 
     return <Componente componentType="calendario-mes">
         <Box style={{ flex:1}}>
-            <Box sx={{padding: '15px 0'}}>
+            <Box className="box-selectores">
+                <div className="row-styl">
                 <Select className="selectores selector-mes"
                     value={periodo.mes}
                     onChange={(event) => { // buscar el tipo correcto
@@ -163,6 +164,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 </Select>
                 <Button onClick={_ => setPeriodo(retrocederUnMes)}><ICON.ChevronLeft/></Button>
                 <Button onClick={_ => setPeriodo(avanzarUnMes)}><ICON.ChevronRight/></Button>
+                </div>
                 <Button 
                     variant="outlined"
                     className={date.today().sameValue(fecha) ? "es-hoy-si" : "es-hoy-no"} 
@@ -286,9 +288,9 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
         {sectores.filter(s => s.perteneceA[sector] || infoUsuario.puede_cargar_todo).map(s =>
             filtro && !abanicoPersonas[s.sector]?.length ? null :
             <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector || !!filtro && !!(abanicoPersonas[s.sector]?.length)} >
-                <AccordionSummary id = {s.sector} expandIcon={<ICON.KeyboardArrowDown />} style={{alignItems: 'center'}}> 
-                    <span className="box-id" style={{paddingLeft: s.nivel+"%"}}>{s.sector}</span>   
-                    {s.nombre_sector} 
+                <AccordionSummary id = {s.sector} expandIcon={<ICON.KeyboardArrowDown />} style={{alignItems: 'center'}}>
+                    <div className="circulo-num"><span style={{paddingLeft: s.nivel+"%"}}>{s.sector}</span></div>   
+                    <span className="box-names">{s.nombre_sector}</span>    
                 </AccordionSummary>
                 <AccordionDetails>
                     <List>
@@ -389,10 +391,10 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     }
     
     return <Componente componentType="horario">
-        <Paper className="contenedores-paper">
-        <h6 className="titulo-componente-descripcion">Horario</h6>
+        <Box sx={{margin:'5px 0'}}>
+        <span className="box-names">Horario</span>
         <div className="horario-vigente">
-            Horario vigente desde {desdeFecha.toDmy()} hasta {hastaFecha.toDmy()}.
+            Vigente desde {desdeFecha.toDmy()} hasta {hastaFecha.toDmy()}.
         </div>
         <div className="horario-contenedor">
             <HorarioRenglon box={info => <div className="horario-dia calendario-nombre-dia"> {DDS[info.dds].abr}</div> } />
@@ -408,7 +410,7 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
             </div> } />
             <HorarioRenglon box={info => <div className={`horario-dia calendario-nombre-dia ${info.trabaja ? '' : 'tipo-dia-no-laborable'}`}> {info.cod_nov}</div> } />
         </div>
-        </Paper>
+        </Box>
     </Componente>
 }
 
@@ -614,18 +616,19 @@ function Pantalla1(props:{conn: Connector}){
                 <Paper className="contenedores-paper">
                     <div className="box-line">
                     <span className="mdi mdi-calendar-edit-outline"></span>
-                        <span className="box-id">
+                        <span className="box-names">
                             {idper} | {persona.apellido}, {persona.nombres}
                         </span>
                     </div>
-                    <div className="box-line">
-                        <span className="box-names">
-                            CUIL: {persona.cuil}
+                    <div>
+                        <span>
+                            CUIL: {persona.cuil} - 
                         </span>
-                        <span className="box-names">
-                            FICHA: {persona.ficha}
+                        <span>
+                             FICHA: {persona.ficha}
                         </span>
                     </div>
+                    <Horario conn={conn} idper={idper} fecha={fecha}/>
                 </Paper>
                 </Box>
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}/>
@@ -650,7 +653,7 @@ function Pantalla1(props:{conn: Connector}){
                         error={siCargaraNovedad.con_detalle && !detalles}
                         helperText={siCargaraNovedad.con_detalle && !detalles ? "El campo es obligatorio." : ""}
                     />
-                    <Button className="boton-confirmar-registro-novedades" key="button" variant="contained" onClick={() => registrarNovedad()}>
+                    <Button className="boton-confirmar-registro-novedades" key="button" variant="outlined" onClick={() => registrarNovedad()}>
                         {siCargaraNovedad.mensaje}<ICON.Save/>
                     </Button>
                 </Box>: null}
@@ -658,7 +661,7 @@ function Pantalla1(props:{conn: Connector}){
                     <Typography>{error?.message ?? (guarndadoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
                 <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>
-                <Horario conn={conn} idper={idper} fecha={fecha}/>
+                
             </Componente>
             <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
         </Box>;
