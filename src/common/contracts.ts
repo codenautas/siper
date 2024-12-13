@@ -357,7 +357,7 @@ export type Tipos_documento = DefinedType<typeof tipos_documento.description>
 
 export const paises = {
     table : 'paises',
-    descrription: is.object({
+    description: is.object({
         pais: is.string,
         codigoagip: is.string,
         nombre_pais: is.string,
@@ -366,7 +366,28 @@ export const paises = {
     })
 }
 
-export type Paises = DefinedType<typeof paises.descrription>
+export type Paises = DefinedType<typeof paises.description>
+
+export const generos = {
+    table : 'generos',
+    description: is.object({
+        genero: is.number,
+        descripcion: is.string
+    })
+}
+
+export type generos = DefinedType<typeof generos.description>
+
+export const estados_civiles = {
+    table : 'estado_civil',
+    description : is.object({
+        estado_civil: is.string,
+        estadoagip: is.number,
+        descripcion: is.string
+    })
+}
+
+export type estados_civiles = DefinedType<typeof estados_civiles.description>
 
 export const meses = [
     {  value:1, name:'enero' },

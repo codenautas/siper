@@ -39,6 +39,8 @@ import { parte_diario         } from "./table-parte-diario";
 import { fichadas_vigentes } from "./table-fichadas_vigentes";
 import { tipos_documento } from "./table-tipos_documento";
 import { paises } from "./table-paises";
+import { generos } from "./table-generos";
+import { estados_civiles } from "./table-estados_civiles";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -128,6 +130,8 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'clases'           },
                             {menuType:'table', name:'paises'           },
                             {menuType:'table', name:'tipos_documento'  },
+                            {menuType:'table', name:'generos'          },
+                            {menuType:'table', name:'estados_civiles'  },
                         ]},
                         {menuType:'table', name:'cod_novedades' },
                         {menuType:'table', name:'usuarios'      },
@@ -206,7 +210,9 @@ export class AppSiper extends AppBackend{
             parte_diario         ,
             fichadas_vigentes    ,
             tipos_documento      ,
-            paises
+            paises               ,
+            generos              ,
+            estados_civiles
         }
     }       
 }
