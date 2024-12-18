@@ -28,6 +28,9 @@ import {
     Toolbar, Typography, TextField,
     Chip,
     Tooltip,
+    Divider,
+    ListItem,
+    Alert,
 
 } from "@mui/material";
 
@@ -289,7 +292,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
             filtro && !abanicoPersonas[s.sector]?.length ? null :
             <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector || !!filtro && !!(abanicoPersonas[s.sector]?.length)} >
                 <AccordionSummary id = {s.sector} expandIcon={<ICON.KeyboardArrowDown />} style={{alignItems: 'center'}}>
-                    <div className="circulo-num"><span style={{paddingLeft: s.nivel+"%"}}>{s.sector}</span></div>   
+                    <div className="cod-num"><span style={{paddingLeft: s.nivel+"%"}}>{s.sector}</span></div>   
                     <span className="box-names">{s.nombre_sector}</span>    
                 </AccordionSummary>
                 <AccordionDetails>
@@ -392,7 +395,7 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     
     return <Componente componentType="horario">
         <Box sx={{margin:'5px 0'}}>
-        <span className="box-names">Horario</span>
+        <span className="box-names">Horario registrado</span>
         <div className="horario-vigente">
             Vigente desde {desdeFecha.toDmy()} hasta {hastaFecha.toDmy()}.
         </div>
@@ -487,22 +490,22 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
         setCodNovedadesFiltradas(codNovedades.filter(recordFilter))
     },[codNovedades, filtro])
     return <Componente componentType="codigo-novedades">
-        <Paper className="contenedores-paper">
+        <Box sx={{marginTop: '20px'}}>
         <h6 className="titulo-componente">Novedades</h6>
         <SearchBox onChange={setFiltro}/>
-        <List>
+        <List className="list-scroll">
             {codNovedadesFiltradas.map(c=>
                 <ListItemButton key = {c.cod_nov} 
                     onClick={() => {if (onCodNov != null && c.con_disponibilidad) onCodNov(c.cod_nov, !!c.con_detalles)}} 
                     className={`${c.cod_nov == cod_nov ? 'seleccionado' : ''} ${!c.con_disponibilidad ? 'deshabilitado' : ''}`}
                     disabled={!c.con_disponibilidad}>
-                    <span className="box-id"> {c.cod_nov} </span>   
+                    <span className="cod-num"> {c.cod_nov} </span>   
                     <span className="box-names"> {c.novedad} </span>
                     <span className="box-info">{c.cantidad! > 0 ? (c.limite! > 0 ?`${c.limite} - ${c.cantidad} = ${c.saldo}` : c.cantidad ): ''}</span>
                 </ListItemButton>
             )}
         </List>
-        </Paper>
+        </Box>
     </Componente>
 }
 
@@ -616,23 +619,24 @@ function Pantalla1(props:{conn: Connector}){
                 <Paper className="contenedores-paper">
                     <div className="box-line">
                     <span className="mdi mdi-calendar-edit-outline"></span>
-                        <span className="box-names">
-                            {idper} | {persona.apellido}, {persona.nombres}
+                        <span className="box-select-name">
+                           {persona.apellido}, {persona.nombres} 
+                           <Typography variant="caption" marginLeft={'10px'} gutterBottom>({idper})</Typography>
                         </span>
                     </div>
-                    <div>
-                        <span>
-                            CUIL: {persona.cuil} - 
-                        </span>
-                        <span>
+                    <List>
+                        <ListItem>
+                            CUIL: {persona.cuil}
+                        </ListItem>
+                        <Divider></Divider>
+                        <ListItem>
                              FICHA: {persona.ficha}
-                        </span>
-                    </div>
-                    <Horario conn={conn} idper={idper} fecha={fecha}/>
+                        </ListItem>
+                    </List>
                 </Paper>
                 </Box>
-                <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}/>
-                {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
+                <Paper className="contenedores-paper">
+                {/* <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}/>
                 {cod_nov && idper && fecha && hasta && !guarndadoRegistroNovedad && !registrandoNovedad && persona.cargable ? <Box key="setSiCargaraNovedad">
                     <Button key="button" variant="outlined" onClick={() => {
                         setRegistrandoNovedad(true);
@@ -659,11 +663,48 @@ function Pantalla1(props:{conn: Connector}){
                 </Box>: null}
                 <Box>{guarndadoRegistroNovedad || error ?
                     <Typography>{error?.message ?? (guarndadoRegistroNovedad && "registrando..." || "error")}</Typography>
-                : null}</Box>
+                : null}</Box> */}
                 <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>
-                
+                <Horario conn={conn} idper={idper} fecha={fecha}/>
+                </Paper>
             </Componente>
+            <Paper className="contenedores-paper">
+            <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}/>
+                {cod_nov && idper && fecha && hasta && !guarndadoRegistroNovedad && !registrandoNovedad && persona.cargable ? <Box key="setSiCargaraNovedad" className="boton-box">
+                    <Button key="button" variant="contained" onClick={() => {
+                        setRegistrandoNovedad(true);
+                        conn.ajax.si_cargara_novedad({idper, cod_nov, desde:fecha, hasta}).then(setSiCargaraNovedad).catch(logError)
+                    }}>Registrar Novedad</Button>
+                </Box>: null}
+                {registrandoNovedad && !siCargaraNovedad ? <Box key="setMensajeRegistroNovedad">
+                    <CircularProgress />
+                </Box>: null}
+                {siCargaraNovedad ? <Box sx={{marginTop:'20px'}}>
+                    <TextField
+                        className="novedades-detalles"
+                        label="Detalles"
+                        placeholder={siCargaraNovedad.con_detalle ? "Completá este campo para registrar la novedad" : ""}
+                        value={detalles}
+                        onChange={(e) => setDetalles(e.target.value)}
+                        required={siCargaraNovedad.con_detalle}
+                        error={siCargaraNovedad.con_detalle && !detalles}
+                        helperText={siCargaraNovedad.con_detalle && !detalles ? "El campo es obligatorio." : ""}
+                    />
+                    {/* <Button className="boton-confirmar-registro-novedades" key="button" variant="outlined" onClick={() => registrarNovedad()}>
+                        {siCargaraNovedad.mensaje}<ICON.Save/>
+                    </Button> */}
+                    <Alert variant="outlined" severity="warning" className="alert-registro-novedades">{siCargaraNovedad.mensaje}
+                    <Button key="button" className="boton-confirmar-registro-novedades" onClick={() => registrarNovedad()}>
+                       Confirmar
+                    </Button>
+                    </Alert>
+
+                </Box>: null}
+                <Box>{guarndadoRegistroNovedad || error ?
+                    <Typography>{error?.message ?? (guarndadoRegistroNovedad && "registrando..." || "error")}</Typography>
+                : null}</Box>
             <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
+            </Paper>
         </Box>;
 }
 

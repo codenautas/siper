@@ -50,7 +50,7 @@ label.fp-fieldname-dds1
   display inline-flex
 
 .box-selectores
-  padding 15px 0
+  margin-bottom 15px
   display flex
   justify-content space-between
   box-sizing border-box
@@ -69,8 +69,8 @@ div.calendario-semana
 div.calendario-dia, div.calendario-nombre-dia
   display flex
   flex-direction column
-  width 4em
-  height 4em
+  width 4.1em
+  height 3.1em
   border-bottom 0.5px solid #e0e0e4
   border-right 0.5px solid #e0e0e4
   border-left 0.5px solid #e0e0e4
@@ -211,7 +211,7 @@ span.box-names
   gap 2%
   margin-left auto
   margin-right auto
-  padding 3%
+  padding 2rem
   box-sizing border-box
   @media (max-width: 960px)
       grid-template-columns: repeat(2, 1fr)
@@ -262,11 +262,19 @@ span.box-names
   min-width 470px
   display flex
   flex-direction column
-  gap 2em  
+  gap 2em
+
+.box-select-name
+  font-size 1.08rem
+  font-weight bold
+  color #252663
+
 
 .novedades-detalles
   width 100%
   max-width 32em
+  margin-bottom 10px
+
 
 div.horario-renglon
   display flex
@@ -309,9 +317,17 @@ button.es-hoy-no
 div.no-seleccionable
   color #666
 
+.alert-registro-novedades
+  margin 15px 0  
+
 button.boton-confirmar-registro-novedades
-  background-color #252663
-  margin 20px 0
+  /*background-color #252663*/
+  margin-top 6px 
+  display block
+  padding 0
+  color #252663
+  &:hover
+    text-decoration underline
 
 
 div.novedades-renglon
@@ -348,10 +364,18 @@ div.novedades-renglon
   margin-right 10px
   font-weight bold
 
-.circulo-num
+.cod-num
   box-sizing border-box
   padding-right 5px
   min-width 35px
   font-size 0.8rem
   font-weight bold
   color #A5ACCD
+
+.list-scroll
+  max-height 500px
+  overflow-y auto
+  scrollbar-width none
+
+.boton-box
+  margin 15px 0  

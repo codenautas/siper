@@ -50,13 +50,13 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             }
             const info = await context.client.query(
                 `select concat_ws(' ',
-                            '¿confirmar el registro de',
+                            'Registrar',
                             case when corridos then dias_corridos else dias_habiles end,
                             case when corridos then 'días corridos' else 'días hábiles' end,
                             'novedad', cn.cod_nov, 
                             'a', p.apellido||',', p.nombres, 
                             '(persona', p.idper,
-                            ')?'
+                            ')'
                         ) as mensaje,
                         dias_corridos, dias_habiles, dias_coincidentes,
                         con_detalles
