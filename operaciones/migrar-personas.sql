@@ -16,7 +16,7 @@ CREATE TEMPORARY TABLE temp_personas_a_migrar AS
 
 ALTER TABLE temp_personas_a_migrar ADD PRIMARY KEY (cuil);
 
-INSERT INTO situacion_revista (situacion_revista) SELECT DISTINCT situacion_de_revista FROM temp_personas_a_migrar;
+INSERT INTO situacion_revista (situacion_revista) SELECT DISTINCT situacion_revista FROM temp_personas_a_migrar;
 
 INSERT INTO sectores (nombre_sector, sector) 
   SELECT DISTINCT oficina, ultimo_numero + row_number() over ()
@@ -76,8 +76,7 @@ MERGE INTO personas p
        --                              IS DISTINCT FROM  q.oficina
        --                              IS DISTINCT FROM  q.reparticion
        --                              IS DISTINCT FROM  q.sexo
-       or p.situacion_de_revista       IS DISTINCT FROM  q.situacion_de_revista
-       or p.situacion_revista          IS DISTINCT FROM  q.situacion_de_revista
+       or p.situacion_revista          IS DISTINCT FROM  q.situacion_revista
        --                              IS DISTINCT FROM  q.tarjeta
        or p.tramo                      IS DISTINCT FROM  q.tramo
        --or p.para_antiguedad_relativa IS DISTINCT FROM  
@@ -86,12 +85,12 @@ MERGE INTO personas p
 ) THEN
     UPDATE SET agrupamiento = q.agrupamiento, ficha = q.ficha, idmeta4 = q.id_meta_4, categoria = q.categoria, documento = q.documento, tramo = q.tramo, 
     domicilio = q.domicilio, fecha_ingreso = q.fecha_ingreso, fecha_nacimiento = q.fecha_nacimiento, grado = q.grado, fecha_egreso = nullif(q.fecha_egreso, '2100-01-01'),
-    nacionalidad = q.nacionalidad, jerarquia = q.jerarquia, cargo_atgc = q."cargo_/atgc", situacion_revista = q.situacion_de_revista, situacion_de_revista = q.situacion_de_revista
+    nacionalidad = q.nacionalidad, jerarquia = q.jerarquia, cargo_atgc = q."cargo_/atgc", situacion_revista = q.situacion_revista
   WHEN NOT MATCHED THEN  
     INSERT (agrupamiento, cuil, ficha, idmeta4, apellido, nombres, categoria, documento, fecha_ingreso, fecha_egreso, 
-    nacionalidad, jerarquia, cargo_atgc, situacion_revista, situacion_de_revista, domicilio, fecha_nacimiento, grado, tramo)
+    nacionalidad, jerarquia, cargo_atgc, situacion_revista, domicilio, fecha_nacimiento, grado, tramo)
     VALUES (q.agrupamiento, q.cuil, q.ficha, q.id_meta_4, q.apellido, q.nombre, q.categoria, q.documento, q.fecha_ingreso, nullif(q.fecha_egreso, '2100-01-01'),
-    q.nacionalidad, q.jerarquia, q."cargo_/atgc", q.situacion_de_revista,q.situacion_de_revista, q.domicilio, q.fecha_nacimiento, q.grado, q.tramo);
+    q.nacionalidad, q.jerarquia, q."cargo_/atgc", q.situacion_revista, q.domicilio, q.fecha_nacimiento, q.grado, q.tramo);
 
 UPDATE personas p
   SET sector = s.sector

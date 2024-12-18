@@ -33,7 +33,7 @@ export function personas_importadas(context: TableContext): TableDefinition {
             {name:'tramo'                , typeName:'text', title: 'Tramo'                },
             {name:'grado'                , typeName:'text', title: 'Grado'                },
             {name:'categoria'            , typeName:'text', title: 'Categoria'            },
-            {name:'situacion_de_revista' , typeName:'text', title: 'Situacion de Revista' },
+            {name:'situacion_revista'    , typeName:'text', title: 'Situacion de Revista' },
             {name:'fecha_inicio_cargo'   , typeName:'date', title: 'Fecha Inicio Cargo'   },
             {name:'fecha_fin_cargo'      , typeName:'date', title: 'Fecha Fin Cargo'      },
             {name:'horario'              , typeName:'text', title: 'Horario'              },
