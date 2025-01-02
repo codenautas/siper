@@ -2,23 +2,23 @@
 
 import {TableDefinition, TableContext, FieldDefinition, sinMinusculas} from "./types-principal";
 
-export const tipodocumento:FieldDefinition = {
-    name: 'tipodocumento', 
+export const tipo_doc:FieldDefinition = {
+    name: 'tipo_doc', 
     typeName: 'text', 
     postInput: sinMinusculas
 }
 
-export function tipos_documento(context:TableContext):TableDefinition{
+export function tipos_doc(context:TableContext):TableDefinition{
     var admin = context.user.rol==='admin';
     return {
-        name: 'tipos_documento',
-        elementName: 'tipo_documento',
+        name: 'tipos_doc',
+        elementName: 'tipo_doc',
         editable: admin,
         fields: [
-            tipodocumento,
+            tipo_doc,
             {name: 'documento',typeName:'text' },
         ],
-        primaryKey: ['tipodocumento'],
+        primaryKey: ['tipo_doc'],
         constraints: [
         ],
         detailTables: [

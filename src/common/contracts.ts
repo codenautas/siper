@@ -345,15 +345,15 @@ export const annio = {
 
 export type Annio = DefinedType<typeof annio.description>
 
-export const tipos_documento = {
-    table: 'tipos_documento',
+export const tipos_doc = {
+    table: 'tipos_doc',
     description: is.object({
-        tipodocumento: is.string,
+        tipo_doc: is.string,
         documento: is.string
     })
 } satisfies CommonEntityDefinition
 
-export type Tipos_documento = DefinedType<typeof tipos_documento.description>
+export type Tipos_doc = DefinedType<typeof tipos_doc.description>
 
 export const paises = {
     table : 'paises',
