@@ -6,41 +6,42 @@ import { AppBackend, Context, Request,
 
 import { date } from 'best-globals'
 
-import { annios               } from './table-annios';
-import { roles                } from './table-roles';
-import { cod_novedades        } from './table-cod_novedades';
-import { fechas               } from './table-fechas';
-import { clases               } from './table-clases';
-import { grupos               } from './table-grupos';
-import { situacion_revista    } from './table-situacion_revista';
-import { sectores             } from './table-sectores';
-import { personas             } from './table-personas';
-import { personas_importadas  } from './table-personas-importadas';
-import { per_gru              } from './table-per_gru';
-import { nov_gru              } from './table-nov_gru';
-import { novedades_importadas } from './table-novedades_importadas';
-import { nov_per_importado    } from './table-nov_per_importado';
-import { novedades_registradas} from './table-novedades_registradas';
-import { novedades_horarias   } from './table-novedades_horarias';
-import { novedades_vigentes   } from './table-novedades_vigentes';
-import { per_nov_cant         } from './table-per_nov_cant';
-import { nov_per              } from './table-nov_per';
-import { pautas               } from './table-pautas';
-import { inconsistencias      } from './table-inconsistencias';
-import { usuarios             } from './table-usuarios';
-import { parametros           } from "./table-parametros";
-import { horarios             } from "./table-horarios";
-import { fichadas             } from "./table-fichadas";
+import { annios                  } from './table-annios';
+import { roles                   } from './table-roles';
+import { cod_novedades           } from './table-cod_novedades';
+import { fechas                  } from './table-fechas';
+import { clases                  } from './table-clases';
+import { grupos                  } from './table-grupos';
+import { situacion_revista       } from './table-situacion_revista';
+import { sectores                } from './table-sectores';
+import { personas                } from './table-personas';
+import { personas_importadas     } from './table-personas-importadas';
+import { per_gru                 } from './table-per_gru';
+import { nov_gru                 } from './table-nov_gru';
+import { novedades_importadas    } from './table-novedades_importadas';
+import { nov_per_importado       } from './table-nov_per_importado';
+import { novedades_registradas   } from './table-novedades_registradas';
+import { novedades_horarias      } from './table-novedades_horarias';
+import { novedades_vigentes      } from './table-novedades_vigentes';
+import { per_nov_cant            } from './table-per_nov_cant';
+import { nov_per                 } from './table-nov_per';
+import { pautas                  } from './table-pautas';
+import { inconsistencias         } from './table-inconsistencias';
+import { usuarios                } from './table-usuarios';
+import { parametros              } from "./table-parametros";
+import { horarios                } from "./table-horarios";
+import { fichadas                } from "./table-fichadas";
 import { historial_contrataciones} from "./table-historial_contrataciones";
-import { capa_modalidades     } from "./table-capa_modalidades";
-import { capacitaciones       } from "./table-capacitaciones";
-import { per_capa       } from "./table-per_capa";
-import { parte_diario         } from "./table-parte-diario";
-import { fichadas_vigentes } from "./table-fichadas_vigentes";
-import { tipos_doc } from "./table-tipos_doc";
-import { paises } from "./table-paises";
-import { sexos } from "./table-sexos";
-import { estados_civiles } from "./table-estados_civiles";
+import { capa_modalidades        } from "./table-capa_modalidades";
+import { capacitaciones          } from "./table-capacitaciones";
+import { per_capa                } from "./table-per_capa";
+import { parte_diario            } from "./table-parte-diario";
+import { fichadas_vigentes       } from "./table-fichadas_vigentes";
+import { tipos_doc               } from "./table-tipos_doc";
+import { paises                  } from "./table-paises";
+import { sexos                   } from "./table-sexos";
+import { estados_civiles         } from "./table-estados_civiles";
+import { categorias              } from "./table-categorias";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -132,6 +133,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'tipos_doc'        },
                             {menuType:'table', name:'sexos'            },
                             {menuType:'table', name:'estados_civiles'  },
+                            {menuType:'table', name:'categorias'       },
                         ]},
                         {menuType:'table', name:'cod_novedades' },
                         {menuType:'table', name:'usuarios'      },
@@ -212,7 +214,8 @@ export class AppSiper extends AppBackend{
             tipos_doc            ,
             paises               ,
             sexos                ,
-            estados_civiles
+            estados_civiles      ,
+            categorias           ,
         }
     }       
 }

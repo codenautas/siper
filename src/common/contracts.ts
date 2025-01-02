@@ -389,6 +389,16 @@ export const estados_civiles = {
 
 export type estados_civiles = DefinedType<typeof estados_civiles.description>
 
+export const categorias = {
+    table : 'categorias',
+    description : is.object({
+        categoria: is.string,
+        descripcion: is.string
+    })
+}
+
+export type categorias = DefinedType<typeof categorias.description>
+
 export const meses = [
     {  value:1, name:'enero' },
     {  value:2, name:'febrero' },
