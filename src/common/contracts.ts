@@ -368,15 +368,15 @@ export const paises = {
 
 export type Paises = DefinedType<typeof paises.description>
 
-export const generos = {
-    table : 'generos',
+export const sexos = {
+    table : 'sexos',
     description: is.object({
-        genero: is.number,
+        sexo: is.string,
         descripcion: is.string
     })
 }
 
-export type generos = DefinedType<typeof generos.description>
+export type sexos = DefinedType<typeof sexos.description>
 
 export const estados_civiles = {
     table : 'estado_civil',

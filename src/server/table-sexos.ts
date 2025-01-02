@@ -2,22 +2,22 @@
 
 import {TableDefinition, TableContext, FieldDefinition} from "./types-principal";
 
-export const genero:FieldDefinition = {
-    name: 'genero', 
-    typeName: 'integer', 
+export const sexo:FieldDefinition = {
+    name: 'sexo', 
+    typeName: 'text', 
 }
 
-export function generos(context:TableContext):TableDefinition{
+export function sexos(context:TableContext):TableDefinition{
     var admin = context.user.rol==='admin';
     return {
-        name: 'generos',
-        elementName: 'genero',
+        name: 'sexos',
+        elementName: 'sexo',
         editable: admin,
         fields: [
-            genero,
+            sexo,
             {name: 'descripcion',typeName:'text' },
         ],
-        primaryKey: ['genero'],
+        primaryKey: ['sexo'],
         constraints: [
         ],
         detailTables: [
