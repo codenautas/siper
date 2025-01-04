@@ -41,6 +41,9 @@ import { tipos_doc               } from "./table-tipos_doc";
 import { paises                  } from "./table-paises";
 import { sexos                   } from "./table-sexos";
 import { estados_civiles         } from "./table-estados_civiles";
+import { agrupamientos           } from "./table-agrupamientos";
+import { tramos                  } from "./table-tramos";
+import { grados                  } from "./table-grados";
 import { categorias              } from "./table-categorias";
 
 import { ProceduresPrincipal } from './procedures-principal'
@@ -133,6 +136,9 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'tipos_doc'        },
                             {menuType:'table', name:'sexos'            },
                             {menuType:'table', name:'estados_civiles'  },
+                            {menuType:'table', name:'agrupamientos'    },
+                            {menuType:'table', name:'grados'           },
+                            {menuType:'table', name:'tramos'           },
                             {menuType:'table', name:'categorias'       },
                         ]},
                         {menuType:'table', name:'cod_novedades' },
@@ -215,6 +221,9 @@ export class AppSiper extends AppBackend{
             paises               ,
             sexos                ,
             estados_civiles      ,
+            agrupamientos        ,
+            tramos               ,
+            grados               ,
             categorias           ,
         }
     }       

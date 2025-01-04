@@ -389,6 +389,37 @@ export const estados_civiles = {
 
 export type estados_civiles = DefinedType<typeof estados_civiles.description>
 
+export const agrupamientos = {
+    table : 'agrupamientos',
+    description : is.object({
+        agrupamiento: is.string,
+        descripcion: is.string
+    })
+}
+
+export type agrupamientos = DefinedType<typeof agrupamientos.description>
+
+export const tramos = {
+    table : 'tramos',
+    description : is.object({
+        tramo: is.string,
+        descripcion: is.string
+    })
+}
+
+export type tramos = DefinedType<typeof tramos.description>
+
+export const grados = {
+    table : 'grados',
+    description : is.object({
+        tramo: is.string,
+        grado: is.string,
+        descripcion: is.string
+    })
+}
+
+export type grados = DefinedType<typeof grados.description>
+
 export const categorias = {
     table : 'categorias',
     description : is.object({
