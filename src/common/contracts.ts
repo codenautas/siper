@@ -430,6 +430,17 @@ export const categorias = {
 
 export type categorias = DefinedType<typeof categorias.description>
 
+export const situacion_revista = {
+    table : 'situacion_revista',
+    description : is.object({
+        situacion_revista: is.string,
+        codigo_agip: is.number,
+        con_novedad: is.boolean
+    })
+}
+
+export type situacion_revista = DefinedType<typeof situacion_revista.description>
+
 export const meses = [
     {  value:1, name:'enero' },
     {  value:2, name:'febrero' },

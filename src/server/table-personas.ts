@@ -20,6 +20,7 @@ export function personas(context: TableContext): TableDefinition {
         fields:[
             idper,
             {name: 'cuil'     , typeName: 'text', isName:false, postInput: soloDigitosPostConfig  },
+            {name: 'tipo_doc' , typeName: 'text',                                                 },
             {name: 'documento', typeName: 'text', isName:false, postInput: soloDigitosPostConfig  },
             {name: 'ficha'    , typeName: 'text', isName:true ,                                   },
             {name: 'idmeta4'  , typeName: 'text', isName:false, title:'id meta4'                  },
@@ -54,6 +55,7 @@ export function personas(context: TableContext): TableDefinition {
             soloDigitosCons('ficha'  ),
             soloDigitosCons('idmeta4'),
             soloMayusculas(s_revista.name),
+            soloMayusculas('tipo_doc'),
             {constraintType:'unique', consName:'nombre y apellidos sin repetir', fields:['apellido', 'nombres']}
         ],
         detailTables: [
