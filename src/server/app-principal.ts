@@ -45,6 +45,7 @@ import { agrupamientos           } from "./table-agrupamientos";
 import { tramos                  } from "./table-tramos";
 import { grados                  } from "./table-grados";
 import { categorias              } from "./table-categorias";
+import { motivos_egreso          } from "./table-motivos_egreso";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -140,6 +141,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'grados'           },
                             {menuType:'table', name:'tramos'           },
                             {menuType:'table', name:'categorias'       },
+                            {menuType:'table', name:'motivos_egreso'   },
                         ]},
                         {menuType:'table', name:'cod_novedades' },
                         {menuType:'table', name:'usuarios'      },
@@ -225,6 +227,7 @@ export class AppSiper extends AppBackend{
             tramos               ,
             grados               ,
             categorias           ,
+            motivos_egreso
         }
     }       
 }

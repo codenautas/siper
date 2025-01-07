@@ -1,0 +1,28 @@
+"use strict";
+
+import {TableDefinition, TableContext, FieldDefinition, sinMinusculas} from "./types-principal";
+
+export const motivo_egreso:FieldDefinition = {
+    name : 'motivo_egreso',
+    typeName: 'text',
+    postInput: sinMinusculas
+}
+
+export function motivos_egreso(context:TableContext):TableDefinition{
+    var admin = context.user.rol==='admin';
+    return {
+        name : 'motivos_egreso',
+        elementName : 'motivo_egreso',
+        editable : admin,
+        fields: [
+            motivo_egreso,
+            {name: 'motivo_egreso_agip',typeName:'integer' },
+            {name: 'descripcion',typeName:'text' },
+        ],
+        primaryKey: ['motivo_egreso'],
+        constraints: [
+        ],
+        detailTables: [
+        ]
+    }
+};
