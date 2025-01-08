@@ -452,6 +452,17 @@ export const motivos_egreso = {
 
 export type motivos_egreso = DefinedType<typeof motivos_egreso.description>
 
+export const jerarquias = {
+    table : 'jerarquias',
+    description : is.object({
+        jerarquia_agip : is.string,
+        jerarquia : is.string,
+        descripcion : is.string
+    })
+}
+
+export type jerarquias = DefinedType<typeof jerarquias.description>
+
 export const meses = [
     {  value:1, name:'enero' },
     {  value:2, name:'febrero' },
