@@ -99,17 +99,17 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
             conn.ajax.calendario_persona({idper, ...periodo}).then(dias => {
                 var semanas = [];
                 var semana = [];
-                for(var i = 0; i < dias[0].dds; i++) {
+                for(var i = 0; i < dias[0]?.dds; i++) {
                     semana.push({});
                 }
                 for(var dia of dias){
-                    if (dia.dds == 0 && dia.dia !=1) {
+                    if (dia?.dds == 0 && dia.dia !=1) {
                         semanas.push(semana);   
                         semana = []
                     }
                     semana.push(dia);
                 }
-                for(var j = dia.dds + 1; j <= 6; j++) {
+                for(var j = dia?.dds + 1; j <= 6; j++) {
                     semana.push({});
                 }
                 semanas.push(semana);
@@ -374,7 +374,9 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
 
     function HorarioRenglon(props:{box:(data:HorarioSemanaVigenteDia) => ReactNode[]|ReactNode}){
         return <div className="horario-renglon">
-            {Object.keys(horario.dias).map(dds => props.box(horario.dias[dds]))}
+            {horario?.dias && (
+                Object.keys(horario.dias).map(dds => props.box(horario.dias[dds]))
+            )}
         </div>
     }
     
