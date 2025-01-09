@@ -8,7 +8,7 @@ AS
 $BODY$
 DECLARE
   v_idper text;
-  v_letras text := upper(substr(new.apellido, 1, 2));
+  v_letras text := replace(upper(substr(new.apellido, 1, 2)),'Ü','U');
   v_numero integer;
 BEGIN
   IF new.idper IS NULL OR substr(new.idper, 1, 2) IS DISTINCT FROM v_letras THEN
