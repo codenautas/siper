@@ -1,6 +1,6 @@
 "use strict";
 
-import { TableDefinition, TableContext, FieldDefinition, sinMinusculas } from "./types-principal";
+import { TableDefinition, TableContext, FieldDefinition, sinMinusculas, soloCodigo } from "./types-principal";
 
 export const jerarquia:FieldDefinition = {
     name : 'jerarquia',
@@ -21,6 +21,7 @@ export function jerarquias(context:TableContext):TableDefinition{
         ],
         primaryKey: ['jerarquia'],
         constraints: [
+            soloCodigo(jerarquia.name),
         ],
         detailTables: [
         ]
