@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition, sinMinusculas} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, sinMinusculas, soloCodigo} from "./types-principal";
 
 export const estado_civil:FieldDefinition = {
     name: 'estado_civil', 
@@ -21,6 +21,7 @@ export function estados_civiles(context:TableContext):TableDefinition{
         ],
         primaryKey: ['estado_civil'],
         constraints: [
+            soloCodigo(estado_civil.name)
         ],
         detailTables: [
         ]

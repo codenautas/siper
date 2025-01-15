@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, soloCodigo} from "./types-principal";
 
 export const sexo:FieldDefinition = {
     name: 'sexo', 
@@ -19,6 +19,7 @@ export function sexos(context:TableContext):TableDefinition{
         ],
         primaryKey: ['sexo'],
         constraints: [
+            soloCodigo(sexo.name)
         ],
         detailTables: [
         ]

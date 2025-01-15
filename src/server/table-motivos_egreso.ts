@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition, sinMinusculas} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, sinMinusculas, soloCodigo} from "./types-principal";
 
 export const motivo_egreso:FieldDefinition = {
     name : 'motivo_egreso',
@@ -21,6 +21,7 @@ export function motivos_egreso(context:TableContext):TableDefinition{
         ],
         primaryKey: ['motivo_egreso'],
         constraints: [
+            soloCodigo(motivo_egreso.name),
         ],
         detailTables: [
         ]

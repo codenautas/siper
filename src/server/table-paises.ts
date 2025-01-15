@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition, sinMinusculas} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, sinMinusculas, soloCodigo} from "./types-principal";
 
 export const pais:FieldDefinition = {
     name: 'pais', 
@@ -23,6 +23,7 @@ export function paises(context:TableContext):TableDefinition{
         ],
         primaryKey: ['pais'],
         constraints: [
+            soloCodigo(pais.name)
         ],
         detailTables: [
         ]

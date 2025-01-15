@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition, sinMinusculas} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, sinMinusculas, soloCodigo} from "./types-principal";
 
 export const tipo_doc:FieldDefinition = {
     name: 'tipo_doc', 
@@ -20,6 +20,7 @@ export function tipos_doc(context:TableContext):TableDefinition{
         ],
         primaryKey: ['tipo_doc'],
         constraints: [
+            soloCodigo(tipo_doc.name)
         ],
         detailTables: [
         ]
