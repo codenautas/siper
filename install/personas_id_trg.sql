@@ -8,7 +8,11 @@ AS
 $BODY$
 DECLARE
   v_idper text;
-  v_letras text := translate(translate(upper(substr(new.apellido, 1, 2)),'ÄÜËÏÖÑ','AUEION'),'ÁÉÍÓÚ','AEIOU');
+  v_letras text := translate(
+    upper(substr(new.apellido, 1, 2)),
+    'ÄËÏÖÜÑÁÉÍÓÚ',
+    'AEIOUNAEIOU'
+  );
   v_numero integer;
 BEGIN
   IF new.idper IS NULL OR substr(new.idper, 1, 2) IS DISTINCT FROM v_letras THEN
