@@ -77,6 +77,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {name: 'hasta'    , typeName: 'date'   ,                                    },
             {...idr, sequence:{name:'idr_seq', firstValue:1001}, nullable:true, editable:false },
             cod_nov,
+            {name: 'prioridad', typeName: 'integer'},
             {name: 'dds0'     , typeName: 'boolean', title:'domingo'                    },
             {name: 'dds1'     , typeName: 'boolean', title:'lunes'                      },
             {name: 'dds2'     , typeName: 'boolean', title:'martes'                     },

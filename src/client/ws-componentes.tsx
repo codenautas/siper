@@ -199,7 +199,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         }}
                 >
                     <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
-                    <span className={`calendario-dia-contenido ${dia.con_novedad ? 'con_novedad_si' : 'con_novedad_no' }`}>{dia.cod_nov ?? ''}</span>
+                    <span className={`calendario-dia-contenido ${dia.prioridad ? 'con_novedad_si' : 'con_novedad_no' }`}>{dia.cod_nov ?? ''}</span>
                 </div>)}
             </Box>)}
         </Box>

@@ -13,8 +13,6 @@ export const cod_nov = {
         con_detalles: is.nullable.boolean,
         total: is.nullable.boolean,
         parcial: is.nullable.boolean,
-        con_horario: is.nullable.boolean,
-        con_novedad: is.nullable.boolean,
     })
 }
 export type CodNovedades = DefinedType<typeof cod_nov.description>
@@ -87,6 +85,7 @@ export const novedades_registradas = {
         desde: is.Date,
         hasta: is.Date,
         cod_nov: is.nullable.string,
+        prioridad: is.nullable.number,
         cancela: is.nullable.boolean,
         dds0: is.nullable.boolean,
         dds1: is.nullable.boolean,
@@ -124,7 +123,6 @@ export const horarios = {
         hora_desde: is.string,
         hora_hasta: is.string,
         trabaja: is.boolean,
-        cod_nov: is.string,
         hasta: is.Date,
     })
 } satisfies CommonEntityDefinition
@@ -296,7 +294,7 @@ export const calendario_persona = {
         semana: is.number,
         cod_nov: is.string,
         tipo_dia: is.string,
-        con_novedad: is.nullable.string
+        prioridad: is.nullable.number
     })
 }
 

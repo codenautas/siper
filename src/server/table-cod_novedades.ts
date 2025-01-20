@@ -27,8 +27,6 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {name: 'con_detalles', typeName: 'boolean',                                             },
             {name: 'total'       , typeName: 'boolean',                                             },
             {name: 'parcial'     , typeName: 'boolean',                                             },
-            {name: 'con_horario' , typeName: 'boolean', description:'la novedad puede usarse en el horario de las personas'},
-            {name: 'con_novedad' , typeName: 'boolean', description:'la novedad puede usarse en el registro de novedades'},
             {name: 'corridos'    , typeName: 'boolean', description:'días corridos (incluye feriados y fines de semana)'},
             {name: 'registra'    , typeName: 'boolean', description:'novedades que pueden ser registradas por los registras'},
             {name: 'prioritario' , typeName: 'boolean', description:'aparecen en la lista reducida'},

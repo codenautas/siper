@@ -68,7 +68,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                                         where extract(dow from f.fecha) between 1 and 5
                                             and laborable is not false
                                     ) as dias_habiles,
-                                    count(*) filter (where v.con_novedad) as dias_coincidentes
+                                    count(*) filter (where cod_nov is not null) as dias_coincidentes
                                 from fechas f
                                     left join novedades_vigentes v on v.fecha = f.fecha and v.idper = p.idper -- es correcto no juntar con cn.cod_nov
                                 where f.fecha between $1 and $2
@@ -103,8 +103,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                                     when laborable is false then 'no-laborable' 
                                     else 'normal' 
                                 end 
-                        end as tipo_dia,
-                        con_novedad
+                        end as tipo_dia
                     from fechas f
                         left join novedades_vigentes v on v.fecha = f.fecha and v.idper = $1
                     where f.fecha between $2 and ($3::date + interval '1 month'  - interval '1 day')
@@ -161,7 +160,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                                     inner join cod_novedades cn using(cod_nov)
                                     inner join personas p using(idper)
                                     left join per_nov_cant using(annio, idper, cod_nov)
-                                where n.con_novedad and idper = $1 and annio = (select extract(year from fecha_actual) from parametros)
+                                where idper = $1 and annio = (select extract(year from fecha_actual) from parametros)
                                 group by annio, cod_nov, idper, cantidad
                             ) v on v.cod_nov = cn.cod_nov
                     where (cantidad > 0 or cn.registra and r.puede_cargar_dependientes or puede_cargar_todo)
@@ -179,7 +178,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         coreFunction: async function(context: ProcedureContext, params:any){
             const info = await context.client.query(
                 `select pe.idper, pe.cuil, pe.ficha, pe.idmeta4, pe.apellido, pe.nombres, pe.sector, cod_nov, novedad,
-                        (puede_cargar_propio or pe.idper is distinct from u.idper) and sr.con_novedad as cargable
+                        (puede_cargar_propio or pe.idper is distinct from u.idper) as cargable
                     from personas pe
                         inner join situacion_revista sr using (situacion_revista)
                         inner join usuarios u on u.usuario = $2

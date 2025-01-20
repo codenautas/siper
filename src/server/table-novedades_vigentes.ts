@@ -28,8 +28,8 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
             {name: 'sector'   , typeName: 'text'   ,                                    },
             /* campos automáticos */
             añoEnBaseAFecha                                                              ,
-            {name: 'con_novedad', typeName: 'boolean', description: 'si tiene una novedad registrada' },
             {name: 'trabajable' , typeName: 'boolean', description: 'si es un día que debe trabajar según su horario (normalmente día hábil, no feriado)' },
+            {name: 'prioridad'  , typeName: 'integer',                                    },
             {name: 'detalles'   , typeName: 'text'   ,                                    },
         ],
         primaryKey: [idper.name, fecha.name],

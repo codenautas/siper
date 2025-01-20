@@ -1,111 +1,111 @@
-cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|con_horario|con_novedad|corridos|registra|prioritario
-1|Art. 18 Descanso anual remunerado|I|||True|||True||True|True
-2|Licencia ordinaria no controlada||||True|||True|||True
-5|Licencia por afecciones comunes (Art. 19)||||True|||True|||True
-7|Ausente||||True|||True|||
-8|Cargo de mayor jerarquía||||True|||True|||True
-9|Cesantia en tramite||||True|||True|||
-10|Comision de servicios||||True|True||True||True|True
-12|Enfermedad familiar (Art. 20)|||True|True|||True|||
-13|Licencia por enfermedad largo tratamiento (Art. 21)||||True|||True|True||True
-19|Licencia por Maternidad|S|||True|||True|||True
-21|Licencia por examen (Art. 25)||||True|||True||True|True
-22|Licencia sin goce de sueldo||||True|||True|||True
-23|Licencia por matrimonio (Art. 27)|C|||True|||True|||True
-24|Licencia por nacimiento de hijo (Art. 26)|U|||True|||True|||
-26|Renuncia en tramite||||True|||True|||
-35|Afecciones comunes pendiente de justificar||||True|||True|||True
-37|Tarde||||True|||True|||
-38|Tarde+||||True|||True|||
-41|Feriado religioso||||True|||True||True|True
-59|Abandono de servicio (Sin fichada de salida o Ficho antes)||||True|||True|||
-85|Autorizado a no fichar||||True||True||||True
-89|Encuestador y/o supervisor||||True||True||||True
-99|Presente (justificado por personal)||||True|||True|||True
-101|Teletrabajo Diagramado||True||True||True|||True|True
-102|AI Ausente injustificado||||True|||True|||True
-103|Franco Diagramado||True||True|||True|||
-106|Teletrabajo||||True||True||||
-116|Ley 360||||True|||True|||True
-121|CC 09/10 Art. 67 c Tramites particulares|U|||True|||True||True|True
-124|CC 09/10 Art. 67 d Mudanza||||True|||True|||True
-126|Art 30 ter Licencia esp.l para controles de prev.||||True|||True|||True
-140|Autoridades superiores|P|||True||True||||True
-154|Ley 6025, Art. 12. Licencia con goce de haberes por nacimiento de hijo/a (30 corridos - no gestante)||||True|||True|||True
-156|Fallecimiento de Conyuge/Padre/Madre/Hno/Nieto||||True|||True|||True
-158|Violencia de Genero||||True|||True|||True
-200|Licencia por donación de sangre (Art.30)||||True|||True||True|True
-201|Comisión de trabajo por día||||True|||True|||True
-202|Accidente de trabajo||||True|||True|||True
-204|Fuerza mayor||||True|||True|||True
-205|Comisión por Capacitación||||True|||True||True|True
-206|Autoridades Superiores||||True|||True|||True
-999|Presente(Horario Flexible)||||True||True||||
-207|Adopción múltiple||||True|||True|||
-208|Adscripción||||True|||True|||
-209|Aislamiento Social Preventivo y Obligatorio||||True|||True|||
-210|Art 20 1er periodo (con haberes)||||True|||True|||
-211|Art 20 2do periodo (sin haberes)||||True|||True|||
-212|Art. 150 Licencia anual ACARA||||True|||True|||
-213|Ausencia por fuerza mayor||||True|||True|||True
-214|Aut. entrada demorada por comisión||||True|||True|||
-215|Aut. entrada demorada por razones personales||||True|||True|||
-216|Baja en trámite por jubilación||||True|||True|||
-217|CC 09/10 Art. 67 a Donación de órganos||||True|||True|||
-218|CC 09/10 Art. 67 b Tec. de reproducción asistida||||True|||True|||
-219|Comisión art.73 bis CCT||||True|||True|||
-220|Descentralización||||True|||True|||
-221|Enfermedad familiar (Art. 20) Pendiente de justif||||True|||True|||True
-222|Extensión por enfermedad grave de fliar a cargo (Art 68 CC)||||True|||True|||True
-223|Fallecimiento de Abuelos/as -Suegros/as||||True|||True|||True
-224|Fallecimiento de Cónyuge/Padre/Madre/Hno./Nieto||||True|||True|||True
-225|Fallecimiento de Hijo/a||||True|||True|||True
-226|Horas estadísticas||||True|||True|||
-227|Horas tributarias||||True|||True|||
-228|Horas tributarias RRHH||||True|||True|||
-229|Jornada de 4 hs. Decreto 7170/90||||True||True|True|||
-230|Justificación aut. salida anticipada comis.||||True|||True|||
-231|Justificación Aut. salida anticipada Pers.||||True|||True|||
-232|Justificación entrada demorada comis.||||True|||True|||
-233|Justificación entrada demorada por razones personales||||True|||True|||
-234|Lic nac. hijo muerto o poco nacer (Art. 22 bis )||||True|||True|||
-235|Licencia deportiva (Art. 30 bis)||||True|||True|||
-236|Licencia largo tratamiento (Art.21 - 0%)||||True|||True|||True
-237|Licencia médica familiar injustificada||||True|||True|||
-238|Licencia por Adopción de 10 a 18 años||||True|||True|||True
-239|Licencia por Adopción de 3 a 6 años||||True|||True|||True
-240|Licencia por Adopción de 6 a 10 años||||True|||True|||True
-241|Licencia por Adopción hasta 3 años de edad||||True|||True|||True
-242|Licencia por afecciones comunes SIN haberes (Art. 19)||||True|||True|||
-243|Licencia por Alumbramiento Interlicencia||||True|||True|||
-244|Licencia por Alumbramiento sin goce de haberes||||True|||True|||True
-245|Licencia por cargos electivos (Art. 29 )||||True|||True|||
-246|Licencia por embarazo de alto riesgo||||True|||True|||True
-247|Licencia por enfermedad largo tratamiento (ART. 21 - 30%)||||True|||True|||True
-248|Licencia por enfermedad largo tratamiento (ART. 21 - 75%)||||True|||True|||True
-249|Licencia por nacimiento de hijo (ACARA)||||True|||True|||
-250|Licencia por nacimiento de hijo (contratados)||||True|||True|||
-251|Licencia por nacimiento de hijo/a no gestante, neonatología||||True|||True|||True
-252|Medico||||True|||True|||
-253|Pausa por alimentación y cuidado de hijo (Art. 24)||||True|||True|||
-254|Permiso de Ausencia Extraordinaria Obligatorio||||True|||True|||
-255|Permiso de Ausencia Extraordinario S/Dec. N.º 147/AJG/2020 y Complementarias||||True|||True|||
-256|Permiso vacacional||||True|||True|||
-257|Presente||||True|||True|||
-258|Privado de libertad||||True|||True|||
-259|Salida anticipada por comisión||||True|||True|||
-260|Salida anticipada por razones personales||||True|||True|||
-261|Salida con retorno comisión||||True|||True|||
-262|Salida con retorno personal||||True|||True|||
-263|Suspensión||||True|||True|||
-264|Teletrabajo (excepto PP y R.Fisco)||||True||True|True|||
-265|Tramites Particulares- Modalidades||||True|||True|||
-266|Tramites por Adopción||||True|||True|||
-267|Transferencia en trámite||||True|||True|||True
-268|Inspector||||True||True||||
-269|Abandono de Servicio(Ficho antes)|||||True|True||||
-270|Cargo de mayor jerarquia||||True||True||||
-271|Abandono de Servicio (Sin fichada de salida)|||||True|True||||
-272|Censista||||True||True||||
-273|Abandono de servicio (Sin fichada de salida)|||||True|True||||
-274|Comision por capacitacion||||True||True||||
+cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|prioritario
+1|Art. 18 Descanso anual remunerado|I|||True|||True|True
+2|Licencia ordinaria no controlada||||True||||True
+5|Licencia por afecciones comunes (Art. 19)||||True||||True
+7|Ausente||||True|||True|
+8|Cargo de mayor jerarquía||||True||||True
+9|Cesantia en tramite||||True||||
+10|Comision de servicios||||True|True||True|True
+12|Enfermedad familiar (Art. 20)|||True|True||||
+13|Licencia por enfermedad largo tratamiento (Art. 21)||||True||True||True
+19|Licencia por Maternidad|S|||True||||True
+21|Licencia por examen (Art. 25)||||True|||True|True
+22|Licencia sin goce de sueldo||||True||||True
+23|Licencia por matrimonio (Art. 27)|C|||True||||True
+24|Licencia por nacimiento de hijo (Art. 26)|U|||True||||
+26|Renuncia en tramite||||True||||
+35|Afecciones comunes pendiente de justificar||||True||||True
+37|Tarde||||True||||
+38|Tarde+||||True||||
+41|Feriado religioso||||True|||True|True
+59|Abandono de servicio (Sin fichada de salida o Ficho antes)||||True||||
+85|Autorizado a no fichar||||True|||True|True
+89|Encuestador y/o supervisor||||True|||True|True
+99|Presente (justificado por personal)||||True||||True
+101|Teletrabajo Diagramado||True||True|||True|True
+102|AI Ausente injustificado||||True||||True
+103|Franco Diagramado||True||True||||
+106|Teletrabajo||||True|||True|
+116|Ley 360||||True||||True
+121|CC 09/10 Art. 67 c Tramites particulares|U|||True|||True|True
+124|CC 09/10 Art. 67 d Mudanza||||True||||True
+126|Art 30 ter Licencia esp.l para controles de prev.||||True||||True
+140|Autoridades superiores|P|||True|||True|True
+154|Ley 6025, Art. 12. Licencia con goce de haberes por nacimiento de hijo/a (30 corridos - no gestante)||||True||||True
+156|Fallecimiento de Conyuge/Padre/Madre/Hno/Nieto||||True||||True
+158|Violencia de Genero||||True||||True
+200|Licencia por donación de sangre (Art.30)||||True|||True|True
+201|Comisión de trabajo por día||||True||||True
+202|Accidente de trabajo||||True||||True
+204|Fuerza mayor||||True||||True
+205|Comisión por Capacitación||||True|||True|True
+206|Autoridades Superiores||||True||||True
+999|Presente(Horario Flexible)||||True|||True|
+207|Adopción múltiple||||True||||
+208|Adscripción||||True||||
+209|Aislamiento Social Preventivo y Obligatorio||||True||||
+210|Art 20 1er periodo (con haberes)||||True||||
+211|Art 20 2do periodo (sin haberes)||||True||||
+212|Art. 150 Licencia anual ACARA||||True||||
+213|Ausencia por fuerza mayor||||True||||True
+214|Aut. entrada demorada por comisión||||True||||
+215|Aut. entrada demorada por razones personales||||True||||
+216|Baja en trámite por jubilación||||True||||
+217|CC 09/10 Art. 67 a Donación de órganos||||True||||
+218|CC 09/10 Art. 67 b Tec. de reproducción asistida||||True||||
+219|Comisión art.73 bis CCT||||True||||
+220|Descentralización||||True||||
+221|Enfermedad familiar (Art. 20) Pendiente de justif||||True||||True
+222|Extensión por enfermedad grave de fliar a cargo (Art 68 CC)||||True||||True
+223|Fallecimiento de Abuelos/as -Suegros/as||||True||||True
+224|Fallecimiento de Cónyuge/Padre/Madre/Hno./Nieto||||True||||True
+225|Fallecimiento de Hijo/a||||True||||True
+226|Horas estadísticas||||True||||
+227|Horas tributarias||||True||||
+228|Horas tributarias RRHH||||True||||
+229|Jornada de 4 hs. Decreto 7170/90||||True|||True|
+230|Justificación aut. salida anticipada comis.||||True||||
+231|Justificación Aut. salida anticipada Pers.||||True||||
+232|Justificación entrada demorada comis.||||True||||
+233|Justificación entrada demorada por razones personales||||True||||
+234|Lic nac. hijo muerto o poco nacer (Art. 22 bis )||||True||||
+235|Licencia deportiva (Art. 30 bis)||||True||||
+236|Licencia largo tratamiento (Art.21 - 0%)||||True||||True
+237|Licencia médica familiar injustificada||||True||||
+238|Licencia por Adopción de 10 a 18 años||||True||||True
+239|Licencia por Adopción de 3 a 6 años||||True||||True
+240|Licencia por Adopción de 6 a 10 años||||True||||True
+241|Licencia por Adopción hasta 3 años de edad||||True||||True
+242|Licencia por afecciones comunes SIN haberes (Art. 19)||||True||||
+243|Licencia por Alumbramiento Interlicencia||||True||||
+244|Licencia por Alumbramiento sin goce de haberes||||True||||True
+245|Licencia por cargos electivos (Art. 29 )||||True||||
+246|Licencia por embarazo de alto riesgo||||True||||True
+247|Licencia por enfermedad largo tratamiento (ART. 21 - 30%)||||True||||True
+248|Licencia por enfermedad largo tratamiento (ART. 21 - 75%)||||True||||True
+249|Licencia por nacimiento de hijo (ACARA)||||True||||
+250|Licencia por nacimiento de hijo (contratados)||||True||||
+251|Licencia por nacimiento de hijo/a no gestante, neonatología||||True||||True
+252|Medico||||True||||
+253|Pausa por alimentación y cuidado de hijo (Art. 24)||||True||||
+254|Permiso de Ausencia Extraordinaria Obligatorio||||True||||
+255|Permiso de Ausencia Extraordinario S/Dec. N.º 147/AJG/2020 y Complementarias||||True||||
+256|Permiso vacacional||||True||||
+257|Presente||||True||||
+258|Privado de libertad||||True||||
+259|Salida anticipada por comisión||||True||||
+260|Salida anticipada por razones personales||||True||||
+261|Salida con retorno comisión||||True||||
+262|Salida con retorno personal||||True||||
+263|Suspensión||||True||||
+264|Teletrabajo (excepto PP y R.Fisco)||||True|||True|
+265|Tramites Particulares- Modalidades||||True||||
+266|Tramites por Adopción||||True||||
+267|Transferencia en trámite||||True||||True
+268|Inspector||||True|||True|
+269|Abandono de Servicio(Ficho antes)|||||True||True|
+270|Cargo de mayor jerarquia||||True|||True|
+271|Abandono de Servicio (Sin fichada de salida)|||||True||True|
+272|Censista||||True|||True|
+273|Abandono de servicio (Sin fichada de salida)|||||True||True|
+274|Comision por capacitacion||||True|||True|

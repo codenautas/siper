@@ -54,7 +54,6 @@ export function nov_per(_context: TableContext): TableDefinition {
                                 from per_nov_cant 
                                 group by annio, idper, cod_nov
                         ) pn using (annio, idper, cod_nov)
-                    where n.con_novedad
                     group by annio, cod_nov, idper, 
                         pn.total, p.sector, pn.esquema            )`
         },

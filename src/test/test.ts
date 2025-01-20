@@ -61,7 +61,9 @@ const COD_ENF_FAMILIAR = "12";
 const COD_ENFERMEDAD = "13";
 const COD_MUDANZA = "124";
 const COD_COMISION = "10";
-const COD_PRESENTE = "999"; // es probable que esto deba ser otro código.
+const COD_PRED_LAB: string|null = null; // es el código predeterminado para un día laborable, por ahora null
+
+const PRIORIDAD_PRED: number|null = null;
 
 const ADMIN_REQ = {user:{usuario:'perry', rol:''}};
 const TEXTO_PRUEBA = "un texto de prueba...";
@@ -246,7 +248,7 @@ describe("connected", function(){
         try {
             var persona1 = await crearNuevaPersona(numero, {});
             var persona2 = await crearNuevaPersona(numero + " segunda persona", {});
-            await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA agregar feriado', total:true, con_novedad: true }, 'new')
+            await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA agregar feriado', total:true }, 'new')
             haciendo = 'poniendo el feriado'
             await rrhhAdminSession.saveRecord(
                 ctts.fecha, 
@@ -293,13 +295,13 @@ describe("connected", function(){
                 // discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:5, dias_coincidentes:0})
                 await rrhhSession.saveRecord(ctts.novedades_registradas, novedadRegistradaPorCargar, 'new');
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-01'), cod_nov:null          , idper, con_novedad: false, trabajable: false},
-                    {fecha:date.iso('2000-01-02'), cod_nov:null          , idper, con_novedad: false, trabajable: false},
-                    {fecha:date.iso('2000-01-03'), cod_nov:COD_VACACIONES, idper, con_novedad: true , trabajable: true },
-                    {fecha:date.iso('2000-01-04'), cod_nov:COD_VACACIONES, idper, con_novedad: true , trabajable: true },
-                    {fecha:date.iso('2000-01-05'), cod_nov:COD_VACACIONES, idper, con_novedad: true , trabajable: true },
-                    {fecha:date.iso('2000-01-06'), cod_nov:COD_VACACIONES, idper, con_novedad: true , trabajable: true },
-                    {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper, con_novedad: true , trabajable: true },
+                    {fecha:date.iso('2000-01-01'), cod_nov:null          , idper, trabajable: false},
+                    {fecha:date.iso('2000-01-02'), cod_nov:null          , idper, trabajable: false},
+                    {fecha:date.iso('2000-01-03'), cod_nov:COD_VACACIONES, idper, trabajable: true },
+                    {fecha:date.iso('2000-01-04'), cod_nov:COD_VACACIONES, idper, trabajable: true },
+                    {fecha:date.iso('2000-01-05'), cod_nov:COD_VACACIONES, idper, trabajable: true },
+                    {fecha:date.iso('2000-01-06'), cod_nov:COD_VACACIONES, idper, trabajable: true },
+                    {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper, trabajable: true },
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-01', '2000-01-07']}})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
@@ -318,11 +320,11 @@ describe("connected", function(){
                 })
                 await rrhhSession.saveRecord(ctts.novedades_registradas, novedadRegistradaPorCargar, 'new');
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-03-07'), cod_nov:null          , idper, con_novedad:false, trabajable:false},
-                    {fecha:date.iso('2000-03-08'), cod_nov:COD_VACACIONES, idper, con_novedad:true , trabajable:true },
-                    {fecha:date.iso('2000-03-09'), cod_nov:COD_VACACIONES, idper, con_novedad:true , trabajable:true },
-                    {fecha:date.iso('2000-03-10'), cod_nov:COD_VACACIONES, idper, con_novedad:true , trabajable:true },
-                    {fecha:date.iso('2000-03-11'), cod_nov:null          , idper, con_novedad:false, trabajable:false},
+                    {fecha:date.iso('2000-03-07'), cod_nov:null          , idper, trabajable:false},
+                    {fecha:date.iso('2000-03-08'), cod_nov:COD_VACACIONES, idper, trabajable:true },
+                    {fecha:date.iso('2000-03-09'), cod_nov:COD_VACACIONES, idper, trabajable:true },
+                    {fecha:date.iso('2000-03-10'), cod_nov:COD_VACACIONES, idper, trabajable:true },
+                    {fecha:date.iso('2000-03-11'), cod_nov:null          , idper, trabajable:false},
                 ], 'all', {fixedFields:{idper, fecha:['2000-03-07','2000-03-11']}})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
@@ -361,11 +363,11 @@ describe("connected", function(){
                     {fecha:date.iso('2000-05-05'), cod_nov:COD_VACACIONES , idper},
                     {fecha:date.iso('2000-05-06'), cod_nov:null           , idper},
                     {fecha:date.iso('2000-05-07'), cod_nov:null           , idper},
-                    {fecha:date.iso('2000-05-08'), cod_nov:COD_PRESENTE   , idper},
-                    {fecha:date.iso('2000-05-09'), cod_nov:COD_PRESENTE   , idper},
-                    {fecha:date.iso('2000-05-10'), cod_nov:COD_PRESENTE   , idper},
+                    {fecha:date.iso('2000-05-08'), cod_nov:COD_PRED_LAB   , idper},
+                    {fecha:date.iso('2000-05-09'), cod_nov:COD_PRED_LAB   , idper},
+                    {fecha:date.iso('2000-05-10'), cod_nov:COD_PRED_LAB   , idper},
                     {fecha:date.iso('2000-05-11'), cod_nov:COD_TRAMITE    , idper},
-                    {fecha:date.iso('2000-05-12'), cod_nov:COD_PRESENTE   , idper},
+                    {fecha:date.iso('2000-05-12'), cod_nov:COD_PRED_LAB   , idper},
                 ], 'all', {fixedFields:{idper, fecha:['2000-05-01', '2000-05-12']}})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
@@ -383,9 +385,9 @@ describe("connected", function(){
                     'new'
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-05'), cod_nov:COD_PRESENTE, idper, con_novedad:null , trabajable:true},
-                    {fecha:date.iso('2000-01-06'), cod_nov:COD_TRAMITE , idper, con_novedad:true , trabajable:true},
-                    {fecha:date.iso('2000-01-07'), cod_nov:COD_PRESENTE, idper, con_novedad:null , trabajable:true},
+                    {fecha:date.iso('2000-01-05'), cod_nov:COD_PRED_LAB, idper, trabajable:true},
+                    {fecha:date.iso('2000-01-06'), cod_nov:COD_TRAMITE , idper, trabajable:true},
+                    {fecha:date.iso('2000-01-07'), cod_nov:COD_PRED_LAB, idper, trabajable:true},
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-05','2000-01-07']}})
             })
             fallaEnLaQueQuieroOmitirElBorrado = false;
@@ -594,7 +596,7 @@ describe("connected", function(){
                     'new'
                 );
                 await sesion.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-02-01'), cod_nov:COD_PRESENTE, idper: persona.idper, con_novedad: null},
+                    {fecha:date.iso('2000-02-01'), cod_nov:COD_PRED_LAB, idper: persona.idper},
                 ], 'all', {fixedFields:{fecha:'2000-02-01'}})
             })
         })
@@ -641,7 +643,7 @@ describe("connected", function(){
             await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
                 await expectError( async () => {
                     const cod_nov = '10003';
-                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA intengo agregar no total', total: false, con_novedad: true }, 'new')
+                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA intengo agregar no total', total: false}, 'new')
                     await rrhhAdminSession.saveRecord(
                         ctts.novedades_registradas, 
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov, idper: persona.idper},
@@ -650,36 +652,10 @@ describe("connected", function(){
                 }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_TOTAL);
             })
         })
-        it("no puede cargarse un HORARIO cuando el codigo de novedad NO indica CON_HORARIO", async function(){
-            await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
-                await expectError( async () => {
-                    const cod_nov = '10004';
-                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA intento agregar NO CON_HORARIO', con_horario: false }, 'new')
-                    await rrhhAdminSession.saveRecord(
-                        ctts.horarios, 
-                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov, idper: persona.idper, dds: 2},
-                        'new'
-                    );
-                }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_CON_HORARIO);
-            })
-        })
-        it("no puede cargarse una NOVEDAD cuando el codigo de novedad NO indica CON_NOVEDAD", async function(){
-            await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
-                await expectError( async () => {
-                    const cod_nov = '10005';
-                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA intento agregar NO CON_NOVEDAD', total: true, con_novedad: false }, 'new')
-                    await rrhhAdminSession.saveRecord(
-                        ctts.novedades_registradas, 
-                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov, idper: persona.idper},
-                        'new'
-                    );
-                }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_CON_NOVEDAD);
-            })
-        })
         it("genera novedades desde registra_novedades_desde", async function(){
             await enNuevaPersona(this.test?.title!, {registra_novedades_desde: date.iso('2000-01-04')}, async ({idper}) => {
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-04'), cod_nov:COD_PRESENTE, idper},
+                    {fecha:date.iso('2000-01-04'), cod_nov:COD_PRED_LAB, idper},
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-01','2000-01-04']}})
             })
         })
@@ -692,10 +668,10 @@ describe("connected", function(){
                         'new'
                     );
                     await rrhhSession.tableDataTest('novedades_vigentes', [
-                        {fecha:date.iso('2000-02-04'), cod_nov:COD_ENFERMEDAD, idper, con_novedad:true},
-                        {fecha:date.iso('2000-02-05'), cod_nov:COD_ENFERMEDAD, idper, con_novedad:true},
-                        {fecha:date.iso('2000-02-06'), cod_nov:COD_ENFERMEDAD, idper, con_novedad:true},
-                        {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper, con_novedad:true},
+                        {fecha:date.iso('2000-02-04'), cod_nov:COD_ENFERMEDAD, idper},
+                        {fecha:date.iso('2000-02-05'), cod_nov:COD_ENFERMEDAD, idper},
+                        {fecha:date.iso('2000-02-06'), cod_nov:COD_ENFERMEDAD, idper},
+                        {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper},
                     ], 'all', {fixedFields:{idper, fecha:['2000-02-04', '2000-02-07']}})
                 })
             })
@@ -764,26 +740,60 @@ describe("connected", function(){
                     ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
                 })
             })
-        });
-        describe("horarios", function(){
             it("mezclo teletrabajo con presencial", async function(){
-                /// TODO: Hay que reescribir esto por completo para verlo bien.
+                var cod_nov = COD_DIAGRAMADO;                
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
-                    for (var dds of [1,3,4]) {
-                        await rrhhAdminSession.saveRecord(
-                            ctts.horarios, 
-                            {desde:date.iso('2000-01-01'), hasta:date.iso('2000-12-31'), dds, idper, trabaja:true, hora_desde:'09:00', hora_hasta:'16:00', cod_nov:COD_DIAGRAMADO},
-                            'new',
-                            // [idper, dds, 2000, date.iso('2000-01-01')]
-                        );
-                    }
+                    await rrhhAdminSession.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-01-17'), hasta:date.iso('2000-01-29'), idper, cod_nov,
+                            dds1:true, dds3:true, dds4:true, prioridad:2
+                        },
+                        'new',
+                    );
                     await rrhhSession.tableDataTest('novedades_vigentes', [
-                        {fecha:date.iso('2000-01-03'), cod_nov:COD_DIAGRAMADO, idper},
-                        {fecha:date.iso('2000-01-04'), cod_nov:COD_PRESENTE  , idper},
-                        {fecha:date.iso('2000-01-05'), cod_nov:COD_DIAGRAMADO, idper},
-                        {fecha:date.iso('2000-01-06'), cod_nov:COD_DIAGRAMADO, idper},
-                        {fecha:date.iso('2000-01-07'), cod_nov:COD_PRESENTE  , idper},
-                    ], 'all', {fixedFields:{idper, fecha:['2000-01-03','2000-01-07']}})
+                        {fecha:date.iso('2000-01-17'), cod_nov:COD_DIAGRAMADO, idper, prioridad:2},
+                        {fecha:date.iso('2000-01-18'), cod_nov:COD_PRED_LAB  , idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-01-19'), cod_nov:COD_DIAGRAMADO, idper, prioridad:2},
+                        {fecha:date.iso('2000-01-20'), cod_nov:COD_DIAGRAMADO, idper, prioridad:2},
+                        {fecha:date.iso('2000-01-21'), cod_nov:COD_PRED_LAB  , idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-01-22'), cod_nov:null          , idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-01-23'), cod_nov:null          , idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-01-24'), cod_nov:COD_DIAGRAMADO, idper, prioridad:2},
+                        {fecha:date.iso('2000-01-25'), cod_nov:COD_PRED_LAB  , idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-01-26'), cod_nov:COD_DIAGRAMADO, idper, prioridad:2},
+                        {fecha:date.iso('2000-01-27'), cod_nov:COD_DIAGRAMADO, idper, prioridad:2},
+                        {fecha:date.iso('2000-01-28'), cod_nov:COD_PRED_LAB  , idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-01-29'), cod_nov:null          , idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-01-30'), cod_nov:null          , idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-01-31'), cod_nov:COD_PRED_LAB  , idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-02-01'), cod_nov:COD_PRED_LAB  , idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-02-02'), cod_nov:COD_PRED_LAB  , idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-02-03'), cod_nov:COD_PRED_LAB  , idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-02-04'), cod_nov:COD_PRED_LAB  , idper, prioridad:PRIORIDAD_PRED},
+                    ], 'all', {fixedFields:{idper, fecha:['2000-01-17','2000-02-04']}})
+                })
+            })
+            it("prioridad 2 no mata principales", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                    await rrhhAdminSession.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-01-19'), hasta:date.iso('2000-01-21'), idper, cod_nov: COD_VACACIONES},
+                        'new',
+                    );
+                    await rrhhAdminSession.saveRecord(
+                        ctts.novedades_registradas, 
+                        {desde:date.iso('2000-01-17'), hasta:date.iso('2000-01-21'), idper, cod_nov: COD_DIAGRAMADO,
+                            dds1:true, dds3:true, dds4:true, prioridad:2
+                        },
+                        'new',
+                    );
+                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                        {fecha:date.iso('2000-01-17'), cod_nov:COD_DIAGRAMADO, idper, prioridad:2},
+                        {fecha:date.iso('2000-01-18'), cod_nov:COD_PRED_LAB  , idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-01-19'), cod_nov:COD_VACACIONES, idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-01-20'), cod_nov:COD_VACACIONES, idper, prioridad:PRIORIDAD_PRED},
+                        {fecha:date.iso('2000-01-21'), cod_nov:COD_VACACIONES, idper, prioridad:PRIORIDAD_PRED},
+                    ], 'all', {fixedFields:{idper, fecha:['2000-01-17','2000-01-21']}})
                 })
             })
         });
