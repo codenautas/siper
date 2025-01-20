@@ -217,7 +217,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         coalesce(h.hora_desde, horario_habitual_desde) as hora_desde,
                         coalesce(h.hora_hasta, horario_habitual_hasta) as hora_hasta,
                         coalesce(h.trabaja, d.dds BETWEEN 1 AND 5) as trabaja,
-                        coalesce(h.cod_nov, case when d.dds BETWEEN 1 AND 5 then cod_nov_habitual else null end) as cod_nov
+                        coalesce(nv.cod_nov, case when d.dds BETWEEN 1 AND 5 then cod_nov_habitual else null end) as cod_nov
                     FROM dias_semana d
                         INNER JOIN annios a USING (annio)
                         LEFT JOIN horarios h 
@@ -225,6 +225,11 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             AND d.fecha >= h.desde 
                             AND (h.hasta IS NULL OR d.fecha <= h.hasta)
                             AND h.idper = $1
+                        LEFT JOIN novedades_vigentes nv
+                            ON extract(dow from nv.fecha) = d.dds
+                            AND d.fecha >= nv.fecha 
+                            AND (nv.fecha IS NULL OR d.fecha <= nv.fecha)
+                            AND nv.idper = $1
                     ORDER BY d.fecha
                     )
                     SELECT coalesce(max(desde), make_date(extract(year from $2)::integer,1,1)) as desde, 
