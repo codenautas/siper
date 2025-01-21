@@ -59,7 +59,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             ')?'
                         ) as mensaje,
                         dias_corridos, dias_habiles, dias_coincidentes,
-                        con_detalles
+                        con_detalles,
+                        cn.c_dds
                     from personas p
                         left join cod_novedades cn on cn.cod_nov = $3,
                         lateral (
@@ -149,7 +150,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         coalesce(v.limite, 0) as limite, 
                         coalesce(v.saldo, 0) as saldo, 
                         (coalesce(v.saldo, 0) > 0 or v.limite is null) as con_disponibilidad,
-                        (cn.registra and r.puede_cargar_dependientes or puede_cargar_todo) as puede_cargar
+                        (cn.registra and r.puede_cargar_dependientes or puede_cargar_todo) as puede_cargar,
+                        c_dds
                     from cod_novedades cn 
                         inner join usuarios u on u.usuario = $2
                         -- inner join personas pu on pu.idper = u.ipder -- persona conectada

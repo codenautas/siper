@@ -95,6 +95,7 @@ export const novedades_registradas = {
         dds5: is.nullable.boolean,
         dds6: is.nullable.boolean,
         detalles: is.nullable.string,
+        c_dds: is.nullable.boolean
     })
 } satisfies CommonEntityDefinition
 
@@ -257,6 +258,7 @@ export const novedades_disponibles = {
         limite: is.nullable.number,
         saldo: is.nullable.number,
         con_disponibilidad: is.nullable.boolean,
+        c_dds: is.nullable.boolean,
     })
 }
 
