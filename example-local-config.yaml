@@ -16,8 +16,8 @@ install:
       owner: siper_owner
 client-setup: 
   lang: es
-x-devel: # no incluir en producción. En desarrollo quitar la x-
-  delay: 500
+devel: # no incluir en producción. En desarrollo quitar la x-
+  x-delay: 500
   tests-can-delete-db: true
   useFileDevelopment: true
 log:
