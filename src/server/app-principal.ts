@@ -100,7 +100,7 @@ export class AppSiper extends AppBackend{
                 {menuType:'menu', name:'listados', menuContent:[
                     {menuType:'proc', name:'parte_diario'},
                     {menuType:'proc', name:'descanso_anual_remunerado'},
-                    {menuType:'proc', name:'visor_de_fichadas'},
+                    // {menuType:'proc', name:'visor_de_fichadas'},
                     {menuType:'table', name:'novedades_totales', table:'nov_per', ff:[{fieldName:'annio', value:date.today().getFullYear()}]},
                 ]}
             ] : []),
