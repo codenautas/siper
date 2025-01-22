@@ -25,12 +25,13 @@ import {
     MenuItem, 
     Paper,
     Select, 
-    Toolbar, Typography, TextField
+    Toolbar, Typography, TextField,
+    Checkbox
 } from "@mui/material";
 
 import { date, RealDate } from "best-globals";
 
-import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult } from "../common/contracts"
+import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, NovedadRegistrada } from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 
 export function logError(error:Error){
@@ -425,7 +426,7 @@ function DatosPersonales(props:{conn: Connector, idper:string}){
     </Componente>
 }
 
-function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean)=>void, ultimaNovedad?: ULTIMA_NOVEDAD}){
+function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean, c_dds: boolean)=>void, ultimaNovedad?: ULTIMA_NOVEDAD}){
     // @ts-ignore
     const {idper, cod_nov, onCodNov, conn, ultimaNovedad} = props;
     const [codNovedades, setCodNovedades] = useState<NovedadesDisponiblesResult[]>([]);
@@ -449,7 +450,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
         <List>
             {codNovedadesFiltradas.map(c=>
                 <ListItemButton key = {c.cod_nov} 
-                    onClick={() => {if (onCodNov != null && c.con_disponibilidad) onCodNov(c.cod_nov, !!c.con_detalles)}} 
+                    onClick={() => {if (onCodNov != null && c.con_disponibilidad) onCodNov(c.cod_nov, !!c.con_detalles, !!c.c_dds)}} 
                     className={`${c.cod_nov == cod_nov ? 'seleccionado' : ''} ${!c.con_disponibilidad ? 'deshabilitado' : ''}`}
                     disabled={!c.con_disponibilidad}>
                     <span className="box-id"> {c.cod_nov} </span>   
@@ -467,7 +468,7 @@ type Hora = string;
 
 type HorarioSemanaVigenteDia = {hora_desde:Hora, hora_hasta:Hora, cod_nov:string, trabaja:boolean, dds:0 | 1 | 2 | 3 | 4 | 5 | 6}
 type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, dias:Record<string, HorarioSemanaVigenteDia>}
-type SiCargaraNovedades = {mensaje:string, con_detalle:boolean}
+type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean}
 declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: (params: {
@@ -511,6 +512,7 @@ function Pantalla1(props:{conn: Connector}){
     const [persona, setPersona] = useState({} as ProvisorioPersonas);
     const [cod_nov, setCodNov] = useState("");
     const [detalles, setDetalles] = useState("");
+    const [novedadRegistrada, setNovedadRegistrada] = useState({} as NovedadRegistrada);
     const [fecha, setFecha] = useState<RealDate>(date.today());
     const [hasta, setHasta] = useState<RealDate>(date.today());
     const [registrandoNovedad, setRegistrandoNovedad] = useState(false);
@@ -537,7 +539,20 @@ function Pantalla1(props:{conn: Connector}){
         conn.ajax.table_record_save({
             table:'novedades_registradas',
             primaryKeyValues:[],
-            newRow:{idper, desde:fecha, hasta, cod_nov, detalles: detalles == "" ? null : detalles},
+            newRow:{
+                idper, 
+                desde:fecha, 
+                hasta, 
+                cod_nov, 
+                detalles: detalles == "" ? null : detalles,
+                dds0:novedadRegistrada.dds0,
+                dds1:novedadRegistrada.dds1,
+                dds2:novedadRegistrada.dds2,
+                dds3:novedadRegistrada.dds3,
+                dds4:novedadRegistrada.dds4,
+                dds5:novedadRegistrada.dds5,
+                dds6:novedadRegistrada.dds6
+            },
             oldRow:{},
             status:'new'
         }).then(function(result){
@@ -551,6 +566,27 @@ function Pantalla1(props:{conn: Connector}){
     function handleCodNovChange(codNov: string) {
         setCodNov(codNov);
     }
+
+    function handleDiaCheckboxChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const { name, checked } = e.target;
+        setNovedadRegistrada((prev) => ({
+            ...prev,
+            [name]: checked,
+        }));
+    }
+
+    function diasEnRangoSeleccionado(fecha: Date, hasta: Date): Set<number> {
+        const actual = new Date(fecha);
+                
+        const diasIncluidos = new Set<number>();
+        while (actual.getTime() <= hasta.getTime()) {
+            diasIncluidos.add(actual.getDay());
+            actual.setDate(actual.getDate() + 1);
+        }
+        return diasIncluidos;
+    }
+
+    const diasIncluidos = diasEnRangoSeleccionado(fecha, hasta);
 
     return infoUsuario.usuario == null ?  
             <CircularProgress />
@@ -589,6 +625,71 @@ function Pantalla1(props:{conn: Connector}){
                     <CircularProgress />
                 </Box>: null}
                 {siCargaraNovedad ? <Box>
+                    { siCargaraNovedad.c_dds ? <Box>
+                        <label>
+                            <Checkbox
+                                name="dds0"
+                                checked={novedadRegistrada.dds0 || false}
+                                onChange={handleDiaCheckboxChange}
+                                disabled={!diasIncluidos.has(0)}
+                            />
+                            Domingo
+                        </label>
+                        <label>
+                            <Checkbox
+                                name="dds1"
+                                checked={novedadRegistrada.dds1 || false}
+                                onChange={handleDiaCheckboxChange}
+                                disabled={!diasIncluidos.has(1)}
+                             />
+                            Lunes
+                        </label>
+                        <label>
+                            <Checkbox                             
+                                name="dds2"
+                                checked={novedadRegistrada.dds2 || false}
+                                onChange={handleDiaCheckboxChange}
+                                disabled={!diasIncluidos.has(2)}
+                             />
+                            Martes
+                        </label>
+                        <label>
+                            <Checkbox 
+                                name="dds3"
+                                checked={novedadRegistrada.dds3 || false}
+                                onChange={handleDiaCheckboxChange}
+                                disabled={!diasIncluidos.has(3)}
+                            />
+                            Miercoles
+                        </label>
+                        <label>
+                            <Checkbox 
+                                name="dds4"
+                                checked={novedadRegistrada.dds4 || false}
+                                onChange={handleDiaCheckboxChange}
+                                disabled={!diasIncluidos.has(4)}
+                            />
+                            Jueves
+                        </label>
+                        <label>
+                            <Checkbox 
+                                name="dds5"
+                                checked={novedadRegistrada.dds5 || false}
+                                onChange={handleDiaCheckboxChange}
+                                disabled={!diasIncluidos.has(5)}
+                             />
+                            Viernes
+                        </label>
+                        <label>
+                            <Checkbox 
+                                name="dds6"
+                                checked={novedadRegistrada.dds6 || false}
+                                onChange={handleDiaCheckboxChange}
+                                disabled={!diasIncluidos.has(6)}
+                            />
+                            Sabado
+                        </label>
+                    </Box> : null}
                     <TextField
                         className="novedades-detalles"
                         label="Detalles"
@@ -612,7 +713,6 @@ function Pantalla1(props:{conn: Connector}){
             <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
         </Paper>;
 }
-
 
 function RegistrarNovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
     const {fieldsProps /*, optionsInfo*/} = props;

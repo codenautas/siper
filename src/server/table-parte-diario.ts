@@ -45,6 +45,7 @@ export function parte_diario(_context: TableContext): TableDefinition{
             {references: 'cod_novedades', fields: [cod_nov.name], displayFields:['novedad']},
             {references: 'sectores', fields: [sector.name], displayFields:['nombre_sector']},
         ],
+        hiddenColumns: ['fichada'],
         constraints: [
         ],
         sql:{
