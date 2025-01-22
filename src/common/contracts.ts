@@ -241,6 +241,7 @@ export const si_cargara_novedad = {
         dias_habiles: is.number,
         dias_coincidentes: is.number,
         con_detalles: is.nullable.boolean,
+        c_dds: is.nullable.boolean,
     })
 }
 
