@@ -203,6 +203,17 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                     <span className={`calendario-dia-contenido ${dia.prioridad ? 'con_novedad_si' : 'con_novedad_no' }`}>{dia.cod_nov ?? ''}</span>
                 </div>)}
             </Box>)}
+            <Box>
+                {fecha && fechaHasta && (fecha.valueOf() !== fechaHasta.valueOf() ?
+                    <Typography>
+                        Fechas seleccionadas: 
+                        {` ${fecha.toLocaleDateString()} - ${fechaHasta.toLocaleDateString()}`}
+                    </Typography> :
+                    <Typography>
+                        Fecha seleccionada: {fecha.toLocaleDateString()}
+                    </Typography>
+                )}
+            </Box>
         </Box>
     </Componente>
 }
@@ -575,13 +586,13 @@ function Pantalla1(props:{conn: Connector}){
         }));
     }
 
-    function diasEnRangoSeleccionado(fecha: Date, hasta: Date): Set<number> {
-        const actual = new Date(fecha);
-                
+    function diasEnRangoSeleccionado(fecha: RealDate, hasta: RealDate): Set<number> {
         const diasIncluidos = new Set<number>();
-        while (actual.getTime() <= hasta.getTime()) {
-            diasIncluidos.add(actual.getDay());
-            actual.setDate(actual.getDate() + 1);
+        let current = fecha.add({days: 0});
+    
+        while(current.valueOf() <= hasta.valueOf()){
+            diasIncluidos.add(current.getDay());
+            current = current.add({days: 1});
         }
         return diasIncluidos;
     }
