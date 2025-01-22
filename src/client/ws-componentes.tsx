@@ -258,9 +258,8 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     const [abanicoPersonas, setAbanicoPersonas] = useState<Partial<Record<string, PersonasNovedadActualResult[]>>>({});
     const [filtro, setFiltro] = useState("");
     const APELLIDOYNOMBRES = 'apellidoynombres' as keyof PersonasNovedadActualResult
-    const attributosBuscables:(keyof PersonasNovedadActualResult)[] = ['apellido', 'nombres', 'cuil', 'ficha', 'idmeta4', 'idper', APELLIDOYNOMBRES]
+    const attributosBuscables:(keyof PersonasNovedadActualResult)[] = ['apellido', 'nombres', 'cuil', 'ficha', 'idmeta4', 'idper', 'nombre_sector', APELLIDOYNOMBRES]
     useEffect(function(){
-        console.log(listaPersonas)
         const recordFilter = GetRecordFilter<PersonasNovedadActualResult>(filtro, attributosBuscables);
         const personasFiltradas = listaPersonas.filter(recordFilter)
         var abanico = Object.groupBy(personasFiltradas, p => p.sector);
