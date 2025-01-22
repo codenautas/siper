@@ -575,6 +575,19 @@ function Pantalla1(props:{conn: Connector}){
         }));
     }
 
+    function diasEnRangoSeleccionado(fecha: Date, hasta: Date): Set<number> {
+        const actual = new Date(fecha);
+                
+        const diasIncluidos = new Set<number>();
+        while (actual.getTime() <= hasta.getTime()) {
+            diasIncluidos.add(actual.getDay());
+            actual.setDate(actual.getDate() + 1);
+        }
+        return diasIncluidos;
+    }
+
+    const diasIncluidos = diasEnRangoSeleccionado(fecha, hasta);
+
     return infoUsuario.usuario == null ?  
             <CircularProgress />
         : infoUsuario.idper == null ?
@@ -618,6 +631,7 @@ function Pantalla1(props:{conn: Connector}){
                                 name="dds0"
                                 checked={novedadRegistrada.dds0 || false}
                                 onChange={handleDiaCheckboxChange}
+                                disabled={!diasIncluidos.has(0)}
                             />
                             Domingo
                         </label>
@@ -626,6 +640,7 @@ function Pantalla1(props:{conn: Connector}){
                                 name="dds1"
                                 checked={novedadRegistrada.dds1 || false}
                                 onChange={handleDiaCheckboxChange}
+                                disabled={!diasIncluidos.has(1)}
                              />
                             Lunes
                         </label>
@@ -634,6 +649,7 @@ function Pantalla1(props:{conn: Connector}){
                                 name="dds2"
                                 checked={novedadRegistrada.dds2 || false}
                                 onChange={handleDiaCheckboxChange}
+                                disabled={!diasIncluidos.has(2)}
                              />
                             Martes
                         </label>
@@ -642,6 +658,7 @@ function Pantalla1(props:{conn: Connector}){
                                 name="dds3"
                                 checked={novedadRegistrada.dds3 || false}
                                 onChange={handleDiaCheckboxChange}
+                                disabled={!diasIncluidos.has(3)}
                             />
                             Miercoles
                         </label>
@@ -650,6 +667,7 @@ function Pantalla1(props:{conn: Connector}){
                                 name="dds4"
                                 checked={novedadRegistrada.dds4 || false}
                                 onChange={handleDiaCheckboxChange}
+                                disabled={!diasIncluidos.has(4)}
                             />
                             Jueves
                         </label>
@@ -658,6 +676,7 @@ function Pantalla1(props:{conn: Connector}){
                                 name="dds5"
                                 checked={novedadRegistrada.dds5 || false}
                                 onChange={handleDiaCheckboxChange}
+                                disabled={!diasIncluidos.has(5)}
                              />
                             Viernes
                         </label>
@@ -666,6 +685,7 @@ function Pantalla1(props:{conn: Connector}){
                                 name="dds6"
                                 checked={novedadRegistrada.dds6 || false}
                                 onChange={handleDiaCheckboxChange}
+                                disabled={!diasIncluidos.has(6)}
                             />
                             Sabado
                         </label>
@@ -693,7 +713,6 @@ function Pantalla1(props:{conn: Connector}){
             <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
         </Paper>;
 }
-
 
 function RegistrarNovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
     const {fieldsProps /*, optionsInfo*/} = props;
