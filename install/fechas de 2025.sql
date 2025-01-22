@@ -339,7 +339,7 @@ insert into "fechas" ("fecha", "laborable", "leyenda", "repite", "inamovible") v
 ('2025-11-30', null, null, null, null),
 ('2025-12-01', null, null, null, null),
 ('2025-12-02', null, null, null, null),
-('2025-12-03', null, null, null, null),
+('2025-12-03', 'false', 'Día del Trabajador Municipal', 'true', 'true'),
 ('2025-12-04', null, null, null, null),
 ('2025-12-05', null, null, null, null),
 ('2025-12-06', null, null, null, null),

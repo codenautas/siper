@@ -1066,7 +1066,7 @@ fecha|laborable|leyenda|repite|inamovible
 2025-11-30||||
 2025-12-01||||
 2025-12-02||||
-2025-12-03||||
+2025-12-03|false|Día del Trabajador Municipal|true|true
 2025-12-04||||
 2025-12-05||||
 2025-12-06||||
