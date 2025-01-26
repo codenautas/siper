@@ -14,7 +14,7 @@ $BODY$
 -- ¡ATENCIÓN! NO MODIFICAR MANUALMENTE ESTA FUNCIÓN FUE GENERADA CON EL SCRIPT novedades_calculadas.sql
 -- Otras funciones que comienzan con el nombre novedades_calculadas se generaron junto a esta!
       idper, fecha, 
-      CASE WHEN trabajable OR nr_corridos THEN nr_cod_nov ELSE null END as cod_nov, 
+      CASE WHEN trabajable OR nr_corridos THEN coalesce(nr_cod_nov, cod_nov_pred_fecha) ELSE null END as cod_nov, 
       ficha, null as ent_fich, null as sal_fich, sector, annio,
       trabajable, prioridad, detalles
     FROM (
@@ -23,7 +23,7 @@ $BODY$
           p.sector, f.annio, nr.detalles,
           nr.cod_nov as nr_cod_nov,
           nr.corridos as nr_corridos,
-          cod_nov_habitual,
+          cod_nov_pred_fecha,
           nr.prioridad
         FROM fechas f INNER JOIN annios a USING (annio) CROSS JOIN personas p
           LEFT JOIN LATERAL (

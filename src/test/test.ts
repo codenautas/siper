@@ -120,9 +120,9 @@ describe("connected", function(){
                         `update fechas set laborable = false, repite = true, inamovible = true where fecha in (
                             '2000-05-01');
                         `,
-                        `update annios set horario_habitual_desde = '10:00', horario_habitual_hasta = '17:00', cod_nov_habitual = 999 where annio = '${DESDE_AÑO}'`,
+                        `update annios set horario_habitual_desde = '10:00', horario_habitual_hasta = '17:00' where annio = '${DESDE_AÑO}'`,
                         `select annio_abrir('${DESDE_AÑO}')`,
-                        `update parametros set fecha_actual = '${FECHA_ACTUAL.toYmd()}' where unico_registro`,
+                        `update parametros set fecha_actual = '${FECHA_ACTUAL.toYmd()}', cod_nov_habitual = 999 where unico_registro`,
                         `insert into sectores (sector, nombre_sector, pertenece_a) values
                             ('PRA1'   , 'PRUEBA AUTOMATICA 1'      , null    ),
                             ('PRA11'  , 'PRUEBA AUTOMATICA 1.1'    , 'PRA1'  ),

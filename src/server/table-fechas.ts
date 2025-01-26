@@ -3,6 +3,8 @@
 import {FieldDefinition, TableDefinition, TableContext} from "./types-principal";
 
 import {año} from "./table-annios"
+import {cod_nov} from "./table-cod_novedades";
+
 
 export const fecha: FieldDefinition = {name: 'fecha', typeName: 'date'};
 export const añoEnBaseAFecha = {...año, editable:false, generatedAs:`extract(year from ${fecha.name})`}
@@ -22,11 +24,13 @@ export function fechas(context:TableContext):TableDefinition{
             {name: 'repite'    , typeName: 'boolean', description: 'si es un feriado todos los años (poner no a feriados turísticos y a asuetos puntuales'},
             {name: 'inamovible', typeName: 'boolean', description: 'si es un feriado que no se mueve, que se festeja siempre en la misma fecha'},
             {name: 'dds'       , typeName: 'integer', generatedAs: 'extract(dow from fecha)' /*, inTable:false, serverSide:true, editable:false*/},
+            {...cod_nov, name: 'cod_nov_pred_fecha', editable:false, title:'cod nov'},
             añoEnBaseAFecha,
         ],
         primaryKey: [fecha.name],
         foreignKeys: [
             {references: 'annios'  , fields: [año.name], onUpdate: 'no action'},
+            {references: 'cod_novedades', fields: [{source: 'cod_nov_pred_fecha', target:cod_nov.name}]}
         ],
         constraints: [
             {constraintType:'check', consName:'repite e inamovible solo asuetos y feriados', expr:'laborable is false or repite is null and inamovible is null'},
