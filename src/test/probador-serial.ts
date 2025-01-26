@@ -4,7 +4,7 @@
  * No hay que poner acá nada que conozca la aplicación
  */
 
-import { AppBackend, TableDefinition } from 'backend-plus';
+import { AppBackend, AppConfigClientSetup, TableDefinition } from 'backend-plus';
 import * as MiniTools from 'mini-tools';
 import { expected } from "cast-error";
 import { promises as fs } from 'fs';
@@ -49,28 +49,38 @@ export type Credentials = {username:string, password:string}
 export type FixedFields = {fieldName:string, value:any, until?:AnyValue}[]
 export type EasyFixedFields = null|undefined|FixedFields|Record<string,AnyValue|[AnyValue, AnyValue]>
 
+export type Methods = 'get'|'post'|'put'|'patch'|'delete'
+
+export interface ClientConfig{
+    config: AppConfigClientSetup
+}
+
 export class EmulatedSession<TApp extends AppBackend>{
     private connstr:string
     public tableDefs: Record<string, TableDefinition> = {}
     private cookies:string[] = []
+    public config:ClientConfig
     constructor(private server:TApp, port:number){
         this.connstr = `http://localhost:${port}${this.server.config.server["base-url"]}`;
     }
     async request(params:{path:string, payload:any, onlyHeaders:boolean}):ReturnType<typeof fetch>;
+    async request<T = any>(params:{path:string, method:'get'}):Promise<T>;
     async request<T = any>(params:{path:string, payload:any}):Promise<T>;
-    async request({path, payload, onlyHeaders}:{path:string, payload:any, onlyHeaders?:boolean}){
-        var body = new URLSearchParams(payload);
+    async request({path, payload, onlyHeaders, method}:{path:string, payload?:any, onlyHeaders?:boolean, method?:Methods}){
+        method ??= 'post';
+        var body = payload == null ? payload : new URLSearchParams(payload);
         var headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
         } as Record<string, string>
         if (this.cookies.length) {
             headers.Cookie = this.cookies[0].split(';')[0];
         }
-        var request = await fetch(this.connstr+path, {method:'post', headers, body, redirect: 'manual'});
+        var request = await fetch(this.connstr+path, {method, headers, body, redirect: 'manual'});
+        var direct = method == 'get';
         if (onlyHeaders) {
             return request;
         } else {
-            return this.getResult(request);
+            return this.getResult(request, direct);
         }
     }
     async callProcedure<T extends Description, U extends Description>(
@@ -89,10 +99,15 @@ export class EmulatedSession<TApp extends AppBackend>{
         // return result;
         return guarantee(target.result, result);
     }
-    async getResult(request:Awaited<ReturnType<typeof fetch>>){
+    async getResult(request:Awaited<ReturnType<typeof fetch>>, direct?:boolean){
         var result = await request.text();
         var lines = result.split(/\r?\n/);
         var notices:string[] = []
+        if (direct) {
+            var directResult = JSON4all.parse(lines[0]);
+            // console.log('----------------------- directResult',(directResult as any).config)
+            return directResult;
+        }
         do {
             var line = lines.shift();
             if (line == '--') return JSON4all.parse( lines.shift() || 'null')
@@ -120,6 +135,7 @@ export class EmulatedSession<TApp extends AppBackend>{
         if (request.status != 302) throw new Error("se esperaba una redirección");
         var result = request.headers.get('location');
         discrepances.showAndThrow(result?.substring(0,6), './menu');
+        this.config = await this.request<ClientConfig>({path:'/client-setup', method:'get'});
         return result;
     }
     async saveRecord<T extends Description>(target: {table: string, description:T}, rowToSave:PartialOnUndefinedDeep<DefinedType<NoInfer<T>>>, status:'new'):Promise<DefinedType<T>>

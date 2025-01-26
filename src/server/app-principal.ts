@@ -1,6 +1,6 @@
 "use strict";
 
-import { AppBackend, Context, Request, 
+import { AppBackend, Context, Request, ClientSetup,
     ClientModuleDefinition, OptsClientPage, MenuDefinition, MenuInfoBase
 } from "./types-principal";
 
@@ -78,7 +78,7 @@ export class AppSiper extends AppBackend{
         var es = context.es ?? {} as Context["es"]
         es.admin = context.user && context.user.rol=="admin" 
         es.rrhh = es.admin || context.user && context.user.rol=="rrhh" 
-        es.registra = es.admin || context.user && context.user.rol=="registra" 
+        es.registra = es.rrhh || context.user && context.user.rol=="registra" 
         context.es = es;
     }
     override getContextForDump():Context{
@@ -153,6 +153,12 @@ export class AppSiper extends AppBackend{
             );
         }
         return {menu:menuContent};
+    }
+    override async getClientSetupForSendToFrontEnd(req: Request): Promise<ClientSetup>{
+        var result = await super.getClientSetupForSendToFrontEnd(req);
+        var context = this.getContext(req);
+        result.config.es = context.es;
+        return result;
     }
     override clientIncludes(req:Request|null, opts:OptsClientPage):ClientModuleDefinition[]{
         var UsandoREact = true;

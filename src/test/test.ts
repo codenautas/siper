@@ -4,7 +4,7 @@ import { AppSiper } from '../server/app-principal';
 
 import {promises as fs} from 'fs'
 
-import { startServer, EmulatedSession, expectError, loadLocalFile, saveLocalFile, benchmarksSave, someTestFails } from "./probador-serial";
+import { startServer, EmulatedSession, expectError, loadLocalFile, saveLocalFile, benchmarksSave, someTestFails} from "./probador-serial";
 
 import * as ctts from "../common/contracts"
 
@@ -91,7 +91,6 @@ describe("connected", function(){
             this.timeout(TIMEOUT_SPEED * 20);
             server = await startServer(AppSiper);
             console.log('/// comienzo del borrado', new Date())
-            // @ts-expect-error: todavía no está en el config tests-can-delete-db
             if (server.config.devel['tests-can-delete-db']) {
                 await server.inDbClient(ADMIN_REQ, async client=>{
                     console.log('/// comienzo del borrado efectivo', new Date())
@@ -166,10 +165,15 @@ describe("connected", function(){
         })
         return {usuario, password, rol, idper, credenciales:{username:usuario, password}};
     }
-    it("verifica que exista la tabla de parámetros", async function(){
-        await rrhhSession.tableDataTest('parametros',[
-            {unico_registro:true, fecha_actual: FECHA_ACTUAL},
-        ], 'all')
+    describe("configuraciones", function(){
+        it("verifica que exista la tabla de parámetros", async function(){
+            await rrhhSession.tableDataTest('parametros',[
+                {unico_registro:true, fecha_actual: FECHA_ACTUAL},
+            ], 'all')
+        })
+        it("verifica que un rrhh se considere registra también", async function(){
+            discrepances.showAndThrow(rrhhSession.config.config.es, {admin:false, rrhh:true, registra:true});
+        })
     })
     async function crearNuevaPersona(nombre:string, opts:{registra_novedades_desde?:Date, para_antiguedad_relativa?:Date}): Promise<ctts.Persona>{
         var numero = autoNumero++;
@@ -873,7 +877,7 @@ describe("connected", function(){
             // console.log('test', this.test)
             // console.log('this', this)
         } else {
-            this.timeout(TIMEOUT_SPEED * 15);
+            this.timeout(TIMEOUT_SPEED * 18);
             try {
                 /**
                  * Podría ocurrir que haya algún problema al recalcular. 

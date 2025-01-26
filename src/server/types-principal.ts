@@ -21,6 +21,9 @@ declare module "backend-plus"{
         usuario:string
         rol:string
     }
+    interface AppConfigClientSetup {
+        es:{admin:boolean, rrhh:boolean, registra:boolean}
+    }
 }
 
 export const soloDigitosPostConfig = 'soloDigitos' as PostInputOptions
