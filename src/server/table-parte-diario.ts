@@ -10,7 +10,7 @@ export const sqlParteDiario = `
 select 
         p.idper, 
         f.fecha, 
-        coalesce(nv.cod_nov, case when f.dds between 1 and 5 then cod_nov_habitual else null end) as cod_nov,
+        nv.cod_nov,
         p.sector,
         fi.entrada as fichada_entrada,
         fi.salida as fichada_salida,
