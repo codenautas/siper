@@ -646,71 +646,84 @@ function Pantalla1(props:{conn: Connector}){
                     <CircularProgress />
                 </Box>: null}
                 {siCargaraNovedad ? <Box>
-                    { siCargaraNovedad.c_dds ? <Box>
-                        <label>
+                    {siCargaraNovedad.c_dds ? <Box className="dia-programado-checkbox-container">
+                            <label className="dia-programado-checkbox-label">
                             <Checkbox
                                 name="dds0"
                                 checked={novedadRegistrada.dds0 || false}
                                 onChange={handleDiaCheckboxChange}
                                 disabled={!diasIncluidos.has(0)}
+                                sx={{ padding: 0}}
                             />
-                            Domingo
-                        </label>
-                        <label>
+                            Dom
+                            </label>
+                            <span className="dia-programado-checkbox-separator">|</span>
+                            <label className="dia-programado-checkbox-label">
                             <Checkbox
                                 name="dds1"
                                 checked={novedadRegistrada.dds1 || false}
                                 onChange={handleDiaCheckboxChange}
                                 disabled={!diasIncluidos.has(1)}
-                             />
-                            Lunes
-                        </label>
-                        <label>
-                            <Checkbox                             
+                                sx={{ padding: 0}}
+                            />
+                            Lun
+                            </label>
+                            <span className="dia-programado-checkbox-separator">|</span>
+                            <label className="dia-programado-checkbox-label">
+                            <Checkbox
                                 name="dds2"
                                 checked={novedadRegistrada.dds2 || false}
                                 onChange={handleDiaCheckboxChange}
                                 disabled={!diasIncluidos.has(2)}
-                             />
-                            Martes
-                        </label>
-                        <label>
-                            <Checkbox 
+                                sx={{ padding: 0}}
+                            />
+                            Mar
+                            </label>
+                            <span className="dia-programado-checkbox-separator">|</span>
+                            <label className="dia-programado-checkbox-label">
+                            <Checkbox
                                 name="dds3"
                                 checked={novedadRegistrada.dds3 || false}
                                 onChange={handleDiaCheckboxChange}
                                 disabled={!diasIncluidos.has(3)}
+                                sx={{ padding: 0}}
                             />
-                            Miercoles
-                        </label>
-                        <label>
-                            <Checkbox 
+                            Mie
+                            </label>
+                            <span className="dia-programado-checkbox-separator">|</span>
+                            <label className="dia-programado-checkbox-label">
+                            <Checkbox
                                 name="dds4"
                                 checked={novedadRegistrada.dds4 || false}
                                 onChange={handleDiaCheckboxChange}
                                 disabled={!diasIncluidos.has(4)}
+                                sx={{ padding: 0}}
                             />
-                            Jueves
-                        </label>
-                        <label>
-                            <Checkbox 
+                            Jue
+                            </label>
+                            <span className="dia-programado-checkbox-separator">|</span>
+                            <label className="dia-programado-checkbox-label">
+                            <Checkbox
                                 name="dds5"
                                 checked={novedadRegistrada.dds5 || false}
                                 onChange={handleDiaCheckboxChange}
                                 disabled={!diasIncluidos.has(5)}
-                             />
-                            Viernes
-                        </label>
-                        <label>
-                            <Checkbox 
+                                sx={{ padding: 0}}
+                            />
+                            Vie
+                            </label>
+                            <span className="dia-programado-checkbox-separator">|</span>
+                            <label className="dia-programado-checkbox-label">
+                            <Checkbox
                                 name="dds6"
                                 checked={novedadRegistrada.dds6 || false}
                                 onChange={handleDiaCheckboxChange}
                                 disabled={!diasIncluidos.has(6)}
+                                sx={{ padding: 0}}
                             />
-                            Sabado
-                        </label>
-                    </Box> : null}
+                            Sab
+                            </label>
+                        </Box> : null }
                     <TextField
                         className="novedades-detalles"
                         label="Detalles"
