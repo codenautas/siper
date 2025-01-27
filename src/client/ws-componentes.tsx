@@ -257,12 +257,20 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     const [listaPersonas, setListaPersonas] = useState<PersonasNovedadActualResult[]>([]);
     const [abanicoPersonas, setAbanicoPersonas] = useState<Partial<Record<string, PersonasNovedadActualResult[]>>>({});
     const [filtro, setFiltro] = useState("");
+    const [expandido, setExpandido] = useState<Record<string, boolean>>({})
     const APELLIDOYNOMBRES = 'apellidoynombres' as keyof PersonasNovedadActualResult
     const attributosBuscables:(keyof PersonasNovedadActualResult)[] = ['apellido', 'nombres', 'cuil', 'ficha', 'idmeta4', 'idper', 'nombre_sector', APELLIDOYNOMBRES]
     useEffect(function(){
         const recordFilter = GetRecordFilter<PersonasNovedadActualResult>(filtro, attributosBuscables);
         const personasFiltradas = listaPersonas.filter(recordFilter)
         var abanico = Object.groupBy(personasFiltradas, p => p.sector);
+        var abrir:Record<string, boolean> = {[sector]: true}
+        if (filtro) {
+            personasFiltradas.forEach(p=>{
+                abrir[p.sector] = true;
+            })
+            setExpandido(e=>({...e, ...abrir}));
+        }
         setAbanicoPersonas(abanico);
     }, [listaPersonas, filtro])
     useEffect(function(){
@@ -293,8 +301,12 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
         <SearchBox onChange={setFiltro}/>
         {sectores.filter(s => s.perteneceA[sector] || infoUsuario.puede_cargar_todo).map(s =>
             filtro && !abanicoPersonas[s.sector]?.length ? null :
-            <Accordion key = {s.sector?.toString()} defaultExpanded = {sector == s.sector || !!filtro && !!(abanicoPersonas[s.sector]?.length)} >
-                <AccordionSummary id = {s.sector} expandIcon={<ICON.NavigationDown />} > 
+            <Accordion key = {s.sector?.toString()} expanded = {expandido[s.sector]} 
+                onChange={(_, b: boolean) => { setExpandido(e => ({...e, [s.sector]:b })) }}
+            >
+                <AccordionSummary id = {s.sector} expandIcon={<ICON.NavigationDown />} 
+                    sx={{flexDirection: 'row-reverse', '& .MuiAccordionSummary-content': { marginLeft: '16px' },}}
+                > 
                     <span className="box-id" style={{paddingLeft: s.nivel+"em", paddingRight:"1em"}}> {s.sector} </span>  
                     {s.nombre_sector} 
                 </AccordionSummary>
