@@ -301,7 +301,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
         <SearchBox onChange={setFiltro}/>
         {sectores.filter(s => s.perteneceA[sector] || infoUsuario.puede_cargar_todo).map(s =>
             filtro && !abanicoPersonas[s.sector]?.length ? null :
-            <Accordion key = {s.sector?.toString()} expanded = {expandido[s.sector]} 
+            <Accordion key = {s.sector?.toString()} expanded = {!!expandido[s.sector]}
                 onChange={(_, b: boolean) => { setExpandido(e => ({...e, [s.sector]:b })) }}
             >
                 <AccordionSummary id = {s.sector} expandIcon={<ICON.NavigationDown />} 
