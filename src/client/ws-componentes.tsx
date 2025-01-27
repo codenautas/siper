@@ -176,12 +176,12 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
             </Box>
             <Box className="calendario-semana">
                 {likeAr(DDS).map(dds =>
-                    <div className={"calendario-nombre-dia " + (dds.habil ? "" : "tipo-dia-no-laborable")}>{dds.abr}</div>
+                    <div key={dds.abr} className={"calendario-nombre-dia " + (dds.habil ? "" : "tipo-dia-no-laborable")}>{dds.abr}</div>
                 ).array()}
             </Box>
-            {calendario.map(semana => <Box className="calendario-semana">
+            {calendario.map(semana => <Box key={semana[0].dia} className="calendario-semana">
                 {semana.map(dia => 
-                <div 
+                <div key={dia.dia}
                     className={`calendario-dia tipo-dia-${dia.tipo_dia} 
                         ${fecha && dia.dia === fecha.getDate() && periodo.mes === fecha.getMonth() + 1 && periodo.annio === fecha.getFullYear() ? 'calendario-dia-seleccionado' : ''}
                         ${fechaHasta && dia.dia === fechaHasta.getDate() && periodo.mes === fechaHasta.getMonth() + 1 && periodo.annio === fechaHasta.getFullYear() ? 'calendario-dia-seleccionado' : ''}
@@ -265,13 +265,13 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
         const personasFiltradas = listaPersonas.filter(recordFilter)
         var abanico = Object.groupBy(personasFiltradas, p => p.sector);
         var abrir:Record<string, boolean> = {[sector]: true}
+        setAbanicoPersonas(abanico);
         if (filtro) {
             personasFiltradas.forEach(p=>{
                 abrir[p.sector] = true;
             })
             setExpandido(e=>({...e, ...abrir}));
         }
-        setAbanicoPersonas(abanico);
     }, [listaPersonas, filtro])
     useEffect(function(){
         setListaPersonas([])
@@ -408,8 +408,8 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
             Horario vigente desde {desdeFecha.toDmy()} hasta {hastaFecha.toDmy()}.
         </div>
         <div className="horario-contenedor">
-            <HorarioRenglon box={info => <div className="horario-dia calendario-nombre-dia"> {DDS[info.dds].abr}</div> } />
-            <HorarioRenglon box={info => <div className={`horario-dia ${info.trabaja ? '' : 'tipo-dia-no-laborable'}`}> 
+            <HorarioRenglon box={info => <div key={DDS[info.dds].abr} className="horario-dia calendario-nombre-dia"> {DDS[info.dds].abr}</div> } />
+            <HorarioRenglon box={info => <div key={DDS[info.dds].abr} className={`horario-dia ${info.trabaja ? '' : 'tipo-dia-no-laborable'}`}> 
                 {info.trabaja ? (
                     <>
                         <div>{info.hora_desde?.replace(/(?<=\d?\d:\d\d):00$/,'')}</div>
@@ -419,7 +419,7 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
                     <div>-</div>
                 )}                
             </div> } />
-            <HorarioRenglon box={info => <div className={`horario-dia calendario-nombre-dia ${info.trabaja ? '' : 'tipo-dia-no-laborable'}`}> {info.cod_nov}</div> } />
+            <HorarioRenglon box={info => <div key={DDS[info.dds].abr} className={`horario-dia calendario-nombre-dia ${info.trabaja ? '' : 'tipo-dia-no-laborable'}`}> {info.cod_nov}</div> } />
         </div>
     </Componente>
 }
