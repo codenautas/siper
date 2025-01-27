@@ -85,7 +85,6 @@ export const novedades_registradas = {
         desde: is.Date,
         hasta: is.Date,
         cod_nov: is.nullable.string,
-        prioridad: is.nullable.number,
         cancela: is.nullable.boolean,
         dds0: is.nullable.boolean,
         dds1: is.nullable.boolean,
@@ -297,7 +296,6 @@ export const calendario_persona = {
         semana: is.number,
         cod_nov: is.string,
         tipo_dia: is.string,
-        prioridad: is.nullable.number
     })
 }
 

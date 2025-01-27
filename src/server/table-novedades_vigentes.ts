@@ -29,7 +29,6 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
             /* campos automáticos */
             añoEnBaseAFecha                                                              ,
             {name: 'trabajable' , typeName: 'boolean', description: 'si es un día que debe trabajar según su horario (normalmente día hábil, no feriado)' },
-            {name: 'prioridad'  , typeName: 'integer',                                    },
             {name: 'detalles'   , typeName: 'text'   ,                                    },
         ],
         primaryKey: [idper.name, fecha.name],

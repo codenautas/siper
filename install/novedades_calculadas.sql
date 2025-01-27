@@ -16,26 +16,24 @@ $BODY$
       idper, fecha, 
       CASE WHEN trabajable OR nr_corridos THEN coalesce(nr_cod_nov, cod_nov_pred_fecha) ELSE null END as cod_nov, 
       ficha, null as ent_fich, null as sal_fich, sector, annio,
-      trabajable, prioridad, detalles
+      trabajable, detalles
     FROM (
       SELECT p.idper, p.ficha, f.fecha, 
           (f.dds BETWEEN 1 AND 5) AND (laborable is not false OR inamovible is not true AND f.dds NOT BETWEEN 1 AND 5) as trabajable,
           p.sector, f.annio, nr.detalles,
-          nr.cod_nov as nr_cod_nov,
+          CASE WHEN (c_dds IS NOT TRUE -- FILTRO PARA DIAGRAMADO POR DIA DE SEMANA:
+            OR CASE extract(DOW from f.fecha) WHEN 0 THEN nr.dds0 WHEN 1 THEN nr.dds1 WHEN 2 THEN nr.dds2 WHEN 3 THEN nr.dds3 WHEN 4 THEN nr.dds4 WHEN 5 THEN nr.dds5 WHEN 6 THEN nr.dds6 END
+          ) THEN nr.cod_nov ELSE null END as nr_cod_nov,
           nr.corridos as nr_corridos,
-          cod_nov_pred_fecha,
-          nr.prioridad
+          cod_nov_pred_fecha
         FROM fechas f INNER JOIN annios a USING (annio) CROSS JOIN personas p
           LEFT JOIN LATERAL (
-            SELECT nr.cod_nov, cn.corridos, nr.detalles, prioridad,
-                dds0, dds1, dds2, dds3, dds4, dds5, dds6
+            SELECT nr.cod_nov, cn.corridos, nr.detalles, 
+                dds0, dds1, dds2, dds3, dds4, dds5, dds6, cn.c_dds
               FROM novedades_registradas nr LEFT JOIN cod_novedades cn ON nr.cod_nov = cn.cod_nov
               WHERE f.fecha BETWEEN nr.desde AND nr.hasta
-                AND p.idper = nr.idper
-                AND (cn.c_dds IS NOT TRUE -- FILTRO PARA DIAGRAMADO POR DIA DE SEMANA:
-                  OR CASE extract(DOW from f.fecha) WHEN 0 THEN nr.dds0 WHEN 1 THEN nr.dds1 WHEN 2 THEN nr.dds2 WHEN 3 THEN nr.dds3 WHEN 4 THEN nr.dds4 WHEN 5 THEN nr.dds5 WHEN 6 THEN nr.dds6 /*ELSE false*/ END
-                )
-              ORDER BY nr.prioridad NULLS FIRST, nr.idr DESC LIMIT 1
+                AND p.idper = nr.idper                
+              ORDER BY nr.idr DESC LIMIT 1
           ) nr ON true
         WHERE f.fecha BETWEEN p_desde AND p_hasta
           AND f.fecha <= COALESCE(p.fecha_egreso, '2999-12-31'::date)
