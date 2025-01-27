@@ -419,7 +419,6 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
                     <div>-</div>
                 )}                
             </div> } />
-            <HorarioRenglon box={info => <div key={DDS[info.dds].abr} className={`horario-dia calendario-nombre-dia ${info.trabaja ? '' : 'tipo-dia-no-laborable'}`}> {info.cod_nov}</div> } />
         </div>
     </Componente>
 }
