@@ -225,7 +225,7 @@ type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<str
 // @ts-ignore
 type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
-type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, detalles:string, idr:number}
+type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, dds0: boolean, dds1: boolean, dds2: boolean, dds3: boolean, dds4: boolean, dds5: boolean, dds6: boolean, detalles:string, idr:number}
 
 type IdperFuncionCambio = (persona:ProvisorioPersonas)=>void
 
@@ -334,6 +334,16 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
     const [novedades, setNovedades] = useState<ProvisorioNovedadesRegistradas[]>([]);
     const [quiereBorrar, setQuiereBorrar] = useState<ProvisorioNovedadesRegistradas|null>(null);
     const [eliminando, setEliminando] = useState(false);
+    const diasSemana: { [key: string]: string } = {
+        dds0: "Dom",
+        dds1: "Lun",
+        dds2: "Mar",
+        dds3: "Mie",
+        dds4: "Jue",
+        dds5: "Vie",
+        dds6: "Sab",
+      };
+
     useEffect(function(){
         conn.ajax.table_data<ProvisorioNovedadesRegistradas>({
             table: 'novedades_registradas',
@@ -341,18 +351,24 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
             paramfun: {}
         }).then(function(novedadesRegistradas){
             novedadesRegistradas.reverse()
+            console.log(novedadesRegistradas)
             setNovedades(novedadesRegistradas);
         }).catch(logError)
     },[idper, ultimaNovedad])
     return <Componente componentType="novedades-registradas">
-        {novedades.map(n => 
+        {novedades.map(n => {
+            const diasSeleccionados = Object.entries(n)
+                .filter(([key, value]) => key.startsWith("dds") && value === true)
+                .map(([key]) => diasSemana[key]); 
+            return (
             <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar?' por-borrar':''}`}>
                 <div className="fechas">{n.desde.toDmy().replace(/\/\d\d\d\d$/,'') + (n.desde == n.hasta ? '' : ` - ${n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')}`)}</div>
                 <div className="cod_nov">{n.cod_nov}</div>
                 <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' }</div>
+                <div className="razones">{diasSeleccionados.length > 0 ? diasSeleccionados.join(', ') : ''}</div>
                 <div className="borrar">{n.desde > date.today() ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
-            </Box>
-        )}
+            </Box>)
+        })}
         <Dialog open={quiereBorrar != null}>
             {quiereBorrar == null ? null : (
                 eliminando ? <div>
