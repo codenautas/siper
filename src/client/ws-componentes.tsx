@@ -615,11 +615,7 @@ function Pantalla1(props:{conn: Connector}){
             setFecha(date.today());
             setHasta(date.today());
             setCodNov("");
-<<<<<<< HEAD
-            setDetalles("");
-=======
             
->>>>>>> 72d392dcf3ea18efc008bf4c5b136682d921cdbc
         }).catch(setError).finally(()=>setGuardandoRegistroNovedad(false));
     }
 
@@ -696,88 +692,13 @@ function Pantalla1(props:{conn: Connector}){
                                 name={`dds${key}`}
                                 checked={novedadRegistrada[`dds${key}` as DDSKeys] || false}
                                 onChange={handleDiaCheckboxChange}
-<<<<<<< HEAD
-                                disabled={true || !diasIncluidos.has(0)}
-                                sx={{ padding: 0}}
-=======
                                 disabled={!diasIncluidos.has(parseInt(key))}
                                 sx={{ padding: 0 }}
->>>>>>> 72d392dcf3ea18efc008bf4c5b136682d921cdbc
                             />
                             {abr}
                             </label>
-<<<<<<< HEAD
-                            <span className="dia-programado-checkbox-separator">|</span>
-                            <label className="dia-programado-checkbox-label">
-                            <Checkbox
-                                name="dds1"
-                                checked={novedadRegistrada.dds1 || false}
-                                onChange={handleDiaCheckboxChange}
-                                disabled={!diasIncluidos.has(1)}
-                                sx={{ padding: 0}}
-                            />
-                            Lun
-                            </label>
-                            <span className="dia-programado-checkbox-separator">|</span>
-                            <label className="dia-programado-checkbox-label">
-                            <Checkbox
-                                name="dds2"
-                                checked={novedadRegistrada.dds2 || false}
-                                onChange={handleDiaCheckboxChange}
-                                disabled={!diasIncluidos.has(2)}
-                                sx={{ padding: 0}}
-                            />
-                            Mar
-                            </label>
-                            <span className="dia-programado-checkbox-separator">|</span>
-                            <label className="dia-programado-checkbox-label">
-                            <Checkbox
-                                name="dds3"
-                                checked={novedadRegistrada.dds3 || false}
-                                onChange={handleDiaCheckboxChange}
-                                disabled={!diasIncluidos.has(3)}
-                                sx={{ padding: 0}}
-                            />
-                            Mie
-                            </label>
-                            <span className="dia-programado-checkbox-separator">|</span>
-                            <label className="dia-programado-checkbox-label">
-                            <Checkbox
-                                name="dds4"
-                                checked={novedadRegistrada.dds4 || false}
-                                onChange={handleDiaCheckboxChange}
-                                disabled={!diasIncluidos.has(4)}
-                                sx={{ padding: 0}}
-                            />
-                            Jue
-                            </label>
-                            <span className="dia-programado-checkbox-separator">|</span>
-                            <label className="dia-programado-checkbox-label">
-                            <Checkbox
-                                name="dds5"
-                                checked={novedadRegistrada.dds5 || false}
-                                onChange={handleDiaCheckboxChange}
-                                disabled={!diasIncluidos.has(5)}
-                                sx={{ padding: 0}}
-                            />
-                            Vie
-                            </label>
-                            <span className="dia-programado-checkbox-separator">|</span>
-                            <label className="dia-programado-checkbox-label">
-                            <Checkbox
-                                name="dds6"
-                                checked={novedadRegistrada.dds6 || false}
-                                onChange={handleDiaCheckboxChange}
-                                disabled={true || !diasIncluidos.has(6)}
-                                sx={{ padding: 0}}
-                            />
-                            Sab
-                            </label>
-                        </Box> : null }
-=======
                         ))}
                     </Box> : null }
->>>>>>> 72d392dcf3ea18efc008bf4c5b136682d921cdbc
                     <TextField
                         className="novedades-detalles"
                         label="Detalles"
