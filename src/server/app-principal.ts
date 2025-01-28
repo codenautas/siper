@@ -105,12 +105,12 @@ export class AppSiper extends AppBackend{
                 ]}
             ] : []),
             {menuType:'table', name:'personas'          },
-            {menuType:'menu', name:'capacitaciones', menuContent:[
+               ...es.admin ? [{menuType:'menu', name:'capacitaciones', menuContent:[
                 {menuType:'table', name:'capacitaciones'},
                 ...(es.registra ? [{menuType:'table', name:'modadidades', table:'capa_modalidades'}] : []),
-            ]}
+            ]}] : []
         );
-        if(es.registra){
+        if(es.admin){
             menuContent.push(
                 {menuType:'menu', name:'en_desarrollo', menuContent:[
                     {menuType:'menu', name:'novedades', menuContent:[
