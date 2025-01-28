@@ -506,7 +506,7 @@ type Hora = string;
 
 type HorarioSemanaVigenteDia = {hora_desde:Hora, hora_hasta:Hora, cod_nov:string, trabaja:boolean, dds:0 | 1 | 2 | 3 | 4 | 5 | 6}
 type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, dias:Record<string, HorarioSemanaVigenteDia>}
-type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean}
+type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean, dias_habiles: number}
 declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: (params: {
@@ -627,6 +627,10 @@ function Pantalla1(props:{conn: Connector}){
 
     const diasIncluidos = diasEnRangoSeleccionado(fecha, hasta);
 
+    var noPuedeConfirmarPorque = !siCargaraNovedad?.dias_habiles ? "debe haber al menos un día hábil y no hay" :
+        siCargaraNovedad?.c_dds && !(novedadRegistrada.dds1 || novedadRegistrada.dds2 || novedadRegistrada.dds3 || novedadRegistrada.dds4 || novedadRegistrada.dds5)
+            ? "debe marcar alguno de los días de la semana" : null;
+
     return infoUsuario.usuario == null ?  
             <CircularProgress />
         : infoUsuario.idper == null ?
@@ -670,7 +674,7 @@ function Pantalla1(props:{conn: Connector}){
                                 name="dds0"
                                 checked={novedadRegistrada.dds0 || false}
                                 onChange={handleDiaCheckboxChange}
-                                disabled={!diasIncluidos.has(0)}
+                                disabled={true || !diasIncluidos.has(0)}
                                 sx={{ padding: 0}}
                             />
                             Dom
@@ -736,7 +740,7 @@ function Pantalla1(props:{conn: Connector}){
                                 name="dds6"
                                 checked={novedadRegistrada.dds6 || false}
                                 onChange={handleDiaCheckboxChange}
-                                disabled={!diasIncluidos.has(6)}
+                                disabled={true || !diasIncluidos.has(6)}
                                 sx={{ padding: 0}}
                             />
                             Sab
@@ -752,8 +756,11 @@ function Pantalla1(props:{conn: Connector}){
                         error={siCargaraNovedad.con_detalle && !detalles}
                         helperText={siCargaraNovedad.con_detalle && !detalles ? "El campo es obligatorio." : ""}
                     />
-                    <Button className="boton-confirmar-registro-novedades" key="button" variant="outlined" onClick={() => registrarNovedad()}>
-                        {siCargaraNovedad.mensaje}<ICON.Save/>
+                    <Button className="boton-confirmar-registro-novedades" key="button" variant="outlined" 
+                        disabled={!!noPuedeConfirmarPorque}
+                        onClick={() => registrarNovedad()}
+                    >
+                        {noPuedeConfirmarPorque ?? siCargaraNovedad.mensaje}<ICON.Save/>
                     </Button>
                 </Box>: null}
                 <Box>{guarndadoRegistroNovedad || error ?
