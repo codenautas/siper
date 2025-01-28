@@ -69,13 +69,13 @@ export function ValueDB(props:{value:any}){
 type DDSKeys = `dds${0 | 1 | 2 | 3 | 4 | 5 | 6}`;
 
 export const DDS = {
-    0: {abr:'dom', habil:true , nombre:'domingo'  },
+    0: {abr:'dom', habil:false , nombre:'domingo'  },
     1: {abr:'lun', habil:true , nombre:'lunes'    },
     2: {abr:'mar', habil:true , nombre:'martes'   },
     3: {abr:'mié', habil:true , nombre:'miércoles'},
     4: {abr:'jue', habil:true , nombre:'jueves'   },
     5: {abr:'vie', habil:true , nombre:'viernes'  },
-    6: {abr:'sáb', habil:true , nombre:'sábado'   },
+    6: {abr:'sáb', habil:false , nombre:'sábado'   },
 }
 
 type ULTIMA_NOVEDAD = number;
@@ -686,13 +686,13 @@ function Pantalla1(props:{conn: Connector}){
                 </Box>: null}
                 {siCargaraNovedad ? <Box>
                     {siCargaraNovedad.c_dds ? <Box className="dia-programado-checkbox-container">
-                        {Object.entries(DDS).map(([key, { abr }]) => (
+                        {Object.entries(DDS).map(([key, { abr, habil }]) => (
                             <label key={key} className="dia-programado-checkbox-label">
                             <Checkbox
                                 name={`dds${key}`}
                                 checked={novedadRegistrada[`dds${key}` as DDSKeys] || false}
                                 onChange={handleDiaCheckboxChange}
-                                disabled={!diasIncluidos.has(parseInt(key))}
+                                disabled={!habil || !diasIncluidos.has(parseInt(key))}
                                 sx={{ padding: 0 }}
                             />
                             {abr}
