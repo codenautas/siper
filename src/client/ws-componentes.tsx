@@ -330,8 +330,9 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     </Componente>
 }
 
-function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number, ultimaNovedad?:number, cargable?:boolean, onBorrado:()=>void}){
-    const {idper, conn, ultimaNovedad, cargable} = props;
+function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number, ultimaNovedad?:number, infoUsuario:ProvisorioInfoUsuario, onBorrado:()=>void}){
+    const {idper, conn, ultimaNovedad, infoUsuario} = props;
+    console.log(infoUsuario)
     const [novedades, setNovedades] = useState<ProvisorioNovedadesRegistradas[]>([]);
     const [quiereBorrar, setQuiereBorrar] = useState<ProvisorioNovedadesRegistradas|null>(null);
     const [eliminando, setEliminando] = useState(false);
@@ -368,7 +369,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' } 
                     {diasSeleccionados.length > 0 ? ' / ' + diasSeleccionados.join(', ') : ''}
                 </div>
-                <div className="borrar">{n.desde > date.today() && cargable ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
+                <div className="borrar">{n.desde > date.today() && (infoUsuario.rol == 'rrhh' || infoUsuario.rol == 'admin') ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
             </Box>)
         })}
         <Dialog open={quiereBorrar != null}>
@@ -501,7 +502,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
     </Componente>
 }
 
-type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate, usuario:string, apellido:string, nombres:string, cuil:string, ficha:string, puede_cargar_todo:boolean};
+type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate, usuario:string, apellido:string, nombres:string, cuil:string, ficha:string, puede_cargar_todo:boolean, rol:string };
 
 type Hora = string;
 
@@ -719,7 +720,7 @@ function Pantalla1(props:{conn: Connector}){
                 <Box>{guarndadoRegistroNovedad || error ?
                     <Typography>{error?.message ?? (guarndadoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
-                <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} cargable={persona.cargable} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>
+                <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
             </Componente>
             <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
@@ -859,7 +860,7 @@ function DemoDeComponentes(props: {conn: Connector}){
                 </Card>,
             "calendario": () => <Calendario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
             "personas": () => <ListaPersonasEditables conn={conn} sector="MS" fecha={date.today()} idper={IDPER_DEMO} infoUsuario={{} as ProvisorioInfoUsuario}/>,
-            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO} annio={2024} onBorrado={()=>{}}/>,
+            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO} annio={2024} infoUsuario={{} as ProvisorioInfoUsuario} onBorrado={()=>{}}/>,
             "horario": () => <Horario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
             "datos-personales": () => <DatosPersonales conn={conn} idper={IDPER_DEMO}/>,
             "registrar-novedades": () => <RegistrarNovedades conn={conn} idper={IDPER_DEMO}/>,

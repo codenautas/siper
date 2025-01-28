@@ -275,7 +275,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         coalesce(p.nombres, u.nombre) as nombres,
                         p.cuil,
                         p.ficha,
-                        puede_cargar_todo
+                        puede_cargar_todo,
+                        roles.*
                     from usuarios u 
                         inner join roles using(rol)
                         left join personas p using (idper)
