@@ -66,6 +66,7 @@ export function ValueDB(props:{value:any}){
         default: return <span className="error-valor">{value}</span> 
     }
 }
+type DDSKeys = `dds${0 | 1 | 2 | 3 | 4 | 5 | 6}`;
 
 export const DDS = {
     0: {abr:'dom', habil:true , nombre:'domingo'  },
@@ -560,6 +561,20 @@ function Pantalla1(props:{conn: Connector}){
     const {idper} = persona
     const [ultimaNovedad, setUltimaNovedad] = useState(0);
     const annio = fecha.getFullYear();
+
+    function resetDias() {
+        setNovedadRegistrada((prev) => ({
+          ...prev,
+          dds0: null,
+          dds1: null,
+          dds2: null,
+          dds3: null,
+          dds4: null,
+          dds5: null,
+          dds6: null,
+        }));
+      }
+
     useEffect(function(){
         // @ts-ignore
         conn.ajax.info_usuario().then(function(infoUsuario:ProvisorioInfoUsuario){
@@ -571,6 +586,7 @@ function Pantalla1(props:{conn: Connector}){
         setRegistrandoNovedad(false);
         setSiCargaraNovedad(null);
         setError(null);
+        resetDias();
     },[idper,cod_nov,fecha,hasta])
     function registrarNovedad(){
         setGuardandoRegistroNovedad(true);
@@ -599,9 +615,14 @@ function Pantalla1(props:{conn: Connector}){
             setFecha(date.today());
             setHasta(date.today());
             setCodNov("");
+<<<<<<< HEAD
             setDetalles("");
+=======
+            
+>>>>>>> 72d392dcf3ea18efc008bf4c5b136682d921cdbc
         }).catch(setError).finally(()=>setGuardandoRegistroNovedad(false));
     }
+
     function handleCodNovChange(codNov: string) {
         setCodNov(codNov);
     }
@@ -669,16 +690,23 @@ function Pantalla1(props:{conn: Connector}){
                 </Box>: null}
                 {siCargaraNovedad ? <Box>
                     {siCargaraNovedad.c_dds ? <Box className="dia-programado-checkbox-container">
-                            <label className="dia-programado-checkbox-label">
+                        {Object.entries(DDS).map(([key, { abr }]) => (
+                            <label key={key} className="dia-programado-checkbox-label">
                             <Checkbox
-                                name="dds0"
-                                checked={novedadRegistrada.dds0 || false}
+                                name={`dds${key}`}
+                                checked={novedadRegistrada[`dds${key}` as DDSKeys] || false}
                                 onChange={handleDiaCheckboxChange}
+<<<<<<< HEAD
                                 disabled={true || !diasIncluidos.has(0)}
                                 sx={{ padding: 0}}
+=======
+                                disabled={!diasIncluidos.has(parseInt(key))}
+                                sx={{ padding: 0 }}
+>>>>>>> 72d392dcf3ea18efc008bf4c5b136682d921cdbc
                             />
-                            Dom
+                            {abr}
                             </label>
+<<<<<<< HEAD
                             <span className="dia-programado-checkbox-separator">|</span>
                             <label className="dia-programado-checkbox-label">
                             <Checkbox
@@ -746,6 +774,10 @@ function Pantalla1(props:{conn: Connector}){
                             Sab
                             </label>
                         </Box> : null }
+=======
+                        ))}
+                    </Box> : null }
+>>>>>>> 72d392dcf3ea18efc008bf4c5b136682d921cdbc
                     <TextField
                         className="novedades-detalles"
                         label="Detalles"
