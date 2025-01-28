@@ -364,8 +364,9 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
             <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar?' por-borrar':''}`}>
                 <div className="fechas">{n.desde.toDmy().replace(/\/\d\d\d\d$/,'') + (n.desde == n.hasta ? '' : ` - ${n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')}`)}</div>
                 <div className="cod_nov">{n.cod_nov}</div>
-                <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' }</div>
-                <div className="razones">{diasSeleccionados.length > 0 ? diasSeleccionados.join(', ') : ''}</div>
+                <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' } 
+                    {diasSeleccionados.length > 0 ? ' / ' + diasSeleccionados.join(', ') : ''}
+                </div>
                 <div className="borrar">{n.desde > date.today() ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
             </Box>)
         })}
@@ -582,13 +583,13 @@ function Pantalla1(props:{conn: Connector}){
                 hasta, 
                 cod_nov, 
                 detalles: detalles == "" ? null : detalles,
-                dds0:novedadRegistrada.dds0,
-                dds1:novedadRegistrada.dds1,
-                dds2:novedadRegistrada.dds2,
-                dds3:novedadRegistrada.dds3,
-                dds4:novedadRegistrada.dds4,
-                dds5:novedadRegistrada.dds5,
-                dds6:novedadRegistrada.dds6
+                dds0:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds0,
+                dds1:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds1,
+                dds2:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds2,
+                dds3:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds3,
+                dds4:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds4,
+                dds5:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds5,
+                dds6:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds6
             },
             oldRow:{},
             status:'new'
@@ -598,6 +599,7 @@ function Pantalla1(props:{conn: Connector}){
             setFecha(date.today());
             setHasta(date.today());
             setCodNov("");
+            setDetalles("");
         }).catch(setError).finally(()=>setGuardandoRegistroNovedad(false));
     }
     function handleCodNovChange(codNov: string) {
