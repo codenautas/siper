@@ -330,8 +330,8 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     </Componente>
 }
 
-function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number, ultimaNovedad?:number, onBorrado:()=>void}){
-    const {idper, conn, ultimaNovedad} = props;
+function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number, ultimaNovedad?:number, cargable?:boolean, onBorrado:()=>void}){
+    const {idper, conn, ultimaNovedad, cargable} = props;
     const [novedades, setNovedades] = useState<ProvisorioNovedadesRegistradas[]>([]);
     const [quiereBorrar, setQuiereBorrar] = useState<ProvisorioNovedadesRegistradas|null>(null);
     const [eliminando, setEliminando] = useState(false);
@@ -368,7 +368,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' } 
                     {diasSeleccionados.length > 0 ? ' / ' + diasSeleccionados.join(', ') : ''}
                 </div>
-                <div className="borrar">{n.desde > date.today() ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
+                <div className="borrar">{n.desde > date.today() && cargable ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
             </Box>)
         })}
         <Dialog open={quiereBorrar != null}>
@@ -719,7 +719,7 @@ function Pantalla1(props:{conn: Connector}){
                 <Box>{guarndadoRegistroNovedad || error ?
                     <Typography>{error?.message ?? (guarndadoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
-                <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>
+                <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} cargable={persona.cargable} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
             </Componente>
             <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
