@@ -13,6 +13,7 @@ export function sectores(context: TableContext): TableDefinition {
         fields: [
             sector,
             {name: 'nombre_sector', typeName: 'text', isName:true, title:'sector departamento área'},
+            {name: 'tipo_ofi'     , typeName: 'text', nullable: true},
             {name: 'pertenece_a'  , typeName: sector.typeName, nullable: true}
         ],
         primaryKey: [sector.name],
