@@ -335,6 +335,15 @@ export const historico_persona = {
 
 export type HistoricoResult = DefinedType<typeof historico_persona.result>
 
+export const parametros = {
+    procedure : 'parametros',
+    result: is.object({
+        fecha_actual: is.Date
+    })
+}
+
+export type ParametrosResult = DefinedType<typeof parametros.result>
+
 export const annio = {
     table: 'annio',
     description: is.object({

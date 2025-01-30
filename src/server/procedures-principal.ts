@@ -404,4 +404,14 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             return info.row
         }
     },
+    {
+        action: 'parametros',
+        parameters: [],
+        coreFunction: async function (context: ProcedureContext) {
+            const info = await context.client.query(
+                `SELECT fecha_actual FROM parametros;`
+            ).fetchUniqueRow();
+            return info.row
+        }
+    },
 ];

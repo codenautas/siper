@@ -31,7 +31,7 @@ import {
 
 import { date, RealDate } from "best-globals";
 
-import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, NovedadRegistrada } from "../common/contracts"
+import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, NovedadRegistrada, ParametrosResult } from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 
 export function logError(error:Error){
@@ -534,7 +534,8 @@ declare module "frontend-plus" {
         table_record_delete: (params:{
             table: string;
             primaryKeyValues: any[];    
-        }) => Promise<void>
+        }) => Promise<void>;
+        parametros: (params:{}) => Promise<ParametrosResult>;
     }
 }
 
@@ -562,6 +563,20 @@ function Pantalla1(props:{conn: Connector}){
     const {idper} = persona
     const [ultimaNovedad, setUltimaNovedad] = useState(0);
     const annio = fecha.getFullYear();
+
+    const [fechaActual, setFechaActual] =  useState<ParametrosResult[]>([]);
+    useEffect(function(){
+        // @ts-ignore
+        conn.ajax.parametros().then(function(fechaActual:ParametrosResult){
+            setFechaActual([fechaActual])
+        }).catch(logError)
+    },[])
+    console.log("--------- fechaActual ----------")
+    if(fechaActual.length == 0){
+        console.log("---- fechaActual no cargo -----")
+    } else{
+        console.log(fechaActual[0].fecha_actual)
+    }
 
     function resetDias() {
         setNovedadRegistrada((prev) => ({
