@@ -679,7 +679,7 @@ fecha|laborable|leyenda|repite|inamovible
 2024-11-08||||
 2024-11-09||||
 2024-11-10||||
-2024-11-11||||
+2024-11-11|false|Día del trabajador municipal|true|false
 2024-11-12||||
 2024-11-13||||
 2024-11-14||||
@@ -1066,7 +1066,7 @@ fecha|laborable|leyenda|repite|inamovible
 2025-11-30||||
 2025-12-01||||
 2025-12-02||||
-2025-12-03||||
+2025-12-03|false|Día del trabajador municipal|true|false
 2025-12-04||||
 2025-12-05||||
 2025-12-06||||
