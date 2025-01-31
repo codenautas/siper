@@ -278,7 +278,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         p.cuil,
                         p.ficha,
                         puede_cargar_todo,
-                        roles.*
+                        roles.*,
+                        (puede_cargar_propio and u.activo is true) as cargable
                     from usuarios u 
                         inner join roles using(rol)
                         left join personas p using (idper)
