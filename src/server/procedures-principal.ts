@@ -95,7 +95,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 `select extract(day from f.fecha) as dia,
                         extract(dow from f.fecha) as dds,
                         extract(day from f.fecha) - extract(dow from f.fecha) as semana,
-                        cod_nov,
+                        v.cod_nov,
                         case extract(dow from f.fecha) 
                             when 0 then 'no-laborable' 
                             when 6 then 'no-laborable' 
@@ -104,9 +104,11 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                                     when laborable is false then 'no-laborable' 
                                     else 'normal' 
                                 end 
-                        end as tipo_dia
+                        end as tipo_dia,
+                        cn.novedad
                     from fechas f
                         left join novedades_vigentes v on v.fecha = f.fecha and v.idper = $1
+                        left join cod_novedades cn on cn.cod_nov = v.cod_nov
                     where f.fecha between $2 and ($3::date + interval '1 month'  - interval '1 day')
                     order by f.fecha`,
                 [idper, desde, desde]

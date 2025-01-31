@@ -26,7 +26,8 @@ import {
     Paper,
     Select, 
     Toolbar, Typography, TextField,
-    Checkbox
+    Checkbox,
+    Tooltip
 } from "@mui/material";
 
 import { date, RealDate } from "best-globals";
@@ -182,7 +183,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
             </Box>
             {calendario.map(semana => <Box key={semana[0].dia} className="calendario-semana">
                 {semana.map(dia => 
-                <div key={dia.dia}
+                <Tooltip key={dia.dia} title={dia.novedad || "Sin novedad"} arrow>
+                <div
                     className={`calendario-dia tipo-dia-${dia.tipo_dia} 
                         ${fecha && dia.dia === fecha.getDate() && periodo.mes === fecha.getMonth() + 1 && periodo.annio === fecha.getFullYear() ? 'calendario-dia-seleccionado' : ''}
                         ${fechaHasta && dia.dia === fechaHasta.getDate() && periodo.mes === fechaHasta.getMonth() + 1 && periodo.annio === fechaHasta.getFullYear() ? 'calendario-dia-seleccionado' : ''}
@@ -202,7 +204,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 >
                     <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
                     <span className={`calendario-dia-contenido ${dia ? 'con_novedad_si' : 'con_novedad_no' }`}>{dia.cod_nov ?? ''}</span>
-                </div>)}
+                </div>
+                </Tooltip>)}
             </Box>)}
             <Box>
                 {fecha && fechaHasta && (fecha.valueOf() !== fechaHasta.valueOf() ?

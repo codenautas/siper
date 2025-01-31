@@ -297,6 +297,7 @@ export const calendario_persona = {
         semana: is.number,
         cod_nov: is.string,
         tipo_dia: is.string,
+        novedad: is.string,
     })
 }
 
