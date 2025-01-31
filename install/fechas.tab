@@ -784,15 +784,15 @@ fecha|laborable|leyenda|repite|inamovible
 2025-02-21||||
 2025-02-22||||
 2025-02-23||||
-2025-02-24|false|Carnaval|true|true
-2025-02-25|false|Carnaval|true|true
+2025-02-24||||
+2025-02-25||||
 2025-02-26||||
 2025-02-27||||
 2025-02-28||||
 2025-03-01||||
 2025-03-02||||
-2025-03-03||||
-2025-03-04||||
+2025-03-03|false|Lunes de carnaval|true|false
+2025-03-04|false|Martes de carnaval|true|false
 2025-03-05||||
 2025-03-06||||
 2025-03-07||||
@@ -812,7 +812,7 @@ fecha|laborable|leyenda|repite|inamovible
 2025-03-21||||
 2025-03-22||||
 2025-03-23||||
-2025-03-24|false|Día de la Memoria por la Verdad y la Justicia|true|true
+2025-03-24|false|Día de la memoria|true|false
 2025-03-25||||
 2025-03-26||||
 2025-03-27||||
@@ -821,7 +821,7 @@ fecha|laborable|leyenda|repite|inamovible
 2025-03-30||||
 2025-03-31||||
 2025-04-01||||
-2025-04-02|false|Día del Veterano y de los Caídos en la Guerra de Malvinas|true|true
+2025-04-02|false|Día del veterano|true|true
 2025-04-03||||
 2025-04-04||||
 2025-04-05||||
@@ -836,8 +836,8 @@ fecha|laborable|leyenda|repite|inamovible
 2025-04-14||||
 2025-04-15||||
 2025-04-16||||
-2025-04-17||||
-2025-04-18|false|Viernes Santo|true|true
+2025-04-17|false|Jueves santo|true|false
+2025-04-18|false|Viernes santo|true|false
 2025-04-19||||
 2025-04-20||||
 2025-04-21||||
@@ -850,8 +850,8 @@ fecha|laborable|leyenda|repite|inamovible
 2025-04-28||||
 2025-04-29||||
 2025-04-30||||
-2025-05-01|false|Día del Trabajador|true|true
-2025-05-02||||
+2025-05-01|false|Día del trabajador|true|true
+2025-05-02|false|Feriado turístico|false|false
 2025-05-03||||
 2025-05-04||||
 2025-05-05||||
@@ -874,7 +874,7 @@ fecha|laborable|leyenda|repite|inamovible
 2025-05-22||||
 2025-05-23||||
 2025-05-24||||
-2025-05-25|false|Día de la Revolución de Mayo|true|true
+2025-05-25|false|Revolución de mayo|true|true
 2025-05-26||||
 2025-05-27||||
 2025-05-28||||
@@ -896,11 +896,11 @@ fecha|laborable|leyenda|repite|inamovible
 2025-06-13||||
 2025-06-14||||
 2025-06-15||||
-2025-06-16||||
-2025-06-17|false|Paso a la Inmortalidad del General Güemes|true|true
+2025-06-16|false|Güemes|true|false
+2025-06-17||||
 2025-06-18||||
 2025-06-19||||
-2025-06-20|false|Paso a la Inmortalidad del General Manuel Belgrano|true|true
+2025-06-20|false|Belgrano|true|false
 2025-06-21||||
 2025-06-22||||
 2025-06-23||||
@@ -919,7 +919,7 @@ fecha|laborable|leyenda|repite|inamovible
 2025-07-06||||
 2025-07-07||||
 2025-07-08||||
-2025-07-09|false|Día de la Independencia|true|true
+2025-07-09|false|Independencia|true|true
 2025-07-10||||
 2025-07-11||||
 2025-07-12||||
@@ -956,10 +956,10 @@ fecha|laborable|leyenda|repite|inamovible
 2025-08-12||||
 2025-08-13||||
 2025-08-14||||
-2025-08-15||||
+2025-08-15|false|Feriado turístico|false|false
 2025-08-16||||
-2025-08-17||||
-2025-08-18|false|Paso a la Inmortalidad del General José de San Martín|true|true
+2025-08-17|false|San Martín|true|false
+2025-08-18||||
 2025-08-19||||
 2025-08-20||||
 2025-08-21||||
@@ -1014,8 +1014,8 @@ fecha|laborable|leyenda|repite|inamovible
 2025-10-09||||
 2025-10-10||||
 2025-10-11||||
-2025-10-12||||
-2025-10-13|false|Día del Respeto a la Diversidad Cultural|true|true
+2025-10-12|false|Respeto a la Diversidad Cultural|true|false
+2025-10-13||||
 2025-10-14||||
 2025-10-15||||
 2025-10-16||||
@@ -1050,14 +1050,14 @@ fecha|laborable|leyenda|repite|inamovible
 2025-11-14||||
 2025-11-15||||
 2025-11-16||||
-2025-11-17|false|Día de la Soberanía Nacional|true|true
+2025-11-17||||
 2025-11-18||||
 2025-11-19||||
 2025-11-20||||
-2025-11-21||||
+2025-11-21|false|Feriado turístico|false|false
 2025-11-22||||
 2025-11-23||||
-2025-11-24||||
+2025-11-24|false|Soberanía|true|false
 2025-11-25||||
 2025-11-26||||
 2025-11-27||||
@@ -1066,12 +1066,12 @@ fecha|laborable|leyenda|repite|inamovible
 2025-11-30||||
 2025-12-01||||
 2025-12-02||||
-2025-12-03|false|Día del Trabajador Municipal|true|true
+2025-12-03||||
 2025-12-04||||
 2025-12-05||||
 2025-12-06||||
 2025-12-07||||
-2025-12-08|false|Día de la Inmaculada Concepción de María|true|true
+2025-12-08|false|Inmaculada concepción|true|true
 2025-12-09||||
 2025-12-10||||
 2025-12-11||||
