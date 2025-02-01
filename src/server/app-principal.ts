@@ -54,6 +54,8 @@ import {staticConfigYaml} from './def-config';
 
 import { Persona } from "../common/contracts"
 
+import { unexpected } from "cast-error";
+
 /* Dos líneas para incluir contracts: */
 var persona: Persona | null = null;
 console.log(persona)
@@ -66,6 +68,38 @@ export class AppSiper extends AppBackend{
     override configStaticConfig(){
         super.configStaticConfig();
         this.setStaticConfig(staticConfigYaml);
+    }
+    async inCron(actionOrSqlProcedure:()=>Promise<void>, opts:{vecesPorDia: number, name:string}):Promise<void>
+    async inCron(actionOrSqlProcedure:string, opts:{vecesPorDia: number, name?:string}):Promise<void>
+    async inCron(actionOrSqlProcedure:string|(()=>Promise<void>), opts:{vecesPorDia: number, name:string}){
+        const be = this;
+        const action = typeof actionOrSqlProcedure == "string" ? 
+            async ()=>{
+                await be.inDbClient(null, async client => {
+                    client.query(`call ${actionOrSqlProcedure}()`).execute()
+                });
+            }
+            : actionOrSqlProcedure;
+        const errorSeen: Record<string, boolean> = {}
+        const actionWithErrorLog = async () => {
+            try {
+                await action();
+            } catch (err) {
+                const name = opts.name ?? (typeof actionOrSqlProcedure == "string" ? actionOrSqlProcedure : 'action without name')
+                if (!(errorSeen[name])) {
+                    console.error('error inCron:', name);
+                    unexpected(err);
+                    errorSeen[name] = true;
+                }
+            }
+        }
+        await actionWithErrorLog();
+        setInterval(actionWithErrorLog, 24*60*60*1000 / opts.vecesPorDia);
+    }
+    override async postConfig(){
+        const be = this;
+        super.postConfig();
+        be.inCron('avance_de_dia_proc', {vecesPorDia:24*6})
     }
     override async getProcedures(){
         var be = this;

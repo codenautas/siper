@@ -12,7 +12,8 @@ export function parametros(context: TableContext): TableDefinition {
         fields:[
             {name: 'unico_registro'              , typeName: 'boolean', editable: false                                },
             {name: 'fecha_actual'                , typeName: 'date'   , nullable: false                                }, // solo se va a cambiar en modo test
-            {name: 'cod_nov_habitual'            , typeName: 'text', title: 'cód nov', description: 'código de novedad'},
+            {name: 'cod_nov_habitual'            , typeName: 'text'   , title: 'cód nov', description: 'código de novedad'},
+            {name: 'avance_dia_automatico'       , typeName: 'boolean', title: 'avance día automático', description: 'Debe ser Sí. El día se avanza automáticamente. Puede estear en No solo en programas de test'},
         ],
         primaryKey: ['unico_registro'],
         foreignKeys: [
