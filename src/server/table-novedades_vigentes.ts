@@ -35,7 +35,7 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
         foreignKeys: [
             {references:'personas'     , fields: [idper.name]},
             {references:'fechas'       , fields: [fecha.name]},
-            {references:'sectores'     , fields: [sector.name]},
+            {references:'sectores'     , fields: [sector.name], onDelete:'set null'},
             {references:'cod_novedades', fields: [cod_nov.name]},
         ],
         sql: {
