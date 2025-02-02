@@ -16,10 +16,10 @@ export function paises(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             pais,
-            {name: 'cod_2024',typeName:'text' },
-            {name: 'nombre_pais',typeName:'text' },
-            {name: 'gentilicio',typeName:'text' },
-            {name: 'orden',typeName:'integer' },
+            {name: 'nombre_pais', typeName:'text'    },
+            {name: 'gentilicio' , typeName:'text'    },
+            {name: 'orden'      , typeName:'integer' },
+            {name: 'cod_2024'   , typeName:'text'    },
         ],
         primaryKey: ['pais'],
         constraints: [

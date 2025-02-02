@@ -16,8 +16,8 @@ export function estados_civiles(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             estado_civil,
-            {name: 'cod_2024',typeName:'integer' },
-            {name: 'descripcion',typeName:'text' },
+            {name: 'descripcion',typeName:'text'    },
+            {name: 'cod_2024'   ,typeName:'integer' },
         ],
         primaryKey: ['estado_civil'],
         constraints: [
