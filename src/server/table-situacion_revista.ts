@@ -18,7 +18,7 @@ export function situacion_revista(context:TableContext):TableDefinition{
         editable:admin,
         fields:[
             s_revista,
-            {name: 'codigo_agip' ,typeName:'integer' },
+            {name: 'cod_2024' ,typeName:'integer' },
             {name: 'con_novedad', typeName: 'boolean', description: 'si permite registrar una novedad' },
         ],
         primaryKey:[s_revista.name],

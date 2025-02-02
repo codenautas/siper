@@ -16,7 +16,7 @@ export function paises(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             pais,
-            {name: 'codigoagip',typeName:'text' },
+            {name: 'cod_2024',typeName:'text' },
             {name: 'nombre_pais',typeName:'text' },
             {name: 'gentilicio',typeName:'text' },
             {name: 'orden',typeName:'integer' },

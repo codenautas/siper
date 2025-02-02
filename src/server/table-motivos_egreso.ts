@@ -16,7 +16,7 @@ export function motivos_egreso(context:TableContext):TableDefinition{
         editable : admin,
         fields: [
             motivo_egreso,
-            {name: 'motivo_egreso_agip',typeName:'integer' },
+            {name: 'cod_2024',typeName:'integer' },
             {name: 'descripcion',typeName:'text' },
         ],
         primaryKey: ['motivo_egreso'],

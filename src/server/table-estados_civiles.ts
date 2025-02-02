@@ -16,7 +16,7 @@ export function estados_civiles(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             estado_civil,
-            {name: 'estadoagip',typeName:'integer' },
+            {name: 'cod_2024',typeName:'integer' },
             {name: 'descripcion',typeName:'text' },
         ],
         primaryKey: ['estado_civil'],

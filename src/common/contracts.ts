@@ -369,7 +369,7 @@ export const paises = {
     table : 'paises',
     description: is.object({
         pais: is.string,
-        codigoagip: is.string,
+        cod_2024: is.string,
         nombre_pais: is.string,
         gentilicio: is.string,
         orden: is.number
@@ -392,7 +392,7 @@ export const estados_civiles = {
     table : 'estado_civil',
     description : is.object({
         estado_civil: is.string,
-        estadoagip: is.number,
+        cod_2024: is.number,
         descripcion: is.string
     })
 }
@@ -444,7 +444,7 @@ export const situacion_revista = {
     table : 'situacion_revista',
     description : is.object({
         situacion_revista: is.string,
-        codigo_agip: is.number,
+        cod_2024: is.number,
         con_novedad: is.boolean
     })
 }
@@ -454,7 +454,7 @@ export type situacion_revista = DefinedType<typeof situacion_revista.description
 export const motivos_egreso = {
     table : 'motivos_egreso',
     description : is.object({
-        motivo_egreso_agip : is.number,
+        cod_2024 : is.number,
         motivo_egreso : is.string,
         descripcion : is.string
     })
@@ -465,7 +465,7 @@ export type motivos_egreso = DefinedType<typeof motivos_egreso.description>
 export const jerarquias = {
     table : 'jerarquias',
     description : is.object({
-        jerarquia_agip : is.string,
+        cod_2024 : is.string,
         jerarquia : is.string,
         descripcion : is.string
     })

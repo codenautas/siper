@@ -5,16 +5,18 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 export const sector: FieldDefinition = {name: 'sector', typeName: 'text', title:'sector'}
 
 export function sectores(context: TableContext): TableDefinition {
-    var admin = context.user.rol==='admin';
+    var editable = context.es.rrhh
     return {
         name: 'sectores',
         elementName: 'sector',
-        editable: admin,
+        editable,
         fields: [
             sector,
             {name: 'nombre_sector', typeName: 'text', isName:true, title:'sector departamento área'},
-            {name: 'tipo_ofi'     , typeName: 'text', nullable: true},
-            {name: 'pertenece_a'  , typeName: sector.typeName, nullable: true}
+            {name: 'tipo_ofi'     , typeName: 'text', nullable:false },
+            {name: 'pertenece_a'  , typeName: sector.typeName},
+            {name: 'cod_2024'     , typeName: 'text'   },
+            {name: 'personas'     , typeName: 'integer', editable: false},
         ],
         primaryKey: [sector.name],
         foreignKeys: [
@@ -23,6 +25,13 @@ export function sectores(context: TableContext): TableDefinition {
         detailTables: [
             {table:'personas', fields:[sector.name], abr:'P'},
             {table:'sectores', fields:[{source:'sector', target:'pertenece_a'}], abr:'S'}
-        ]
+        ],
+        sql: {
+            isTable: true,
+            ...(context.es.rrhh ? {from:`(
+                select s.*, count(*) as personas
+                    from sectores s left join personas using (${sector.name})
+            )`} : {}),
+        }
     };
 }
