@@ -63,6 +63,8 @@ install:
       - ../install/novedades_registradas_total_trg.sql
       - ../install/horarios_recalcular_trg.sql
       - ../install/personas_actualizar_novedades_trg.sql
+      - ../install/avance_de_dia_proc.sql
+      - ../install/parametros_trg.sql
 logo: 
   path: client/img
 `;
