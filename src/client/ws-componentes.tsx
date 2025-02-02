@@ -30,7 +30,7 @@ import {
     Tooltip
 } from "@mui/material";
 
-import { date, RealDate } from "best-globals";
+import { date, RealDate, compareForOrder } from "best-globals";
 
 import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, NovedadRegistrada, ParametrosResult } from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
@@ -480,6 +480,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
         setCodNovedades([])
         if (idper != null) {
             conn.ajax.novedades_disponibles({ idper }).then(novedades => {
+                novedades.sort(compareForOrder([{column:'cod_nov'}]))
                 setCodNovedades(novedades);
             }).catch(logError);
         }
@@ -522,7 +523,7 @@ declare module "frontend-plus" {
         }) => Promise<any>;
         novedades_disponibles: (params:{
 
-        }) => Promise<any>;
+        }) => Promise<NovedadesDisponiblesResult[]>;
         personas_novedad_actual: (params:{
             fecha: Date
         }) => Promise<PersonasNovedadActualResult[]>;
