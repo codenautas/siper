@@ -13,7 +13,7 @@ BEGIN
     WHERE cod_nov_pred_fecha is null
       AND fecha <= fecha_actual
       AND f.annio = a.annio
-      AND a.abierto
+      AND a.abierto;
   RETURN new;
 END;
 $BODY$;

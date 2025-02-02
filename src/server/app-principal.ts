@@ -13,7 +13,7 @@ import { fechas                  } from './table-fechas';
 import { clases                  } from './table-clases';
 import { grupos                  } from './table-grupos';
 import { situacion_revista       } from './table-situacion_revista';
-import { sectores                } from './table-sectores';
+import { sectores, sectores_edit } from './table-sectores';
 import { personas                } from './table-personas';
 import { personas_importadas     } from './table-personas-importadas';
 import { per_gru                 } from './table-per_gru';
@@ -165,7 +165,7 @@ export class AppSiper extends AppBackend{
                     {menuType:'menu', name:'config', label:'configurar', menuContent:[
                         {menuType:'table', name:'fechas'        },
                         {menuType:'menu', name:'ref personas'   , description:'tablas referenciales de personas', menuContent:[
-                            {menuType:'table', name:'sectores'         },
+                            {menuType:'table', name:'sectores'         , table:'sectores_edit' },
                             {menuType:'table', name:'situacion_revista', label: 'sit. revista' },
                             {menuType:'table', name:'clases'           },
                             {menuType:'table', name:'paises'           },
@@ -234,7 +234,7 @@ export class AppSiper extends AppBackend{
             roles                ,
             cod_novedades        ,
             fechas               ,
-            sectores             ,
+            sectores, sectores_edit,
             clases               ,
             grupos               ,
             situacion_revista    ,
