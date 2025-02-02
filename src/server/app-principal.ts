@@ -13,6 +13,7 @@ import { fechas                  } from './table-fechas';
 import { clases                  } from './table-clases';
 import { grupos                  } from './table-grupos';
 import { situacion_revista       } from './table-situacion_revista';
+import { tipos_sec               } from "./table-tipos_sec";
 import { sectores, sectores_edit } from './table-sectores';
 import { personas                } from './table-personas';
 import { personas_importadas     } from './table-personas-importadas';
@@ -170,6 +171,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'clases'           },
                             {menuType:'table', name:'paises'           },
                             {menuType:'table', name:'tipos_doc'        },
+                            {menuType:'table', name:'tipos_sec'        },
                             {menuType:'table', name:'sexos'            },
                             {menuType:'table', name:'estados_civiles'  },
                             {menuType:'table', name:'agrupamientos'    },
@@ -234,6 +236,7 @@ export class AppSiper extends AppBackend{
             roles                ,
             cod_novedades        ,
             fechas               ,
+            tipos_sec            ,
             sectores, sectores_edit,
             clases               ,
             grupos               ,

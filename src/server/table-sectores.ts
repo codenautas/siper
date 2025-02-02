@@ -4,6 +4,8 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 
 export const sector: FieldDefinition = {name: 'sector', typeName: 'text', title:'sector'}
 
+import {tipo_sec} from "./table-tipos_sec"
+
 function sectores_def(name:string, usuarioPuedeEditar: boolean, extendido: boolean): TableDefinition{
     return {
         name,
@@ -13,7 +15,7 @@ function sectores_def(name:string, usuarioPuedeEditar: boolean, extendido: boole
         fields: [
             sector,
             {name: 'nombre_sector', typeName: 'text', isName:true, title:'sector departamento área'},
-            {name: 'tipo_ofi'     , typeName: 'text', nullable:false },
+            {...tipo_sec, nullable:false},
             ...(extendido?[
                 {name: 'directas'  ,typeName: 'integer', editable: false},
                 {name: 'indirectas',typeName: 'integer', editable: false},
@@ -23,7 +25,8 @@ function sectores_def(name:string, usuarioPuedeEditar: boolean, extendido: boole
         ],
         primaryKey: [sector.name],
         foreignKeys: [
-            {references: 'sectores', fields:[{source:'pertenece_a', target:'sector'}], alias: 'pertenece_a'}
+            {references: 'sectores', fields:[{source:'pertenece_a', target:'sector'}], alias: 'pertenece_a'},
+            {references: 'tipos_sec', fields:[tipo_sec.name]}
         ], 
         detailTables: extendido ? [
             {table:'personas', fields:[sector.name], abr:'P'},

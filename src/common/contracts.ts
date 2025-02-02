@@ -165,7 +165,7 @@ export const sectores = {
     description: is.object({
         sector: is.string,
         nombre_sector: is.string,
-        tipo_ofi: is.nullable.string,
+        tipo_sec: is.nullable.string,
         pertenece_a: is.nullable.string
     })
 }

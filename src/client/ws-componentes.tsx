@@ -224,8 +224,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 
 // @ts-ignore
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean};
-type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string};
-type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, nivel:number}
+type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string, tipos_sec__nivel:number};
+type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>}
 // @ts-ignore
 type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
@@ -311,7 +311,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                 <AccordionSummary id = {s.sector} expandIcon={<ICON.NavigationDown />} 
                     sx={{flexDirection: 'row-reverse', '& .MuiAccordionSummary-content': { marginLeft: '16px' },}}
                 > 
-                    <span className="box-id" style={{paddingLeft: s.nivel+"em", paddingRight:"1em"}}> {s.sector} </span>  
+                    <span className="box-id" style={{paddingLeft: (s.tipos_sec__nivel-1)+"em", paddingRight:"1em"}}> {s.sector} </span>  
                     {s.nombre_sector} 
                 </AccordionSummary>
                 <AccordionDetails>
