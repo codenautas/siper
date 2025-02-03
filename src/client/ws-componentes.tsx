@@ -233,7 +233,7 @@ type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealD
 
 type IdperFuncionCambio = (persona:ProvisorioPersonas)=>void
 
-function SearchBox(props: {onChange:(newValue:string)=>void}){
+function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null, onTodasChange?:(newValue:boolean)=>void}){
     var [textToSearch, setTextToSearch] = useState("");
     return <Paper sx={{ display: 'flex', alignItems: 'center', width: '100%' }} className="search-box">
         <ICON.Search/>
@@ -242,15 +242,26 @@ function SearchBox(props: {onChange:(newValue:string)=>void}){
             onChange = {(event)=>{ var newValue = event.target.value; props.onChange(newValue); setTextToSearch(newValue)}}
         />
         <Button onClick={_=>{props.onChange(""); setTextToSearch("")}}><ICON.BackspaceOutlined/></Button>
+        {props.todas != null ?
+        <label>
+            <Checkbox
+                checked={props.todas}
+                disabled={!props.onTodasChange}
+                onChange={(_event, checked) => props.onTodasChange?.(checked)}
+                sx={{ padding: 0 }}
+            /> todas
+        </label>
+        : null }
     </Paper>;
 }
 
-function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof T)[]){
-    if (filter == "") return function(){ return true }
+function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof T)[], todas?:boolean, principalesKey?:keyof T){
+    var principales:(row:T) => boolean = todas || !principalesKey ? function(){ return true } : row => !!row[principalesKey]
+    if (filter == "") return principales
     var f = filter.replace(/[^A-Z0-9 ]+/gi,'');
     var regExp = new RegExp(f.replace(/\s+/, '(\\w* \\w*)+'), 'i');
     return function(row: T){
-        return attributteList.some(a => regExp.test(row[a]+''))
+        return principales(row) && attributteList.some(a => regExp.test(row[a]+''))
     }
 }
 
@@ -475,7 +486,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
     const [codNovedades, setCodNovedades] = useState<NovedadesDisponiblesResult[]>([]);
     const [codNovedadesFiltradas, setCodNovedadesFiltradas] = useState<NovedadesDisponiblesResult[]>([]);
     const [filtro, setFiltro] = useState("");
-
+    const [todas, setTodas] = useState(false);
     useEffect(function(){
         setCodNovedades([])
         if (idper != null) {
@@ -486,11 +497,11 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
         }
     },[idper, ultimaNovedad])
     useEffect(function(){
-        const recordFilter = GetRecordFilter<NovedadesDisponiblesResult>(filtro,['cod_nov', 'novedad']);
+        const recordFilter = GetRecordFilter<NovedadesDisponiblesResult>(filtro,['cod_nov', 'novedad'],todas,'prioritario');
         setCodNovedadesFiltradas(codNovedades.filter(recordFilter))
-    },[codNovedades, filtro])
+    },[codNovedades, filtro, todas])
     return <Componente componentType="codigo-novedades">
-        <SearchBox onChange={setFiltro}/>
+        <SearchBox onChange={setFiltro} todas={todas} onTodasChange={setTodas}/>
         <List>
             {codNovedadesFiltradas.map(c=>
                 <ListItemButton key = {c.cod_nov} 

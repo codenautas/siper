@@ -158,6 +158,8 @@ span.box-info
 
 .componente-lista-personas
   min-width 500px
+  position sticky
+  bottom 0px
 
 .componente-persona
   & > *
@@ -168,11 +170,15 @@ span.box-info
   align-content space-between
 
 .componente-pantalla-1
+  position relative
   display flex
   gap 2em
+  align-items flex-start
 
 .componente-codigo-novedades
   min-width 24em
+  position sticky
+  bottom 0px
 
 .deshabilitado
   opacity 0.5
@@ -201,10 +207,13 @@ span.box-info
   padding-left 0.7em
 
 .componente-del-medio
+  padding-top 1em
   min-width 470px
-  display flex
+  display flex  
   flex-direction column
-  gap 2em  
+  gap 2em
+  position sticky
+  top 0px
 
 .novedades-detalles
   width 100%

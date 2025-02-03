@@ -259,6 +259,7 @@ export const novedades_disponibles = {
         saldo: is.nullable.number,
         con_disponibilidad: is.nullable.boolean,
         c_dds: is.nullable.boolean,
+        prioritario: is.boolean,
     })
 }
 

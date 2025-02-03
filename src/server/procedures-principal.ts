@@ -153,7 +153,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         coalesce(v.saldo, 0) as saldo, 
                         (coalesce(v.saldo, 0) > 0 or v.limite is null) as con_disponibilidad,
                         (cn.registra and r.puede_cargar_dependientes or puede_cargar_todo) as puede_cargar,
-                        c_dds
+                        c_dds,
+                        prioritario
                     from cod_novedades cn 
                         inner join usuarios u on u.usuario = $2
                         -- inner join personas pu on pu.idper = u.ipder -- persona conectada
