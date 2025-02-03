@@ -124,12 +124,12 @@ describe("connected", function(){
                         `update annios set horario_habitual_desde = '10:00', horario_habitual_hasta = '17:00' where annio = '${DESDE_AÑO}'`,
                         `select annio_abrir('${DESDE_AÑO}')`,
                         `update parametros set fecha_actual = '${FECHA_ACTUAL.toYmd()}', cod_nov_habitual = 999 where unico_registro`,
-                        `insert into sectores (sector, nombre_sector, pertenece_a) values
-                            ('PRA1'   , 'PRUEBA AUTOMATICA 1'      , null    ),
-                            ('PRA11'  , 'PRUEBA AUTOMATICA 1.1'    , 'PRA1'  ),
-                            ('PRA111' , 'PRUEBA AUTOMATICA 1.1.1'  , 'PRA11' ),
-                            ('PRA1111', 'PRUEBA AUTOMATICA 1.1.1.1', 'PRA111'),
-                            ('PRA12'  , 'PRUEBA AUTOMATICA 1.2'    , 'PRA1'  );
+                        `insert into sectores (sector, nombre_sector, pertenece_a, tipo_sec) values
+                            ('PRA1'   , 'PRUEBA AUTOMATICA 1'      , null    ,'GRAL'),
+                            ('PRA11'  , 'PRUEBA AUTOMATICA 1.1'    , 'PRA1'  ,'SUB'),
+                            ('PRA111' , 'PRUEBA AUTOMATICA 1.1.1'  , 'PRA11' ,'DIR'),
+                            ('PRA1111', 'PRUEBA AUTOMATICA 1.1.1.1', 'PRA111','DEPTO'),
+                            ('PRA12'  , 'PRUEBA AUTOMATICA 1.2'    , 'PRA1'  ,'SUB');
                         `,
                     ])
                 })
