@@ -7,6 +7,11 @@
   .number-separator
     display none
 
+.paper-principal
+  height 100vh
+  display flex
+  flex-direction column
+
 .my-grid td[my-colname*=nombre_sector]
   max-width 40em
 
@@ -157,9 +162,11 @@ span.box-info
   min-width 28em  
 
 .componente-lista-personas
+  flex 1
   min-width 500px
-  position sticky
   bottom 0px
+  overflow-x hidden !important
+  overflow-y auto !important
 
 .componente-persona
   & > *
@@ -172,12 +179,15 @@ span.box-info
 .componente-pantalla-1
   position relative
   display flex
+  height calc(100vh - 64px)
   gap 2em
-  align-items flex-start
+  overflow hidden
 
 .componente-codigo-novedades
+  flex 1
+  overflow-x hidden !important
+  overflow-y auto !important
   min-width 24em
-  position sticky
   bottom 0px
 
 .deshabilitado
@@ -207,12 +217,21 @@ span.box-info
   padding-left 0.7em
 
 .componente-del-medio
+  flex 1
+  overflow-x hidden !important
+  overflow-y auto !important
   padding-top 1em
-  min-width 470px
-  display flex  
+  padding-bottom 1em
+  min-width 470px 
+  flex-direction column
+  top 0px
+
+.container-del-medio
+  display flex
+  padding-top 1em
+  padding-bottom 1em
   flex-direction column
   gap 2em
-  position sticky
   top 0px
 
 .novedades-detalles

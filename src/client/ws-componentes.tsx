@@ -686,6 +686,7 @@ function Pantalla1(props:{conn: Connector}){
         : <Paper className="componente-pantalla-1">
             <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)} infoUsuario={infoUsuario}/>
             <Componente componentType="del-medio">
+                <div className="container-del-medio">
                 <Box>
                     <div className="box-line">
                         <span className="box-id">
@@ -752,6 +753,7 @@ function Pantalla1(props:{conn: Connector}){
                 : null}</Box>
                 <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
+                </div>
             </Componente>
             <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
         </Paper>;
@@ -829,7 +831,7 @@ function RegistrarNovedades(props:{conn: Connector, idper:string}){
 const IDPER_DEMO = "AR8"
 
 function PantallaPrincipal(props: {conn: Connector}){
-    return <Paper>
+    return <Paper className="paper-principal">
         <AppBar position="static">
             <Toolbar>
                 <IconButton color="inherit" onClick={()=>{
