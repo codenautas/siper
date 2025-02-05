@@ -1,11 +1,39 @@
 "use strict";
+import * as sqlTools from 'sql-tools';
 
 import {TableDefinition, TableContext} from "./types-principal";
-
 import {año} from "./table-annios"
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades"
 import {sector} from "./table-sectores"
+
+export const sqlNovPer= (params:{usuario?:string,idper?:string})=> `
+    select annio, cod_nov, idper, 
+            pn.total, 
+            count(*) filter (where fecha <= fecha_actual) as usados, 
+            count(*) filter (where (fecha <= fecha_actual) is not true) as pendientes, 
+            pn.total - count(*) as disponibles,
+            p.sector,
+            pn.esquema
+        from novedades_vigentes n
+            inner join cod_novedades cn using(cod_nov)
+            inner join personas p using(idper)
+            inner join parametros on unico_registro
+            left join (
+            select annio, idper, cod_nov, 
+                        sum(cantidad) as total,
+                        json_object_agg(origen, json_build_object('cantidad', cantidad) order by origen)::text as esquema
+                    from per_nov_cant 
+                    group by annio, idper, cod_nov
+            ) pn using (annio, idper, cod_nov)
+            join (
+            select u.usuario, u.rol, r.puede_cargar_dependientes, r.puede_cargar_todo 
+              from usuarios u join roles r on u.rol = r.rol
+              where u.usuario = ${sqlTools.quoteLiteral(params.usuario)}
+            ) ur on true
+        where true ${params.idper? ` and idper = ${sqlTools.quoteLiteral(params.idper)} `:' '}
+        group by annio, cod_nov, idper, pn.total, p.sector, pn.esquema
+`;
 
 export function nov_per(_context: TableContext): TableDefinition {
     return {
@@ -35,27 +63,9 @@ export function nov_per(_context: TableContext): TableDefinition {
         ],
         sql: {
             isTable:false,
-            from:`(
-                select annio, cod_nov, idper, 
-                        pn.total, 
-                        count(*) filter (where fecha <= fecha_actual) as usados, 
-                        count(*) filter (where (fecha <= fecha_actual) is not true) as pendientes, 
-                        pn.total - count(*) as disponibles,
-                        p.sector,
-                        pn.esquema
-                    from novedades_vigentes n
-                        inner join cod_novedades cn using(cod_nov)
-                        inner join personas p using(idper)
-                        inner join parametros on unico_registro
-                        left join (
-                            select annio, idper, cod_nov, 
-                                    sum(cantidad) as total,
-                                    json_object_agg(origen, json_build_object('cantidad', cantidad) order by origen)::text as esquema
-                                from per_nov_cant 
-                                group by annio, idper, cod_nov
-                        ) pn using (annio, idper, cod_nov)
-                    group by annio, cod_nov, idper, 
-                        pn.total, p.sector, pn.esquema            )`
+            from:`(select *
+                   from (${sqlNovPer({usuario:_context.user.usuario})}) x
+            )`
         },
         hiddenColumns: ['esquema', 'detalle'],
     };
