@@ -41,7 +41,7 @@ myOwn.clientSides.detalle_dias = {
             renglon.saldo = renglon.cantidad - renglon.pedidos;
         });
         if(saldo) {
-            esquema.inconsistencia = {cantidad:'', saldo, pedidos:''}
+            esquema.inconsistencia = {cantidad:'', pedidos:'', saldo}
         }
         // @ts-ignore
         myOwn.agregar_json(depot.rowControls[fieldName], esquema);
