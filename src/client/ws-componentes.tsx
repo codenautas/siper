@@ -40,8 +40,8 @@ export function logError(error:Error){
     my.log(error);
 }
 
-export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string}){
-    return <Card className={"componente-" + props.componentType}>
+export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string, scrollable?: boolean  }){
+    return <Card className={"componente-" + props.componentType} sx={{ overflowY: props.scrollable ? 'auto' : 'hidden'}}>
         {props.children}
     </Card>
 }
@@ -312,7 +312,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
             setSectores(sectoresAumentados);
         }).catch(logError)
     }, [fecha]);
-    return <Componente componentType="lista-personas">
+    return <Componente componentType="lista-personas" scrollable={true}>
         <SearchBox onChange={setFiltro}/>
         {sectores.filter(s => s.perteneceA[sector] || infoUsuario.puede_cargar_todo).map(s =>
             filtro && !abanicoPersonas[s.sector]?.length ? null :
@@ -500,7 +500,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
         const recordFilter = GetRecordFilter<NovedadesDisponiblesResult>(filtro,['cod_nov', 'novedad'],todas,'prioritario');
         setCodNovedadesFiltradas(codNovedades.filter(recordFilter))
     },[codNovedades, filtro, todas])
-    return <Componente componentType="codigo-novedades">
+    return <Componente componentType="codigo-novedades" scrollable={true}>
         <SearchBox onChange={setFiltro} todas={todas} onTodasChange={setTodas}/>
         <List>
             {codNovedadesFiltradas.map(c=>
@@ -685,7 +685,7 @@ function Pantalla1(props:{conn: Connector}){
             <Typography>El usuario <b>{infoUsuario.usuario}</b> no tiene una persona asociada</Typography>
         : <Paper className="componente-pantalla-1">
             <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)} infoUsuario={infoUsuario}/>
-            <Componente componentType="del-medio">
+            <Componente componentType="del-medio" scrollable={true}>
                 <div className="container-del-medio">
                 <Box>
                     <div className="box-line">
