@@ -286,6 +286,8 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                 abrir[p.sector] = true;
             })
             setExpandido(e=>({...e, ...abrir}));
+        } else {
+            setExpandido( {} );
         }
     }, [listaPersonas, filtro])
     useEffect(function(){
