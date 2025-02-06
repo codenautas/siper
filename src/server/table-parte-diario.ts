@@ -51,29 +51,21 @@ export function parte_diario(_context: TableContext): TableDefinition{
         ],
         sql:{
             isTable: false,
-            from:`(WITH RECURSIVE hierarchy AS (
-                    SELECT s.sector
-                    FROM sectores s
-                    WHERE s.sector = (
-                        SELECT p.sector
-                        FROM personas p
-                        INNER JOIN usuarios u ON u.idper = p.idper
-                        WHERE u.usuario = get_app_user()
-                    )
-                    UNION ALL
-                    SELECT s2.sector
-                    FROM sectores s2
-                    INNER JOIN hierarchy st ON s2.pertenece_a = st.sector
-                )
-                (select x.idper, x.fecha, x.sector, x.cod_nov,
+            from:`(select x.idper, x.fecha, x.sector, x.cod_nov,
                     hora_texto(fichada_entrada) || ' - ' || hora_texto(fichada_salida) as fichada,
                     hora_texto(horario_entrada) || ' - ' || hora_texto(horario_Salida) as horario
                 from (${sqlParteDiario}) x
                     inner join usuarios u on u.usuario = get_app_user()
                     inner join roles using (rol)
-                    ${rrhh ? `` : `WHERE x.sector IN (SELECT sector FROM hierarchy)`}
+                    ${rrhh ? `` : `WHERE sector_pertenece(
+                        x.sector,
+                        (SELECT sector 
+                        FROM personas 
+                        INNER JOIN usuarios USING (idper) 
+                        WHERE usuario = get_app_user())
+                    )`}
                     
-            ))`,
+            )`,
         },
         sortColumns:[{column:'personas__apellido'}, {column:'personas__nombres'}]
     };
