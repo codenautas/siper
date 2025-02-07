@@ -7,32 +7,28 @@ import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades"
 import {sector} from "./table-sectores"
 
-export const sqlNovPer= (params:{usuario?:string,idper?:string})=> `
-    select annio, cod_nov, idper, 
-            pn.total, 
-            count(*) filter (where fecha <= fecha_actual) as usados, 
-            count(*) filter (where (fecha <= fecha_actual) is not true) as pendientes, 
-            pn.total - count(*) as disponibles,
-            p.sector,
-            pn.esquema
-        from novedades_vigentes n
-            inner join cod_novedades cn using(cod_nov)
-            inner join personas p using(idper)
-            inner join parametros on unico_registro
-            left join (
-            select annio, idper, cod_nov, 
-                        sum(cantidad) as total,
-                        json_object_agg(origen, json_build_object('cantidad', cantidad) order by origen)::text as esquema
-                    from per_nov_cant 
-                    group by annio, idper, cod_nov
-            ) pn using (annio, idper, cod_nov)
-            join (
-            select u.usuario, u.rol, r.puede_cargar_dependientes, r.puede_cargar_todo 
-              from usuarios u join roles r on u.rol = r.rol
-              where u.usuario = ${sqlTools.quoteLiteral(params.usuario)}
-            ) ur on true
-        where true ${params.idper? ` and idper = ${sqlTools.quoteLiteral(params.idper)} `:' '}
-        group by annio, cod_nov, idper, pn.total, p.sector, pn.esquema
+export const sqlNovPer= (params:{idper?:string})=> `
+   select annio, cod_nov, idper, 
+      pn.total, 
+      count(*) filter (where fecha <= fecha_actual) as usados, 
+      count(*) filter (where (fecha <= fecha_actual) is not true) as pendientes, 
+      pn.total - count(*) as disponibles,
+      p.sector,
+      pn.esquema
+   from novedades_vigentes n
+   inner join cod_novedades cn using(cod_nov)
+   inner join personas p using(idper)
+   inner join parametros on unico_registro
+   left join (
+    select annio, idper, cod_nov, 
+            sum(cantidad) as total,
+            json_object_agg(origen, json_build_object('cantidad', cantidad) order by origen)::text as esquema
+        from per_nov_cant 
+        group by annio, idper, cod_nov
+    ) pn using (annio, idper, cod_nov)
+    where true ${params.idper? ` and idper = ${sqlTools.quoteLiteral(params.idper)} `:' '}    
+    group by annio, cod_nov, idper, 
+    pn.total, p.sector, pn.esquema
 `;
 
 export function nov_per(_context: TableContext): TableDefinition {
@@ -41,9 +37,8 @@ export function nov_per(_context: TableContext): TableDefinition {
         title: 'cantidad de novedades por persona',
         editable: false,
         fields:[
-            idper,
-            sector,
             año,
+            idper,
             cod_nov,
             {name: 'total'       , typeName: 'integer'},
             {name: 'usados'      , typeName: 'integer', description: 'días pedidos que ya fueron tomados'}, 
@@ -51,12 +46,14 @@ export function nov_per(_context: TableContext): TableDefinition {
             {name: 'disponibles' , typeName: 'integer', description: 'días disponibles bajo el supuesto que los pendientes se tomarán según fueron pedidos'},
             {name: 'esquema'     , typeName: 'text'   },
             {name: 'detalle'     , typeName: 'text'   , clientSide: 'detalle_dias'},
+            sector,
         ],
         primaryKey: [año.name, cod_nov.name, idper.name],
         softForeignKeys: [
             {references: 'annios'       , fields: [año.name]},
-            {references: 'personas'     , fields: [idper.name], displayFields:['ficha', 'cuil', 'apellido', 'nombres']},
+            {references: 'personas'     , fields: [idper.name], displayFields:['apellido', 'nombres']},
             {references: 'sectores'     , fields: [sector.name]},
+            {references: 'cod_novedades', fields: [cod_nov.name]},
         ],
         detailTables: [
             {table:'novedades_vigentes', fields:[año.name, idper.name, cod_nov.name], abr:'D'}
@@ -64,7 +61,7 @@ export function nov_per(_context: TableContext): TableDefinition {
         sql: {
             isTable:false,
             from:`(select *
-                   from (${sqlNovPer({usuario:_context.user.usuario})}) x
+                   from (${sqlNovPer({})}) x
             )`
         },
         hiddenColumns: ['esquema', 'detalle'],

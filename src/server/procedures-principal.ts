@@ -3,6 +3,7 @@
 import {strict as likeAr, createIndex} from 'like-ar';
 import { ProcedureDef, ProcedureContext } from './types-principal';
 import { NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles } from '../common/contracts';
+import { sqlNovPer } from "./table-nov_per";
 
 import { date, datetime } from 'best-globals'
 import { DefinedType } from 'guarantee-type';
@@ -148,29 +149,22 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof novedades_disponibles.parameters>){
             const {idper} = params;
             const info = await context.client.query(
-                `select cn.cod_nov, cn.novedad, coalesce(cn.con_detalles, FALSE) as con_detalles, coalesce(v.cantidad, 0) as cantidad, 
-                        coalesce(v.limite, 0) as limite, 
-                        coalesce(v.saldo, 0) as saldo, 
-                        (coalesce(v.saldo, 0) > 0 or v.limite is null) as con_disponibilidad,
+                `select cn.cod_nov, cn.novedad, coalesce(cn.con_detalles, FALSE) as con_detalles, coalesce(v.usados+v.pendientes, 0) as cantidad, 
+                        coalesce(v.total, 0) as limite, 
+                        coalesce(v.disponibles, 0) as saldo, 
+                        (coalesce(v.disponibles, 0) > 0 or v.total is null) as con_disponibilidad,
                         (cn.registra and r.puede_cargar_dependientes or puede_cargar_todo) as puede_cargar,
                         c_dds,
                         prioritario
                     from cod_novedades cn 
-                        inner join usuarios u on u.usuario = $2
-                        -- inner join personas pu on pu.idper = u.ipder -- persona conectada
+                        inner join usuarios u on u.usuario = $1
                         inner join roles r using (rol)
                         left join
-                            (select annio, cod_nov, idper, max(origen) as origen, count(*) as cantidad, cantidad as limite, cantidad - count(*) as saldo
-                                from novedades_vigentes n
-                                    inner join cod_novedades cn using(cod_nov)
-                                    inner join personas p using(idper)
-                                    left join per_nov_cant using(annio, idper, cod_nov)
-                                where idper = $1 and annio = (select extract(year from fecha_actual) from parametros)
-                                group by annio, cod_nov, idper, cantidad
-                            ) v on v.cod_nov = cn.cod_nov
-                    where (cantidad > 0 or cn.registra and r.puede_cargar_dependientes or puede_cargar_todo)
+                        (${sqlNovPer({idper: idper})}) v
+                        on v.cod_nov = cn.cod_nov
+                    where (v.usados+v.pendientes > 0 or cn.registra and r.puede_cargar_dependientes or puede_cargar_todo)
                     order by cn.cod_nov`,
-                [idper, context.username]
+                [context.username]
             ).fetchAll();
             return info.rows
         }
