@@ -1,5 +1,8 @@
 "use strict";
 
+// @ts-ignore 
+import * as assert from "assert";
+
 import { AppSiper } from '../server/app-principal';
 
 import {promises as fs} from 'fs'
@@ -49,10 +52,12 @@ import * as FormData from "form-data";
 
 const FECHA_ACTUAL = date.iso('2000-01-31');
 const DESDE_AÑO = `2000`;
-const HASTA_AÑO = `2000`;
+const HASTA_AÑO = `2001`;
 const AÑOS_DE_PRUEBA = `annio BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
-const FECHAS_DE_PRUEBA = `extract(year from fecha) BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
+const FECHAS_DE_PRUEBA = `extract(year from fecha) BETWEEN ${DESDE_AÑO} AND ${DESDE_AÑO}`;
 const IDPER_DE_PRUEBA = `idper like 'XX%'`;
+const SECTOR = 'M';
+const SITUACION_REVISTA = "XX";
 
 const COD_VACACIONES = "1";
 const COD_TRAMITE = "121";
@@ -72,7 +77,7 @@ const DESDE_HORA = "12:00";
 const PAUTA_CORRIDOS = "CORRIDOS";
 const PAUTA_ANTCOMVSRE = "ANTCOMVSRE";
 
-const sqlCalcularNovedades = `CALL actualizar_novedades_vigentes('${DESDE_AÑO}-01-01'::date,'${HASTA_AÑO}-12-31'::date)`;
+const sqlCalcularNovedades = `CALL actualizar_novedades_vigentes('${DESDE_AÑO}-01-01'::date,'${DESDE_AÑO}-12-31'::date)`;
 
 var autoNumero = 1;
 
@@ -87,8 +92,25 @@ describe("connected", function(){
     var fallaEnLaQueQuieroOmitirElBorrado: boolean = false;
     before(async function(){
         try{
-            this.timeout(TIMEOUT_SPEED * 20);
             server = await startServer(AppSiper);
+            rrhhAdminSession = new EmulatedSession(server, PORT || server.config.server.port);
+            await rrhhAdminSession.login({
+                username: 'perry',
+                password: 'white',
+            });
+            rrhhSession = new EmulatedSession(server, PORT || server.config.server.port);
+            await rrhhSession.login({
+                username: 'jimmi',
+                password: 'olsen',
+            });
+        } catch(err) {
+            console.log(err);
+            throw err;
+        }
+    })
+    it("borra todo y prepara para el control de tiempos", async function(){
+        try{
+            this.timeout(TIMEOUT_SPEED * 30);
             console.log('/// comienzo del borrado', new Date())
             if (server.config.devel['tests-can-delete-db']) {
                 await server.inDbClient(ADMIN_REQ, async client=>{
@@ -103,6 +125,7 @@ describe("connected", function(){
                         `delete from novedades_vigentes where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
                         `delete from usuarios where ${IDPER_DE_PRUEBA}`,
                         `delete from personas where ${IDPER_DE_PRUEBA}`,
+                        `delete from situacion_revista where situacion_revista = '${SITUACION_REVISTA}'`,
                         `delete from grupos where ${IDPER_DE_PRUEBA.replace('idper', 'grupo')}`,
                         `delete from fechas where ${AÑOS_DE_PRUEBA}`,
                         `delete from annios where ${AÑOS_DE_PRUEBA}`,
@@ -131,6 +154,7 @@ describe("connected", function(){
                             ('PRA1111', 'PRUEBA AUTOMATICA 1.1.1.1', 'PRA111','DEPTO'),
                             ('PRA12'  , 'PRUEBA AUTOMATICA 1.2'    , 'PRA1'  ,'SUB');
                         `,
+                        `insert into situacion_revista (situacion_revista, con_novedad) values ('${SITUACION_REVISTA}', true)`,
                     ])
                 })
                 console.log("Borrado y listo!")
@@ -139,16 +163,6 @@ describe("connected", function(){
                 throw new Error("no se puede probar sin setear devel: tests-can-delete-db: true")
             }
             console.log('/// fin del borrado', new Date())
-            rrhhAdminSession = new EmulatedSession(server, PORT || server.config.server.port);
-            await rrhhAdminSession.login({
-                username: 'perry',
-                password: 'white',
-            });
-            rrhhSession = new EmulatedSession(server, PORT || server.config.server.port);
-            await rrhhSession.login({
-                username: 'jimmi',
-                password: 'olsen',
-            });
         } catch(err) {
             console.log(err);
             throw err;
@@ -181,11 +195,13 @@ describe("connected", function(){
         var persona = {
             cuil: (10330010005 + numero*11).toString(),
             apellido: "XX Prueba " + numero,
-            nombres: nombre,
+            nombres: nombre + (borradoExitoso ? '' : ' ' + Math.random()),
             activo: true,
             registra_novedades_desde: opts.registra_novedades_desde ?? date.iso(`${DESDE_AÑO}-01-01`),
             para_antiguedad_relativa: opts.para_antiguedad_relativa ?? date.iso(`${DESDE_AÑO}-01-01`),
-        } as Partial<ctts.Persona>;
+            sector: SECTOR,
+            situacion_revista: SITUACION_REVISTA,
+        } satisfies Partial<ctts.Persona>;
         var personaGrabada = await rrhhSession.saveRecord(
             ctts.personas,
             persona as ctts.Persona,
@@ -906,6 +922,40 @@ describe("connected", function(){
             })
         })
     })
+    describe("pantallas", function(){
+        it("tiene que ver un solo renglón de vacaciones", async function(){
+            await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
+                await rrhhAdminSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'1999', cod_nov: COD_VACACIONES, idper, cantidad: 1 }, 'new')
+                await rrhhAdminSession.saveRecord(ctts.per_nov_cant, {annio:2001, origen:'2000', cod_nov: COD_VACACIONES, idper, cantidad: 10 }, 'new')
+                var novedadRegistradaPorCargar = {desde:date.iso('2000-03-01'), hasta:date.iso('2000-03-07'), cod_nov:COD_VACACIONES, idper};
+                await rrhhSession.saveRecord(ctts.novedades_registradas, novedadRegistradaPorCargar, 'new');
+                var novedadRegistradaPorCargar2 = {desde:date.iso('2001-03-01'), hasta:date.iso('2001-03-07'), cod_nov:COD_VACACIONES, idper};
+                await rrhhSession.saveRecord(ctts.novedades_registradas, novedadRegistradaPorCargar2, 'new');
+                var expectedResult: ctts.NovedadesDisponiblesResult = {
+                    cod_nov: COD_VACACIONES,
+                    novedad: "Art. 18 Descanso anual remunerado",
+                    con_detalles: false, 
+                    con_disponibilidad: true, 
+                    puede_cargar: true,
+                    prioritario: true,
+                    c_dds: null,
+                    limite:21, 
+                    cantidad: 3, 
+                    saldo: 18,
+                };
+                var result = await rrhhSession.callProcedure(ctts.novedades_disponibles, {idper, annio: Number(DESDE_AÑO)})
+                var resultVacaciones = result.filter(x => x.cod_nov == COD_VACACIONES)
+                assert.deepEqual(resultVacaciones, [expectedResult]);
+                discrepances.showAndThrow(resultVacaciones, [expectedResult])
+                // LÍMIES:
+                await rrhhSession.tableDataTest('nov_per', [
+                    {annio:2000, cod_nov:COD_VACACIONES, total:21  , usados:0 , pendientes:3, disponibles:18  },
+                    {annio:2000, cod_nov:COD_PRED_PAS  , total:null, usados:19, pendientes:0, disponibles:null},
+                    {annio:2001, cod_nov:COD_VACACIONES, total:10  , usados:0 , pendientes:5, disponibles:5   },
+                ], 'all', {fixedFields:{idper}})
+            })
+        })
+    })
     after(async function(){
         var error: Error|null = null;
         if (!borradoExitoso || fallaEnLaQueQuieroOmitirElBorrado || someTestFails(this)) {
@@ -913,7 +963,7 @@ describe("connected", function(){
             // console.log('test', this.test)
             // console.log('this', this)
         } else {
-            this.timeout(TIMEOUT_SPEED * 24);
+            this.timeout(TIMEOUT_SPEED * 30);
             try {
                 /**
                  * Podría ocurrir que haya algún problema al recalcular. 
@@ -978,7 +1028,7 @@ describe("connected", function(){
                     var cuits = (await client.query(`select distinct idper from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
                     await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
                     for(var row of cuits) {
-                        await client.query(`CALL actualizar_novedades_vigentes_idper('${DESDE_AÑO}-01-01'::date, '${HASTA_AÑO}-12-31'::date, $1)`, [row.idper]).execute();
+                        await client.query(`CALL actualizar_novedades_vigentes_idper('${DESDE_AÑO}-01-01'::date, '${DESDE_AÑO}-12-31'::date, $1)`, [row.idper]).execute();
                     }
                     const novedadesRecalculadasPorCuit = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
                     benchmark.duracion = Number(

@@ -144,7 +144,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         action: 'novedades_disponibles',
         parameters: [
             {name:'idper'      , typeName:'text'   },
-            // {name:'annio'     , typeName:'integer'},
+            {name:'annio'     , typeName:'integer'},
         ],
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof novedades_disponibles.parameters>){
             const {idper} = params;
@@ -160,7 +160,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         inner join usuarios u on u.usuario = $1
                         inner join roles r using (rol)
                         left join
-                        (${sqlNovPer({idper: idper})}) v
+                        (${sqlNovPer({idper, annio:params.annio})}) v
                         on v.cod_nov = cn.cod_nov
                     where (v.usados+v.pendientes > 0 or cn.registra and r.puede_cargar_dependientes or puede_cargar_todo)
                     order by cn.cod_nov`,

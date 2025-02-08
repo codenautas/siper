@@ -1,5 +1,8 @@
 import { DefinedType, Description, is } from 'guarantee-type'
 
+type ArrayElement<ArrayType extends readonly unknown[]> = 
+  ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+
 type CommonEntityDefinition = {
     table: string
     description: Description
@@ -144,6 +147,7 @@ export const personas = {
         activo:    is.nullable.boolean,
         fecha_ingreso: is.nullable.Date,
         fecha_egreso : is.nullable.Date,
+        situacion_revista: is.nullable.string,
     })
 } satisfies CommonEntityDefinition
 
@@ -249,8 +253,9 @@ export const novedades_disponibles = {
     procedure: 'novedades_disponibles',
     parameters: is.object({
         idper: is.string,
+        annio: is.number,
     }),
-    result: is.object({
+    result: is.array.object({
         cod_nov: is.string,
         novedad: is.nullable.string,
         con_detalles: is.nullable.boolean,
@@ -259,11 +264,12 @@ export const novedades_disponibles = {
         saldo: is.nullable.number,
         con_disponibilidad: is.nullable.boolean,
         c_dds: is.nullable.boolean,
-        prioritario: is.boolean,
+        prioritario: is.nullable.boolean,
+        puede_cargar: is.nullable.boolean,
     })
 }
 
-export type NovedadesDisponiblesResult = DefinedType<typeof novedades_disponibles.result>
+export type NovedadesDisponiblesResult = ArrayElement<DefinedType<typeof novedades_disponibles.result>>
 
 export const personas_novedad_actual = {
     procedure: 'personas_novedad_actual',
