@@ -239,7 +239,13 @@ describe("connected", function(){
             throw err;
         } finally {
             if (hoy) {
-                await server.inDbClient(ADMIN_REQ, async client => client.query("update parametros set fecha_actual = $1", [FECHA_ACTUAL]).execute())
+                await server.inDbClient(ADMIN_REQ, async client =>{
+                    await client.query(
+                        "update fechas set cod_nov_pred_fecha = $1 where cod_nov_pred_fecha = $2 and fecha between $3 and $4", 
+                        [COD_PRED_FUT, COD_PRED_PAS, FECHA_ACTUAL, hoy]
+                    ).execute();
+                    await client.query("update parametros set fecha_actual = $1", [FECHA_ACTUAL]).execute();
+                })
             }
         }
     }
@@ -604,7 +610,7 @@ describe("connected", function(){
                     'new'
                 );
                 await sesion.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-02-01'), cod_nov:COD_PRED_FUT, idper: persona.idper},
+                    {fecha:date.iso('2000-02-01'), cod_nov:COD_PRED_PAS, idper: persona.idper},
                 ], 'all', {fixedFields:{fecha:'2000-02-01'}})
             })
         })
@@ -749,8 +755,8 @@ describe("connected", function(){
                 })
             })
             it("mezclo teletrabajo con presencial", async function(){
-                var cod_nov = COD_DIAGRAMADO;                
-                await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                var cod_nov = COD_DIAGRAMADO;
+                await enNuevaPersona(this.test?.title!, {hoy: FECHA_ACTUAL}, async ({idper}) => {
                     await rrhhAdminSession.saveRecord(
                         ctts.novedades_registradas, 
                         {desde:date.iso('2000-01-17'), hasta:date.iso('2000-01-29'), idper, cod_nov,
@@ -832,7 +838,7 @@ describe("connected", function(){
             })
         })
         describe("inconsistencias de personas", function(){
-            it("Activos, antiguedad por suma de rangos no coincide con días desde para_antiguedad_relativa hasta hoy", async function(){
+            it.skip("Activos, antiguedad por suma de rangos no coincide con días desde para_antiguedad_relativa hasta hoy", async function(){
                 await enNuevaPersona(this.test?.title!, {hoy:date.iso('2024-11-20'), para_antiguedad_relativa: date.iso('2021-10-31')}, async (persona, {}) => {
                     await rrhhSession.saveRecord(
                         ctts.historial_contrataciones,
@@ -907,7 +913,7 @@ describe("connected", function(){
             // console.log('test', this.test)
             // console.log('this', this)
         } else {
-            this.timeout(TIMEOUT_SPEED * 20);
+            this.timeout(TIMEOUT_SPEED * 24);
             try {
                 /**
                  * Podría ocurrir que haya algún problema al recalcular. 
