@@ -263,8 +263,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     },
     {
         action: 'info_usuario',
-        parameters: [
-        ],
+        parameters: [],
         coreFunction: async function(context: ProcedureContext, _params:any){
             const info = await context.client.query(
                 `select idper, sector, current_date as fecha, usuario, 
@@ -274,8 +273,10 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         p.ficha,
                         puede_cargar_todo,
                         roles.*,
-                        (puede_cargar_propio and u.activo is true) as cargable
+                        (puede_cargar_propio and u.activo is true) as cargable,
+                        fecha_actual
                     from usuarios u 
+                        inner join parametros on true
                         inner join roles using(rol)
                         left join personas p using (idper)
                     where usuario = $1`,

@@ -343,6 +343,26 @@ export const historico_persona = {
 
 export type HistoricoResult = DefinedType<typeof historico_persona.result>
 
+export const info_usuario = {
+    procedure: 'info_usaurio',
+    result: is.object({
+        fecha_actual: is.Date,
+        sector: is.string, 
+        idper: is.string, 
+        apellido: is.string, 
+        nombres: is.string, 
+        cuil: is.nullable.string, 
+        ficha: is.nullable.string, 
+        idmeta4: is.nullable.string, 
+        cargable: is.nullable.boolean,
+        usuario: is.string,
+        rol: is.string,
+        puede_cargar_todo: is.nullable.boolean,
+    })
+}
+
+export type InfoUsuario = DefinedType<typeof info_usuario.result>
+
 export const parametros = {
     procedure : 'parametros',
     result: is.object({

@@ -32,8 +32,12 @@ import {
 
 import { date, RealDate, compareForOrder } from "best-globals";
 
-import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, NovedadRegistrada, ParametrosResult } from "../common/contracts"
+import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, NovedadRegistrada, ParametrosResult,
+    InfoUsuario
+} from "../common/contracts"
+import * as ctts from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
+import { DefinedType } from "guarantee-type";
 
 export function logError(error:Error){
     console.error(error);
@@ -81,11 +85,11 @@ export const DDS = {
 
 type ULTIMA_NOVEDAD = number;
 
-function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, ultimaNovedad?: ULTIMA_NOVEDAD}){
-    const {conn, fecha, fechaHasta, idper, ultimaNovedad} = props;
+function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, fechaActual: RealDate, onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, ultimaNovedad?: ULTIMA_NOVEDAD}){
+    const {conn, fecha, fechaHasta, idper, ultimaNovedad, fechaActual} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     type Periodo = {mes:number, annio:number} 
-    const [periodo, setPeriodo] = useState<Periodo>({mes:date.today().getMonth()+1, annio:date.today().getFullYear()});
+    const [periodo, setPeriodo] = useState<Periodo>({mes:fecha.getMonth()+1, annio:fecha.getFullYear()});
     const retrocederUnMes = (s:Periodo)=>({mes: (s.mes == 1 ? 12 : s.mes - 1), annio: (s.annio - (s.mes == 1  ? 1 : 0 ))})
     const avanzarUnMes    = (s:Periodo)=>({mes: (s.mes == 12 ? 1 : s.mes + 1), annio: (s.annio + (s.mes == 12 ? 1 : 0 ))})
     // var retrocederUnMes = (s:Periodo)=>({mes: (s.mes == 1 ? 12 : 5), annio: (s.annio - (s.mes == 1  ? 1 : 0 ))})
@@ -167,12 +171,11 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 </Select>
                 <Button 
                     variant="outlined"
-                    className={date.today().sameValue(fecha) ? "es-hoy-si" : "es-hoy-no"} 
+                    className={fechaActual.sameValue(fecha) ? "es-hoy-si" : "es-hoy-no"} 
                     onClick={()=>{ 
-                        const hoy = date.today(); 
-                        setPeriodo({mes: hoy.getMonth()+1, annio: hoy.getFullYear()});
-                        props.onFecha && props.onFecha(hoy);
-                        props.onFechaHasta && props.onFechaHasta(hoy);
+                        setPeriodo({mes: fechaActual.getMonth()+1, annio: fechaActual.getFullYear()});
+                        props.onFecha && props.onFecha(fechaActual);
+                        props.onFechaHasta && props.onFechaHasta(fechaActual);
                     }}
                 >Hoy</Button>
             </Box>
@@ -265,7 +268,7 @@ function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof
     }
 }
 
-function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:string, fecha:RealDate, onIdper?:IdperFuncionCambio, infoUsuario:ProvisorioInfoUsuario}){
+function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:string, fecha:RealDate, onIdper?:IdperFuncionCambio, infoUsuario:InfoUsuario}){
     const {conn, idper, fecha, onIdper, infoUsuario} = props;
     const [sector, _setSector] = useState(props.sector);
     const [sectores, setSectores] = useState<ProvisorioSectoresAumentados[]>([]);
@@ -346,8 +349,11 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     </Componente>
 }
 
-function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number, ultimaNovedad?:number, infoUsuario:ProvisorioInfoUsuario, onBorrado:()=>void}){
-    const {idper, conn, ultimaNovedad, infoUsuario} = props;
+function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number, ultimaNovedad?:number, infoUsuario:InfoUsuario, 
+    fechaActual:RealDate,
+    onBorrado:()=>void}
+){
+    const {idper, conn, ultimaNovedad, infoUsuario, fechaActual} = props;
     console.log(infoUsuario)
     const [novedades, setNovedades] = useState<ProvisorioNovedadesRegistradas[]>([]);
     const [quiereBorrar, setQuiereBorrar] = useState<ProvisorioNovedadesRegistradas|null>(null);
@@ -385,7 +391,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' } 
                     {diasSeleccionados.length > 0 ? ' / ' + diasSeleccionados.join(', ') : ''}
                 </div>
-                <div className="borrar">{n.desde > date.today() && (infoUsuario.rol == 'rrhh' || infoUsuario.rol == 'admin') ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
+                <div className="borrar">{n.desde > fechaActual && (infoUsuario.rol == 'rrhh' || infoUsuario.rol == 'admin') ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
             </Box>)
         })}
         <Dialog open={quiereBorrar != null}>
@@ -416,7 +422,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
 
 function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     const {fecha, idper, conn} = props
-    const horarioVacio:HorarioSemanaVigenteResult = {desde: date.today(), hasta: date.today(), dias:{}}
+    const horarioVacio:HorarioSemanaVigenteResult = {desde: date.today(), hasta: date.today(), dias:{}} // corresponde today, es un default provisorio
     const [horario, setHorario] = useState(horarioVacio);
     useEffect(function(){
         setHorario(horarioVacio)
@@ -482,9 +488,9 @@ function DatosPersonales(props:{conn: Connector, idper:string}){
     </Componente>
 }
 
-function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean, c_dds: boolean)=>void, ultimaNovedad?: ULTIMA_NOVEDAD}){
+function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, annio:number, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean, c_dds: boolean)=>void, ultimaNovedad?: ULTIMA_NOVEDAD}){
     // @ts-ignore
-    const {idper, cod_nov, onCodNov, conn, ultimaNovedad} = props;
+    const {idper, cod_nov, annio, onCodNov, conn, ultimaNovedad} = props;
     const [codNovedades, setCodNovedades] = useState<NovedadesDisponiblesResult[]>([]);
     const [codNovedadesFiltradas, setCodNovedadesFiltradas] = useState<NovedadesDisponiblesResult[]>([]);
     const [filtro, setFiltro] = useState("");
@@ -492,7 +498,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
     useEffect(function(){
         setCodNovedades([])
         if (idper != null) {
-            conn.ajax.novedades_disponibles({ idper }).then(novedades => {
+            conn.ajax.novedades_disponibles({ idper, annio }).then(novedades => {
                 novedades.sort(compareForOrder([{column:'cod_nov'}]))
                 setCodNovedades(novedades);
             }).catch(logError);
@@ -519,8 +525,6 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, para
     </Componente>
 }
 
-type ProvisorioInfoUsuario = {idper:string, sector:string, fecha:RealDate, usuario:string, apellido:string, nombres:string, cuil:string, ficha:string, puede_cargar_todo:boolean, cargable:boolean, rol:string };
-
 type Hora = string;
 
 type HorarioSemanaVigenteDia = {hora_desde:Hora, hora_hasta:Hora, cod_nov:string, trabaja:boolean, dds:0 | 1 | 2 | 3 | 4 | 5 | 6}
@@ -528,9 +532,7 @@ type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, dias:Record<s
 type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean, dias_habiles: number}
 declare module "frontend-plus" {
     interface BEAPI {
-        info_usuario: (params: {
-            table: string;
-        }) => Promise<ProvisorioInfoUsuario>;
+        info_usuario: () => Promise<DefinedType<typeof ctts.info_usuario.result>>;
         calendario_persona: (params:{
 
         }) => Promise<any>;
@@ -556,7 +558,7 @@ declare module "frontend-plus" {
     }
 }
 
-function Persona(props:{conn: Connector, idper:string, fecha:RealDate}){
+function Persona(props:{conn: Connector, idper:string, fecha:RealDate, fechaActual:RealDate}){
     return <Paper className="componente-persona">
         <DatosPersonales {...props}/>
         <Horario {...props}/>
@@ -566,13 +568,13 @@ function Persona(props:{conn: Connector, idper:string, fecha:RealDate}){
 
 function Pantalla1(props:{conn: Connector}){
     const {conn} = props;
-    const [infoUsuario, setInfoUsuario] = useState({} as ProvisorioInfoUsuario);
+    const [infoUsuario, setInfoUsuario] = useState({} as InfoUsuario);
     const [persona, setPersona] = useState({} as ProvisorioPersonas);
     const [cod_nov, setCodNov] = useState("");
     const [detalles, setDetalles] = useState("");
     const [novedadRegistrada, setNovedadRegistrada] = useState({} as NovedadRegistrada);
-    const [fecha, setFecha] = useState<RealDate>(date.today());
-    const [hasta, setHasta] = useState<RealDate>(date.today());
+    const [fecha, setFecha] = useState<RealDate>(date.today()); // corresponde today, es un default provisorio
+    const [hasta, setHasta] = useState<RealDate>(date.today()); // corresponde today, es un default provisorio
     const [registrandoNovedad, setRegistrandoNovedad] = useState(false);
     const [siCargaraNovedad, setSiCargaraNovedad] = useState<SiCargaraNovedades|null>(null);
     const [guarndadoRegistroNovedad, setGuardandoRegistroNovedad] = useState(false);
@@ -580,20 +582,7 @@ function Pantalla1(props:{conn: Connector}){
     const {idper} = persona
     const [ultimaNovedad, setUltimaNovedad] = useState(0);
     const annio = fecha.getFullYear();
-
-    const [fechaActual, setFechaActual] =  useState<ParametrosResult[]>([]);
-    useEffect(function(){
-        // @ts-ignore
-        conn.ajax.parametros().then(function(fechaActual:ParametrosResult){
-            setFechaActual([fechaActual])
-        }).catch(logError)
-    },[])
-    console.log("--------- fechaActual ----------")
-    if(fechaActual.length == 0){
-        console.log("---- fechaActual no cargo -----")
-    } else{
-        console.log(fechaActual[0].fecha_actual)
-    }
+    const [fechaActual, setFechaActual] =  useState<RealDate>(date.today()); // corresponde today, es un default provisorio
 
     function resetDias() {
         setNovedadRegistrada((prev) => ({
@@ -610,9 +599,10 @@ function Pantalla1(props:{conn: Connector}){
 
     useEffect(function(){
         // @ts-ignore
-        conn.ajax.info_usuario().then(function(infoUsuario:ProvisorioInfoUsuario){
+        conn.ajax.info_usuario().then(function(infoUsuario){
             setPersona(infoUsuario as ProvisorioPersonas);
             setInfoUsuario(infoUsuario);
+            setFechaActual(infoUsuario.fecha_actual as RealDate);
         }).catch(logError)
     },[])
     useEffect(function(){
@@ -645,9 +635,9 @@ function Pantalla1(props:{conn: Connector}){
         }).then(function(result){
             console.log(result)
             setUltimaNovedad(result.row.idr as number);
-            setFecha(date.today());
-            setHasta(date.today());
-            setCodNov("");
+            // setFecha(fechaActual);
+            // setHasta(fechaActual);
+            // setCodNov("");
             
         }).catch(setError).finally(()=>setGuardandoRegistroNovedad(false));
     }
@@ -707,7 +697,9 @@ function Pantalla1(props:{conn: Connector}){
                         </span>
                     </div>
                 </Box>
-                <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}/>
+                <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}
+                    fechaActual={fechaActual!}
+                />
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
                 {cod_nov && idper && fecha && hasta && !guarndadoRegistroNovedad && !registrandoNovedad && persona.cargable ? <Box key="setSiCargaraNovedad">
                     <Button key="button" variant="outlined" onClick={() => {
@@ -753,11 +745,11 @@ function Pantalla1(props:{conn: Connector}){
                 <Box>{guarndadoRegistroNovedad || error ?
                     <Typography>{error?.message ?? (guarndadoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
-                <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>
+                <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
                 </div>
             </Componente>
-            <NovedadesPer conn={conn} idper={idper} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
+            <NovedadesPer conn={conn} idper={idper} annio={annio} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
         </Paper>;
 }
 
@@ -855,6 +847,7 @@ function DemoDeComponentes(props: {conn: Connector}){
     const {conn} = props;
     type QUE = ""|"calendario"|"personas"|"novedades-registradas"|"horario"|"persona"|"datos-personales"|"pantalla-1"|"registrar-novedades"|"novedades-per"
     const [que, setQue] = useState<QUE>("");
+    const fechaActual = date.today(); // es una demo corresponde el today
     const UnComponente = (props:{titulo:string, que:QUE}) =>
         <Box><Typography><Button onClick={_=>setQue(props.que)}>Ver:</Button> {props.titulo}</Typography></Box>
     return <Paper>
@@ -892,14 +885,14 @@ function DemoDeComponentes(props: {conn: Connector}){
                     <UnComponente titulo="Info de una persona" que="persona"/>
                     <UnComponente titulo="Pantalla 1 (primera total)" que="pantalla-1"/>
                 </Card>,
-            "calendario": () => <Calendario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
-            "personas": () => <ListaPersonasEditables conn={conn} sector="MS" fecha={date.today()} idper={IDPER_DEMO} infoUsuario={{} as ProvisorioInfoUsuario}/>,
-            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO} annio={2024} infoUsuario={{} as ProvisorioInfoUsuario} onBorrado={()=>{}}/>,
-            "horario": () => <Horario conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
+            "calendario": () => <Calendario conn={conn} idper={IDPER_DEMO} fecha={fechaActual} fechaActual={fechaActual}/>,
+            "personas": () => <ListaPersonasEditables conn={conn} sector="MS" fecha={fechaActual} idper={IDPER_DEMO} infoUsuario={{} as InfoUsuario}/>,
+            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO} annio={2024} infoUsuario={{} as InfoUsuario} fechaActual={fechaActual} onBorrado={()=>{}}/>,
+            "horario": () => <Horario conn={conn} idper={IDPER_DEMO} fecha={fechaActual}/>,
             "datos-personales": () => <DatosPersonales conn={conn} idper={IDPER_DEMO}/>,
             "registrar-novedades": () => <RegistrarNovedades conn={conn} idper={IDPER_DEMO}/>,
-            "novedades-per": () => <NovedadesPer conn={conn} idper={IDPER_DEMO} cod_nov="101" paraCargar={false}/>,
-            "persona": () => <Persona conn={conn} idper={IDPER_DEMO} fecha={date.today()}/>,
+            "novedades-per": () => <NovedadesPer conn={conn} idper={IDPER_DEMO} annio={2024} cod_nov="101" paraCargar={false}/>,
+            "persona": () => <Persona conn={conn} idper={IDPER_DEMO} fecha={fechaActual} fechaActual={fechaActual}/>,
             "pantalla-1": () => <Pantalla1 conn={conn}/>
         })[que]()}
     </Paper>
