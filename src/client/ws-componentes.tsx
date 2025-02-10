@@ -171,7 +171,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 </Select>
                 <Button 
                     variant="outlined"
-                    className={fechaActual.sameValue(fecha) ? "es-hoy-si" : "es-hoy-no"} 
+                    className={fechaActual?.sameValue(fecha) ? "es-hoy-si" : "es-hoy-no"} 
                     onClick={()=>{ 
                         setPeriodo({mes: fechaActual.getMonth()+1, annio: fechaActual.getFullYear()});
                         props.onFecha && props.onFecha(fechaActual);
