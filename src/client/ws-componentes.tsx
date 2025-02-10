@@ -102,7 +102,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
         // ver async
         // @ts-ignore infinito
         conn.ajax.table_data<Annio>({table: 'annios', fixedFields: [],paramfun:{} }).then(annios => {
-            //Establezco en que mes y año estoy posicionado, verifica si hay año anterior/posterior y habilita/deshabilita boton retrocerder/avanzar
+            //Establezco en que mes y año está posicionado, verifica si hay año anterior/posterior y habilita/deshabilita boton retrocerder/avanzar
             const currentYear = periodo.annio;
             const currentMonth = periodo.mes;
             const tieneAñoAnterior = annios.some(annio => annio.annio === currentYear - 1);
