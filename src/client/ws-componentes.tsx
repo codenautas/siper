@@ -95,11 +95,22 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
     // var retrocederUnMes = (s:Periodo)=>({mes: (s.mes == 1 ? 12 : 5), annio: (s.annio - (s.mes == 1  ? 1 : 0 ))})
     // var avanzarUnMes    = (s:Periodo)=>({mes: (s.mes == 12 ? 1 : 5), annio: (s.annio + (s.mes == 12 ? 1 : 0 ))})
     const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
+    const [botonRetrocederHabilitado, setBotonRetrocederHabilitado] = useState<boolean>(true); 
+    const [botonAvanzarHabilitado, setBotonAvanzarHabilitado] = useState<boolean>(true); 
+    
     useEffect(function(){
-        setCalendario([]);
         // ver async
         // @ts-ignore infinito
         conn.ajax.table_data<Annio>({table: 'annios', fixedFields: [],paramfun:{} }).then(annios => {
+            //Establezco en que mes y año está posicionado, verifica si hay año anterior/posterior y habilita/deshabilita boton retrocerder/avanzar
+            const currentYear = periodo.annio;
+            const currentMonth = periodo.mes;
+            const tieneAñoAnterior = annios.some(annio => annio.annio === currentYear - 1);
+            const tieneAñoSiguiente = annios.some(annio => annio.annio === currentYear + 1);
+    
+            setBotonRetrocederHabilitado(currentMonth !== 1 || tieneAñoAnterior);
+            setBotonAvanzarHabilitado(currentMonth !== 12 || tieneAñoSiguiente);
+            
             setAnnios(annios);
         }).catch(logError);
         if (idper != null) {
@@ -138,8 +149,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
     return <Componente componentType="calendario-mes">
         <Box style={{ flex:1}}>
             <Box>
-                <Button onClick={_ => setPeriodo(retrocederUnMes)}><ICON.ChevronLeft/></Button>
-                <Button onClick={_ => setPeriodo(avanzarUnMes)}><ICON.ChevronRight/></Button>
+                <Button onClick={_ => setPeriodo(retrocederUnMes)} disabled={!botonRetrocederHabilitado}><ICON.ChevronLeft/></Button>
+                <Button onClick={_ => setPeriodo(avanzarUnMes)} disabled={!botonAvanzarHabilitado}><ICON.ChevronRight/></Button>
                 <Select 
                     className="selector-mes"
                     value={periodo.mes}
