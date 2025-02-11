@@ -588,7 +588,7 @@ function Pantalla1(props:{conn: Connector}){
     const [hasta, setHasta] = useState<RealDate>(date.today()); // corresponde today, es un default provisorio
     const [registrandoNovedad, setRegistrandoNovedad] = useState(false);
     const [siCargaraNovedad, setSiCargaraNovedad] = useState<SiCargaraNovedades|null>(null);
-    const [guarndadoRegistroNovedad, setGuardandoRegistroNovedad] = useState(false);
+    const [guardandoRegistroNovedad, setGuardandoRegistroNovedad] = useState(false);
     const [error, setError] = useState<Error|null>(null);
     const {idper} = persona
     const [ultimaNovedad, setUltimaNovedad] = useState(0);
@@ -649,7 +649,8 @@ function Pantalla1(props:{conn: Connector}){
             // setFecha(fechaActual);
             // setHasta(fechaActual);
             // setCodNov("");
-            
+            setSiCargaraNovedad(null);
+            setRegistrandoNovedad(false);
         }).catch(setError).finally(()=>setGuardandoRegistroNovedad(false));
     }
 
@@ -712,7 +713,7 @@ function Pantalla1(props:{conn: Connector}){
                     fechaActual={fechaActual!}
                 />
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
-                {cod_nov && idper && fecha && hasta && !guarndadoRegistroNovedad && !registrandoNovedad && persona.cargable ? <Box key="setSiCargaraNovedad">
+                {cod_nov && idper && fecha && hasta && !guardandoRegistroNovedad && !registrandoNovedad && persona.cargable ? <Box key="setSiCargaraNovedad">
                     <Button key="button" variant="outlined" onClick={() => {
                         setRegistrandoNovedad(true);
                         conn.ajax.si_cargara_novedad({idper, cod_nov, desde:fecha, hasta}).then(setSiCargaraNovedad).catch(logError)
@@ -753,8 +754,8 @@ function Pantalla1(props:{conn: Connector}){
                         {noPuedeConfirmarPorque ?? siCargaraNovedad.mensaje}<ICON.Save/>
                     </Button>
                 </Box>: null}
-                <Box>{guarndadoRegistroNovedad || error ?
-                    <Typography>{error?.message ?? (guarndadoRegistroNovedad && "registrando..." || "error")}</Typography>
+                <Box>{guardandoRegistroNovedad || error ?
+                    <Typography>{error?.message ?? (guardandoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
                 <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
