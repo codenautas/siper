@@ -139,7 +139,9 @@ export class AppSiper extends AppBackend{
                     {menuType:'table', name:'novedades_totales', table:'nov_per', ff:[{fieldName:'annio', value:date.today().getFullYear()}]},
                 ]}
             ] : []),
-               ...es.rrhh ? [{menuType:'table', name:'personas'          }] : [],
+               ...es.rrhh ? [{menuType:'table', name:'personas'          },
+                {menuType:'table', name:'sectores', table:'sectores_edit' },
+               ] : [],
                ...es.admin ? [{menuType:'menu', name:'capacitaciones', menuContent:[
                 {menuType:'table', name:'capacitaciones'},
                 ...(es.registra ? [{menuType:'table', name:'modadidades', table:'capa_modalidades'}] : []),
