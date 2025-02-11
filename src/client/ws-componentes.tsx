@@ -38,6 +38,7 @@ import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNov
 import * as ctts from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 import { DefinedType } from "guarantee-type";
+import { AppConfigClientSetup } from "../server/types-principal";
 
 export function logError(error:Error){
     console.error(error);
@@ -402,7 +403,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' } 
                     {diasSeleccionados.length > 0 ? ' / ' + diasSeleccionados.join(', ') : ''}
                 </div>
-                <div className="borrar">{n.desde > fechaActual && (infoUsuario.rol == 'rrhh' || infoUsuario.rol == 'admin') ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
+                <div className="borrar">{n.desde > fechaActual && conn.config.es.rrhh ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
             </Box>)
         })}
         <Dialog open={quiereBorrar != null}>
@@ -566,6 +567,9 @@ declare module "frontend-plus" {
             primaryKeyValues: any[];    
         }) => Promise<void>;
         parametros: (params:{}) => Promise<ParametrosResult>;
+    }
+    interface Connector {
+        config: AppConfigClientSetup
     }
 }
 
