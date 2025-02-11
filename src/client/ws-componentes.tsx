@@ -836,6 +836,12 @@ function RegistrarNovedades(props:{conn: Connector, idper:string}){
 const IDPER_DEMO = "AR8"
 
 function PantallaPrincipal(props: {conn: Connector}){
+    useEffect(() => {
+        if (window.location.href.includes("muleto")) {
+            document.body.style.backgroundImage = "url('img/../img/background-test.png')";
+        }
+    }, []);
+
     return <Paper className="paper-principal">
         <AppBar position="static">
             <Toolbar>
