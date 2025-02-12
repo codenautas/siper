@@ -45,7 +45,7 @@ export function logError(error:Error){
 }
 
 export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string, scrollable?: boolean  }){
-    return <Card className={"componente-" + props.componentType} sx={{ overflowY: props.scrollable ? 'auto' : 'hidden'}}>
+    return <Card className={"componente-" + props.componentType} sx={{ overflowY: props.scrollable ? 'auto' : 'hidden', backgroundImage: `url('${myOwn.config.config["background-img"]}')`}}>
         {props.children}
     </Card>
 }
@@ -334,6 +334,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
             filtro && !abanicoPersonas[s.sector]?.length ? null :
             <Accordion key = {s.sector?.toString()} expanded = {!!expandido[s.sector]}
                 onChange={(_, b: boolean) => { setExpandido(e => ({...e, [s.sector]:b })) }}
+                sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')`, backgroundSize: 'auto 100%'}}
             >
                 <AccordionSummary id = {s.sector} expandIcon={<ICON.NavigationDown />} 
                     sx={{flexDirection: 'row-reverse', '& .MuiAccordionSummary-content': { marginLeft: '16px' },}}
@@ -837,13 +838,11 @@ const IDPER_DEMO = "AR8"
 
 function PantallaPrincipal(props: {conn: Connector}){
     useEffect(() => {
-        if (window.location.href.includes("muleto")) {
-            document.body.style.backgroundImage = "url('img/../img/background-test.png')";
-        }
+            document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
     }, []);
 
     return <Paper className="paper-principal">
-        <AppBar position="static">
+        <AppBar position="static" sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')`, backgroundSize: 'auto 100%'}}>
             <Toolbar>
                 <IconButton color="inherit" onClick={()=>{
                     var root = document.getElementById('total-layout');
