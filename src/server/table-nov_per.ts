@@ -8,16 +8,14 @@ import {cod_nov} from "./table-cod_novedades"
 import {sector} from "./table-sectores"
 
 export const sqlNovPer= (params:{idper?:string, annio?:number})=> `
-    select annio, cod_nov, idper, 
+    select pn.annio, cn.cod_nov, pn.idper, 
             pn.total, 
-            count(*) filter (where fecha <= fecha_actual) as usados, 
-            count(*) filter (where (fecha <= fecha_actual) is not true) as pendientes, 
-            pn.total - count(*) as disponibles,
+            count(*) filter (where fecha is not null and fecha <= fecha_actual) as usados, 
+            count(*) filter (where fecha is not null and (fecha <= fecha_actual) is not true) as pendientes, 
+            pn.total - count(*) filter (where fecha is not null) as disponibles,
             p.sector,
             pn.esquema
-    from novedades_vigentes n
-        inner join cod_novedades cn using(cod_nov)
-        inner join personas p using(idper)
+    from cod_novedades cn
         inner join parametros on unico_registro
         left join (
             select annio, idper, cod_nov, 
@@ -26,10 +24,12 @@ export const sqlNovPer= (params:{idper?:string, annio?:number})=> `
                 from per_nov_cant 
                 where true ${params.annio? ` and annio = ${sqlTools.quoteLiteral(params.annio)} `:' '}
                 group by annio, idper, cod_nov
-        ) pn using (annio, idper, cod_nov)
-    where true ${params.idper? ` and idper = ${sqlTools.quoteLiteral(params.idper)} `:' '}
-         ${params.annio? ` and annio = ${sqlTools.quoteLiteral(params.annio)} `:' '}
-    group by annio, cod_nov, idper, pn.total, p.sector, pn.esquema
+        ) pn on cn.cod_nov = pn.cod_nov
+        left join novedades_vigentes n on pn.annio = n.annio and pn.idper = n.idper and pn.cod_nov = n.cod_nov
+        left join personas p on pn.idper = p.idper
+    where true ${params.idper? ` and pn.idper = ${sqlTools.quoteLiteral(params.idper)} `:' '}
+         ${params.annio? ` and pn.annio = ${sqlTools.quoteLiteral(params.annio)} `:' '}
+    group by pn.annio, cn.cod_nov, pn.idper, pn.total, p.sector, pn.esquema
 `;
 
 export function nov_per(_context: TableContext): TableDefinition {

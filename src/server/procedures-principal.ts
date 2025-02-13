@@ -162,7 +162,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         left join
                         (${sqlNovPer({idper, annio:params.annio})}) v
                         on v.cod_nov = cn.cod_nov
-                    where (v.usados+v.pendientes > 0 or cn.registra and r.puede_cargar_dependientes or puede_cargar_todo)
+                    where (v.total > 0 or cn.registra and r.puede_cargar_dependientes or puede_cargar_todo)
                     order by cn.cod_nov`,
                 [context.username]
             ).fetchAll();
