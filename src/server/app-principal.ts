@@ -220,6 +220,7 @@ export class AppSiper extends AppBackend{
                 // { type: 'js', module: 'redux-typed-reducer', modPath:'../dist', file:'redux-typed-reducer.js' },
                 { type: 'js', src: 'adapt.js' },
             ]:[])  satisfies ClientModuleDefinition[],
+            { type: 'js', file: 'client/shared-functions.js' },
             { type: 'js', src: 'lib/my-icons.js' },
             { type: 'js', module: 'guarantee-type', file:'guarantee-type.js'},
             { type: 'js', module: 'frontend-plus', file:'frontend-plus.js'},

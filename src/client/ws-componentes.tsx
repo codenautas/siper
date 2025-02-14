@@ -27,7 +27,13 @@ import {
     Select, 
     Toolbar, Typography, TextField,
     Checkbox,
-    Tooltip
+    Tooltip,
+    TableContainer,
+    Table,
+    TableHead,
+    TableBody,
+    TableRow,
+    TableCell
 } from "@mui/material";
 
 import { date, RealDate, compareForOrder } from "best-globals";
@@ -39,6 +45,7 @@ import * as ctts from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 import { DefinedType } from "guarantee-type";
 import { AppConfigClientSetup } from "../server/types-principal";
+import { obtenerDetalleVacaciones } from "./shared-functions";
 
 export function logError(error:Error){
     console.error(error);
@@ -245,6 +252,14 @@ type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<str
 type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
 type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, dds0: boolean, dds1: boolean, dds2: boolean, dds3: boolean, dds4: boolean, dds5: boolean, dds6: boolean, detalles:string, idr:number}
+
+interface DetalleAnioNovPer {
+    cantidad: number;
+    pedidos: number;
+    saldo: number;
+}
+
+type ProvisorioDetalleNovPer = { detalle: Record<string, DetalleAnioNovPer> }
 
 type IdperFuncionCambio = (persona:ProvisorioPersonas)=>void
 
@@ -582,6 +597,49 @@ function Persona(props:{conn: Connector, idper:string, fecha:RealDate, fechaActu
     </Paper>
 }
 
+interface DetalleNovPerProps {
+    detalleVacacionesPersona?: { detalle?: Record<string, DetalleAnioNovPer> } | null;
+}
+  
+const DetalleAniosNovPer: React.FC<DetalleNovPerProps> = ({ detalleVacacionesPersona }) => {
+    const detalle = (detalleVacacionesPersona || {}) as Record<string, DetalleAnioNovPer>;
+    const registros = Object.entries(detalle);
+    return (
+        <TableContainer component={Paper}>
+        <Table>
+        <TableHead>
+            <TableRow>
+            <TableCell>Año</TableCell>
+            <TableCell align="right">Cantidad</TableCell>
+            <TableCell align="right">Pedidos</TableCell>
+            <TableCell align="right">Saldo</TableCell>
+            </TableRow>
+        </TableHead>
+        <TableBody>
+        {registros.length > 0 ? (
+            registros.map(([anio, registro]) => (
+                <TableRow key={anio}>
+                <TableCell component="th" scope="row">
+                    {anio}
+                </TableCell>
+                <TableCell align="right">{registro.cantidad}</TableCell>
+                <TableCell align="right">{registro.pedidos}</TableCell>
+                <TableCell align="right">{registro.saldo}</TableCell>
+                </TableRow>
+            ))
+            ) : (
+            <TableRow>
+                <TableCell colSpan={4} align="center">
+                    No hay información de vacaciones
+                </TableCell>
+            </TableRow>
+            )}
+        </TableBody>
+        </Table>
+        </TableContainer>
+    );
+};
+
 function Pantalla1(props:{conn: Connector}){
     const {conn} = props;
     const [infoUsuario, setInfoUsuario] = useState({} as InfoUsuario);
@@ -599,6 +657,7 @@ function Pantalla1(props:{conn: Connector}){
     const [ultimaNovedad, setUltimaNovedad] = useState(0);
     const annio = fecha.getFullYear();
     const [fechaActual, setFechaActual] =  useState<RealDate>(date.today()); // corresponde today, es un default provisorio
+    const [detalleVacacionesPersona, setDetalleVacacionesPersona] = useState<ProvisorioDetalleNovPer|null>({} as ProvisorioDetalleNovPer)
 
     function resetDias() {
         setNovedadRegistrada((prev) => ({
@@ -627,6 +686,26 @@ function Pantalla1(props:{conn: Connector}){
         setError(null);
         resetDias();
     },[idper,cod_nov,fecha,hasta])
+    useEffect(() => {
+        if (persona.idper) {
+            conn.ajax.table_data({
+                table: 'nov_per',
+                fixedFields: [
+                    {fieldName:'annio', value:fechaActual.getFullYear()}, 
+                    {fieldName:'idper', value:persona.idper}, 
+                    {fieldName:'cod_nov', value:1}
+                ],
+                paramfun: {}
+            }).then(function(data:any){
+                if (data[0]){
+                    data[0].detalle = obtenerDetalleVacaciones(data[0])
+                    setDetalleVacacionesPersona(data[0].detalle);
+                }else{
+                    setDetalleVacacionesPersona(null);
+                }
+            }).catch(logError)
+        }
+    }, [persona]);
     function registrarNovedad(){
         setGuardandoRegistroNovedad(true);
         conn.ajax.table_record_save({
@@ -696,23 +775,30 @@ function Pantalla1(props:{conn: Connector}){
             <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)} infoUsuario={infoUsuario}/>
             <Componente componentType="del-medio" scrollable={true}>
                 <div className="container-del-medio">
-                <Box>
-                    <div className="box-line">
-                        <span className="box-id">
-                            {idper}
-                        </span>
-                        <span className="box-names">
-                            {persona.apellido}, {persona.nombres}
-                        </span>
-                    </div>
-                    <div className="box-line">
-                        <span className="box-names">
-                            CUIL: {persona.cuil}
-                        </span>
-                        <span className="box-names">
-                            FICHA: {persona.ficha}
-                        </span>
-                    </div>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                    <Paper sx={{ flex: 2 }}>
+                        <div className="box-line">
+                            <span className="box-id">
+                                {idper}
+                            </span>
+                            <span className="box-names">
+                                {persona.apellido}, {persona.nombres}
+                            </span>
+                        </div>
+                        <div className="box-line">
+                            <span className="box-names">
+                                CUIL: {persona.cuil}
+                            </span>
+                        </div>
+                        <div className="box-line">
+                            <span className="box-names">
+                                FICHA: {persona.ficha}
+                            </span>
+                        </div>
+                    </Paper>
+                    <Box sx={{ flex: 1 }}>
+                        <DetalleAniosNovPer detalleVacacionesPersona={detalleVacacionesPersona}/>
+                    </Box>
                 </Box>
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}
                     fechaActual={fechaActual!}
