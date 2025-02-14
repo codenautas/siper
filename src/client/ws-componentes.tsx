@@ -263,7 +263,7 @@ type ProvisorioDetalleNovPer = { detalle: Record<string, DetalleAnioNovPer> }
 
 type IdperFuncionCambio = (persona:ProvisorioPersonas)=>void
 
-function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null, onTodasChange?:(newValue:boolean)=>void}){
+function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null, onTodasChange?:(newValue:boolean)=>void, ordenPorNovedad?:boolean|null, onOrdenPorNovedadChange?:(newValue:boolean)=>void}){
     var [textToSearch, setTextToSearch] = useState("");
     return <Paper sx={{ display: 'flex', alignItems: 'center', width: '100%' }} className="search-box">
         <ICON.Search/>
@@ -273,6 +273,7 @@ function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null
         />
         <Button onClick={_=>{props.onChange(""); setTextToSearch("")}}><ICON.BackspaceOutlined/></Button>
         {props.todas != null ?
+        <>
         <label>
             <Checkbox
                 checked={props.todas}
@@ -281,6 +282,17 @@ function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null
                 sx={{ padding: 0 }}
             /> todas
         </label>
+       {props.ordenPorNovedad
+            // @ts-ignore
+        ?   <Button onClick={_=>{props.onOrdenPorNovedadChange(!props.ordenPorNovedad)}}>
+                <ICON.AlphabeticOrder />
+            </Button>
+            // @ts-ignore
+        :   <Button onClick={_=>{props.onOrdenPorNovedadChange(!props.ordenPorNovedad)}}>
+                <ICON.NumericalOrder />
+            </Button>
+        }
+        </>
         : null }
     </Paper>;
 }
@@ -523,21 +535,25 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
     const [codNovedadesFiltradas, setCodNovedadesFiltradas] = useState<NovedadesDisponiblesResult[]>([]);
     const [filtro, setFiltro] = useState("");
     const [todas, setTodas] = useState(false);
+    const [ordenPorNovedad, setOrdenPorNovedad] = useState(false);
+
     useEffect(function(){
         setCodNovedades([])
         if (idper != null) {
             conn.ajax.novedades_disponibles({ idper, annio }).then(novedades => {
-                novedades.sort(compareForOrder([{column:'cod_nov'}]))
                 setCodNovedades(novedades);
             }).catch(logError);
         }
     },[idper, ultimaNovedad])
+    
     useEffect(function(){
         const recordFilter = GetRecordFilter<NovedadesDisponiblesResult>(filtro,['cod_nov', 'novedad'],todas,'prioritario');
-        setCodNovedadesFiltradas(codNovedades.filter(recordFilter))
-    },[codNovedades, filtro, todas])
+        const novedadesOrdenadas = [...codNovedades].sort(compareForOrder([{ column: ordenPorNovedad ? 'novedad' : 'cod_nov' }]));
+        setCodNovedadesFiltradas(novedadesOrdenadas.filter(recordFilter));
+    },[codNovedades, filtro, todas, ordenPorNovedad])
+
     return <Componente componentType="codigo-novedades" scrollable={true}>
-        <SearchBox onChange={setFiltro} todas={todas} onTodasChange={setTodas}/>
+        <SearchBox onChange={setFiltro} todas={todas} onTodasChange={setTodas} ordenPorNovedad={ordenPorNovedad} onOrdenPorNovedadChange={setOrdenPorNovedad}/>
         <List>
             {codNovedadesFiltradas.map(c=>
                 <ListItemButton key = {c.cod_nov} 
