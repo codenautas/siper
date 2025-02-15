@@ -596,46 +596,47 @@ function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
     const detalle = (detalleVacacionesPersona || {}) as Record<string, DetalleAnioNovPer>;
     const registros = Object.entries(detalle);
     return <Componente componentType="detalle-anios-novper">
-        <div className="horario-contenedor">
-        <div className="horario-renglon">
-          <div className="horario-dia" style={{ flex: 1 }}>
-            Año
-          </div>
-          <div className="horario-dia" style={{ flex: 1 }}>
-            Cantidad
-          </div>
-          <div className="horario-dia" style={{ flex: 1 }}>
-            Pedidos
-          </div>
-          <div className="horario-dia" style={{ flex: 1 }}>
-            Saldo
-          </div>
+        <div className="vacaciones-contenedor">
+            <div className="vacaciones-renglon">
+                vacaciones
+            </div>
+            <div className="vacaciones-renglon">
+                <div className="vacaciones-titulo">
+                    año
+                </div>
+                <div className="vacaciones-titulo" title="cantidad inicial">
+                    cant
+                </div>
+                <div className="vacaciones-titulo" title="pedidos">
+                    ped
+                </div>
+                <div className="vacaciones-titulo" title="saldo">
+                    saldo
+                </div>
+            </div>
+            {registros.length > 0 ? (
+                registros.map(([anio, registro]) => (
+                    <div key={anio} className="vacaciones-renglon">
+                    <div className="vacaciones-celda">
+                        {anio}
+                    </div>
+                    <div className="vacaciones-celda">
+                        {registro.cantidad}
+                    </div>
+                    <div className="vacaciones-celda">
+                        {registro.pedidos}
+                    </div>
+                    <div className="vacaciones-celda">
+                        {registro.saldo}
+                    </div>
+                    </div>
+                ))
+            ) : (
+                <div className="vacaciones-renglon">
+                    sin información
+                </div>
+            )}
         </div>
-        {registros.length > 0 ? (
-          registros.map(([anio, registro]) => (
-            <div key={anio} className="horario-renglon">
-              <div className="horario-dia" style={{ flex: 1 }}>
-                {anio}
-              </div>
-              <div className="horario-dia" style={{ flex: 1 }}>
-                {registro.cantidad}
-              </div>
-              <div className="horario-dia" style={{ flex: 1 }}>
-                {registro.pedidos}
-              </div>
-              <div className="horario-dia" style={{ flex: 1 }}>
-                {registro.saldo}
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="horario-renglon">
-            <div className="horario-dia" style={{ flex: 4, textAlign: "center" }}>
-              No hay información de vacaciones
-            </div>
-          </div>
-        )}
-      </div>
     </Componente>
 }
 
