@@ -596,19 +596,18 @@ function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
     const detalle = (detalleVacacionesPersona || {}) as Record<string, DetalleAnioNovPer>;
     const registros = Object.entries(detalle);
     return <Componente componentType="detalle-anios-novper">
-        <div className="horario-contenedor" style={{ border: "1px solid #ddd" }}>
-        {/* Encabezado: similar a la primera fila en tu ejemplo de horario */}
+        <div className="horario-contenedor">
         <div className="horario-renglon">
           <div className="horario-dia" style={{ flex: 1 }}>
             Año
           </div>
-          <div className="horario-dia" style={{ flex: 1, textAlign: "right" }}>
+          <div className="horario-dia" style={{ flex: 1 }}>
             Cantidad
           </div>
-          <div className="horario-dia" style={{ flex: 1, textAlign: "right" }}>
+          <div className="horario-dia" style={{ flex: 1 }}>
             Pedidos
           </div>
-          <div className="horario-dia" style={{ flex: 1, textAlign: "right" }}>
+          <div className="horario-dia" style={{ flex: 1 }}>
             Saldo
           </div>
         </div>
@@ -618,13 +617,13 @@ function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
               <div className="horario-dia" style={{ flex: 1 }}>
                 {anio}
               </div>
-              <div className="horario-dia" style={{ flex: 1, textAlign: "right" }}>
+              <div className="horario-dia" style={{ flex: 1 }}>
                 {registro.cantidad}
               </div>
-              <div className="horario-dia" style={{ flex: 1, textAlign: "right" }}>
+              <div className="horario-dia" style={{ flex: 1 }}>
                 {registro.pedidos}
               </div>
-              <div className="horario-dia" style={{ flex: 1, textAlign: "right" }}>
+              <div className="horario-dia" style={{ flex: 1 }}>
                 {registro.saldo}
               </div>
             </div>
