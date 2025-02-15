@@ -27,13 +27,7 @@ import {
     Select, 
     Toolbar, Typography, TextField,
     Checkbox,
-    Tooltip,
-    TableContainer,
-    Table,
-    TableHead,
-    TableBody,
-    TableRow,
-    TableCell
+    Tooltip
 } from "@mui/material";
 
 import { date, RealDate, compareForOrder } from "best-globals";
@@ -597,48 +591,54 @@ function Persona(props:{conn: Connector, idper:string, fecha:RealDate, fechaActu
     </Paper>
 }
 
-interface DetalleNovPerProps {
-    detalleVacacionesPersona?: { detalle?: Record<string, DetalleAnioNovPer> } | null;
-}
-  
-const DetalleAniosNovPer: React.FC<DetalleNovPerProps> = ({ detalleVacacionesPersona }) => {
+function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
+    const { detalleVacacionesPersona } = props
     const detalle = (detalleVacacionesPersona || {}) as Record<string, DetalleAnioNovPer>;
     const registros = Object.entries(detalle);
-    return (
-        <TableContainer component={Paper}>
-        <Table>
-        <TableHead>
-            <TableRow>
-            <TableCell>Año</TableCell>
-            <TableCell align="right">Cantidad</TableCell>
-            <TableCell align="right">Pedidos</TableCell>
-            <TableCell align="right">Saldo</TableCell>
-            </TableRow>
-        </TableHead>
-        <TableBody>
+    return <Componente componentType="detalle-anios-novper">
+        <div className="horario-contenedor" style={{ border: "1px solid #ddd" }}>
+        {/* Encabezado: similar a la primera fila en tu ejemplo de horario */}
+        <div className="horario-renglon">
+          <div className="horario-dia" style={{ flex: 1 }}>
+            Año
+          </div>
+          <div className="horario-dia" style={{ flex: 1, textAlign: "right" }}>
+            Cantidad
+          </div>
+          <div className="horario-dia" style={{ flex: 1, textAlign: "right" }}>
+            Pedidos
+          </div>
+          <div className="horario-dia" style={{ flex: 1, textAlign: "right" }}>
+            Saldo
+          </div>
+        </div>
         {registros.length > 0 ? (
-            registros.map(([anio, registro]) => (
-                <TableRow key={anio}>
-                <TableCell component="th" scope="row">
-                    {anio}
-                </TableCell>
-                <TableCell align="right">{registro.cantidad}</TableCell>
-                <TableCell align="right">{registro.pedidos}</TableCell>
-                <TableCell align="right">{registro.saldo}</TableCell>
-                </TableRow>
-            ))
-            ) : (
-            <TableRow>
-                <TableCell colSpan={4} align="center">
-                    No hay información de vacaciones
-                </TableCell>
-            </TableRow>
-            )}
-        </TableBody>
-        </Table>
-        </TableContainer>
-    );
-};
+          registros.map(([anio, registro]) => (
+            <div key={anio} className="horario-renglon">
+              <div className="horario-dia" style={{ flex: 1 }}>
+                {anio}
+              </div>
+              <div className="horario-dia" style={{ flex: 1, textAlign: "right" }}>
+                {registro.cantidad}
+              </div>
+              <div className="horario-dia" style={{ flex: 1, textAlign: "right" }}>
+                {registro.pedidos}
+              </div>
+              <div className="horario-dia" style={{ flex: 1, textAlign: "right" }}>
+                {registro.saldo}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="horario-renglon">
+            <div className="horario-dia" style={{ flex: 4, textAlign: "center" }}>
+              No hay información de vacaciones
+            </div>
+          </div>
+        )}
+      </div>
+    </Componente>
+}
 
 function Pantalla1(props:{conn: Connector}){
     const {conn} = props;
