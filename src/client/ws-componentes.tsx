@@ -8,6 +8,7 @@ import {
 
 import { 
     Connector,
+    FixedFields,
     ICON,
     renderConnectedApp,
     RowType
@@ -313,7 +314,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
         }
     }, [listaPersonas, filtro])
     useEffect(function(){
-        setListaPersonas([])
+        // setListaPersonas([])
         conn.ajax.personas_novedad_actual({fecha}).then(personas => {
             setListaPersonas(personas);
         }).catch(logError);
@@ -606,15 +607,26 @@ function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
     </Componente>
 }
 
-function Pantalla1(props:{conn: Connector}){
+function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
+    var ffObject: Record<string, any> = {
+    };
+    props.fixedFields.forEach(({fieldName, value}) => {
+        ffObject[fieldName] = value;
+    });
+    var defaults = {
+        fecha: typeof ffObject.fecha == "string" ? date.iso(ffObject.fecha) : null,
+        persona: typeof ffObject.idper == "string" ? {idper: ffObject.idper} : {},
+        cod_nov: ffObject.cod_nov ?? ""
+    };
+    console.log('defaults', defaults);
     const {conn} = props;
     const [infoUsuario, setInfoUsuario] = useState({} as InfoUsuario);
-    const [persona, setPersona] = useState({} as ProvisorioPersonas);
-    const [cod_nov, setCodNov] = useState("");
+    const [persona, setPersona] = useState(defaults.persona as ProvisorioPersonas);
+    const [cod_nov, setCodNov] = useState(defaults.cod_nov);
     const [detalles, setDetalles] = useState("");
     const [novedadRegistrada, setNovedadRegistrada] = useState({} as NovedadRegistrada);
-    const [fecha, setFecha] = useState<RealDate>(date.today()); // corresponde today, es un default provisorio
-    const [hasta, setHasta] = useState<RealDate>(date.today()); // corresponde today, es un default provisorio
+    const [fecha, setFecha] = useState<RealDate>(defaults.fecha ?? date.today()); // corresponde today, es un default provisorio
+    const [hasta, setHasta] = useState<RealDate>(defaults.fecha ?? date.today()); // corresponde today, es un default provisorio
     const [registrandoNovedad, setRegistrandoNovedad] = useState(false);
     const [siCargaraNovedad, setSiCargaraNovedad] = useState<SiCargaraNovedades|null>(null);
     const [guardandoRegistroNovedad, setGuardandoRegistroNovedad] = useState(false);
@@ -641,9 +653,13 @@ function Pantalla1(props:{conn: Connector}){
     useEffect(function(){
         // @ts-ignore
         conn.ajax.info_usuario().then(function(infoUsuario){
+            var idperDefault = idper;
             setPersona(infoUsuario as ProvisorioPersonas);
             setInfoUsuario(infoUsuario);
             setFechaActual(infoUsuario.fecha_actual as RealDate);
+            conn.ajax.personas_novedad_actual({fecha}).then(personas => {
+                setPersona((personas.find(p => p.idper == idperDefault) ?? infoUsuario) as ProvisorioPersonas);
+            }).catch(logError);
         }).catch(logError)
     },[])
     useEffect(function(){
@@ -653,12 +669,12 @@ function Pantalla1(props:{conn: Connector}){
         resetDias();
     },[idper,cod_nov,fecha,hasta])
     useEffect(() => {
-        if (persona.idper) {
+        if (idper) {
             conn.ajax.table_data({
                 table: 'nov_per',
                 fixedFields: [
                     {fieldName:'annio', value:fechaActual.getFullYear()}, 
-                    {fieldName:'idper', value:persona.idper}, 
+                    {fieldName:'idper', value:idper}, 
                     {fieldName:'cod_nov', value:1}
                 ],
                 paramfun: {}
@@ -671,7 +687,7 @@ function Pantalla1(props:{conn: Connector}){
                 }
             }).catch(logError)
         }
-    }, [persona]);
+    }, [idper]);
     function registrarNovedad(){
         setGuardandoRegistroNovedad(true);
         conn.ajax.table_record_save({
@@ -822,7 +838,7 @@ function Pantalla1(props:{conn: Connector}){
         </Paper>;
 }
 
-function PantallaPrincipal(props: {conn: Connector}){
+function PantallaPrincipal(props: {conn: Connector, fixedFields:FixedFields}){
     useEffect(() => {
             document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
     }, []);
@@ -840,7 +856,7 @@ function PantallaPrincipal(props: {conn: Connector}){
                 </Typography>
             </Toolbar>
         </AppBar>
-        <Pantalla1 conn={props.conn}/>
+        <Pantalla1 conn={props.conn} fixedFields={props.fixedFields}/>
     </Paper>
 
 }
@@ -851,6 +867,6 @@ myOwn.wScreens.principal = function principal(addrParams:any){
         myOwn as never as Connector,
         { ...addrParams},
         document.getElementById('total-layout')!,
-        ({ conn }) => <PantallaPrincipal conn={conn} />
+        ({ conn, fixedFields }) => <PantallaPrincipal conn={conn} fixedFields={fixedFields} />
     )
 }
