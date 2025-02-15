@@ -7,10 +7,8 @@ import {
 } from "react";
 
 import { 
-    CardEditorConnected, Connector,
-    GenericField, GenericFieldProperties,
+    Connector,
     ICON,
-    OptionsInfo,
     renderConnectedApp,
     RowType
 } from "frontend-plus";
@@ -486,30 +484,6 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     </Componente>
 }
 
-function DatosPersonales(props:{conn: Connector, idper:string}){
-    const {idper, conn} = props;
-    const [persona, setPersona] = useState<RowType>({});
-    useEffect(function(){
-        conn.ajax.table_data({
-            table: 'personas',
-            fixedFields: [{fieldName:'idper', value:idper}],
-            paramfun: {}
-        }).then(function(personas){
-            setPersona(personas[0] ?? {});
-        }).catch(logError)
-    },[idper])
-    return <Componente componentType="datos-personales">
-        <table>
-        {["ficha", "cuil", "apellido", "nombres"].map(n => 
-            <tr key={n}>
-                <td>{n}</td>
-                <td><ValueDB value={persona[n]}/></td>
-            </tr>
-        )}
-        </table>
-    </Componente>
-}
-
 function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, annio:number, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean, c_dds: boolean)=>void, ultimaNovedad?: ULTIMA_NOVEDAD}){
     // @ts-ignore
     const {idper, cod_nov, annio, onCodNov, conn, ultimaNovedad} = props;
@@ -581,14 +555,6 @@ declare module "frontend-plus" {
     interface Connector {
         config: AppConfigClientSetup
     }
-}
-
-function Persona(props:{conn: Connector, idper:string, fecha:RealDate, fechaActual:RealDate}){
-    return <Paper className="componente-persona">
-        <DatosPersonales {...props}/>
-        <Horario {...props}/>
-        <Calendario {...props}/>
-    </Paper>
 }
 
 function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
@@ -856,77 +822,6 @@ function Pantalla1(props:{conn: Connector}){
         </Paper>;
 }
 
-function RegistrarNovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
-    const {fieldsProps /*, optionsInfo*/} = props;
-    const f = createIndex(fieldsProps, f => f.fd.name)
-    const [forEdit, setForEdit] = useState(true)
-    // const rowsCodNov = optionsInfo.tables!.cod_novedades;
-    if (f.idper == null) return <Card> <Typography>Cargando...</Typography> </Card>
-    // const novedad = likeAr(f).filter((_, name) => !(/__/.test(name as string))).map(f => f.value).plain() as Partial<any>
-    console.log(setForEdit)
-    return <Card style={{ width: 'auto' }}>
-        <Box
-            sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                height: '20em',
-            }}
-        >
-            <Box
-                sx={{
-                    width: '100%',
-                }}
-            >
-                <Box>
-                    <GenericField {...f.idper } forEdit={false} />
-                    <GenericField {...f.personas__ficha} />
-                    <GenericField {...f.personas__apellido} />
-                    <GenericField {...f.personas__nombres} />
-                </Box>
-            </Box>
-        
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexGrow: 1,
-                }}
-            >
-                <Box
-                    sx={{
-                        flex: 1,
-                        display: 'flex',
-                        flexDirection: 'column',
-
-                    }}
-                >
-                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
-                        <GenericField {...f.cod_nov} forEdit={forEdit}/>
-                        <GenericField {...f.cod_novedades__novedad} />
-                    </Box>
-            
-                    <Box>
-                        <GenericField {...f.desde} forEdit={forEdit}/>
-                        <GenericField {...f.hasta} forEdit={forEdit}/>
-                    </Box>
-            
-                </Box>
-            </Box>
-        </Box>
-    </Card>
-}
-
-function RegistrarNovedades(props:{conn: Connector, idper:string}){
-    const {idper, conn} = props;
-    return CardEditorConnected({
-        table:'novedades_registradas', 
-        fixedFields:[{fieldName:'idper', value:idper}/*, {fieldName:'desde', value:null}*/], 
-        conn, 
-        CardDisplay: RegistrarNovedadesDisplay
-    });
-}
-
-const IDPER_DEMO = "AR8"
-
 function PantallaPrincipal(props: {conn: Connector}){
     useEffect(() => {
             document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
@@ -948,71 +843,6 @@ function PantallaPrincipal(props: {conn: Connector}){
         <Pantalla1 conn={props.conn}/>
     </Paper>
 
-}
-
-function DemoDeComponentes(props: {conn: Connector}){
-    const {conn} = props;
-    type QUE = ""|"calendario"|"personas"|"novedades-registradas"|"horario"|"persona"|"datos-personales"|"pantalla-1"|"registrar-novedades"|"novedades-per"
-    const [que, setQue] = useState<QUE>("");
-    const fechaActual = date.today(); // es una demo corresponde el today
-    const UnComponente = (props:{titulo:string, que:QUE}) =>
-        <Box><Typography><Button onClick={_=>setQue(props.que)}>Ver:</Button> {props.titulo}</Typography></Box>
-    return <Paper>
-        <AppBar position="static">
-            <Toolbar>
-                {que == "" ?
-                    null
-                : 
-                    <IconButton color="inherit" onClick={()=>setQue("")}><ICON.ChevronLeft/></IconButton>
-                }
-                <Typography flexGrow={2}>
-                    Demo de componentes
-                </Typography>
-                <Typography>
-                    {que}
-                </Typography>
-                {que == "" ?
-                    <IconButton color="inherit" onClick={()=>location.hash="i=devel"}><ICON.ExitToApp/></IconButton>
-                : 
-                    null
-                }
-            </Toolbar>
-        </AppBar>
-        {({
-            "": () => <Card>
-                    <Typography>♪ Componentes invididuales</Typography>
-                    <UnComponente titulo="Lista de personas" que="personas"/>
-                    <UnComponente titulo="Calendario" que="calendario"/>
-                    <UnComponente titulo="Novedades registradas" que="novedades-registradas"/>
-                    <UnComponente titulo="Horario" que="horario"/>
-                    <UnComponente titulo="Datos personales" que="datos-personales"/>
-                    <UnComponente titulo="Novedades de Personas" que="novedades-per"/>
-                    <hr/>
-                    <Typography>🎼 Composición de componentes</Typography>
-                    <UnComponente titulo="Info de una persona" que="persona"/>
-                    <UnComponente titulo="Pantalla 1 (primera total)" que="pantalla-1"/>
-                </Card>,
-            "calendario": () => <Calendario conn={conn} idper={IDPER_DEMO} fecha={fechaActual} fechaActual={fechaActual}/>,
-            "personas": () => <ListaPersonasEditables conn={conn} sector="MS" fecha={fechaActual} idper={IDPER_DEMO} infoUsuario={{} as InfoUsuario}/>,
-            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO} annio={2024} infoUsuario={{} as InfoUsuario} fechaActual={fechaActual} onBorrado={()=>{}}/>,
-            "horario": () => <Horario conn={conn} idper={IDPER_DEMO} fecha={fechaActual}/>,
-            "datos-personales": () => <DatosPersonales conn={conn} idper={IDPER_DEMO}/>,
-            "registrar-novedades": () => <RegistrarNovedades conn={conn} idper={IDPER_DEMO}/>,
-            "novedades-per": () => <NovedadesPer conn={conn} idper={IDPER_DEMO} annio={2024} cod_nov="101" paraCargar={false}/>,
-            "persona": () => <Persona conn={conn} idper={IDPER_DEMO} fecha={fechaActual} fechaActual={fechaActual}/>,
-            "pantalla-1": () => <Pantalla1 conn={conn}/>
-        })[que]()}
-    </Paper>
-}
-
-// @ts-ignore
-myOwn.wScreens.componentesSiper = function componentesSiper(addrParams:any){
-    renderConnectedApp(
-        myOwn as never as Connector,
-        { ...addrParams, table: 'personas' },
-        document.getElementById('total-layout')!,
-        ({ conn }) => <DemoDeComponentes conn={conn} />
-    )
 }
 
 // @ts-ignore
