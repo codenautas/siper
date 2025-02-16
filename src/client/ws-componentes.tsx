@@ -86,15 +86,18 @@ export const DDS = {
 
 type ULTIMA_NOVEDAD = number;
 
-function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, fechaActual: RealDate, onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, ultimaNovedad?: ULTIMA_NOVEDAD}){
-    const {conn, fecha, fechaHasta, idper, ultimaNovedad, fechaActual} = props;
+function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, fechaActual: RealDate, 
+    annio:number,
+    onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, ultimaNovedad?: ULTIMA_NOVEDAD
+    onAnnio?: (annio:number) => void
+}){
+    const {conn, fecha, fechaHasta, idper, ultimaNovedad, fechaActual, annio} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
-    type Periodo = {mes:number, annio:number} 
-    const [periodo, setPeriodo] = useState<Periodo>({mes:fecha.getMonth()+1, annio:fecha.getFullYear()});
-    const retrocederUnMes = (s:Periodo)=>({mes: (s.mes == 1 ? 12 : s.mes - 1), annio: (s.annio - (s.mes == 1  ? 1 : 0 ))})
-    const avanzarUnMes    = (s:Periodo)=>({mes: (s.mes == 12 ? 1 : s.mes + 1), annio: (s.annio + (s.mes == 12 ? 1 : 0 ))})
-    // var retrocederUnMes = (s:Periodo)=>({mes: (s.mes == 1 ? 12 : 5), annio: (s.annio - (s.mes == 1  ? 1 : 0 ))})
-    // var avanzarUnMes    = (s:Periodo)=>({mes: (s.mes == 12 ? 1 : 5), annio: (s.annio + (s.mes == 12 ? 1 : 0 ))})
+    type Periodo = {mes:number, annio:number}
+    const [mes, setMes] = useState(fecha.getMonth()+1);
+    const [periodo, setPeriodo] = [{mes, annio}, (x:Periodo) => {setMes(x.mes); props.onAnnio?.(x.annio);}]
+    const retrocederUnMes = ({mes: (mes == 1 ? 12 : mes - 1), annio: (annio - (mes == 1  ? 1 : 0 ))})
+    const avanzarUnMes    = ({mes: (mes == 12 ? 1 : mes + 1), annio: (annio + (mes == 12 ? 1 : 0 ))})
     const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
     const [botonRetrocederHabilitado, setBotonRetrocederHabilitado] = useState<boolean>(true); 
     const [botonAvanzarHabilitado, setBotonAvanzarHabilitado] = useState<boolean>(true); 
@@ -500,7 +503,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
                 setCodNovedades(novedades);
             }).catch(logError);
         }
-    },[idper, ultimaNovedad])
+    },[idper, ultimaNovedad, annio])
     useEffect(function(){
         const recordFilter = GetRecordFilter<NovedadesDisponiblesResult>(filtro,['cod_nov', 'novedad'],todas,'prioritario');
         setCodNovedadesFiltradas(codNovedades.filter(recordFilter))
@@ -633,7 +636,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     const [error, setError] = useState<Error|null>(null);
     const {idper} = persona
     const [ultimaNovedad, setUltimaNovedad] = useState(0);
-    const annio = fecha.getFullYear();
+    const [annio, setAnnio] = useState((defaults.fecha ?? date.today()).getFullYear());
     const [fechaActual, setFechaActual] =  useState<RealDate>(date.today()); // corresponde today, es un default provisorio
     const [detalleVacacionesPersona, setDetalleVacacionesPersona] = useState<ProvisorioDetalleNovPer|null>({} as ProvisorioDetalleNovPer)
 
@@ -673,7 +676,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             conn.ajax.table_data({
                 table: 'nov_per',
                 fixedFields: [
-                    {fieldName:'annio', value:fechaActual.getFullYear()}, 
+                    {fieldName:'annio', value:annio}, 
                     {fieldName:'idper', value:idper}, 
                     {fieldName:'cod_nov', value:1}
                 ],
@@ -687,7 +690,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                 }
             }).catch(logError)
         }
-    }, [idper]);
+    }, [idper, annio]);
     function registrarNovedad(){
         setGuardandoRegistroNovedad(true);
         conn.ajax.table_record_save({
@@ -783,7 +786,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                     </Box>
                 </Box>
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}
-                    fechaActual={fechaActual!}
+                    fechaActual={fechaActual!} annio={annio} onAnnio={setAnnio}
                 />
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
                 {cod_nov && idper && fecha && hasta && !guardandoRegistroNovedad && !registrandoNovedad && persona.cargable ? <Box key="setSiCargaraNovedad">
