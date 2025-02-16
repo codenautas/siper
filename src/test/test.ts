@@ -952,7 +952,7 @@ describe("connected", function(){
                     prioritario: true,
                     c_dds: null,
                     limite:21, 
-                    cantidad: 3, 
+                    pedidos: 3, 
                     saldo: 18,
                 };
                 var result = await rrhhSession.callProcedure(ctts.novedades_disponibles, {idper, annio: Number(DESDE_AÑO)})
