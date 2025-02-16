@@ -414,8 +414,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
             fixedFields: [{fieldName:'idper', value:idper}, {fieldName:'annio', value:annio}],
             paramfun: {}
         }).then(function(novedadesRegistradas){
-            novedadesRegistradas.reverse()
-            console.log(novedadesRegistradas)
+            novedadesRegistradas.sort(compareForOrder([{column:'idr', order:-1}]))
             setNovedades(novedadesRegistradas);
         }).catch(logError)
     },[idper, ultimaNovedad, annio])
