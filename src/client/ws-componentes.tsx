@@ -40,13 +40,27 @@ import { DefinedType } from "guarantee-type";
 import { AppConfigClientSetup } from "../server/types-principal";
 import { obtenerDetalleVacaciones } from "./shared-functions";
 
+const EFIMERO = Symbol("EFIMERO");
+function setEfimero<T extends {}|null>(tictac:T){
+    if (tictac != null) {
+        // @ts-expect-error Situación especial para marcar objetos que ya no están disponibles porque se pidió un dato nuevo
+        tictac[EFIMERO] = true;
+    }
+    return tictac
+}
+
 export function logError(error:Error){
     console.error(error);
     my.log(error);
 }
 
-export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string, scrollable?: boolean  }){
-    return <Card className={"componente-" + props.componentType} sx={{ overflowY: props.scrollable ? 'auto' : 'hidden', backgroundImage: `url('${myOwn.config.config["background-img"]}')`}}>
+export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string, scrollable?: boolean  
+    esEfimero?: any
+}){
+    return <Card className={"componente-" + props.componentType} 
+        siper-esEfimero={props.esEfimero === true || props.esEfimero?.[EFIMERO] ? "si" : "no"}
+        sx={{ overflowY: props.scrollable ? 'auto' : 'hidden', backgroundImage: `url('${myOwn.config.config["background-img"]}')`}}
+    >
         {props.children}
     </Card>
 }
@@ -118,6 +132,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
             setAnnios(annios);
         }).catch(logError);
         if (idper != null) {
+            setCalendario(setEfimero)
             conn.ajax.calendario_persona({idper, ...periodo}).then(dias => {
                 var semanas = [];
                 var semana = [];
@@ -150,7 +165,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
         }
     };
 
-    return <Componente componentType="calendario-mes">
+    return <Componente componentType="calendario-mes" esEfimero={calendario}>
         <Box style={{ flex:1}}>
             <Box>
                 <Button onClick={_ => setPeriodo(retrocederUnMes)} disabled={!botonRetrocederHabilitado}><ICON.ChevronLeft/></Button>
@@ -317,7 +332,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
         }
     }, [listaPersonas, filtro])
     useEffect(function(){
-        // setListaPersonas([])
+        setListaPersonas(setEfimero)
         conn.ajax.personas_novedad_actual({fecha}).then(personas => {
             setListaPersonas(personas);
         }).catch(logError);
@@ -340,7 +355,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
             setSectores(sectoresAumentados);
         }).catch(logError)
     }, [fecha]);
-    return <Componente componentType="lista-personas" scrollable={true}>
+    return <Componente componentType="lista-personas" scrollable={true} esEfimero={listaPersonas}>
         <SearchBox onChange={setFiltro}/>
         {sectores.filter(s => s.perteneceA[sector] || infoUsuario.puede_cargar_todo).map(s =>
             filtro && !abanicoPersonas[s.sector]?.length ? null :
@@ -393,6 +408,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
       };
 
     useEffect(function(){
+        setNovedades(setEfimero)
         conn.ajax.table_data<ProvisorioNovedadesRegistradas>({
             table: 'novedades_registradas',
             fixedFields: [{fieldName:'idper', value:idper}],
@@ -403,7 +419,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
             setNovedades(novedadesRegistradas);
         }).catch(logError)
     },[idper, ultimaNovedad])
-    return <Componente componentType="novedades-registradas">
+    return <Componente componentType="novedades-registradas" esEfimero={novedades}>
         {novedades.map(n => {
             const diasSeleccionados = Object.entries(n)
                 .filter(([key, value]) => key.startsWith("dds") && value === true)
@@ -449,7 +465,7 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     const horarioVacio:HorarioSemanaVigenteResult = {desde: date.today(), hasta: date.today(), dias:{}} // corresponde today, es un default provisorio
     const [horario, setHorario] = useState(horarioVacio);
     useEffect(function(){
-        setHorario(horarioVacio)
+        setHorario(setEfimero)
         if (idper != null) {
             conn.ajax.horario_semana_vigente({ idper, fecha }).then(result => {
                 setHorario(result);
@@ -468,7 +484,7 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
         </div>
     }
     
-    return <Componente componentType="horario">
+    return <Componente componentType="horario" esEfimero={horario}>
         <div className="horario-vigente">
             Horario vigente desde {desdeFecha.toDmy()} hasta {hastaFecha.toDmy()}.
         </div>
@@ -496,7 +512,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
     const [filtro, setFiltro] = useState("");
     const [todas, setTodas] = useState(false);
     useEffect(function(){
-        setCodNovedades([])
+        setCodNovedades(setEfimero)
         if (idper != null) {
             conn.ajax.novedades_disponibles({ idper, annio }).then(novedades => {
                 novedades.sort(compareForOrder([{column:'cod_nov'}]))
@@ -508,7 +524,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
         const recordFilter = GetRecordFilter<NovedadesDisponiblesResult>(filtro,['cod_nov', 'novedad'],todas,'prioritario');
         setCodNovedadesFiltradas(codNovedades.filter(recordFilter))
     },[codNovedades, filtro, todas])
-    return <Componente componentType="codigo-novedades" scrollable={true}>
+    return <Componente componentType="codigo-novedades" scrollable={true} esEfimero={codNovedades}>
         <SearchBox onChange={setFiltro} todas={todas} onTodasChange={setTodas}/>
         <List>
             {codNovedadesFiltradas.map(c=>
@@ -673,6 +689,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     },[idper,cod_nov,fecha,hasta])
     useEffect(() => {
         if (idper) {
+            setDetalleVacacionesPersona(setEfimero)
             conn.ajax.table_data({
                 table: 'nov_per',
                 fixedFields: [
