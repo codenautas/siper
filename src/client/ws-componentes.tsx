@@ -392,7 +392,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
     fechaActual:RealDate,
     onBorrado:()=>void}
 ){
-    const {idper, conn, ultimaNovedad, infoUsuario, fechaActual} = props;
+    const {idper, conn, ultimaNovedad, infoUsuario, fechaActual, annio} = props;
     console.log(infoUsuario)
     const [novedades, setNovedades] = useState<ProvisorioNovedadesRegistradas[]>([]);
     const [quiereBorrar, setQuiereBorrar] = useState<ProvisorioNovedadesRegistradas|null>(null);
@@ -411,14 +411,14 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
         setNovedades(setEfimero)
         conn.ajax.table_data<ProvisorioNovedadesRegistradas>({
             table: 'novedades_registradas',
-            fixedFields: [{fieldName:'idper', value:idper}],
+            fixedFields: [{fieldName:'idper', value:idper}, {fieldName:'annio', value:annio}],
             paramfun: {}
         }).then(function(novedadesRegistradas){
             novedadesRegistradas.reverse()
             console.log(novedadesRegistradas)
             setNovedades(novedadesRegistradas);
         }).catch(logError)
-    },[idper, ultimaNovedad])
+    },[idper, ultimaNovedad, annio])
     return <Componente componentType="novedades-registradas" esEfimero={novedades}>
         {novedades.map(n => {
             const diasSeleccionados = Object.entries(n)
