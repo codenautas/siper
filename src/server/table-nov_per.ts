@@ -8,28 +8,42 @@ import {cod_nov} from "./table-cod_novedades"
 import {sector} from "./table-sectores"
 
 export const sqlNovPer= (params:{idper?:string, annio?:number})=> `
-    select pn.annio, cn.cod_nov, pn.idper, 
-            pn.total, 
-            count(*) filter (where fecha is not null and fecha <= fecha_actual) as usados, 
-            count(*) filter (where fecha is not null and (fecha <= fecha_actual) is not true) as pendientes, 
-            pn.total - count(*) filter (where fecha is not null) as disponibles,
+    select a.annio, 
+            cn.cod_nov, 
+            p.idper, 
             p.sector,
-            pn.esquema
-    from cod_novedades cn
-        inner join parametros on unico_registro
-        left join (
-            select annio, idper, cod_nov, 
-                    sum(cantidad) as total,
+            pnc.total,
+            nv.usados,
+            nv.pendientes,
+            nv.disponibles,
+            pnc.esquema,
+            (pnc.total > 0 or nv.usados > 0 or nv.pendientes > 0) as con_dato,
+            cn.novedad,
+            cn.c_dds,
+            cn.con_detalles,
+            cn.registra,
+            cn.prioritario
+    from cod_novedades cn,
+        parametros par,
+        annios a,
+        personas p,
+        lateral (
+            select sum(cantidad) as total,
                     json_object_agg(origen, json_build_object('cantidad', cantidad) order by origen)::text as esquema
-                from per_nov_cant 
-                where true ${params.annio? ` and annio = ${sqlTools.quoteLiteral(params.annio)} `:' '}
-                group by annio, idper, cod_nov
-        ) pn on cn.cod_nov = pn.cod_nov
-        left join novedades_vigentes n on pn.annio = n.annio and pn.idper = n.idper and pn.cod_nov = n.cod_nov
-        left join personas p on pn.idper = p.idper
-    where true ${params.idper? ` and pn.idper = ${sqlTools.quoteLiteral(params.idper)} `:' '}
-         ${params.annio? ` and pn.annio = ${sqlTools.quoteLiteral(params.annio)} `:' '}
-    group by pn.annio, cn.cod_nov, pn.idper, pn.total, p.sector, pn.esquema
+                from per_nov_cant pnc
+                where pnc.cod_nov = cn.cod_nov and pnc.annio = a.annio and pnc.idper = p.idper
+        ) pnc,
+        lateral (
+            select 
+                    count(*) filter (where nv.fecha <= fecha_actual) as usados, 
+                    count(*) filter (where nv.fecha > fecha_actual) as pendientes, 
+                    pnc.total - count(*) as disponibles
+                from novedades_vigentes nv
+                where nv.cod_nov = cn.cod_nov and nv.annio = a.annio and nv.idper = p.idper
+        ) nv
+        where true 
+            ${params.annio? ` and a.annio = ${sqlTools.quoteLiteral(params.annio)} `:''}
+            ${params.idper? ` and p.idper = ${sqlTools.quoteLiteral(params.idper)} `:''}
 `;
 
 export function nov_per(_context: TableContext): TableDefinition {
@@ -63,6 +77,7 @@ export function nov_per(_context: TableContext): TableDefinition {
             isTable:false,
             from:`(select *
                    from (${sqlNovPer({})}) x
+                   where con_dato
             )`
         },
         hiddenColumns: ['esquema', 'detalle'],
