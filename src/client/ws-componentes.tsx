@@ -285,11 +285,11 @@ function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null
        {props.ordenPorNovedad
             // @ts-ignore
         ?   <Button onClick={_=>{props.onOrdenPorNovedadChange(!props.ordenPorNovedad)}}>
-                <ICON.SortByAlpha />
+                <ICON.SortByNum />
             </Button>
             // @ts-ignore
         :   <Button onClick={_=>{props.onOrdenPorNovedadChange(!props.ordenPorNovedad)}}>
-                <ICON.SortByNum />
+                <ICON.SortByAlpha />
             </Button>
         }
         </>
