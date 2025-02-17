@@ -22,7 +22,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'cuil'     , typeName: 'text', isName:false, postInput: soloDigitosPostConfig  },
             {name: 'tipo_doc' , typeName: 'text',                                                 },
             {name: 'documento', typeName: 'text', isName:false, postInput: soloDigitosPostConfig  },
-            {name: 'ficha'    , typeName: 'text', isName:false,                                   },
+            {name: 'ficha'    , typeName: 'text', isName:true ,                                   },
             {name: 'idmeta4'  , typeName: 'text', isName:false, title:'id meta4'                  },
             {name: 'apellido' , typeName: 'text', isName:true , nullable:false                    },
             {name: 'nombres'  , typeName: 'text', isName:true , nullable:false                    },

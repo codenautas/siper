@@ -7,9 +7,10 @@ import {
 } from "react";
 
 import { 
-    Connector,
-    FixedFields,
+    CardEditorConnected, Connector,
+    GenericField, GenericFieldProperties,
     ICON,
+    OptionsInfo,
     renderConnectedApp,
     RowType
 } from "frontend-plus";
@@ -26,7 +27,13 @@ import {
     Select, 
     Toolbar, Typography, TextField,
     Checkbox,
-    Tooltip
+    Tooltip,
+    TableContainer,
+    Table,
+    TableHead,
+    TableBody,
+    TableRow,
+    TableCell
 } from "@mui/material";
 
 import { date, RealDate, compareForOrder } from "best-globals";
@@ -40,27 +47,13 @@ import { DefinedType } from "guarantee-type";
 import { AppConfigClientSetup } from "../server/types-principal";
 import { obtenerDetalleVacaciones } from "./shared-functions";
 
-const EFIMERO = Symbol("EFIMERO");
-function setEfimero<T extends {}|null>(tictac:T){
-    if (tictac != null) {
-        // @ts-expect-error Situación especial para marcar objetos que ya no están disponibles porque se pidió un dato nuevo
-        tictac[EFIMERO] = true;
-    }
-    return tictac
-}
-
 export function logError(error:Error){
     console.error(error);
     my.log(error);
 }
 
-export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string, scrollable?: boolean  
-    esEfimero?: any
-}){
-    return <Card className={"componente-" + props.componentType} 
-        siper-esEfimero={props.esEfimero === true || props.esEfimero?.[EFIMERO] ? "si" : "no"}
-        sx={{ overflowY: props.scrollable ? 'auto' : 'hidden', backgroundImage: `url('${myOwn.config.config["background-img"]}')`}}
-    >
+export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string, scrollable?: boolean  }){
+    return <Card className={"componente-" + props.componentType} sx={{ overflowY: props.scrollable ? 'auto' : 'hidden', backgroundImage: `url('${myOwn.config.config["background-img"]}')`}}>
         {props.children}
     </Card>
 }
@@ -100,18 +93,15 @@ export const DDS = {
 
 type ULTIMA_NOVEDAD = number;
 
-function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, fechaActual: RealDate, 
-    annio:number,
-    onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, ultimaNovedad?: ULTIMA_NOVEDAD
-    onAnnio?: (annio:number) => void
-}){
-    const {conn, fecha, fechaHasta, idper, ultimaNovedad, fechaActual, annio} = props;
+function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, fechaActual: RealDate, onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, ultimaNovedad?: ULTIMA_NOVEDAD}){
+    const {conn, fecha, fechaHasta, idper, ultimaNovedad, fechaActual} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
-    type Periodo = {mes:number, annio:number}
-    const [mes, setMes] = useState(fecha.getMonth()+1);
-    const [periodo, setPeriodo] = [{mes, annio}, (x:Periodo) => {setMes(x.mes); props.onAnnio?.(x.annio);}]
-    const retrocederUnMes = ({mes: (mes == 1 ? 12 : mes - 1), annio: (annio - (mes == 1  ? 1 : 0 ))})
-    const avanzarUnMes    = ({mes: (mes == 12 ? 1 : mes + 1), annio: (annio + (mes == 12 ? 1 : 0 ))})
+    type Periodo = {mes:number, annio:number} 
+    const [periodo, setPeriodo] = useState<Periodo>({mes:fecha.getMonth()+1, annio:fecha.getFullYear()});
+    const retrocederUnMes = (s:Periodo)=>({mes: (s.mes == 1 ? 12 : s.mes - 1), annio: (s.annio - (s.mes == 1  ? 1 : 0 ))})
+    const avanzarUnMes    = (s:Periodo)=>({mes: (s.mes == 12 ? 1 : s.mes + 1), annio: (s.annio + (s.mes == 12 ? 1 : 0 ))})
+    // var retrocederUnMes = (s:Periodo)=>({mes: (s.mes == 1 ? 12 : 5), annio: (s.annio - (s.mes == 1  ? 1 : 0 ))})
+    // var avanzarUnMes    = (s:Periodo)=>({mes: (s.mes == 12 ? 1 : 5), annio: (s.annio + (s.mes == 12 ? 1 : 0 ))})
     const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
     const [botonRetrocederHabilitado, setBotonRetrocederHabilitado] = useState<boolean>(true); 
     const [botonAvanzarHabilitado, setBotonAvanzarHabilitado] = useState<boolean>(true); 
@@ -132,7 +122,6 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
             setAnnios(annios);
         }).catch(logError);
         if (idper != null) {
-            setCalendario(setEfimero)
             conn.ajax.calendario_persona({idper, ...periodo}).then(dias => {
                 var semanas = [];
                 var semana = [];
@@ -165,7 +154,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
         }
     };
 
-    return <Componente componentType="calendario-mes" esEfimero={calendario}>
+    return <Componente componentType="calendario-mes">
         <Box style={{ flex:1}}>
             <Box>
                 <Button onClick={_ => setPeriodo(retrocederUnMes)} disabled={!botonRetrocederHabilitado}><ICON.ChevronLeft/></Button>
@@ -344,7 +333,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
         }
     }, [listaPersonas, filtro])
     useEffect(function(){
-        setListaPersonas(setEfimero)
+        setListaPersonas([])
         conn.ajax.personas_novedad_actual({fecha}).then(personas => {
             setListaPersonas(personas);
         }).catch(logError);
@@ -367,7 +356,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
             setSectores(sectoresAumentados);
         }).catch(logError)
     }, [fecha]);
-    return <Componente componentType="lista-personas" scrollable={true} esEfimero={listaPersonas}>
+    return <Componente componentType="lista-personas" scrollable={true}>
         <SearchBox onChange={setFiltro}/>
         {sectores.filter(s => s.perteneceA[sector] || infoUsuario.puede_cargar_todo).map(s =>
             filtro && !abanicoPersonas[s.sector]?.length ? null :
@@ -404,7 +393,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
     fechaActual:RealDate,
     onBorrado:()=>void}
 ){
-    const {idper, conn, ultimaNovedad, infoUsuario, fechaActual, annio} = props;
+    const {idper, conn, ultimaNovedad, infoUsuario, fechaActual} = props;
     console.log(infoUsuario)
     const [novedades, setNovedades] = useState<ProvisorioNovedadesRegistradas[]>([]);
     const [quiereBorrar, setQuiereBorrar] = useState<ProvisorioNovedadesRegistradas|null>(null);
@@ -420,19 +409,17 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
       };
 
     useEffect(function(){
-        setNovedades(setEfimero)
         conn.ajax.table_data<ProvisorioNovedadesRegistradas>({
             table: 'novedades_registradas',
-            fixedFields: [{fieldName:'idper', value:idper}, {fieldName:'annio', value:annio}],
+            fixedFields: [{fieldName:'idper', value:idper}],
             paramfun: {}
         }).then(function(novedadesRegistradas){
-            novedadesRegistradas.sort(compareForOrder([{column:'idr', order:-1}]))
+            novedadesRegistradas.reverse()
+            console.log(novedadesRegistradas)
             setNovedades(novedadesRegistradas);
         }).catch(logError)
-    },[idper, ultimaNovedad, annio])
-    // @ts-expect-error
-    var es:{rrhh:boolean} = conn.config?.config?.es||{}
-    return <Componente componentType="novedades-registradas" esEfimero={novedades}>
+    },[idper, ultimaNovedad])
+    return <Componente componentType="novedades-registradas">
         {novedades.map(n => {
             const diasSeleccionados = Object.entries(n)
                 .filter(([key, value]) => key.startsWith("dds") && value === true)
@@ -444,7 +431,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' } 
                     {diasSeleccionados.length > 0 ? ' / ' + diasSeleccionados.join(', ') : ''}
                 </div>
-                <div className="borrar">{n.desde > fechaActual && es.rrhh ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
+                <div className="borrar">{n.desde > fechaActual && conn.config.es?.rrhh ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
             </Box>)
         })}
         <Dialog open={quiereBorrar != null}>
@@ -478,7 +465,7 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     const horarioVacio:HorarioSemanaVigenteResult = {desde: date.today(), hasta: date.today(), dias:{}} // corresponde today, es un default provisorio
     const [horario, setHorario] = useState(horarioVacio);
     useEffect(function(){
-        setHorario(setEfimero)
+        setHorario(horarioVacio)
         if (idper != null) {
             conn.ajax.horario_semana_vigente({ idper, fecha }).then(result => {
                 setHorario(result);
@@ -497,7 +484,7 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
         </div>
     }
     
-    return <Componente componentType="horario" esEfimero={horario}>
+    return <Componente componentType="horario">
         <div className="horario-vigente">
             Horario vigente desde {desdeFecha.toDmy()} hasta {hastaFecha.toDmy()}.
         </div>
@@ -517,6 +504,30 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     </Componente>
 }
 
+function DatosPersonales(props:{conn: Connector, idper:string}){
+    const {idper, conn} = props;
+    const [persona, setPersona] = useState<RowType>({});
+    useEffect(function(){
+        conn.ajax.table_data({
+            table: 'personas',
+            fixedFields: [{fieldName:'idper', value:idper}],
+            paramfun: {}
+        }).then(function(personas){
+            setPersona(personas[0] ?? {});
+        }).catch(logError)
+    },[idper])
+    return <Componente componentType="datos-personales">
+        <table>
+        {["ficha", "cuil", "apellido", "nombres"].map(n => 
+            <tr key={n}>
+                <td>{n}</td>
+                <td><ValueDB value={persona[n]}/></td>
+            </tr>
+        )}
+        </table>
+    </Componente>
+}
+
 function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, annio:number, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean, c_dds: boolean)=>void, ultimaNovedad?: ULTIMA_NOVEDAD}){
     // @ts-ignore
     const {idper, cod_nov, annio, onCodNov, conn, ultimaNovedad} = props;
@@ -527,20 +538,21 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
     const [ordenPorNovedad, setOrdenPorNovedad] = useState(false);
 
     useEffect(function(){
-        setCodNovedades(setEfimero)
+        setCodNovedades([])
         if (idper != null) {
             conn.ajax.novedades_disponibles({ idper, annio }).then(novedades => {
                 setCodNovedades(novedades);
             }).catch(logError);
         }
-    },[idper, ultimaNovedad, annio])
+    },[idper, ultimaNovedad])
+    
     useEffect(function(){
         const recordFilter = GetRecordFilter<NovedadesDisponiblesResult>(filtro,['cod_nov', 'novedad'],todas,'prioritario');
         const novedadesOrdenadas = [...codNovedades].sort(compareForOrder([{ column: ordenPorNovedad ? 'novedad' : 'cod_nov' }]));
         setCodNovedadesFiltradas(novedadesOrdenadas.filter(recordFilter));
     },[codNovedades, filtro, todas, ordenPorNovedad])
 
-    return <Componente componentType="codigo-novedades" scrollable={true} esEfimero={codNovedades}>
+    return <Componente componentType="codigo-novedades" scrollable={true}>
         <SearchBox onChange={setFiltro} todas={todas} onTodasChange={setTodas} ordenPorNovedad={ordenPorNovedad} onOrdenPorNovedadChange={setOrdenPorNovedad}/>
         <List>
             {codNovedadesFiltradas.map(c=>
@@ -550,7 +562,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
                     disabled={!c.con_disponibilidad}>
                     <span className="box-id"> {c.cod_nov} </span>   
                     <span className="box-names"> {c.novedad} </span>
-                    <span className="box-info">{c.limite! > 0 ? (c.pedidos! > 0 ?`${c.limite} - ${c.pedidos} = ${c.saldo}` : c.limite ): ''}</span>
+                    <span className="box-info">{c.limite! > 0 ? (c.cantidad! > 0 ?`${c.limite} - ${c.cantidad} = ${c.saldo}` : c.limite ): ''}</span>
                 </ListItemButton>
             )}
         </List>
@@ -593,82 +605,73 @@ declare module "frontend-plus" {
     }
 }
 
-function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
-    const { detalleVacacionesPersona } = props
-    const detalle = (detalleVacacionesPersona || {}) as Record<string, DetalleAnioNovPer>;
-    const registros = Object.entries(detalle);
-    return <Componente componentType="detalle-anios-novper">
-        <div className="vacaciones-contenedor">
-            <div className="vacaciones-renglon">
-                vacaciones
-            </div>
-            <div className="vacaciones-renglon">
-                <div className="vacaciones-titulo">
-                    año
-                </div>
-                <div className="vacaciones-titulo" title="cantidad inicial">
-                    cant
-                </div>
-                <div className="vacaciones-titulo" title="pedidos">
-                    ped
-                </div>
-                <div className="vacaciones-titulo" title="saldo">
-                    saldo
-                </div>
-            </div>
-            {registros.length > 0 ? (
-                registros.map(([anio, registro]) => (
-                    <div key={anio} className="vacaciones-renglon">
-                    <div className="vacaciones-celda">
-                        {anio}
-                    </div>
-                    <div className="vacaciones-celda">
-                        {registro.cantidad}
-                    </div>
-                    <div className="vacaciones-celda">
-                        {registro.pedidos}
-                    </div>
-                    <div className="vacaciones-celda">
-                        {registro.saldo}
-                    </div>
-                    </div>
-                ))
-            ) : (
-                <div className="vacaciones-renglon">
-                    sin información
-                </div>
-            )}
-        </div>
-    </Componente>
+function Persona(props:{conn: Connector, idper:string, fecha:RealDate, fechaActual:RealDate}){
+    return <Paper className="componente-persona">
+        <DatosPersonales {...props}/>
+        <Horario {...props}/>
+        <Calendario {...props}/>
+    </Paper>
 }
 
-function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
-    var ffObject: Record<string, any> = {
-    };
-    props.fixedFields.forEach(({fieldName, value}) => {
-        ffObject[fieldName] = value;
-    });
-    var defaults = {
-        fecha: typeof ffObject.fecha == "string" ? date.iso(ffObject.fecha) : null,
-        persona: typeof ffObject.idper == "string" ? {idper: ffObject.idper} : {},
-        cod_nov: ffObject.cod_nov ?? ""
-    };
-    console.log('defaults', defaults);
+interface DetalleNovPerProps {
+    detalleVacacionesPersona?: { detalle?: Record<string, DetalleAnioNovPer> } | null;
+}
+  
+const DetalleAniosNovPer: React.FC<DetalleNovPerProps> = ({ detalleVacacionesPersona }) => {
+    const detalle = (detalleVacacionesPersona || {}) as Record<string, DetalleAnioNovPer>;
+    const registros = Object.entries(detalle);
+    return (
+        <TableContainer component={Paper}>
+        <Table>
+        <TableHead>
+            <TableRow>
+            <TableCell>Año</TableCell>
+            <TableCell align="right">Cantidad</TableCell>
+            <TableCell align="right">Pedidos</TableCell>
+            <TableCell align="right">Saldo</TableCell>
+            </TableRow>
+        </TableHead>
+        <TableBody>
+        {registros.length > 0 ? (
+            registros.map(([anio, registro]) => (
+                <TableRow key={anio}>
+                <TableCell component="th" scope="row">
+                    {anio}
+                </TableCell>
+                <TableCell align="right">{registro.cantidad}</TableCell>
+                <TableCell align="right">{registro.pedidos}</TableCell>
+                <TableCell align="right">{registro.saldo}</TableCell>
+                </TableRow>
+            ))
+            ) : (
+            <TableRow>
+                <TableCell colSpan={4} align="center">
+                    No hay información de vacaciones
+                </TableCell>
+            </TableRow>
+            )}
+        </TableBody>
+        </Table>
+        </TableContainer>
+    );
+};
+
+function Pantalla1(props:{conn: Connector}){
     const {conn} = props;
     const [infoUsuario, setInfoUsuario] = useState({} as InfoUsuario);
-    const [persona, setPersona] = useState(defaults.persona as ProvisorioPersonas);
-    const [cod_nov, setCodNov] = useState(defaults.cod_nov);
+    const [persona, setPersona] = useState({} as ProvisorioPersonas);
+    const [cod_nov, setCodNov] = useState("");
     const [detalles, setDetalles] = useState("");
     const [novedadRegistrada, setNovedadRegistrada] = useState({} as NovedadRegistrada);
-    const [fecha, setFecha] = useState<RealDate>(defaults.fecha ?? date.today()); // corresponde today, es un default provisorio
-    const [hasta, setHasta] = useState<RealDate>(defaults.fecha ?? date.today()); // corresponde today, es un default provisorio
+    const [fecha, setFecha] = useState<RealDate>(date.today()); // corresponde today, es un default provisorio
+    const [hasta, setHasta] = useState<RealDate>(date.today()); // corresponde today, es un default provisorio
     const [registrandoNovedad, setRegistrandoNovedad] = useState(false);
     const [siCargaraNovedad, setSiCargaraNovedad] = useState<SiCargaraNovedades|null>(null);
     const [guardandoRegistroNovedad, setGuardandoRegistroNovedad] = useState(false);
     const [error, setError] = useState<Error|null>(null);
     const {idper} = persona
     const [ultimaNovedad, setUltimaNovedad] = useState(0);
-    const [annio, setAnnio] = useState((defaults.fecha ?? date.today()).getFullYear());
+    const annio = fecha.getFullYear();
     const [fechaActual, setFechaActual] =  useState<RealDate>(date.today()); // corresponde today, es un default provisorio
     const [detalleVacacionesPersona, setDetalleVacacionesPersona] = useState<ProvisorioDetalleNovPer|null>({} as ProvisorioDetalleNovPer)
 
@@ -688,13 +691,9 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     useEffect(function(){
         // @ts-ignore
         conn.ajax.info_usuario().then(function(infoUsuario){
-            var idperDefault = idper;
             setPersona(infoUsuario as ProvisorioPersonas);
             setInfoUsuario(infoUsuario);
             setFechaActual(infoUsuario.fecha_actual as RealDate);
-            conn.ajax.personas_novedad_actual({fecha}).then(personas => {
-                setPersona((personas.find(p => p.idper == idperDefault) ?? infoUsuario) as ProvisorioPersonas);
-            }).catch(logError);
         }).catch(logError)
     },[])
     useEffect(function(){
@@ -704,13 +703,12 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         resetDias();
     },[idper,cod_nov,fecha,hasta])
     useEffect(() => {
-        if (idper) {
-            setDetalleVacacionesPersona(setEfimero)
+        if (persona.idper) {
             conn.ajax.table_data({
                 table: 'nov_per',
                 fixedFields: [
-                    {fieldName:'annio', value:annio}, 
-                    {fieldName:'idper', value:idper}, 
+                    {fieldName:'annio', value:fechaActual.getFullYear()}, 
+                    {fieldName:'idper', value:persona.idper}, 
                     {fieldName:'cod_nov', value:1}
                 ],
                 paramfun: {}
@@ -723,7 +721,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                 }
             }).catch(logError)
         }
-    }, [idper, annio]);
+    }, [persona]);
     function registrarNovedad(){
         setGuardandoRegistroNovedad(true);
         conn.ajax.table_record_save({
@@ -819,7 +817,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                     </Box>
                 </Box>
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}
-                    fechaActual={fechaActual!} annio={annio} onAnnio={setAnnio}
+                    fechaActual={fechaActual!}
                 />
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
                 {cod_nov && idper && fecha && hasta && !guardandoRegistroNovedad && !registrandoNovedad && persona.cargable ? <Box key="setSiCargaraNovedad">
@@ -874,7 +872,78 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         </Paper>;
 }
 
-function PantallaPrincipal(props: {conn: Connector, fixedFields:FixedFields}){
+function RegistrarNovedadesDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
+    const {fieldsProps /*, optionsInfo*/} = props;
+    const f = createIndex(fieldsProps, f => f.fd.name)
+    const [forEdit, setForEdit] = useState(true)
+    // const rowsCodNov = optionsInfo.tables!.cod_novedades;
+    if (f.idper == null) return <Card> <Typography>Cargando...</Typography> </Card>
+    // const novedad = likeAr(f).filter((_, name) => !(/__/.test(name as string))).map(f => f.value).plain() as Partial<any>
+    console.log(setForEdit)
+    return <Card style={{ width: 'auto' }}>
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '20em',
+            }}
+        >
+            <Box
+                sx={{
+                    width: '100%',
+                }}
+            >
+                <Box>
+                    <GenericField {...f.idper } forEdit={false} />
+                    <GenericField {...f.personas__ficha} />
+                    <GenericField {...f.personas__apellido} />
+                    <GenericField {...f.personas__nombres} />
+                </Box>
+            </Box>
+        
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexGrow: 1,
+                }}
+            >
+                <Box
+                    sx={{
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+
+                    }}
+                >
+                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+                        <GenericField {...f.cod_nov} forEdit={forEdit}/>
+                        <GenericField {...f.cod_novedades__novedad} />
+                    </Box>
+            
+                    <Box>
+                        <GenericField {...f.desde} forEdit={forEdit}/>
+                        <GenericField {...f.hasta} forEdit={forEdit}/>
+                    </Box>
+            
+                </Box>
+            </Box>
+        </Box>
+    </Card>
+}
+
+function RegistrarNovedades(props:{conn: Connector, idper:string}){
+    const {idper, conn} = props;
+    return CardEditorConnected({
+        table:'novedades_registradas', 
+        fixedFields:[{fieldName:'idper', value:idper}/*, {fieldName:'desde', value:null}*/], 
+        conn, 
+        CardDisplay: RegistrarNovedadesDisplay
+    });
+}
+
+const IDPER_DEMO = "AR8"
+
+function PantallaPrincipal(props: {conn: Connector}){
     useEffect(() => {
             document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
     }, []);
@@ -892,9 +961,74 @@ function PantallaPrincipal(props: {conn: Connector, fixedFields:FixedFields}){
                 </Typography>
             </Toolbar>
         </AppBar>
-        <Pantalla1 conn={props.conn} fixedFields={props.fixedFields}/>
+        <Pantalla1 conn={props.conn}/>
     </Paper>
 
+}
+
+function DemoDeComponentes(props: {conn: Connector}){
+    const {conn} = props;
+    type QUE = ""|"calendario"|"personas"|"novedades-registradas"|"horario"|"persona"|"datos-personales"|"pantalla-1"|"registrar-novedades"|"novedades-per"
+    const [que, setQue] = useState<QUE>("");
+    const fechaActual = date.today(); // es una demo corresponde el today
+    const UnComponente = (props:{titulo:string, que:QUE}) =>
+        <Box><Typography><Button onClick={_=>setQue(props.que)}>Ver:</Button> {props.titulo}</Typography></Box>
+    return <Paper>
+        <AppBar position="static">
+            <Toolbar>
+                {que == "" ?
+                    null
+                : 
+                    <IconButton color="inherit" onClick={()=>setQue("")}><ICON.ChevronLeft/></IconButton>
+                }
+                <Typography flexGrow={2}>
+                    Demo de componentes
+                </Typography>
+                <Typography>
+                    {que}
+                </Typography>
+                {que == "" ?
+                    <IconButton color="inherit" onClick={()=>location.hash="i=devel"}><ICON.ExitToApp/></IconButton>
+                : 
+                    null
+                }
+            </Toolbar>
+        </AppBar>
+        {({
+            "": () => <Card>
+                    <Typography>♪ Componentes invididuales</Typography>
+                    <UnComponente titulo="Lista de personas" que="personas"/>
+                    <UnComponente titulo="Calendario" que="calendario"/>
+                    <UnComponente titulo="Novedades registradas" que="novedades-registradas"/>
+                    <UnComponente titulo="Horario" que="horario"/>
+                    <UnComponente titulo="Datos personales" que="datos-personales"/>
+                    <UnComponente titulo="Novedades de Personas" que="novedades-per"/>
+                    <hr/>
+                    <Typography>🎼 Composición de componentes</Typography>
+                    <UnComponente titulo="Info de una persona" que="persona"/>
+                    <UnComponente titulo="Pantalla 1 (primera total)" que="pantalla-1"/>
+                </Card>,
+            "calendario": () => <Calendario conn={conn} idper={IDPER_DEMO} fecha={fechaActual} fechaActual={fechaActual}/>,
+            "personas": () => <ListaPersonasEditables conn={conn} sector="MS" fecha={fechaActual} idper={IDPER_DEMO} infoUsuario={{} as InfoUsuario}/>,
+            "novedades-registradas": () => <NovedadesRegistradas conn={conn} idper={IDPER_DEMO} annio={2024} infoUsuario={{} as InfoUsuario} fechaActual={fechaActual} onBorrado={()=>{}}/>,
+            "horario": () => <Horario conn={conn} idper={IDPER_DEMO} fecha={fechaActual}/>,
+            "datos-personales": () => <DatosPersonales conn={conn} idper={IDPER_DEMO}/>,
+            "registrar-novedades": () => <RegistrarNovedades conn={conn} idper={IDPER_DEMO}/>,
+            "novedades-per": () => <NovedadesPer conn={conn} idper={IDPER_DEMO} annio={2024} cod_nov="101" paraCargar={false}/>,
+            "persona": () => <Persona conn={conn} idper={IDPER_DEMO} fecha={fechaActual} fechaActual={fechaActual}/>,
+            "pantalla-1": () => <Pantalla1 conn={conn}/>
+        })[que]()}
+    </Paper>
+}
+
+// @ts-ignore
+myOwn.wScreens.componentesSiper = function componentesSiper(addrParams:any){
+    renderConnectedApp(
+        myOwn as never as Connector,
+        { ...addrParams, table: 'personas' },
+        document.getElementById('total-layout')!,
+        ({ conn }) => <DemoDeComponentes conn={conn} />
+    )
 }
 
 // @ts-ignore
@@ -903,6 +1037,6 @@ myOwn.wScreens.principal = function principal(addrParams:any){
         myOwn as never as Connector,
         { ...addrParams},
         document.getElementById('total-layout')!,
-        ({ conn, fixedFields }) => <PantallaPrincipal conn={conn} fixedFields={fixedFields} />
+        ({ conn }) => <PantallaPrincipal conn={conn} />
     )
 }
