@@ -10,6 +10,7 @@ function sectores_def(name:string, usuarioPuedeEditar: boolean, extendido: boole
     return {
         name,
         elementName: 'sector',
+        title: 'sectores',
         tableName: 'sectores',
         editable: usuarioPuedeEditar,
         fields: [
