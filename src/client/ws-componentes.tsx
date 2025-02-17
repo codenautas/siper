@@ -418,6 +418,8 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
             setNovedades(novedadesRegistradas);
         }).catch(logError)
     },[idper, ultimaNovedad, annio])
+    // @ts-expect-error
+    var es:{rrhh:boolean} = conn.config?.config?.es||{}
     return <Componente componentType="novedades-registradas" esEfimero={novedades}>
         {novedades.map(n => {
             const diasSeleccionados = Object.entries(n)
@@ -430,7 +432,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' } 
                     {diasSeleccionados.length > 0 ? ' / ' + diasSeleccionados.join(', ') : ''}
                 </div>
-                <div className="borrar">{n.desde > fechaActual && conn.config.es?.rrhh ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
+                <div className="borrar">{n.desde > fechaActual && es.rrhh ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
             </Box>)
         })}
         <Dialog open={quiereBorrar != null}>
