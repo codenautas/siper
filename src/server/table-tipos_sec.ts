@@ -12,16 +12,13 @@ export function tipos_sec(context:TableContext):TableDefinition{
     var admin = context.user.rol==='admin';
     return {
         name: 'tipos_sec',
-        elementName: 'tipo de sector',
-        title:'tipos de sectores',
+        elementName: 'tipo_sec',
         editable: admin,
         fields: [
             tipo_sec,
             {name: 'descripcion'   , typeName: 'text'   , title: 'descripción' },
             {name: 'nivel'         , typeName: 'integer', isName:true, description: 'Nivel dentro de la jerarquía.' },
         ],
-        // @ts-expect-error
-        lookupFields: ['nivel', 'descripcion'],
         primaryKey: [tipo_sec.name],
         constraints: [
             soloCodigo(tipo_sec.name)
