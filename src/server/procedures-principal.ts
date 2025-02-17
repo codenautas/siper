@@ -149,21 +149,20 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof novedades_disponibles.parameters>){
             const {idper} = params;
             const info = await context.client.query(
-                `select cn.cod_nov, cn.novedad, coalesce(cn.con_detalles, FALSE) as con_detalles, coalesce(v.usados+v.pendientes, 0) as cantidad, 
+                `select v.cod_nov, v.novedad, coalesce(v.con_detalles, FALSE) as con_detalles, 
+                        coalesce(v.usados, 0) + coalesce(v.pendientes, 0) as pedidos, 
                         coalesce(v.total, 0) as limite, 
                         coalesce(v.disponibles, 0) as saldo, 
                         (coalesce(v.disponibles, 0) > 0 or v.total is null) as con_disponibilidad,
-                        (cn.registra and r.puede_cargar_dependientes or puede_cargar_todo) as puede_cargar,
+                        (v.registra and r.puede_cargar_dependientes or puede_cargar_todo) as puede_cargar,
                         c_dds,
                         prioritario
-                    from cod_novedades cn 
-                        inner join usuarios u on u.usuario = $1
-                        inner join roles r using (rol)
-                        left join
+                    from usuarios u 
+                        inner join roles r using (rol),
                         (${sqlNovPer({idper, annio:params.annio})}) v
-                        on v.cod_nov = cn.cod_nov
-                    where (v.total > 0 or cn.registra and r.puede_cargar_dependientes or puede_cargar_todo)
-                    order by cn.cod_nov`,
+                    where (con_dato or v.registra and r.puede_cargar_dependientes or puede_cargar_todo)
+                        and u.usuario = $1
+                    order by v.cod_nov`,
                 [context.username]
             ).fetchAll();
             return info.rows

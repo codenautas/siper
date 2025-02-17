@@ -259,7 +259,7 @@ export const novedades_disponibles = {
         cod_nov: is.string,
         novedad: is.nullable.string,
         con_detalles: is.nullable.boolean,
-        cantidad: is.nullable.number,
+        pedidos: is.nullable.number,
         limite: is.nullable.number,
         saldo: is.nullable.number,
         con_disponibilidad: is.nullable.boolean,

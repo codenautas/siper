@@ -77,6 +77,8 @@ const DESDE_HORA = "12:00";
 const PAUTA_CORRIDOS = "CORRIDOS";
 const PAUTA_ANTCOMVSRE = "ANTCOMVSRE";
 
+const NOVEDADES_TEST = `('10001','10002','10003')`;
+
 const sqlCalcularNovedades = `CALL actualizar_novedades_vigentes('${DESDE_AÑO}-01-01'::date,'${DESDE_AÑO}-12-31'::date)`;
 
 var autoNumero = 1;
@@ -107,6 +109,16 @@ describe("connected", function(){
             console.log(err);
             throw err;
         }
+    })
+    beforeEach(async function(){
+        await server.inDbClient(ADMIN_REQ, async client=>{
+            await client.executeSentences([
+                `update fechas set laborable=null, repite=null, inamovible=null where fecha in ('2000-01-10','2000-01-11')`,
+                `update fechas set cod_nov_pred_fecha=null where cod_nov_pred_fecha in ${NOVEDADES_TEST}`,
+                `delete from novedades_registradas where cod_nov in ${NOVEDADES_TEST}`,
+                `delete from cod_novedades where cod_nov in ${NOVEDADES_TEST}`,
+            ]);
+        });
     })
     it("borra todo y prepara para el control de tiempos", async function(){
         try{
@@ -940,7 +952,7 @@ describe("connected", function(){
                     prioritario: true,
                     c_dds: null,
                     limite:21, 
-                    cantidad: 3, 
+                    pedidos: 3, 
                     saldo: 18,
                 };
                 var result = await rrhhSession.callProcedure(ctts.novedades_disponibles, {idper, annio: Number(DESDE_AÑO)})
@@ -950,7 +962,7 @@ describe("connected", function(){
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
                     {annio:2000, cod_nov:COD_VACACIONES, total:21  , usados:0 , pendientes:3, disponibles:18  },
-                    {annio:2000, cod_nov:COD_PRED_PAS  , total:null, usados:19, pendientes:0, disponibles:null},
+                    {annio:2000, cod_nov:COD_PRED_PAS  , total:null, usados:21, pendientes:0, disponibles:null},
                     {annio:2001, cod_nov:COD_VACACIONES, total:10  , usados:0 , pendientes:5, disponibles:5   },
                 ], 'all', {fixedFields:{idper}})
             })
