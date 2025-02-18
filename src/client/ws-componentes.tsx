@@ -293,16 +293,15 @@ function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null
                 sx={{ padding: 0 }}
             /> todas
         </label>
-       {props.ordenPorNovedad
-            // @ts-ignore
-        ?   <Button onClick={_=>{props.onOrdenPorNovedadChange(!props.ordenPorNovedad)}}>
-                <ICON.SortByNum />
+            <Button onClick={_ => {
+                // @ts-ignore
+                props.onOrdenPorNovedadChange(!props.ordenPorNovedad)
+            }} >
+                {props.ordenPorNovedad
+                    ? <ICON.SortByNum />
+                    : <ICON.SortByAlpha />
+                }
             </Button>
-            // @ts-ignore
-        :   <Button onClick={_=>{props.onOrdenPorNovedadChange(!props.ordenPorNovedad)}}>
-                <ICON.SortByAlpha />
-            </Button>
-        }
         </>
         : null }
     </Paper>;

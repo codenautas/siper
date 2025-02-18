@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "backend-plus": "^2.1.7",
-    "frontend-plus": "^0.0.10",
+    "frontend-plus": "^0.0.12",
     "guarantee-type": "^0.2.2",
     "json4all": "^1.4.0",
     "pg-triggers": "^0.3.3",
