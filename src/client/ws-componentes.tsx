@@ -722,7 +722,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                 }
             }).catch(logError)
         }
-    }, [idper, annio]);
+    }, [idper, annio, ultimaNovedad]);
     function registrarNovedad(){
         setGuardandoRegistroNovedad(true);
         conn.ajax.table_record_save({
