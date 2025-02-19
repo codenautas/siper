@@ -1,5 +1,7 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from 'react-dom/client';
+
+import { BrowserRouter, Routes, Route} from 'react-router-dom';
 
 import {
     ReactNode,
@@ -10,7 +12,7 @@ import {
     Connector,
     FixedFields,
     ICON,
-    renderConnectedApp,
+    //renderConnectedApp,
     RowType
 } from "frontend-plus";
 
@@ -165,14 +167,11 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
         }
     };
 
-    const isPastMonth = periodo.mes < fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio < fechaActual.getFullYear();
-    const isFutureMonth = periodo.mes > fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio > fechaActual.getFullYear();
-
     return <Componente componentType="calendario-mes" esEfimero={calendario}>
         <Box style={{ flex:1}}>
             <Box>
-                <Button onClick={_ => setPeriodo(retrocederUnMes)} disabled={!botonRetrocederHabilitado} sx={{ color: "#000" }}><ICON.ChevronLeft/></Button>
-                <Button onClick={_ => setPeriodo(avanzarUnMes)} disabled={!botonAvanzarHabilitado} sx={{ color: "#000" }}><ICON.ChevronRight/></Button>
+                <Button onClick={_ => setPeriodo(retrocederUnMes)} disabled={!botonRetrocederHabilitado}><ICON.ChevronLeft/></Button>
+                <Button onClick={_ => setPeriodo(avanzarUnMes)} disabled={!botonAvanzarHabilitado}><ICON.ChevronRight/></Button>
                 <Select 
                     className="selector-mes"
                     value={periodo.mes}
@@ -202,8 +201,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                     ))
                         }
                 </Select>
-                <Button
-                    sx={{ color: "#000", borderColor: "#000", "&:hover": { borderColor: "#000" }, }} 
+                <Button 
                     variant="outlined"
                     className={fechaActual?.sameValue(fecha) ? "es-hoy-si" : "es-hoy-no"} 
                     onClick={()=>{ 
@@ -211,11 +209,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         props.onFecha && props.onFecha(fechaActual);
                         props.onFechaHasta && props.onFechaHasta(fechaActual);
                     }}
-                >
-                    {isFutureMonth && <ICON.ChevronLeft />}
-                    Hoy
-                    {isPastMonth && <ICON.ChevronRight />}
-                </Button>
+                >Hoy</Button>
             </Box>
             <Box className="calendario-semana">
                 {likeAr(DDS).map(dds =>
@@ -290,7 +284,7 @@ function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null
             value = {textToSearch} 
             onChange = {(event)=>{ var newValue = event.target.value; props.onChange(newValue); setTextToSearch(newValue)}}
         />
-        <Button onClick={_=>{props.onChange(""); setTextToSearch("")}} sx={{ color: "#000" }}><ICON.BackspaceOutlined/></Button>
+        <Button onClick={_=>{props.onChange(""); setTextToSearch("")}}><ICON.BackspaceOutlined/></Button>
         {props.todas != null ?
         <>
         <label>
@@ -301,13 +295,10 @@ function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null
                 sx={{ padding: 0 }}
             /> todas
         </label>
-            <Button 
-                sx={{ color: "#000" }}
-                onClick={_ => {
+            <Button onClick={_ => {
                 // @ts-ignore
                 props.onOrdenPorNovedadChange(!props.ordenPorNovedad)
-                }} 
-            >
+            }} >
                 {props.ordenPorNovedad
                     ? <ICON.SortByNum />
                     : <ICON.SortByAlpha />
@@ -663,6 +654,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         persona: typeof ffObject.idper == "string" ? {idper: ffObject.idper} : {},
         cod_nov: ffObject.cod_nov ?? ""
     };
+    console.log('defaults', defaults);
     const {conn} = props;
     const [infoUsuario, setInfoUsuario] = useState({} as InfoUsuario);
     const [persona, setPersona] = useState(defaults.persona as ProvisorioPersonas);
@@ -755,6 +747,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             oldRow:{},
             status:'new'
         }).then(function(result){
+            console.log(result)
             setUltimaNovedad(result.row.idr as number);
             // setFecha(fechaActual);
             // setHasta(fechaActual);
@@ -886,31 +879,50 @@ function PantallaPrincipal(props: {conn: Connector, fixedFields:FixedFields}){
     useEffect(() => {
             document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
     }, []);
-
-    return <Paper className="paper-principal">
-        <AppBar position="static" sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')`, backgroundSize: 'auto 100%'}}>
-            <Toolbar>
-                <IconButton color="inherit" onClick={()=>{
-                    var root = document.getElementById('total-layout');
-                    if (root != null ) ReactDOM.unmountComponentAtNode(root)
-                    location.hash="";
-                }}><ICON.Menu/></IconButton>
-                <Typography flexGrow={2}>
-                    SiPer - Principal - <small>(DEMO)</small>
-                </Typography>
-            </Toolbar>
-        </AppBar>
-        <Pantalla1 conn={props.conn} fixedFields={props.fixedFields}/>
-    </Paper>
-
+    return <BrowserRouter>
+        <Paper className="paper-principal">
+            <AppBar position="static" sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')`, backgroundSize: 'auto 100%'}}>
+                <Toolbar>
+                    <IconButton color="inherit" onClick={()=>{
+                        history.replaceState(null, '', `${location.origin+location.pathname}/../menu`);
+                        location.reload();
+                    }}><ICON.Menu/></IconButton>
+                    <Typography flexGrow={2}>
+                        SiPer - Principal - <small>(DEMO)</small>
+                    </Typography>
+                </Toolbar>
+            </AppBar>
+            <Pantalla1 conn={props.conn} fixedFields={props.fixedFields}/>
+        </Paper>
+    </BrowserRouter>
 }
+
+export function AppRoutes() {
+    const baseUrl = "/siper";
+    return (
+    <Routes>
+        <Route path={`${baseUrl}/react`} element={<PantallaPrincipal conn={myOwn as never as Connector} fixedFields={[]} />} />
+    </Routes>
+    );
+}
+
+export function mostrarPrincipal(){
+    document.documentElement.setAttribute('letra','chica');
+    const domNode = document.getElementById('total-layout')!;
+    const root = createRoot(domNode);
+    root.render(<PantallaPrincipal conn={myOwn as never as Connector} fixedFields={[]}/>);
+}
+
+myOwn.autoSetupFunctions.push(()=>{
+    mostrarPrincipal()
+})
 
 // @ts-ignore
-myOwn.wScreens.principal = function principal(addrParams:any){
-    renderConnectedApp(
-        myOwn as never as Connector,
-        { ...addrParams},
-        document.getElementById('total-layout')!,
-        ({ conn, fixedFields }) => <PantallaPrincipal conn={conn} fixedFields={fixedFields} />
-    )
-}
+//myOwn.wScreens.principal = function principal(addrParams:any){
+//    renderConnectedApp(
+//        myOwn as never as Connector,
+//        { ...addrParams},
+//        document.getElementById('total-layout')!,
+//        ({ conn, fixedFields }) => <PantallaPrincipal conn={conn} fixedFields={fixedFields} />
+//    )
+//}

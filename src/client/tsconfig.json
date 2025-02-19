@@ -4,7 +4,7 @@
         "typeRoots" : ["node_modules/@types", "../../node_modules/types.d.ts/modules"],
         "lib": ["dom", "ESNext"],
         "target": "ESNext",
-        "module": "UMD",
+        "module": "ES6",
         "jsx": "react",
         "strict": true,
         "noImplicitAny": true,

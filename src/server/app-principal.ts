@@ -1,9 +1,11 @@
 "use strict";
 
 import { AppBackend, Context, Request, ClientSetup,
-    ClientModuleDefinition, OptsClientPage, MenuDefinition, MenuInfoBase
+    ClientModuleDefinition, OptsClientPage, MenuDefinition, MenuInfoBase, ExpressPlus
 } from "./types-principal";
 
+import * as MiniTools from 'mini-tools';
+import * as express from "express";
 import { date } from 'best-globals'
 
 import { annios                  } from './table-annios';
@@ -126,6 +128,39 @@ export class AppSiper extends AppBackend{
         this.completeContext(context);
         return context;
     }
+    override addSchrödingerServices(mainApp:ExpressPlus, baseUrl:string){
+        var be=this;
+        if(baseUrl=='/'){
+            baseUrl='';
+        }   
+        const reactBasePath = '/react';
+        const reactRouter = express.Router();
+        reactRouter.get('/',async function(req,res,_next){
+            // @ts-ignore useragent existe
+            const {useragent, user} = req;
+            if(user){
+                var htmlMain=be.mainPage(
+                    {useragent}, 
+                    false, 
+                    {
+                        skipMenu:false, 
+                        extraFiles: [{
+                            type:'js',
+                            src:'client/client-bundle.js'
+                        }],
+                        baseUrlForRelativePaths:true
+                    }
+                );
+                MiniTools.serveText(htmlMain.toHtmlDoc(), 'html')(req,res);
+            }else{
+                res.redirect(baseUrl+`/login#w=path&path=/react`)
+            }
+        });
+        mainApp.use(`${baseUrl}${reactBasePath}/*`, reactRouter);
+        mainApp.use(`${baseUrl}${reactBasePath}`, reactRouter);
+
+        super.addSchrödingerServices(mainApp, baseUrl);
+    }
     override getMenu(context:Context):MenuDefinition{
         var {es} = context
         var menuContent:MenuInfoBase[]=[];
@@ -203,15 +238,14 @@ export class AppSiper extends AppBackend{
     override clientIncludes(req:Request|null, opts:OptsClientPage):ClientModuleDefinition[]{
         var UsandoREact = true;
         var menuedResources:ClientModuleDefinition[]=req && opts && !opts.skipMenu ? [
-            { type:'js' , src:'client.js' },
         ]:[
         ];
         var list: ClientModuleDefinition[] = [
             ...(UsandoREact?[
-                { type: 'js', module: 'react', modPath: 'umd', fileDevelopment:'react.development.js', file:'react.production.min.js' },
-                { type: 'js', module: 'react-dom', modPath: 'umd', fileDevelopment:'react-dom.development.js', file:'react-dom.production.min.js' },
-                { type: 'js', module: '@mui/material', modPath: '../umd', fileDevelopment:'material-ui.development.js', file:'material-ui.production.min.js' },
-                { type: 'js', module: 'clsx', file:'clsx.min.js' },
+                //{ type: 'js', module: 'react', modPath: 'umd', fileDevelopment:'react.development.js', file:'react.production.min.js' },
+                //{ type: 'js', module: 'react-dom', modPath: 'umd', fileDevelopment:'react-dom.development.js', file:'react-dom.production.min.js' },
+                //{ type: 'js', module: '@mui/material', modPath: '../umd', fileDevelopment:'material-ui.development.js', file:'material-ui.production.min.js' },
+                //{ type: 'js', module: 'clsx', file:'clsx.min.js' },
                 // { type: 'js', module: 'redux', modPath:'../dist', fileDevelopment:'redux.js', file:'redux.min.js' },
                 // { type: 'js', module: 'react-redux', modPath:'../dist', fileDevelopment:'react-redux.js', file:'react-redux.min.js' },
             ]:[]) satisfies ClientModuleDefinition[],
@@ -220,13 +254,13 @@ export class AppSiper extends AppBackend{
                 // { type: 'js', module: 'redux-typed-reducer', modPath:'../dist', file:'redux-typed-reducer.js' },
                 { type: 'js', src: 'adapt.js' },
             ]:[])  satisfies ClientModuleDefinition[],
-            { type: 'js', file: 'client/shared-functions.js' },
-            { type: 'js', src: 'lib/my-icons.js' },
-            { type: 'js', module: 'guarantee-type', file:'guarantee-type.js'},
-            { type: 'js', module: 'frontend-plus', file:'frontend-plus.js'},
+            //{ type: 'js', file: 'client/shared-functions.js' },
+            //{ type: 'js', src: 'lib/my-icons.js' },
+            //{ type: 'js', module: 'guarantee-type', file:'guarantee-type.js'},
+            //{ type: 'js', module: 'frontend-plus', file:'frontend-plus.js'},
             { type: 'css', file: 'menu.css' },
-            { type: 'js', file: 'common/contracts.js' },
-            { type: 'js', file: 'client/ws-componentes.js' },
+            //{ type: 'js', file: 'common/contracts.js' },
+            //{ type: 'js', file: 'client/ws-componentes.js' },
             ... menuedResources
         ] satisfies ClientModuleDefinition[];
         return list;
