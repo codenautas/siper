@@ -165,11 +165,14 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
         }
     };
 
+    const isPastMonth = periodo.mes < fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio < fechaActual.getFullYear();
+    const isFutureMonth = periodo.mes > fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio > fechaActual.getFullYear();
+
     return <Componente componentType="calendario-mes" esEfimero={calendario}>
         <Box style={{ flex:1}}>
             <Box>
-                <Button onClick={_ => setPeriodo(retrocederUnMes)} disabled={!botonRetrocederHabilitado}><ICON.ChevronLeft/></Button>
-                <Button onClick={_ => setPeriodo(avanzarUnMes)} disabled={!botonAvanzarHabilitado}><ICON.ChevronRight/></Button>
+                <Button onClick={_ => setPeriodo(retrocederUnMes)} disabled={!botonRetrocederHabilitado} sx={{ color: "#000" }}><ICON.ChevronLeft/></Button>
+                <Button onClick={_ => setPeriodo(avanzarUnMes)} disabled={!botonAvanzarHabilitado} sx={{ color: "#000" }}><ICON.ChevronRight/></Button>
                 <Select 
                     className="selector-mes"
                     value={periodo.mes}
@@ -199,7 +202,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                     ))
                         }
                 </Select>
-                <Button 
+                <Button
+                    sx={{ color: "#000", borderColor: "#000", "&:hover": { borderColor: "#000" }, }} 
                     variant="outlined"
                     className={fechaActual?.sameValue(fecha) ? "es-hoy-si" : "es-hoy-no"} 
                     onClick={()=>{ 
@@ -207,7 +211,11 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         props.onFecha && props.onFecha(fechaActual);
                         props.onFechaHasta && props.onFechaHasta(fechaActual);
                     }}
-                >Hoy</Button>
+                >
+                    {isFutureMonth && <ICON.ChevronLeft />}
+                    Hoy
+                    {isPastMonth && <ICON.ChevronRight />}
+                </Button>
             </Box>
             <Box className="calendario-semana">
                 {likeAr(DDS).map(dds =>
@@ -282,7 +290,7 @@ function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null
             value = {textToSearch} 
             onChange = {(event)=>{ var newValue = event.target.value; props.onChange(newValue); setTextToSearch(newValue)}}
         />
-        <Button onClick={_=>{props.onChange(""); setTextToSearch("")}}><ICON.BackspaceOutlined/></Button>
+        <Button onClick={_=>{props.onChange(""); setTextToSearch("")}} sx={{ color: "#000" }}><ICON.BackspaceOutlined/></Button>
         {props.todas != null ?
         <>
         <label>
@@ -293,10 +301,13 @@ function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null
                 sx={{ padding: 0 }}
             /> todas
         </label>
-            <Button onClick={_ => {
+            <Button 
+                sx={{ color: "#000" }}
+                onClick={_ => {
                 // @ts-ignore
                 props.onOrdenPorNovedadChange(!props.ordenPorNovedad)
-            }} >
+                }} 
+            >
                 {props.ordenPorNovedad
                     ? <ICON.SortByNum />
                     : <ICON.SortByAlpha />
@@ -652,7 +663,6 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         persona: typeof ffObject.idper == "string" ? {idper: ffObject.idper} : {},
         cod_nov: ffObject.cod_nov ?? ""
     };
-    console.log('defaults', defaults);
     const {conn} = props;
     const [infoUsuario, setInfoUsuario] = useState({} as InfoUsuario);
     const [persona, setPersona] = useState(defaults.persona as ProvisorioPersonas);
@@ -745,7 +755,6 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             oldRow:{},
             status:'new'
         }).then(function(result){
-            console.log(result)
             setUltimaNovedad(result.row.idr as number);
             // setFecha(fechaActual);
             // setHasta(fechaActual);
