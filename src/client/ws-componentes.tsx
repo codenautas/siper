@@ -761,6 +761,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             // setCodNov("");
             setSiCargaraNovedad(null);
             setRegistrandoNovedad(false);
+            setDetalles("");
         }).catch(setError).finally(()=>setGuardandoRegistroNovedad(false));
     }
 
