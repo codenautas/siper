@@ -274,7 +274,8 @@ type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealD
 
 interface DetalleAnioNovPer {
     cantidad: number;
-    pedidos: number;
+    usados: number;
+    pendientes: number;
     saldo: number;
 }
 
@@ -619,8 +620,11 @@ function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
                 <div className="vacaciones-titulo" title="cantidad inicial">
                     cant
                 </div>
-                <div className="vacaciones-titulo" title="pedidos">
-                    ped
+                <div className="vacaciones-titulo" title="usados">
+                    usad
+                </div>
+                <div className="vacaciones-titulo" title="pendientes">
+                    pend
                 </div>
                 <div className="vacaciones-titulo" title="saldo">
                     saldo
@@ -636,7 +640,10 @@ function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
                         {registro.cantidad}
                     </div>
                     <div className="vacaciones-celda">
-                        {registro.pedidos}
+                        {registro.usados}
+                    </div>
+                    <div className="vacaciones-celda">
+                        {registro.pendientes}
                     </div>
                     <div className="vacaciones-celda">
                         {registro.saldo}
