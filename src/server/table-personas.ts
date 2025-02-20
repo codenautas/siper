@@ -42,6 +42,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'grado'                   , typeName: 'text', title: 'grado'                   },
             {name: 'domicilio'               , typeName: 'text', title: 'domicilio'               },
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
+            {name: 'es_jefe'                 , typeName: 'boolean'                                },
         ],
         primaryKey: [idper.name],
         foreignKeys: [

@@ -148,6 +148,7 @@ export const personas = {
         fecha_ingreso: is.nullable.Date,
         fecha_egreso : is.nullable.Date,
         situacion_revista: is.nullable.string,
+        es_jefe:    is.nullable.boolean,
     })
 } satisfies CommonEntityDefinition
 
