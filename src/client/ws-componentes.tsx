@@ -270,7 +270,7 @@ type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<str
 // @ts-ignore
 type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
-type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, dds0: boolean, dds1: boolean, dds2: boolean, dds3: boolean, dds4: boolean, dds5: boolean, dds6: boolean, detalles:string, idr:number}
+type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, dds0: boolean, dds1: boolean, dds2: boolean, dds3: boolean, dds4: boolean, dds5: boolean, dds6: boolean, detalles:string, idr:number, habiles:number}
 
 interface DetalleAnioNovPer {
     cantidad: number;
@@ -438,6 +438,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
             paramfun: {}
         }).then(function(novedadesRegistradas){
             novedadesRegistradas.sort(compareForOrder([{column:'idr', order:-1}]))
+            console.log(novedadesRegistradas)
             setNovedades(novedadesRegistradas);
         }).catch(logError)
     },[idper, ultimaNovedad, annio])
@@ -450,7 +451,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 .map(([key]) => diasSemana[key]); 
             return (
             <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar?' por-borrar':''}`}>
-                <div className="fechas">{n.desde.toDmy().replace(/\/\d\d\d\d$/,'') + (n.desde == n.hasta ? '' : ` - ${n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')}`)}</div>
+                <div className="fechas">{n.desde.toDmy().replace(/\/\d\d\d\d$/,'') + (n.desde == n.hasta ? '' : ` - ${n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')} (${n.habiles})`)}</div>
                 <div className="cod_nov">{n.cod_nov}</div>
                 <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' } 
                     {diasSeleccionados.length > 0 ? ' / ' + diasSeleccionados.join(', ') : ''}
