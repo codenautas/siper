@@ -1,6 +1,4 @@
 import * as React from "react";
-import { createRoot } from 'react-dom/client';
-
 import { BrowserRouter, Routes, Route} from 'react-router-dom';
 
 import {
@@ -12,7 +10,7 @@ import {
     Connector,
     FixedFields,
     ICON,
-    //renderConnectedApp,
+    renderConnectedApp,
     RowType
 } from "frontend-plus";
 
@@ -885,6 +883,7 @@ function PantallaPrincipal(props: {conn: Connector, fixedFields:FixedFields}){
                 <Toolbar>
                     <IconButton color="inherit" onClick={()=>{
                         history.replaceState(null, '', `${location.origin+location.pathname}/../menu`);
+                        window.location.href="./menu"
                         location.reload();
                     }}><ICON.Menu/></IconButton>
                     <Typography flexGrow={2}>
@@ -892,37 +891,40 @@ function PantallaPrincipal(props: {conn: Connector, fixedFields:FixedFields}){
                     </Typography>
                 </Toolbar>
             </AppBar>
-            <Pantalla1 conn={props.conn} fixedFields={props.fixedFields}/>
+            <AppRoutes conn={props.conn} fixedFields={props.fixedFields}/>
+            {/* <Pantalla1 conn={props.conn} fixedFields={props.fixedFields}/> */}
         </Paper>
     </BrowserRouter>
 }
 
-export function AppRoutes() {
+export function AppRoutes(props: {conn: Connector, fixedFields:FixedFields}) {
     const baseUrl = "/siper";
     return (
     <Routes>
-        <Route path={`${baseUrl}/react`} element={<PantallaPrincipal conn={myOwn as never as Connector} fixedFields={[]} />} />
+        {/* <Route path={`${baseUrl}/react`} element={<PantallaPrincipal conn={myOwn as never as Connector} fixedFields={[]} />} /> */}
+        <Route path={`${baseUrl}/react`} element={<Pantalla1 conn={props.conn} fixedFields={props.fixedFields}/>} />
+        <Route path={`${baseUrl}/react/test`} element={<Horario conn={props.conn} idper={'AR8'} fecha={date.today()}/>} />
     </Routes>
     );
 }
 
-export function mostrarPrincipal(){
-    document.documentElement.setAttribute('letra','chica');
-    const domNode = document.getElementById('total-layout')!;
-    const root = createRoot(domNode);
-    root.render(<PantallaPrincipal conn={myOwn as never as Connector} fixedFields={[]}/>);
+// export function mostrarPrincipal(){
+//     document.documentElement.setAttribute('letra','chica');
+//     const domNode = document.getElementById('total-layout')!;
+//     const root = createRoot(domNode);
+//     root.render(<PantallaPrincipal conn={myOwn as never as Connector} fixedFields={[]}/>);
+// }
+
+// @ts-ignore
+function principal(addrParams:any){
+   renderConnectedApp(
+       myOwn as never as Connector,
+       { ...addrParams},
+       document.getElementById('total-layout')!,
+       ({ conn, fixedFields }) => <PantallaPrincipal conn={conn} fixedFields={fixedFields} />
+   )
 }
 
 myOwn.autoSetupFunctions.push(()=>{
-    mostrarPrincipal()
+    principal([])
 })
-
-// @ts-ignore
-//myOwn.wScreens.principal = function principal(addrParams:any){
-//    renderConnectedApp(
-//        myOwn as never as Connector,
-//        { ...addrParams},
-//        document.getElementById('total-layout')!,
-//        ({ conn, fixedFields }) => <PantallaPrincipal conn={conn} fixedFields={fixedFields} />
-//    )
-//}
