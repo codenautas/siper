@@ -87,6 +87,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {...año, editable:false, generatedAs:`extract(year from desde)`},
             {name: 'cancela'  , typeName: 'boolean', description:'cancelación de novedades'},
             {name: 'detalles' , typeName: 'text'   ,                                    },
+            {name: 'habiles'  , typeName: 'integer'   , inTable:false, serverSide:true, editable:false },
         ],         
         primaryKey: [idper.name, 'desde', idr.name],
         foreignKeys: [
@@ -103,6 +104,14 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
         hiddenColumns: [idr.name],
         sql:{
             policies: politicaNovedades('novedades_registradas', 'desde'),
+            fields: {
+                habiles:{ expr:`(
+                    select count(*) filter(where extract(dow from fecha) between 1 and 5
+                        and laborable is not false)
+                    from fechas as fechas_habiles
+                    where fecha between novedades_registradas.desde and novedades_registradas.hasta
+                )`},
+            },
         }
     };
 }
