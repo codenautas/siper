@@ -14,6 +14,8 @@ install:
     drop-his: false # poner en true en desarrollo
     db:
       owner: siper_owner
+tests:
+  only-in-db: siper_local_test_db
 client-setup: 
   lang: es
 devel: # no incluir en producción. En desarrollo quitar la x-
