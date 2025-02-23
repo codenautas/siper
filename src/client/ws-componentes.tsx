@@ -561,7 +561,13 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
                     disabled={!c.con_disponibilidad}>
                     <span className="box-id"> {c.cod_nov} </span>   
                     <span className="box-names"> {c.novedad} </span>
-                    <span className="box-info">{c.limite! > 0 ? (c.pedidos! > 0 ?`${c.limite} - ${c.pedidos} = ${c.saldo}` : c.limite ): ''}</span>
+                    <span className="box-info" con-info-nov={c.con_info_nov?"si":"no"}>
+                        {c.con_info_nov?
+                            ctts.info_nov_numeros.map(info =>
+                                <span con-info-nov={info.name} key={info.name} title={info.title}>c[info.name]</span>
+                            )
+                        :null}
+                    </span>
                 </ListItemButton>
             )}
         </List>
@@ -617,37 +623,31 @@ function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
                 <div className="vacaciones-titulo">
                     año
                 </div>
-                <div className="vacaciones-titulo" title="cantidad inicial">
-                    cant
-                </div>
-                <div className="vacaciones-titulo" title="usados">
-                    usad
-                </div>
-                <div className="vacaciones-titulo" title="pendientes">
-                    pend
-                </div>
-                <div className="vacaciones-titulo" title="saldo">
-                    saldo
-                </div>
+                {ctts.info_nov_numeros.map(info => 
+                    <div className="vacaciones-titulo" key={info.abr} title={info.title}>{info.abr}</div>
+                )}
             </div>
             {registros.length > 0 ? (
                 registros.map(([anio, registro]) => (
                     <div key={anio} className="vacaciones-renglon">
-                    <div className="vacaciones-celda">
-                        {anio}
-                    </div>
-                    <div className="vacaciones-celda">
-                        {registro.cantidad}
-                    </div>
-                    <div className="vacaciones-celda">
-                        {registro.usados}
-                    </div>
-                    <div className="vacaciones-celda">
-                        {registro.pendientes}
-                    </div>
-                    <div className="vacaciones-celda">
-                        {registro.saldo}
-                    </div>
+                        <div className="vacaciones-celda">
+                            {anio}
+                        </div>
+                        {ctts.info_nov_numeros.map(info => 
+                            <div className="vacaciones-celda" key={info.abr} title={info.title}>{registro[info.name]}</div>
+                        )}
+                        <div className="vacaciones-celda">
+                            {registro.cantidad}
+                        </div>
+                        <div className="vacaciones-celda">
+                            {registro.usados}
+                        </div>
+                        <div className="vacaciones-celda">
+                            {registro.pendientes}
+                        </div>
+                        <div className="vacaciones-celda">
+                            {registro.saldo}
+                        </div>
                     </div>
                 ))
             ) : (
