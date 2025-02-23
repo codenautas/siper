@@ -318,8 +318,8 @@ function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null
     </Paper>;
 }
 
-function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof T)[], todas?:boolean, principalesKey?:keyof T){
-    var principales:(row:T) => boolean = todas || !principalesKey ? function(){ return true } : row => !!row[principalesKey]
+function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof T)[], todas?:boolean, principalesKey?:(keyof T)[]){
+    var principales:(row:T) => boolean = todas || !principalesKey ? function(){ return true } : row => principalesKey.some(a => row[a])
     if (filter == "") return principales
     var f = filter.replace(/[^A-Z0-9 ]+/gi,'');
     var regExp = new RegExp(f.replace(/\s+/, '(\\w* \\w*)+'), 'i');
@@ -545,7 +545,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
         }
     },[idper, ultimaNovedad, annio])
     useEffect(function(){
-        const recordFilter = GetRecordFilter<NovedadesDisponiblesResult>(filtro,['cod_nov', 'novedad'],todas,'prioritario');
+        const recordFilter = GetRecordFilter<NovedadesDisponiblesResult>(filtro,['cod_nov', 'novedad'],todas,['prioritario','con_info_nov']);
         const novedadesOrdenadas = [...codNovedades].sort(compareForOrder([{ column: ordenPorNovedad ? 'novedad' : 'cod_nov' }]));
         setCodNovedadesFiltradas(novedadesOrdenadas.filter(recordFilter));
     },[codNovedades, filtro, todas, ordenPorNovedad])
@@ -563,7 +563,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
                     <span className="box-info" con-info-nov={c.con_info_nov?"si":"no"}>
                         {c.con_info_nov?
                             ctts.info_nov_numeros.map(info =>
-                                <span con-info-nov={info.name} key={info.name} title={info.title}> {c[info.name]} </span>
+                                <span con-info-nov={info.name} key={info.name} title={info.title}>{c[info.name]}</span>
                             )
                         :null}
                     </span>
