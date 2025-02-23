@@ -203,18 +203,17 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         }
                 </Select>
                 <Button
-                    sx={{ color: "#000", borderColor: "#000", "&:hover": { borderColor: "#000" }, }} 
                     variant="outlined"
-                    className={fechaActual?.sameValue(fecha) ? "es-hoy-si" : "es-hoy-no"} 
+                    es-este-mes={isFutureMonth?"no-futuro":isPastMonth?"no-pasado":"si"}
                     onClick={()=>{ 
                         setPeriodo({mes: fechaActual.getMonth()+1, annio: fechaActual.getFullYear()});
                         props.onFecha && props.onFecha(fechaActual);
                         props.onFechaHasta && props.onFechaHasta(fechaActual);
                     }}
                 >
-                    {isFutureMonth && <ICON.ChevronLeft />}
+                    <span hoy-signo-de="futuro">{"<"}</span>
                     Hoy
-                    {isPastMonth && <ICON.ChevronRight />}
+                    <span hoy-signo-de="pasado">{">"}</span>
                 </Button>
             </Box>
             <Box className="calendario-semana">
@@ -564,7 +563,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
                     <span className="box-info" con-info-nov={c.con_info_nov?"si":"no"}>
                         {c.con_info_nov?
                             ctts.info_nov_numeros.map(info =>
-                                <span con-info-nov={info.name} key={info.name} title={info.title}>c[info.name]</span>
+                                <span con-info-nov={info.name} key={info.name} title={info.title}> {c[info.name]} </span>
                             )
                         :null}
                     </span>
@@ -636,18 +635,6 @@ function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
                         {ctts.info_nov_numeros.map(info => 
                             <div className="vacaciones-celda" key={info.abr} title={info.title}>{registro[info.name]}</div>
                         )}
-                        <div className="vacaciones-celda">
-                            {registro.cantidad}
-                        </div>
-                        <div className="vacaciones-celda">
-                            {registro.usados}
-                        </div>
-                        <div className="vacaciones-celda">
-                            {registro.pendientes}
-                        </div>
-                        <div className="vacaciones-celda">
-                            {registro.saldo}
-                        </div>
                     </div>
                 ))
             ) : (

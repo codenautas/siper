@@ -150,11 +150,11 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const {idper} = params;
             const info = await context.client.query(
                 `select v.cod_nov, v.novedad, coalesce(v.con_detalles, FALSE) as con_detalles, 
-                        coalesce(v.cantidad, 0) as cantidad,
-                        coalesce(v.usados, 0) as usados,
-                        coalesce(v.pendientes, 0) as pendientes, 
+                        v.cantidad,
+                        v.usados,
+                        v.pendientes, 
                         coalesce(v.cantidad, 0) + coalesce(v.usados, 0) + coalesce(v.pendientes, 0) + coalesce(v.saldo, 0) > 0 as con_info_nov, 
-                        coalesce(v.saldo, 0) as saldo, 
+                        v.saldo, 
                         (coalesce(v.saldo, 0) > 0 or v.cantidad is null) as con_disponibilidad,
                         (v.registra and r.puede_cargar_dependientes or puede_cargar_todo) as puede_cargar,
                         c_dds,
