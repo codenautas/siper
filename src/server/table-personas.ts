@@ -48,6 +48,7 @@ export function personas(context: TableContext): TableDefinition {
         foreignKeys: [
             {references: 'sectores'         , fields:['sector']       },
             {references: 'paises'           , fields:[{source:'nacionalidad',target:'pais'}]      },
+            {references: 'categorias'         , fields:['categoria']       },
         ],
         softForeignKeys: [
             {references: 'situacion_revista', fields:[s_revista.name] },
