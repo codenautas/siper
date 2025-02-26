@@ -47,6 +47,7 @@ export function personas(context: TableContext): TableDefinition {
         primaryKey: [idper.name],
         foreignKeys: [
             {references: 'sectores'         , fields:['sector']       },
+            {references: 'paises'           , fields:[{source:'nacionalidad',target:'pais'}]      },
         ],
         softForeignKeys: [
             {references: 'situacion_revista', fields:[s_revista.name] },
