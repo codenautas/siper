@@ -18,7 +18,7 @@ export function personas(context: TableContext): TableDefinition {
         elementName: 'persona',
         editable: admin,
         fields:[
-            idper,
+            {...idper, nullable:true, editable:false},
             {name: 'cuil'     , typeName: 'text', isName:false, postInput: soloDigitosPostConfig  },
             {name: 'tipo_doc' , typeName: 'text',                                                 },
             {name: 'documento', typeName: 'text', isName:false, postInput: soloDigitosPostConfig  },
