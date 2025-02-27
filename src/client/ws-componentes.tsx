@@ -57,18 +57,10 @@ export function logError(error:Error){
 export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string, scrollable?: boolean, 
     esEfimero?: any
 }){
-    useEffect(() => {
-        const imageBackground = myOwn.config.config["background-img"];
-                const card = document.querySelector('.componente-' + props.componentType);
-                if (card) {
-                    // @ts-ignore
-                    card.style.backgroundImage = `url('${imageBackground}')`;
-                }
-        }, []);
-
     return <Card className={"componente-" + props.componentType} 
         siper-esEfimero={props.esEfimero === true || props.esEfimero?.[EFIMERO] ? "si" : "no"}
         siper-esScrollable={props.scrollable === true ? "si" : "no"}
+        sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}
     >
         {props.children}
     </Card>
@@ -394,6 +386,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
             <Accordion key = {s.sector?.toString()} expanded = {!!expandido[s.sector]}
                 onChange={(_, b: boolean) => { setExpandido(e => ({...e, [s.sector]:b })) }}
                 className="accordion-bg"
+                sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}
             >
                 <AccordionSummary className="accordion-summary" id = {s.sector} expandIcon={<ICON.NavigationDown />} > 
                     <span className="box-id" style={{paddingLeft: (s.tipos_sec__nivel-1)+"em", paddingRight:"1em"}}> {s.sector} </span>  
@@ -888,17 +881,11 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
 
 function PantallaPrincipal(props: {conn: Connector, fixedFields:FixedFields}){
     useEffect(() => {
-    const imageBackground = myOwn.config.config["background-img"];
-            document.body.style.backgroundImage = `url('${imageBackground}')`;
-            const appBar = document.querySelector('.app-bar-bg');
-            if (appBar) {
-                // @ts-ignore
-                appBar.style.backgroundImage = `url('${imageBackground}')`;
-            }
+            document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
     }, []);
 
     return <Paper className="paper-principal">
-        <AppBar position="static" className="app-bar-bg">
+        <AppBar position="static" className="app-bar-bg" sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}>
             <Toolbar>
                 <IconButton color="inherit" onClick={()=>{
                     var root = document.getElementById('total-layout');
