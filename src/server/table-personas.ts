@@ -27,6 +27,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'apellido' , typeName: 'text', isName:true , nullable:false                    },
             {name: 'nombres'  , typeName: 'text', isName:true , nullable:false                    },
             {name: 'sector'   , typeName: 'text',                                                 },
+            {name: 'es_jefe'  , typeName: 'boolean'                                               },
             {name: 'categoria', typeName: 'text',               title:'categoría'                 },
             s_revista,
             {name: 'registra_novedades_desde', typeName: 'date'                                   },
@@ -42,7 +43,6 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'grado'                   , typeName: 'text', title: 'grado'                   },
             {name: 'domicilio'               , typeName: 'text', title: 'domicilio'               },
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
-            {name: 'es_jefe'                 , typeName: 'boolean'                                },
         ],
         primaryKey: [idper.name],
         foreignKeys: [
