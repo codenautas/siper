@@ -12,6 +12,15 @@
   flex-direction column
   overflow-y hidden
 
+.app-bar-bg
+.accordion-bg
+  background-size auto 100%
+
+.accordion-summary
+  flex-direction row-reverse
+  & .MuiAccordionSummary-content
+    margin-left 16px
+
 .my-grid td[my-colname*=nombre_sector]
   max-width 40em
 
@@ -58,7 +67,7 @@ span.calendario-dia-contenido
   align-self center
 
 div.tipo-dia-no-laborable
-  background-color #ECC
+  background-color #dfdddd
 
 div.tipo-dia-no-trabaja
   background-color #ED9
@@ -121,13 +130,23 @@ div.calendario-dia-seleccionado, div.seleccionado
   align-self center
 
 .tipo-dia-no-laborable
-  background-color #ecc
+  background-color #dfdddd
 
 .tipo-dia-no-trabaja
   background-color #ed9
 
 .calendario-extendido-dia-numero, .calendario-extendido-dia-contenido
   font-size 70%
+
+.box-flex-gap
+  display: flex
+  gap: 1rem
+
+.paper-flex
+  flex: 2
+
+.box-flex
+  flex: 1
 
 div.box-line
   display flex
@@ -242,9 +261,11 @@ span.box-info
 
 .search-box
   padding-left 0.7em
+  display flex
+  align-items center
+  width 100%
 
 .componente-del-medio
-  padding-top 1em
   padding-bottom 1em
   min-width 470px 
   flex-direction column
@@ -304,7 +325,10 @@ div.no-seleccionable
   color #666
 
 button.boton-confirmar-registro-novedades
-  max-width 32em  
+  max-width 32em
+
+.siper-button[boton-negro = si]
+  color #000
 
 div.novedades-renglon
   display flex
@@ -355,6 +379,11 @@ div[role=dialog]
 [siper-esEfimero=si]
   opacity 0.5
 
+.componente-lista-personas[siper-esScrollable=si]
+.componente-codigo-novedades[siper-esScrollable=si]
+.componente-del-medio[siper-esScrollable=si]
+  overflow-y auto
+
 [hoy-signo-de]
   visibility hidden
   padding-left 0.2em
@@ -391,3 +420,6 @@ button[es-este-mes]
     border 0.5px dashed #ccc
     min-width 1em
   
+.check-box[sin-padding=si]
+  color #000
+  padding 0
