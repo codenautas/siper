@@ -79,14 +79,6 @@ export function inconsistencias(_context: TableContext): TableDefinition{
                             GROUP BY v.idper, v.cod_nov, r.desde, r.hasta, r.hasta-r.desde+1
                           ) q2
                      WHERE cantdias IS DISTINCT FROM cantnov
-                     UNION
-                     SELECT idper, NULL::INTEGER as annio, 'ACTSINSEC' pauta, NULL::TEXT as cod_nov 
-                       FROM personas
-                       WHERE activo AND sector IS NULL
-                     UNION
-                     SELECT idper, NULL::INTEGER as annio, 'ACTSINSIT' pauta, NULL::TEXT as cod_nov 
-                       FROM personas
-                       WHERE activo AND situacion_revista IS NULL
                      ) q
             )`
         }
