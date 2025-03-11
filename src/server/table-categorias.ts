@@ -16,7 +16,7 @@ export function categorias(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             categoria,
-            {name: 'descripcion',typeName:'text' },
+            {name: 'descripcion',typeName:'text' , isName: true},
         ],
         primaryKey: ['categoria'],
         constraints: [
