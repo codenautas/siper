@@ -186,7 +186,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         left join sectores se using(sector)
                         left join novedades_vigentes nv on nv.idper = pe.idper and nv.fecha = $1
                         left join cod_novedades cn using(cod_nov)
-                    ${context.es.registra ? `` : `where u.idper = pe.idper`}
+                        where pe.activo is true
+                    ${context.es.registra ? `` : `and u.idper = pe.idper`}
                     order by apellido, nombres`
                 , [params.fecha, context.username]
             ).fetchAll();
