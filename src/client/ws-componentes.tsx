@@ -789,6 +789,9 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         siCargaraNovedad?.c_dds && !(novedadRegistrada.dds1 || novedadRegistrada.dds2 || novedadRegistrada.dds3 || novedadRegistrada.dds4 || novedadRegistrada.dds5)
             ? "debe marcar alguno de los días de la semana" : null;
 
+    // @ts-expect-error
+    var es:{rrhh:boolean} = conn.config?.config?.es||{}
+
     return infoUsuario.usuario == null ?  
             <CircularProgress />
         : infoUsuario.idper == null ?
@@ -871,7 +874,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                 <Box>{guardandoRegistroNovedad || error ?
                     <Typography>{error?.message ?? (guardandoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
-                <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>
+                { es.rrhh && <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>}
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
                 </div>
             </Componente>
