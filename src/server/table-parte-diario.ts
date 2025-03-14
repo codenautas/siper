@@ -32,6 +32,7 @@ export function parte_diario(_context: TableContext): TableDefinition{
     return {
         name: 'parte_diario',
         elementName: 'parte diario',
+        gridAlias: 'parte-diario-grid',
         fields:[
             idper,
             {name: 'fecha' , typeName: 'date'},
