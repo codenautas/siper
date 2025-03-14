@@ -32,6 +32,7 @@ export function parte_diario(_context: TableContext): TableDefinition{
     return {
         name: 'parte_diario',
         elementName: 'parte diario',
+        gridAlias: 'parte-diario-grid',
         fields:[
             idper,
             {name: 'fecha' , typeName: 'date'},
@@ -42,7 +43,7 @@ export function parte_diario(_context: TableContext): TableDefinition{
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],
         softForeignKeys: [
-            {references: 'personas', fields: [idper.name], displayFields:['ficha', 'apellido', 'nombres']},
+            {references: 'personas', fields: [idper.name], displayFields:['ficha', 'cuil', 'apellido', 'nombres'],},
             {references: 'cod_novedades', fields: [cod_nov.name], displayFields:['novedad']},
             {references: 'sectores', fields: [sector.name], displayFields:['nombre_sector']},
         ],
