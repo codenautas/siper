@@ -301,7 +301,32 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             return {
                 tableName:'parte_diario', 
                 fixedFields:[{fieldName:'fecha', value:params.fecha}], 
-                tableDef:{title:'parte diario del '+params.fecha.toDmy()+' - Generado con información hasta '+datetime.now().toLocaleString()}
+                tableDef:{title:'Parte diario del '+params.fecha.toDmy()+' - Generado con información hasta '+datetime.now().toLocaleString()}
+            };
+        }
+    },
+    {
+        action: 'informe_mensual',
+        parameters: [
+            {name:'desde', typeName:'date', specialDefaultValue: 'current_date'},
+            {name:'hasta', typeName:'date', specialDefaultValue: 'current_date'}
+        ],
+        resultOk:'showGrid',
+        coreFunction: async function(context: ProcedureContext, params:any){
+            if (params.hasta < params.desde) {
+                throw new Error("La fecha 'hasta' no puede ser anterior a la fecha 'desde'.");
+            }
+            await context.client.query(
+                `call actualizar_novedades_vigentes($1, $2)`,
+                [params.desde, params.hasta]
+            ).execute();
+            return {
+                tableName:'parte_diario',
+                fixedFields:[
+                    {fieldName:'fecha', value:params.desde, until:params.hasta},
+                ], 
+                tableDef:{title:'Informe mensual del '+params.desde.toDmy()+' al '+params.hasta.toDmy()+' - Generado con información hasta '+datetime.now().toLocaleString(),
+                }
             };
         }
     },
