@@ -1,0 +1,15 @@
+grupo_parte_diario|descripcion|grupo_padre|es_cod_nov|orden|nivel
+PADI|Parte diario||false||
+TOTL|Total agentes|PADI|false|900|
+PRES|Presentes|TOTL|false|100|
+TTPR|Total de presentes|PRES|false|140|
+STPR|Sub Total Presentes|TTPR|false|130|
+140|Autoridades superiores|STPR|true|110|
+999|Presente (Horario flexible)|STPR|true|120|
+AUJU|Ausentes justificados|TOTL|false|200|
+TOAJ|Total ausentes justificados|AUJU|false|260|
+STAJ|Subtotal ausentes justificados|TOAJ|false|250|
+SULI|Subtotal Licencias|STAJ|false|220|
+1|Art. 18 Descanso anual remunerado|SULI|true|210|
+SOAJ|Subtotal Otros Ausentes Justificados|STAJ|false|240|
+101|Teletrabajo Diagramado|SOAJ|true|230|

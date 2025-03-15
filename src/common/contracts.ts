@@ -41,6 +41,20 @@ export const grupos = {
 
 export type Grupo = DefinedType<typeof grupos.description>
 
+export const grupos_parte_diario = {
+    table: 'grupos_parte_diario',
+    description: is.object({
+        grupo: is.string,
+        descripcion: is.string,
+        grupo_padre: is.nullable.string,
+        orden: is.number,
+        nivel: is.nullable.number,
+        es_cod_nov: is.boolean,
+    })
+} satisfies CommonEntityDefinition
+
+export type GrupoParteDiario = DefinedType<typeof grupos_parte_diario.description>
+
 export const nov_gru = {
     table: 'nov_gru',
     description: is.object({

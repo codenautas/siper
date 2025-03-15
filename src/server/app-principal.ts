@@ -12,6 +12,7 @@ import { cod_novedades           } from './table-cod_novedades';
 import { fechas                  } from './table-fechas';
 import { clases                  } from './table-clases';
 import { grupos                  } from './table-grupos';
+import { grupos_parte_diario     } from './table-grupos_parte_diario';
 import { situacion_revista       } from './table-situacion_revista';
 import { tipos_sec               } from "./table-tipos_sec";
 import { sectores, sectores_edit } from './table-sectores';
@@ -37,6 +38,7 @@ import { capa_modalidades        } from "./table-capa_modalidades";
 import { capacitaciones          } from "./table-capacitaciones";
 import { per_capa                } from "./table-per_capa";
 import { parte_diario            } from "./table-parte-diario";
+import { parte_diario_caratula   } from "./table-parte_diario_caratula";
 import { fichadas_vigentes       } from "./table-fichadas_vigentes";
 import { tipos_doc               } from "./table-tipos_doc";
 import { paises                  } from "./table-paises";
@@ -243,6 +245,7 @@ export class AppSiper extends AppBackend{
             sectores, sectores_edit,
             clases               ,
             grupos               ,
+            grupos_parte_diario  ,
             situacion_revista    ,
             personas             ,
             per_gru              ,
@@ -266,6 +269,7 @@ export class AppSiper extends AppBackend{
             capacitaciones       ,
             per_capa             ,
             parte_diario         ,
+            parte_diario_caratula,
             fichadas_vigentes    ,
             tipos_doc            ,
             paises               ,
