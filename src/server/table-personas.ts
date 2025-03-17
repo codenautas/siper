@@ -71,6 +71,7 @@ export function personas(context: TableContext): TableDefinition {
             {table:'historial_contrataciones', fields:[idper.name], abr:'hc'},
             {table:'inconsistencias'      , fields:[idper.name], abr:'⒤'},
             {table:'per_capa'   , fields:[idper.name], abr:'C'},
-        ]
+        ],
+        sortColumns: [{column: 'activo', order: -1}, {column: 'idper', order: 1}],
     };
 }
