@@ -12,12 +12,12 @@ export const sqlNovPer= (params:{idper?:string, annio?:number})=> `
             cn.cod_nov, 
             p.idper, 
             p.sector,
-            pnc.total,
+            pnc.cantidad,
             nv.usados,
             nv.pendientes,
-            nv.disponibles,
+            nv.saldo,
             pnc.esquema,
-            (pnc.total > 0 or nv.usados > 0 or nv.pendientes > 0) as con_dato,
+            (pnc.cantidad > 0 or nv.usados > 0 or nv.pendientes > 0) as con_dato,
             cn.novedad,
             cn.c_dds,
             cn.con_detalles,
@@ -28,7 +28,7 @@ export const sqlNovPer= (params:{idper?:string, annio?:number})=> `
         annios a,
         personas p,
         lateral (
-            select sum(cantidad) as total,
+            select sum(cantidad) as cantidad,
                     json_object_agg(origen, json_build_object('cantidad', cantidad) order by origen)::text as esquema
                 from per_nov_cant pnc
                 where pnc.cod_nov = cn.cod_nov and pnc.annio = a.annio and pnc.idper = p.idper
@@ -37,7 +37,7 @@ export const sqlNovPer= (params:{idper?:string, annio?:number})=> `
             select 
                     count(*) filter (where nv.fecha <= fecha_actual) as usados, 
                     count(*) filter (where nv.fecha > fecha_actual) as pendientes, 
-                    pnc.total - count(*) as disponibles
+                    pnc.cantidad - count(*) as saldo
                 from novedades_vigentes nv
                 where nv.cod_nov = cn.cod_nov and nv.annio = a.annio and nv.idper = p.idper
         ) nv
@@ -55,10 +55,10 @@ export function nov_per(_context: TableContext): TableDefinition {
             año,
             idper,
             cod_nov,
-            {name: 'total'       , typeName: 'integer'},
+            {name: 'cantidad'    , typeName: 'integer'},
             {name: 'usados'      , typeName: 'integer', description: 'días pedidos que ya fueron tomados'}, 
             {name: 'pendientes'  , typeName: 'integer', description: 'días pedidos que todavía no ocurrieron'},
-            {name: 'disponibles' , typeName: 'integer', description: 'días disponibles bajo el supuesto que los pendientes se tomarán según fueron pedidos'},
+            {name: 'saldo'       , typeName: 'integer', description: 'días restantes bajo el supuesto que los pendientes se tomarán según fueron pedidos'},
             {name: 'esquema'     , typeName: 'text'   },
             {name: 'detalle'     , typeName: 'text'   , clientSide: 'detalle_dias'},
             sector,

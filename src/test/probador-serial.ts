@@ -19,6 +19,14 @@ import * as discrepances from 'discrepances';
 
 export type Constructor<T> = new(...args: any[]) => T;
 
+declare module "backend-plus"{
+    interface AppConfig{
+        test?:{
+            "only-in-db"?: string
+        }
+    }
+}
+
 export async function startServer<T extends AppBackend>(AppConstructor: Constructor<T>):Promise<T>{
     var server = new AppConstructor();
     await server.start();
@@ -29,8 +37,18 @@ export async function startServer<T extends AppBackend>(AppConstructor: Construc
     // var client = await pg.connect(config.db);
     // await client.executeSqlScript('test/fixtures/dump-4test.sql');
     if (config.devel.delay) {
-        console.log('************************ WARNING ************************')
-        console.log('config.devel.delay', config.devel.delay, 'deberia ser 0 para tests')
+        console.error('************************ WARNING ************************')
+        console.error('config.devel.delay', config.devel.delay, 'deberia ser 0 para tests')
+    }
+    if (config.test?.["only-in-db"] == null) {
+        console.error('************************ WARNING ************************')
+        console.error('No se encuentra la cofiguracion de seguridad en test.only-in-db')
+        console.error('Colocar ahi el nombre de la base de datos a usar.')
+        console.error('Solo en esa base de datos se van a crear y modificar datos para test.')
+    } else if (config.test?.["only-in-db"] != config.db.database) {
+        console.error('************************ WARNING ************************')
+        console.error(`"${config.db.database}" no es la base de datos de test.only-in-db = ${config.test?.["only-in-db"]}`);
+        process.exit(0);
     }
     try {
         fs.unlink('local-log-all.sql')

@@ -18,7 +18,7 @@ export function personas(context: TableContext): TableDefinition {
         elementName: 'persona',
         editable: admin,
         fields:[
-            idper,
+            {...idper, nullable:true, editable:false},
             {name: 'cuil'     , typeName: 'text', isName:false, postInput: soloDigitosPostConfig  },
             {name: 'tipo_doc' , typeName: 'text',                                                 },
             {name: 'documento', typeName: 'text', isName:false, postInput: soloDigitosPostConfig  },
@@ -27,11 +27,12 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'apellido' , typeName: 'text', isName:true , nullable:false                    },
             {name: 'nombres'  , typeName: 'text', isName:true , nullable:false                    },
             {name: 'sector'   , typeName: 'text',                                                 },
+            {name: 'es_jefe'  , typeName: 'boolean'                                               },
             {name: 'categoria', typeName: 'text',               title:'categoría'                 },
             s_revista,
             {name: 'registra_novedades_desde', typeName: 'date'                                   },
             {name: 'para_antiguedad_relativa', typeName: 'date'                                   },
-            {name: 'activo'                  , typeName: 'boolean'                                },
+            {name: 'activo' , typeName: 'boolean', nullable:false , defaultValue:false            },
             {name: 'fecha_ingreso'           , typeName: 'date'                                   },
             {name: 'fecha_egreso'            , typeName: 'date'                                   },
             {name: 'nacionalidad'            , typeName: 'text', title: 'nacionalidad'            },
@@ -42,11 +43,12 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'grado'                   , typeName: 'text', title: 'grado'                   },
             {name: 'domicilio'               , typeName: 'text', title: 'domicilio'               },
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
-            {name: 'es_jefe'                 , typeName: 'boolean'                                },
         ],
         primaryKey: [idper.name],
         foreignKeys: [
             {references: 'sectores'         , fields:['sector']       },
+            {references: 'paises'           , fields:[{source:'nacionalidad',target:'pais'}]      },
+            {references: 'categorias'         , fields:['categoria']       },
         ],
         softForeignKeys: [
             {references: 'situacion_revista', fields:[s_revista.name] },
@@ -66,9 +68,11 @@ export function personas(context: TableContext): TableDefinition {
             {table:'novedades_registradas', fields:[idper.name], abr:'R'},
             {table:'fichadas'             , fields:[idper.name], abr:'F'},
             {table:'nov_per'              , fields:[idper.name], abr:'#'},
+            {table:'per_nov_cant'         , fields:[idper.name], abr:'##'},
             {table:'historial_contrataciones', fields:[idper.name], abr:'hc'},
             {table:'inconsistencias'      , fields:[idper.name], abr:'⒤'},
             {table:'per_capa'   , fields:[idper.name], abr:'C'},
-        ]
+        ],
+        sortColumns: [{column: 'activo', order: -1}, {column: 'idper', order: 1}],
     };
 }

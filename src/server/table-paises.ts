@@ -16,7 +16,7 @@ export function paises(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             pais,
-            {name: 'nombre_pais', typeName:'text'    },
+            {name: 'nombre_pais', typeName:'text'  , isName: true  },
             {name: 'gentilicio' , typeName:'text'    },
             {name: 'orden'      , typeName:'integer' },
             {name: 'cod_2024'   , typeName:'text'    },

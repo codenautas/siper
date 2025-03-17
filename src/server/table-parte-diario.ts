@@ -42,7 +42,7 @@ export function parte_diario(_context: TableContext): TableDefinition{
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],
         softForeignKeys: [
-            {references: 'personas', fields: [idper.name], displayFields:['ficha', 'apellido', 'nombres']},
+            {references: 'personas', fields: [idper.name], displayFields:['ficha', 'cuil', 'apellido', 'nombres']},
             {references: 'cod_novedades', fields: [cod_nov.name], displayFields:['novedad']},
             {references: 'sectores', fields: [sector.name], displayFields:['nombre_sector']},
         ],
@@ -67,6 +67,6 @@ export function parte_diario(_context: TableContext): TableDefinition{
                     
             )`,
         },
-        sortColumns:[{column:'personas__apellido'}, {column:'personas__nombres'}]
+        sortColumns:[{column:'personas__apellido'}, {column:'personas__nombres'}],
     };
 }

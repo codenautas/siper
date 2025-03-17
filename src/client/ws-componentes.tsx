@@ -54,12 +54,13 @@ export function logError(error:Error){
     my.log(error);
 }
 
-export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string, scrollable?: boolean  
+export function Componente(props:{children:ReactNode[]|ReactNode, componentType:string, scrollable?: boolean, 
     esEfimero?: any
 }){
     return <Card className={"componente-" + props.componentType} 
         siper-esEfimero={props.esEfimero === true || props.esEfimero?.[EFIMERO] ? "si" : "no"}
-        sx={{ overflowY: props.scrollable ? 'auto' : 'hidden', backgroundImage: `url('${myOwn.config.config["background-img"]}')`}}
+        siper-esScrollable={props.scrollable === true ? "si" : "no"}
+        sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}
     >
         {props.children}
     </Card>
@@ -169,10 +170,10 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
     const isFutureMonth = periodo.mes > fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio > fechaActual.getFullYear();
 
     return <Componente componentType="calendario-mes" esEfimero={calendario}>
-        <Box style={{ flex:1}}>
+        <Box className="box-flex">
             <Box>
-                <Button onClick={_ => setPeriodo(retrocederUnMes)} disabled={!botonRetrocederHabilitado} sx={{ color: "#000" }}><ICON.ChevronLeft/></Button>
-                <Button onClick={_ => setPeriodo(avanzarUnMes)} disabled={!botonAvanzarHabilitado} sx={{ color: "#000" }}><ICON.ChevronRight/></Button>
+                <Button onClick={_ => setPeriodo(retrocederUnMes)} disabled={!botonRetrocederHabilitado} className="siper-button" boton-negro="si" ><ICON.ChevronLeft/></Button>
+                <Button onClick={_ => setPeriodo(avanzarUnMes)} disabled={!botonAvanzarHabilitado} className="siper-button" boton-negro="si"><ICON.ChevronRight/></Button>
                 <Select 
                     className="selector-mes"
                     value={periodo.mes}
@@ -203,18 +204,17 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         }
                 </Select>
                 <Button
-                    sx={{ color: "#000", borderColor: "#000", "&:hover": { borderColor: "#000" }, }} 
                     variant="outlined"
-                    className={fechaActual?.sameValue(fecha) ? "es-hoy-si" : "es-hoy-no"} 
+                    es-este-mes={isFutureMonth?"no-futuro":isPastMonth?"no-pasado":"si"}
                     onClick={()=>{ 
                         setPeriodo({mes: fechaActual.getMonth()+1, annio: fechaActual.getFullYear()});
                         props.onFecha && props.onFecha(fechaActual);
                         props.onFechaHasta && props.onFechaHasta(fechaActual);
                     }}
                 >
-                    {isFutureMonth && <ICON.ChevronLeft />}
+                    <span hoy-signo-de="futuro">{"<"}</span>
                     Hoy
-                    {isPastMonth && <ICON.ChevronRight />}
+                    <span hoy-signo-de="pasado">{">"}</span>
                 </Button>
             </Box>
             <Box className="calendario-semana">
@@ -285,13 +285,13 @@ type IdperFuncionCambio = (persona:ProvisorioPersonas)=>void
 
 function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null, onTodasChange?:(newValue:boolean)=>void, ordenPorNovedad?:boolean|null, onOrdenPorNovedadChange?:(newValue:boolean)=>void}){
     var [textToSearch, setTextToSearch] = useState("");
-    return <Paper sx={{ display: 'flex', alignItems: 'center', width: '100%' }} className="search-box">
+    return <Paper className="search-box">
         <ICON.Search/>
         <InputBase
             value = {textToSearch} 
             onChange = {(event)=>{ var newValue = event.target.value; props.onChange(newValue); setTextToSearch(newValue)}}
         />
-        <Button onClick={_=>{props.onChange(""); setTextToSearch("")}} sx={{ color: "#000" }}><ICON.BackspaceOutlined/></Button>
+        <Button onClick={_=>{props.onChange(""); setTextToSearch("")}} className="siper-button" boton-negro="si"><ICON.BackspaceOutlined/></Button>
         {props.todas != null ?
         <>
         <label>
@@ -299,11 +299,12 @@ function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null
                 checked={props.todas}
                 disabled={!props.onTodasChange}
                 onChange={(_event, checked) => props.onTodasChange?.(checked)}
-                sx={{ padding: 0 }}
+                className="check-box"
+                sin-padding="si"
             /> todas
         </label>
             <Button 
-                sx={{ color: "#000" }}
+                className="siper-button" boton-negro="si"
                 onClick={_ => {
                 // @ts-ignore
                 props.onOrdenPorNovedadChange(!props.ordenPorNovedad)
@@ -319,8 +320,8 @@ function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null
     </Paper>;
 }
 
-function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof T)[], todas?:boolean, principalesKey?:keyof T){
-    var principales:(row:T) => boolean = todas || !principalesKey ? function(){ return true } : row => !!row[principalesKey]
+function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof T)[], todas?:boolean, principalesKey?:(keyof T)[]){
+    var principales:(row:T) => boolean = todas || !principalesKey ? function(){ return true } : row => principalesKey.some(a => row[a])
     if (filter == "") return principales
     var f = filter.replace(/[^A-Z0-9 ]+/gi,'');
     var regExp = new RegExp(f.replace(/\s+/, '(\\w* \\w*)+'), 'i');
@@ -384,11 +385,10 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
             filtro && !abanicoPersonas[s.sector]?.length ? null :
             <Accordion key = {s.sector?.toString()} expanded = {!!expandido[s.sector]}
                 onChange={(_, b: boolean) => { setExpandido(e => ({...e, [s.sector]:b })) }}
-                sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')`, backgroundSize: 'auto 100%'}}
+                className="accordion-bg"
+                sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}
             >
-                <AccordionSummary id = {s.sector} expandIcon={<ICON.NavigationDown />} 
-                    sx={{flexDirection: 'row-reverse', '& .MuiAccordionSummary-content': { marginLeft: '16px' },}}
-                > 
+                <AccordionSummary className="accordion-summary" id = {s.sector} expandIcon={<ICON.NavigationDown />} > 
                     <span className="box-id" style={{paddingLeft: (s.tipos_sec__nivel-1)+"em", paddingRight:"1em"}}> {s.sector} </span>  
                     {s.nombre_sector} 
                 </AccordionSummary>
@@ -547,7 +547,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
         }
     },[idper, ultimaNovedad, annio])
     useEffect(function(){
-        const recordFilter = GetRecordFilter<NovedadesDisponiblesResult>(filtro,['cod_nov', 'novedad'],todas,'prioritario');
+        const recordFilter = GetRecordFilter<NovedadesDisponiblesResult>(filtro,['cod_nov', 'novedad'],todas,['prioritario','con_info_nov']);
         const novedadesOrdenadas = [...codNovedades].sort(compareForOrder([{ column: ordenPorNovedad ? 'novedad' : 'cod_nov' }]));
         setCodNovedadesFiltradas(novedadesOrdenadas.filter(recordFilter));
     },[codNovedades, filtro, todas, ordenPorNovedad])
@@ -562,7 +562,13 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
                     disabled={!c.con_disponibilidad}>
                     <span className="box-id"> {c.cod_nov} </span>   
                     <span className="box-names"> {c.novedad} </span>
-                    <span className="box-info">{c.limite! > 0 ? (c.pedidos! > 0 ?`${c.limite} - ${c.pedidos} = ${c.saldo}` : c.limite ): ''}</span>
+                    <span className="box-info" con-info-nov={c.con_info_nov?"si":"no"}>
+                        {c.con_info_nov?
+                            ctts.info_nov_numeros.map(info =>
+                                <span con-info-nov={info.name} key={info.name} title={info.title}>{c[info.name]}</span>
+                            )
+                        :null}
+                    </span>
                 </ListItemButton>
             )}
         </List>
@@ -618,37 +624,19 @@ function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
                 <div className="vacaciones-titulo">
                     año
                 </div>
-                <div className="vacaciones-titulo" title="cantidad inicial">
-                    cant
-                </div>
-                <div className="vacaciones-titulo" title="usados">
-                    usad
-                </div>
-                <div className="vacaciones-titulo" title="pendientes">
-                    pend
-                </div>
-                <div className="vacaciones-titulo" title="saldo">
-                    saldo
-                </div>
+                {ctts.info_nov_numeros.map(info => 
+                    <div className="vacaciones-titulo" key={info.abr} title={info.title}>{info.abr}</div>
+                )}
             </div>
             {registros.length > 0 ? (
                 registros.map(([anio, registro]) => (
                     <div key={anio} className="vacaciones-renglon">
-                    <div className="vacaciones-celda">
-                        {anio}
-                    </div>
-                    <div className="vacaciones-celda">
-                        {registro.cantidad}
-                    </div>
-                    <div className="vacaciones-celda">
-                        {registro.usados}
-                    </div>
-                    <div className="vacaciones-celda">
-                        {registro.pendientes}
-                    </div>
-                    <div className="vacaciones-celda">
-                        {registro.saldo}
-                    </div>
+                        <div className="vacaciones-celda">
+                            {anio}
+                        </div>
+                        {ctts.info_nov_numeros.map(info => 
+                            <div className="vacaciones-celda" key={info.abr} title={info.title}>{registro[info.name]}</div>
+                        )}
                     </div>
                 ))
             ) : (
@@ -802,6 +790,9 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         siCargaraNovedad?.c_dds && !(novedadRegistrada.dds1 || novedadRegistrada.dds2 || novedadRegistrada.dds3 || novedadRegistrada.dds4 || novedadRegistrada.dds5)
             ? "debe marcar alguno de los días de la semana" : null;
 
+    // @ts-expect-error
+    var es:{rrhh:boolean} = conn.config?.config?.es||{}
+
     return infoUsuario.usuario == null ?  
             <CircularProgress />
         : infoUsuario.idper == null ?
@@ -810,8 +801,8 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)} infoUsuario={infoUsuario}/>
             <Componente componentType="del-medio" scrollable={true}>
                 <div className="container-del-medio">
-                <Box sx={{ display: "flex", gap: 1 }}>
-                    <Paper sx={{ flex: 2 }}>
+                <Box className="box-flex-gap">
+                    <Paper className="paper-flex">
                         <div className="box-line">
                             <span className="box-id">
                                 {idper}
@@ -831,7 +822,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                             </span>
                         </div>
                     </Paper>
-                    <Box sx={{ flex: 1 }}>
+                    <Box className="box-flex">
                         <DetalleAniosNovPer detalleVacacionesPersona={detalleVacacionesPersona}/>
                     </Box>
                 </Box>
@@ -857,7 +848,8 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                                 checked={novedadRegistrada[`dds${key}` as DDSKeys] || false}
                                 onChange={handleDiaCheckboxChange}
                                 disabled={!habil || !diasIncluidos.has(parseInt(key))}
-                                sx={{ padding: 0 }}
+                                className="check-box"
+                                sin-padding="si"
                             />
                             {abr}
                             </label>
@@ -883,7 +875,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                 <Box>{guardandoRegistroNovedad || error ?
                     <Typography>{error?.message ?? (guardandoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
-                <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>
+                { es.rrhh && <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>}
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
                 </div>
             </Componente>
@@ -897,7 +889,7 @@ function PantallaPrincipal(props: {conn: Connector, fixedFields:FixedFields}){
     }, []);
 
     return <Paper className="paper-principal">
-        <AppBar position="static" sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')`, backgroundSize: 'auto 100%'}}>
+        <AppBar position="static" className="app-bar-bg" sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}>
             <Toolbar>
                 <IconButton color="inherit" onClick={()=>{
                     var root = document.getElementById('total-layout');

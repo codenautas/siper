@@ -344,8 +344,8 @@ describe("connected", function(){
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-01', '2000-01-07']}})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
-                    {annio:2000, cod_nov:COD_VACACIONES, total:20, usados:5, pendientes:0, disponibles:15},
-                    {annio:2000, cod_nov:COD_PRED_PAS, total:null, usados:16, pendientes:0, disponibles:null},
+                    {annio:2000, cod_nov:COD_VACACIONES, cantidad:20, usados:5, pendientes:0, saldo:15},
+                    {annio:2000, cod_nov:COD_PRED_PAS, cantidad:null, usados:16, pendientes:0, saldo:null},
                 ], 'all', {fixedFields:{idper}})
             })
         })
@@ -368,8 +368,8 @@ describe("connected", function(){
                 ], 'all', {fixedFields:{idper, fecha:['2000-03-07','2000-03-11']}})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
-                    {annio:2000, cod_nov:COD_VACACIONES, total:15, usados:0, pendientes:3, disponibles:12},
-                    {annio:2000, cod_nov:COD_PRED_PAS, total:null, usados:21, pendientes:0, disponibles:null}, // días hábiles hasta el 31 de enero
+                    {annio:2000, cod_nov:COD_VACACIONES, cantidad:15, usados:0, pendientes:3, saldo:12},
+                    {annio:2000, cod_nov:COD_PRED_PAS, cantidad:null, usados:21, pendientes:0, saldo:null}, // días hábiles hasta el 31 de enero
                 ], 'all', {fixedFields:{idper}})
             })
         })
@@ -412,9 +412,9 @@ describe("connected", function(){
                 ], 'all', {fixedFields:{idper, fecha:['2000-05-01', '2000-05-12']}})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
-                    {annio:2000, cod_nov:COD_VACACIONES, total:20, usados:0, pendientes:4, disponibles:16},
-                    {annio:2000, cod_nov:COD_TRAMITE   , total:4 , usados:0, pendientes:1, disponibles:3 },
-                    {annio:2000, cod_nov:COD_PRED_PAS, total:null, usados:21, pendientes:0, disponibles:null}, // días hábiles hasta el 31 de enero
+                    {annio:2000, cod_nov:COD_VACACIONES, cantidad:20, usados:0, pendientes:4, saldo:16},
+                    {annio:2000, cod_nov:COD_TRAMITE   , cantidad:4 , usados:0, pendientes:1, saldo:3 },
+                    {annio:2000, cod_nov:COD_PRED_PAS, cantidad:null, usados:21, pendientes:0, saldo:null}, // días hábiles hasta el 31 de enero
                 ], 'all', {fixedFields:{idper}})
             })
         })
@@ -948,11 +948,13 @@ describe("connected", function(){
                     novedad: "Art. 18 Descanso anual remunerado",
                     con_detalles: false, 
                     con_disponibilidad: true, 
+                    con_info_nov: true,
                     puede_cargar: true,
                     prioritario: true,
                     c_dds: null,
-                    limite:21, 
-                    pedidos: 3, 
+                    cantidad:21, 
+                    usados: 0,
+                    pendientes: 3,
                     saldo: 18,
                 };
                 var result = await rrhhSession.callProcedure(ctts.novedades_disponibles, {idper, annio: Number(DESDE_AÑO)})
@@ -961,9 +963,9 @@ describe("connected", function(){
                 discrepances.showAndThrow(resultVacaciones, [expectedResult])
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
-                    {annio:2000, cod_nov:COD_VACACIONES, total:21  , usados:0 , pendientes:3, disponibles:18  },
-                    {annio:2000, cod_nov:COD_PRED_PAS  , total:null, usados:21, pendientes:0, disponibles:null},
-                    {annio:2001, cod_nov:COD_VACACIONES, total:10  , usados:0 , pendientes:5, disponibles:5   },
+                    {annio:2000, cod_nov:COD_VACACIONES, cantidad:21  , usados:0 , pendientes:3, saldo:18  },
+                    {annio:2000, cod_nov:COD_PRED_PAS  , cantidad:null, usados:21, pendientes:0, saldo:null},
+                    {annio:2001, cod_nov:COD_VACACIONES, cantidad:10  , usados:0 , pendientes:5, saldo:5   },
                 ], 'all', {fixedFields:{idper}})
             })
         })

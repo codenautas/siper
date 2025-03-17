@@ -260,9 +260,11 @@ export const novedades_disponibles = {
         cod_nov: is.string,
         novedad: is.nullable.string,
         con_detalles: is.nullable.boolean,
-        pedidos: is.nullable.number,
-        limite: is.nullable.number,
+        cantidad: is.nullable.number,
+        usados: is.nullable.number,
+        pendientes: is.nullable.number,
         saldo: is.nullable.number,
+        con_info_nov: is.nullable.boolean,
         con_disponibilidad: is.nullable.boolean,
         c_dds: is.nullable.boolean,
         prioritario: is.nullable.boolean,
@@ -514,6 +516,13 @@ export const meses = [
     {  value:10, name:'octubre' },
     {  value:11, name:'noviembre' },
     {  value:12, name:'diciembre' }]
+
+export const info_nov_numeros = [
+    { name: 'cantidad'  , abr: 'cant'  , minAbr: 'c', title: 'cantidad inicial'},
+    { name: 'usados'    , abr: 'usad'  , minAbr: 'u', title: 'usados'          },
+    { name: 'pendientes', abr: 'pend'  , minAbr: 'p', title: 'pendientes'      },
+    { name: 'saldo'     , abr: 'saldo' , minAbr: 's', title: 'saldo'           },
+] satisfies {name:'cantidad'|'usados'|'pendientes'|'saldo', abr:string, minAbr:string, title:string}[]
 
 //////////// ERRORES POSTGRES PROPIOS:
 export const ERROR_REFERENCIA_CIRCULAR_EN_SECTORES = 'P1001';

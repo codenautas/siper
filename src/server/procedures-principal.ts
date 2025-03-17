@@ -143,17 +143,19 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     {
         action: 'novedades_disponibles',
         parameters: [
-            {name:'idper'      , typeName:'text'   },
+            {name:'idper'     , typeName:'text'   },
             {name:'annio'     , typeName:'integer'},
         ],
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof novedades_disponibles.parameters>){
             const {idper} = params;
             const info = await context.client.query(
                 `select v.cod_nov, v.novedad, coalesce(v.con_detalles, FALSE) as con_detalles, 
-                        coalesce(v.usados, 0) + coalesce(v.pendientes, 0) as pedidos, 
-                        coalesce(v.total, 0) as limite, 
-                        coalesce(v.disponibles, 0) as saldo, 
-                        (coalesce(v.disponibles, 0) > 0 or v.total is null) as con_disponibilidad,
+                        v.cantidad,
+                        v.usados,
+                        v.pendientes, 
+                        coalesce(v.cantidad, 0) + coalesce(v.usados, 0) + coalesce(v.pendientes, 0) + coalesce(v.saldo, 0) > 0 as con_info_nov, 
+                        v.saldo, 
+                        (coalesce(v.saldo, 0) > 0 or v.cantidad is null) as con_disponibilidad,
                         (v.registra and r.puede_cargar_dependientes or puede_cargar_todo) as puede_cargar,
                         c_dds,
                         prioritario
@@ -184,7 +186,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         left join sectores se using(sector)
                         left join novedades_vigentes nv on nv.idper = pe.idper and nv.fecha = $1
                         left join cod_novedades cn using(cod_nov)
-                    ${context.es.registra ? `` : `where u.idper = pe.idper`}
+                        where pe.activo is true
+                    ${context.es.registra ? `` : `and u.idper = pe.idper`}
                     order by apellido, nombres`
                 , [params.fecha, context.username]
             ).fetchAll();
