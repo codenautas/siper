@@ -1,3 +1,5 @@
+set search_path = "siper"
+
 -- ticket 119
 alter table "personas" add constraint "idper<>''" check ("idper"<>'');
 
