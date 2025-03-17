@@ -87,7 +87,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {...año, editable:false, generatedAs:`extract(year from desde)`},
             {name: 'cancela'  , typeName: 'boolean', description:'cancelación de novedades'},
             {name: 'detalles' , typeName: 'text'   ,                                    },
-            {name: 'habiles'  , typeName: 'integer'   , inTable:false, serverSide:true, editable:false },
+            {name: 'dias_hoc' , typeName: 'text', inTable:false, serverSide:true, editable:false },
         ],         
         primaryKey: [idper.name, 'desde', idr.name],
         foreignKeys: [
@@ -105,11 +105,24 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
         sql:{
             policies: politicaNovedades('novedades_registradas', 'desde'),
             fields: {
-                habiles:{ expr:`(
-                    select count(*) filter(where extract(dow from fecha) between 1 and 5
-                        and laborable is not false)
-                    from fechas as fechas_habiles
-                    where fecha between novedades_registradas.desde and novedades_registradas.hasta
+                dias_hoc:{ expr:`(
+                    WITH dias AS (
+                        SELECT 
+                            COUNT(*) AS dias_corridos,
+                            COUNT(*) FILTER (
+                                WHERE extract(dow FROM fecha) BETWEEN 1 AND 5
+                                AND laborable IS NOT FALSE
+                            ) AS dias_habiles
+                        FROM fechas
+                        WHERE fecha BETWEEN novedades_registradas.desde AND novedades_registradas.hasta
+                    )
+                    SELECT 
+                        CASE 
+                            WHEN (SELECT corridos FROM cod_novedades WHERE cod_nov = novedades_registradas.cod_nov) IS TRUE 
+                            THEN CONCAT(dias_corridos, 'c')
+                            ELSE CONCAT(dias_habiles, 'h')
+                        END
+                    FROM dias
                 )`},
             },
         }
