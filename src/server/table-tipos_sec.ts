@@ -20,7 +20,6 @@ export function tipos_sec(context:TableContext):TableDefinition{
             {name: 'descripcion'   , typeName: 'text'   , title: 'descripción' },
             {name: 'nivel'         , typeName: 'integer', isName:true, description: 'Nivel dentro de la jerarquía.' },
         ],
-        // @ts-expect-error
         lookupFields: ['nivel', 'descripcion'],
         primaryKey: [tipo_sec.name],
         constraints: [
