@@ -5,6 +5,7 @@ import {TableDefinition, TableContext} from "./types-principal";
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {sector} from "./table-sectores";
+import { FieldDefinition } from "backend-plus";
 
 export const sqlParteDiario = `
 select 
@@ -32,7 +33,6 @@ export function parte_diario(_context: TableContext): TableDefinition{
     return {
         name: 'parte_diario',
         elementName: 'parte diario',
-        gridAlias: 'parte-diario-grid',
         fields:[
             idper,
             {name: 'fecha' , typeName: 'date'},
@@ -71,3 +71,9 @@ export function parte_diario(_context: TableContext): TableDefinition{
         sortColumns:[{column:'personas__apellido'}, {column:'personas__nombres'}],
     };
 }
+
+export function parte_mensual(context: TableContext): TableDefinition{
+    var tableDef = parte_diario(context);
+    tableDef.fields.find((field:FieldDefinition)=>field.name=='fecha')!.alwaysShow = true;
+    return tableDef;
+} 
