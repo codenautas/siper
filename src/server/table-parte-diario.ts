@@ -74,6 +74,7 @@ export function parte_diario(_context: TableContext): TableDefinition{
 
 export function parte_mensual(context: TableContext): TableDefinition{
     var tableDef = parte_diario(context);
+    tableDef.name = 'parte_mensual';
     tableDef.fields.find((field:FieldDefinition)=>field.name=='fecha')!.alwaysShow = true;
     return tableDef;
 } 
