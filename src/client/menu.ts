@@ -1,5 +1,4 @@
 "use strict";
-//import { obtenerDetalleVacaciones } from "./shared-functions";
 function obtenerDetalleVacaciones(row:any){
     if (!row.esquema) return null;
     var esquema = JSON.parse(row.esquema || '{}');

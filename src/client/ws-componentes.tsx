@@ -38,7 +38,6 @@ import * as ctts from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 import { DefinedType } from "guarantee-type";
 import { AppConfigClientSetup } from "../server/types-principal";
-import { obtenerDetalleVacaciones } from "./shared-functions";
 
 const EFIMERO = Symbol("EFIMERO");
 function setEfimero<T extends {}|null>(tictac:T){
