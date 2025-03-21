@@ -26,23 +26,25 @@ select
         left join horarios h on h.idper = p.idper and f.dds = h.dds and f.fecha between h.desde and h.hasta 
 `;
 
-// Configuración base de los campos
-const baseFields: FieldDefinition[] = [
-    idper,
-    { name: 'fecha', typeName: 'date' },
-    sector,
-    cod_nov,
-    { name: 'fichada', typeName: 'text' },
-    { name: 'horario', typeName: 'text' },
-];
+// Función para generar los campos dinámicamente
+function getBaseFields(tableName: string): FieldDefinition[] {
+    return [
+        idper,
+        { name: 'fecha', typeName: 'date', alwaysShow: tableName === "parte_mensual" },
+        sector,
+        cod_nov,
+        { name: 'fichada', typeName: 'text' },
+        { name: 'horario', typeName: 'text' },
+    ];
+}
 
 // Función genérica para la configuración base de las tablas
-function baseReporte(context: TableContext, tableName: string, additionalConfig?: Partial<TableDefinition>): TableDefinition {
+function baseReporte(context: TableContext, tableName: string): TableDefinition {
     const rrhh = context.es.rrhh;
     return {
         name: tableName,
         elementName: tableName.replace('_', ' '),
-        fields: baseFields,
+        fields: getBaseFields(tableName),
         primaryKey: [idper.name, 'fecha', cod_nov.name],
         softForeignKeys: [
             {references: 'personas', fields: [idper.name], displayFields:['ficha', 'cuil', 'apellido', 'nombres']},
@@ -71,7 +73,6 @@ function baseReporte(context: TableContext, tableName: string, additionalConfig?
             )`,
         },
         sortColumns:[{column:'personas__apellido'}, {column:'personas__nombres'}],
-        ...additionalConfig, //configuraciones adicionales
     };
 }
 
@@ -82,11 +83,5 @@ export function parte_diario(context: TableContext): TableDefinition {
 
 // Función para parte_mensual
 export function parte_mensual(context: TableContext): TableDefinition {
-    return baseReporte(context, 'parte_mensual', {
-        fields: [
-            ...baseFields.map((field) =>
-                field.name === 'fecha' ? { ...field, alwaysShow: true } : field
-            ),
-        ],
-    });
+    return baseReporte(context, 'parte_mensual');
 }
