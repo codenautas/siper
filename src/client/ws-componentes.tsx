@@ -265,6 +265,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 
 // @ts-ignore
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean};
+type ProvisorioInconsistencia = {annio:string, idper:string, cod_nov:string, cod_nov__novedad:string, pauta:string, pautas__descripcion:string}
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string, tipos_sec__nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>}
 // @ts-ignore
@@ -409,6 +410,47 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
             </Accordion>
         )}
     </Componente>
+}
+
+function InconsistenciasPersona(props:{conn: Connector, idper:string}){
+    const {conn, idper} = props;
+    const [inconsistencias, setInconsistencias] = useState<ProvisorioInconsistencia[]>([]);
+    useEffect(function(){
+        setInconsistencias(setEfimero)
+        conn.ajax.table_data<any>({
+            table: 'inconsistencias',
+            fixedFields: [{fieldName:'idper', value:idper}],
+            paramfun: {}
+        }).then(function(inconsistencias: ProvisorioInconsistencia[]){
+            setInconsistencias(inconsistencias);
+            console.log(inconsistencias)
+        }).catch(logError)
+    }, [idper])
+    return <Componente componentType="inconsistencias-persona" esEfimero={inconsistencias}>
+        <div className="inconsistencias-contenedor">
+            <div className="inconsistencias-titulo-principal">
+                Inconsistencias
+            </div>
+            <div className="inconsistencias-renglon">
+                {ctts.info_inconsistencias.map(info => 
+                    <div className="inconsistencias-titulo" key={info.abr} title={info.title}>{info.title}</div>
+                )}
+            </div>
+            {inconsistencias.length > 0 ? (
+                inconsistencias.map((inconsistencia) => (
+                    <div key={inconsistencia.pauta} className="inconsistencias-renglon">
+                        {ctts.info_inconsistencias.map(info => 
+                            <div className="inconsistencias-celda" key={info.abr} title={inconsistencia[info.name]}>{inconsistencia[info.name]}</div>
+                        )}
+                    </div>
+                ))
+            ) : (
+                <div className="inconsistencias-renglon">
+                    sin información
+                </div>
+            )}
+        </div>
+    </Componente>   
 }
 
 function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number, ultimaNovedad?:number, infoUsuario:InfoUsuario, 
@@ -876,6 +918,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                     <Typography>{error?.message ?? (guardandoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
                 { es.rrhh && <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>}
+                <InconsistenciasPersona conn={conn} idper={idper}/>
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
                 </div>
             </Componente>
