@@ -1,13 +1,13 @@
 "use strict";
 
-import {TableDefinition, TableContext} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition} from "./types-principal";
 
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {sector} from "./table-sectores";
-import { FieldDefinition } from "backend-plus";
+import {changing} from "best-globals";
 
-export const sqlParteDiario = `
+export const sqlReporte= `
 select 
         p.idper, 
         f.fecha, 
@@ -26,21 +26,18 @@ select
         left join horarios h on h.idper = p.idper and f.dds = h.dds and f.fecha between h.desde and h.hasta 
 `;
 
-// vista para traer las fichadas en el dia. por ahora esta como min(hora) y max(hora) de la fecha. 
-// el nombre no es el mejor. ver si hacer un origen comun para el visor de fichadas
-export function parte_diario(_context: TableContext): TableDefinition{
-    const rrhh = _context.es.rrhh;
+// Función genérica para la configuración base de las tablas
+function baseReporte(context: TableContext): TableDefinition {
+    const rrhh = context.es.rrhh;
     return {
-        name: 'parte_diario',
-        elementName: 'parte diario',
-        gridAlias: 'parte-diario-grid',
-        fields:[
+        name: "reporte",
+        fields: [
             idper,
-            {name: 'fecha' , typeName: 'date'},
+            { name: 'fecha'  , typeName: 'date' },
             sector,
             cod_nov,
-            {name: 'fichada' , typeName: 'text'},
-            {name: 'horario' , typeName: 'text'},
+            { name: 'fichada', typeName: 'text' },
+            { name: 'horario', typeName: 'text' },
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],
         softForeignKeys: [
@@ -56,7 +53,7 @@ export function parte_diario(_context: TableContext): TableDefinition{
             from:`(select x.idper, x.fecha, x.sector, x.cod_nov,
                     hora_texto(fichada_entrada) || ' - ' || hora_texto(fichada_salida) as fichada,
                     hora_texto(horario_entrada) || ' - ' || hora_texto(horario_Salida) as horario
-                from (${sqlParteDiario}) x
+                from (${sqlReporte}) x
                     inner join usuarios u on u.usuario = get_app_user()
                     inner join roles using (rol)
                     ${rrhh ? `` : `WHERE sector_pertenece(
@@ -73,9 +70,20 @@ export function parte_diario(_context: TableContext): TableDefinition{
     };
 }
 
-export function parte_mensual(context: TableContext): TableDefinition{
-    var tableDef = parte_diario(context);
-    tableDef.name = 'parte_mensual';
+// Función para parte_diario
+export function parte_diario(context: TableContext): TableDefinition {
+    return changing (baseReporte(context), {
+        name: "parte_diario",
+        elementName: "parte_diario",
+    });
+}
+
+// Función para parte_mensual
+export function parte_mensual(context: TableContext): TableDefinition {
+    var tableDef = changing (baseReporte(context), {
+        name: "parte_mensual",
+        elementName: "parte_mensual",
+    });
     tableDef.fields.find((field:FieldDefinition)=>field.name=='fecha')!.alwaysShow = true;
     return tableDef;
-} 
+}

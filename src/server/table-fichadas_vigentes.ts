@@ -5,7 +5,7 @@ import {TableDefinition, TableContext} from "./types-principal";
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {sector} from "./table-sectores";
-import { sqlParteDiario } from "./table-parte-diario";
+import { sqlReporte } from "./table-reportes";
 
 // visor de fichadas
 export function fichadas_vigentes(_context: TableContext): TableDefinition{
@@ -37,7 +37,7 @@ export function fichadas_vigentes(_context: TableContext): TableDefinition{
         sql:{
             isTable: false,
             skipEnance: true,
-            from:`(${sqlParteDiario})`
+            from:`(${sqlReporte})`
         }
     };
 }
