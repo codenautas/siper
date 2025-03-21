@@ -411,6 +411,74 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     </Componente>
 }
 
+function Grilla(props:{conn: Connector, table:string, fixedFields:FixedFields}){
+    const {conn, table, fixedFields} = props;
+    const [rows, setRows] = useState<RowType[]>([]);
+    
+    const columnDefinitions = ctts[`grilla_${table}` as keyof typeof ctts] as any[];
+    
+    useEffect(function(){
+        setRows(setEfimero)
+        conn.ajax.table_data<RowType>({table, fixedFields, paramfun: {}}).then(rows => {
+            setRows(rows);
+        }).catch(logError);
+    }, [table, fixedFields]);
+    
+    return <Componente componentType="grilla-generica" esEfimero={rows}>
+        <div className="grilla-titulo-principal">
+            {table}
+        </div>
+        {columnDefinitions ? (
+            <div>
+                <div className="grilla-renglon">
+                    {columnDefinitions.map(info =>
+                        <div className="grilla-titulo" key={info.abr} title={info.title}>{info.title}</div>
+                    )}
+                </div>
+                {rows.length > 0 ? (
+                    rows.map((row, rowIndex) => (
+                        <div key={rowIndex} className="grilla-renglon">
+                            {columnDefinitions.map(info => (
+                                <div key={info.name} className="grilla-celda" title={row[info.name]?.toString()}>
+                                    <ValueDB value={row[info.name]} />
+                                </div>
+                            ))}
+                        </div>
+                    ))
+                ) : (
+                    <div className="grilla-renglon">
+                        <div className="grilla-celda-vacia">Sin información</div>
+                    </div>
+                )}
+            </div>
+        ) : (
+
+            rows.length > 0 ? (
+                <div>
+                    <div className="grilla-renglon">
+                        {Object.keys(rows[0]).map(key => (
+                            <div key={key} className="grilla-titulo">{key}</div>
+                        ))}
+                    </div>
+                    {rows.map((row, rowIndex) => (
+                        <div key={rowIndex} className="grilla-renglon">
+                            {Object.entries(row).map(([key, value]) => (
+                                <div key={key} className="grilla-celda">
+                                    <ValueDB value={value} />
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="grilla-renglon">
+                    <div className="grilla-celda-vacia">Sin información</div>
+                </div>
+            )
+        )}
+    </Componente>
+} 
+
 function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number, ultimaNovedad?:number, infoUsuario:InfoUsuario, 
     fechaActual:RealDate,
     onBorrado:()=>void}
@@ -876,6 +944,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                     <Typography>{error?.message ?? (guardandoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
                 { es.rrhh && <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>}
+                <Grilla conn={conn} table="inconsistencias" fixedFields={[{fieldName:'idper', value:idper}]} />
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
                 </div>
             </Componente>
