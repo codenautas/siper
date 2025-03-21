@@ -1,11 +1,11 @@
 "use strict";
 
-import {TableDefinition, TableContext} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition} from "./types-principal";
 
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {sector} from "./table-sectores";
-import { FieldDefinition } from "backend-plus";
+import {changing} from "best-globals";
 
 export const sqlReporte= `
 select 
@@ -26,25 +26,19 @@ select
         left join horarios h on h.idper = p.idper and f.dds = h.dds and f.fecha between h.desde and h.hasta 
 `;
 
-// Función para generar los campos dinámicamente
-function getBaseFields(tableName: string): FieldDefinition[] {
-    return [
-        idper,
-        { name: 'fecha', typeName: 'date', alwaysShow: tableName === "parte_mensual" },
-        sector,
-        cod_nov,
-        { name: 'fichada', typeName: 'text' },
-        { name: 'horario', typeName: 'text' },
-    ];
-}
-
 // Función genérica para la configuración base de las tablas
-function baseReporte(context: TableContext, tableName: string): TableDefinition {
+function baseReporte(context: TableContext): TableDefinition {
     const rrhh = context.es.rrhh;
     return {
-        name: tableName,
-        elementName: tableName.replace('_', ' '),
-        fields: getBaseFields(tableName),
+        name: "reporte",
+        fields: [
+            idper,
+            { name: 'fecha'  , typeName: 'date' },
+            sector,
+            cod_nov,
+            { name: 'fichada', typeName: 'text' },
+            { name: 'horario', typeName: 'text' },
+        ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],
         softForeignKeys: [
             {references: 'personas', fields: [idper.name], displayFields:['ficha', 'cuil', 'apellido', 'nombres']},
@@ -78,10 +72,18 @@ function baseReporte(context: TableContext, tableName: string): TableDefinition 
 
 // Función para parte_diario
 export function parte_diario(context: TableContext): TableDefinition {
-    return baseReporte(context, 'parte_diario');
+    return changing (baseReporte(context), {
+        name: "parte_diario",
+        elementName: "parte_diario",
+    });
 }
 
 // Función para parte_mensual
 export function parte_mensual(context: TableContext): TableDefinition {
-    return baseReporte(context, 'parte_mensual');
+    var tableDef = changing (baseReporte(context), {
+        name: "parte_mensual",
+        elementName: "parte_mensual",
+    });
+    tableDef.fields.find((field:FieldDefinition)=>field.name=='fecha')!.alwaysShow = true;
+    return tableDef;
 }
