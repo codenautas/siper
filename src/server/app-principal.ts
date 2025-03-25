@@ -36,8 +36,7 @@ import { historial_contrataciones} from "./table-historial_contrataciones";
 import { capa_modalidades        } from "./table-capa_modalidades";
 import { capacitaciones          } from "./table-capacitaciones";
 import { per_capa                } from "./table-per_capa";
-import { parte_diario            } from "./table-reportes";
-import { parte_mensual           } from "./table-reportes";
+import { parte_diario            } from "./table-parte_diario";
 import { fichadas_vigentes       } from "./table-fichadas_vigentes";
 import { tipos_doc               } from "./table-tipos_doc";
 import { paises                  } from "./table-paises";
@@ -268,7 +267,6 @@ export class AppSiper extends AppBackend{
             capacitaciones       ,
             per_capa             ,
             parte_diario         ,
-            parte_mensual        ,
             fichadas_vigentes    ,
             tipos_doc            ,
             paises               ,

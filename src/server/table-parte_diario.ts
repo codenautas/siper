@@ -5,9 +5,8 @@ import {TableDefinition, TableContext} from "./types-principal";
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {sector} from "./table-sectores";
-import {changing} from "best-globals";
 
-export const sqlReporte= `
+export const sqlParteDiario= `
 select 
         p.idper, 
         f.fecha, 
@@ -27,10 +26,11 @@ select
 `;
 
 // Función genérica para la configuración base de las tablas
-function baseReporte(context: TableContext): TableDefinition {
+export function parte_diario(context: TableContext): TableDefinition {
     const rrhh = context.es.rrhh;
     return {
-        name: "reporte",
+        name: "parte_diario",
+        elementName: "parte_diario",
         fields: [
             idper,
             { name: 'fecha'  , typeName: 'date' },
@@ -53,7 +53,7 @@ function baseReporte(context: TableContext): TableDefinition {
             from:`(select x.idper, x.fecha, x.sector, x.cod_nov,
                     hora_texto(fichada_entrada) || ' - ' || hora_texto(fichada_salida) as fichada,
                     hora_texto(horario_entrada) || ' - ' || hora_texto(horario_Salida) as horario
-                from (${sqlReporte}) x
+                from (${sqlParteDiario}) x
                     inner join usuarios u on u.usuario = get_app_user()
                     inner join roles using (rol)
                     ${rrhh ? `` : `WHERE sector_pertenece(
@@ -68,21 +68,4 @@ function baseReporte(context: TableContext): TableDefinition {
         },
         sortColumns:[{column:'personas__apellido'}, {column:'personas__nombres'}],
     };
-}
-
-// Función para parte_diario
-export function parte_diario(context: TableContext): TableDefinition {
-    return changing (baseReporte(context), {
-        name: "parte_diario",
-        elementName: "parte_diario",
-    });
-}
-
-// Función para parte_mensual
-export function parte_mensual(context: TableContext): TableDefinition {
-    var tableDef = changing (baseReporte(context), {
-        name: "parte_mensual",
-        elementName: "parte_mensual",
-    });
-    return tableDef;
 }
