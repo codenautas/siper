@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition} from "./types-principal";
+import {TableDefinition, TableContext} from "./types-principal";
 
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
@@ -84,6 +84,5 @@ export function parte_mensual(context: TableContext): TableDefinition {
         name: "parte_mensual",
         elementName: "parte_mensual",
     });
-    tableDef.fields.find((field:FieldDefinition)=>field.name=='fecha')!.alwaysShow = true;
     return tableDef;
 }
