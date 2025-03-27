@@ -321,7 +321,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 [params.desde, params.hasta]
             ).execute();
             return {
-                tableName:'parte_mensual',
+                tableName:'parte_diario',
                 fixedFields:[
                     {fieldName:'fecha', value:params.desde, until:params.hasta},
                 ], 
