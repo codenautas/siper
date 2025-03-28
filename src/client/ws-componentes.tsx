@@ -918,7 +918,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                     <Typography>{error?.message ?? (guardandoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
                 { es.rrhh && <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>}
-                <InconsistenciasPersona conn={conn} idper={idper}/>
+                { es.rrhh && <InconsistenciasPersona conn={conn} idper={idper}/>}
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
                 </div>
             </Componente>
