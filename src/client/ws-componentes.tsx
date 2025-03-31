@@ -265,6 +265,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 
 // @ts-ignore
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean};
+type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, s_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate}
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string, tipos_sec__nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>}
 // @ts-ignore
@@ -395,6 +396,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                 <AccordionDetails>
                     <List>
                         {abanicoPersonas[s.sector]?.map(p=>
+                            <>
                             <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p as ProvisorioPersonas)}} 
                                     className={`${p.idper == idper ? ' seleccionado' : ''} ${p.cargable ? ' seleccionable' : 'no-seleccionable'}`}>
                                 <span className="box-id persona-id">{p.idper}</span>
@@ -403,6 +405,8 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                                 </span>
                                 <span className="box-info"> {p.cod_nov ? p.cod_nov : 'S/N' } </span>
                             </ListItemButton>
+                            {p.idper == idper && <LegajoPer conn={props.conn} idper={p.idper}/>}
+                            </>
                         )}
                     </List>
                 </AccordionDetails>
@@ -644,6 +648,103 @@ function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
                     sin información
                 </div>
             )}
+        </div>
+    </Componente>
+}
+
+function LegajoPer(props: {conn: Connector, idper:string}) {
+    const {idper, conn} = props;
+    const [persona, setPersona] = useState<ProvisorioPersonaLegajo>({} as ProvisorioPersonaLegajo);
+
+    useEffect(function() {
+        setPersona(setEfimero)
+        if (idper != null) {
+            conn.ajax.table_data<ProvisorioPersonaLegajo>({
+                table: 'personas',
+                fixedFields: [{fieldName:'idper', value:idper}],
+                paramfun: {}
+            }).then(personas => {
+                setPersona(personas[0]);
+            }).catch(logError);
+        }
+    }, [idper])
+
+    return <Componente componentType="legajo-per" esEfimero={persona}>
+        <div className="legajo-contenedor">
+            <div className="legajo-seccion">
+                <div className="legajo-grupo">
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">Ficha:</div>
+                        <div className="legajo-valor">{persona.ficha || '-'}</div>
+                    </div>
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">CUIL:</div>
+                        <div className="legajo-valor">{persona.cuil || '-'}</div>
+                    </div>
+                </div>
+                <div className="legajo-grupo">
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">Nacionalidad:</div>
+                        <div className="legajo-valor">{persona.nacionalidad || '-'}</div>
+                    </div>
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">Fecha Nacimiento:</div>
+                        <div className="legajo-valor">{persona.fecha_nacimiento?.toDmy() || '-'}</div>
+                    </div>
+                </div>
+            </div>
+            <div className="legajo-seccion">
+                <div className="legajo-grupo">
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">Categoría:</div>
+                        <div className="legajo-valor">{persona.categoria || '-'}</div>
+                    </div>
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">Sit. Revista:</div>
+                        <div className="legajo-valor">{persona.s_revista || '-'}</div>
+                    </div>
+                </div>
+                <div className="legajo-grupo">
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">Cargo:</div>
+                        <div className="legajo-valor">{persona.cargo_atgc || '-'}</div>
+                    </div>
+                </div>
+                <div className="legajo-grupo">
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">Agrup.:</div>
+                        <div className="legajo-valor">{persona.agrupamiento || '-'}</div>
+                    </div>
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">Tramo:</div>
+                        <div className="legajo-valor">{persona.tramo || '-'}</div>
+                    </div>
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">Grado:</div>
+                        <div className="legajo-valor">{persona.grado || '-'}</div>
+                    </div>
+                </div>
+            </div>
+            <div className="legajo-seccion">
+                <div className="legajo-grupo">
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">Fecha Ingreso:</div>
+                        <div className="legajo-valor">{persona.fecha_ingreso?.toDmy() || '-'}</div>
+                    </div>
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">Fecha Egreso:</div>
+                        <div className="legajo-valor">{persona.fecha_egreso?.toDmy() || '-'}</div>
+                    </div>
+                </div>
+            </div>
+            <div className="legajo-seccion">
+                <div className="legajo-grupo">
+                    <div className="legajo-campo legajo-campo-largo">
+                        <div className="legajo-etiqueta">Domicilio:</div>
+                        <div className="legajo-valor">{persona.domicilio || '-'}</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </Componente>
 }
