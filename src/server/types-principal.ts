@@ -9,7 +9,7 @@ export * from "pg-promise-strict";
 declare module "backend-plus"{
     interface Context {
         forDump?:boolean
-        es:{admin:boolean, rrhh:boolean, registra:boolean}
+        es:{configurador:boolean, admin:boolean, rrhh:boolean, registra:boolean}
     }
     interface ProcedureContext {
         be:AppSiper
@@ -22,7 +22,7 @@ declare module "backend-plus"{
         rol:string
     }
     interface AppConfigClientSetup {
-        es:{admin:boolean, rrhh:boolean, registra:boolean}
+        es:{configurador:boolean, admin:boolean, rrhh:boolean, registra:boolean}
     }
 }
 

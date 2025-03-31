@@ -49,6 +49,7 @@ import { grados                  } from "./table-grados";
 import { categorias              } from "./table-categorias";
 import { motivos_egreso          } from "./table-motivos_egreso";
 import { jerarquias              } from "./table-jerarquias";
+import { permisos_columnas       } from "./table-permisos_columnas";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -112,7 +113,8 @@ export class AppSiper extends AppBackend{
     }
     completeContext(context:Context){
         var es = context.es ?? {} as Context["es"]
-        es.admin = context.user && context.user.rol=="admin" 
+        es.configurador = context.user && context.user.rol=="configurador" 
+        es.admin = es.configurador || context.user && context.user.rol=="admin" 
         es.rrhh = es.admin || context.user && context.user.rol=="rrhh" 
         es.registra = es.rrhh || context.user && context.user.rol=="registra" 
         context.es = es;
@@ -141,12 +143,12 @@ export class AppSiper extends AppBackend{
                     {menuType:'table', name:'novedades_totales', table:'nov_per', ff:[{fieldName:'annio', value:date.today().getFullYear()}]},
                 ]}
             ] : []),
-               ...es.rrhh ? [{menuType:'table', name:'personas'          },
+            ...es.rrhh ? [{menuType:'table', name:'personas'          },
                 {menuType:'menu', name:'config', label:'configurar', menuContent:[
-                {menuType:'table', name:'sectores', table:'sectores_edit' },
+                    {menuType:'table', name:'sectores', table:'sectores_edit' },
                 ]}
-               ] : [],
-               ...es.admin ? [{menuType:'menu', name:'capacitaciones', menuContent:[
+            ] : [],
+            ...es.admin ? [{menuType:'menu', name:'capacitaciones', menuContent:[
                 {menuType:'table', name:'capacitaciones'},
                 ...(es.registra ? [{menuType:'table', name:'modadidades', table:'capa_modalidades'}] : []),
             ]}] : []
@@ -279,7 +281,8 @@ export class AppSiper extends AppBackend{
             grados               ,
             categorias           ,
             motivos_egreso       ,
-            jerarquias
+            jerarquias           ,
+            permisos_columnas    ,
         }
     }       
 }

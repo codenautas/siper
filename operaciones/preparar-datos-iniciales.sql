@@ -1,3 +1,5 @@
+SET search_path = siper; SET ROLE siper_owner;
+
 set search_path = siper;
 
 /*
