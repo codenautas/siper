@@ -36,11 +36,16 @@ import { historial_contrataciones} from "./table-historial_contrataciones";
 import { capa_modalidades        } from "./table-capa_modalidades";
 import { capacitaciones          } from "./table-capacitaciones";
 import { per_capa                } from "./table-per_capa";
-import { parte_diario            } from "./table-parte-diario";
-import { parte_mensual           } from "./table-parte-diario";
+import { parte_diario            } from "./table-parte_diario";
 import { fichadas_vigentes       } from "./table-fichadas_vigentes";
 import { tipos_doc               } from "./table-tipos_doc";
 import { paises                  } from "./table-paises";
+import { provincias              } from "./table-provincias";
+import { barrios                 } from "./table-barrios";
+import { localidades             } from "./table-localidades";
+import { calles                  } from "./table-calles";
+import { tipos_domicilio         } from "./table-tipos_domicilio";
+import { per_domicilios          } from "./table-per_domicilios";
 import { sexos                   } from "./table-sexos";
 import { estados_civiles         } from "./table-estados_civiles";
 import { agrupamientos           } from "./table-agrupamientos";
@@ -176,6 +181,11 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'situacion_revista', label: 'sit. revista' },
                             {menuType:'table', name:'clases'           },
                             {menuType:'table', name:'paises'           },
+                            {menuType:'table', name:'provincias'       },
+                            {menuType:'table', name:'barrios'          },
+                            {menuType:'table', name:'localidades'      },
+                            {menuType:'table', name:'calles'           },
+                            {menuType:'table', name:'tipos_domicilio'  },
                             {menuType:'table', name:'tipos_doc'        },
                             {menuType:'table', name:'tipos_sec'        },
                             {menuType:'table', name:'sexos'            },
@@ -268,10 +278,15 @@ export class AppSiper extends AppBackend{
             capacitaciones       ,
             per_capa             ,
             parte_diario         ,
-            parte_mensual        ,
             fichadas_vigentes    ,
             tipos_doc            ,
             paises               ,
+            provincias           ,
+            barrios              ,
+            localidades          ,
+            calles               ,
+            tipos_domicilio      ,
+            per_domicilios       ,
             sexos                ,
             estados_civiles      ,
             agrupamientos        ,
