@@ -265,7 +265,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 
 // @ts-ignore
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean};
-type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, s_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate}
+type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate}
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string, tipos_sec__nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>}
 // @ts-ignore
@@ -665,6 +665,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 paramfun: {}
             }).then(personas => {
                 setPersona(personas[0]);
+                console.log(personas[0])
             }).catch(logError);
         }
     }, [idper])
@@ -701,13 +702,17 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                     </div>
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">Sit. Revista:</div>
-                        <div className="legajo-valor">{persona.s_revista || '-'}</div>
+                        <div className="legajo-valor">{persona.situacion_revista || '-'}</div>
                     </div>
                 </div>
                 <div className="legajo-grupo">
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">Cargo:</div>
                         <div className="legajo-valor">{persona.cargo_atgc || '-'}</div>
+                    </div>
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">Jerarquia:</div>
+                        <div className="legajo-valor">{persona.jerarquia || '-'}</div>
                     </div>
                 </div>
                 <div className="legajo-grupo">
