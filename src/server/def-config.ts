@@ -66,6 +66,7 @@ install:
       - ../install/personas_actualizar_novedades_trg.sql
       - ../install/avance_de_dia_proc.sql
       - ../install/parametros_trg.sql
+      - ../install/poblar_pernovcant.sql
 logo: 
   path: client/img
 `;
