@@ -503,6 +503,89 @@ export const jerarquias = {
 
 export type jerarquias = DefinedType<typeof jerarquias.description>
 
+export const provincias = {
+    table : 'provincias',
+    description: is.object({
+        provincia: is.string,
+        nombre_provincia: is.string,
+        cod_2024: is.string,
+    })
+}
+
+export type Provincias = DefinedType<typeof provincias.description>
+
+export const barrios = {
+    table : 'barrios',
+    description: is.object({
+        provincia: is.string,
+        barrio: is.string,
+        nombre_barrio: is.string,
+        cod_2024: is.string,
+    })
+}
+
+export type Barrios = DefinedType<typeof barrios.description>
+
+export const localidades = {
+    table : 'localidades',
+    description: is.object({
+        provincia: is.string,
+        localidad: is.string,
+        nombre_localidad: is.string,
+        cod_2024: is.string,
+    })
+}
+
+export type Localidades = DefinedType<typeof localidades.description>
+
+export const calles = {
+    table : 'calles',
+    description: is.object({
+        provincia: is.string,
+        calle: is.string,
+        nombre_calle: is.string,
+        cod_2024: is.string,
+    })
+}
+
+export type Calles = DefinedType<typeof calles.description>
+
+export const tipos_domicilio = {
+    table: 'tipos_domicilio',
+    description: is.object({
+        tipo_domicilio: is.string,
+        domicilio: is.string,
+        orden: is.number
+    })
+} satisfies CommonEntityDefinition
+
+export type Tipos_domicilio = DefinedType<typeof tipos_domicilio.description>
+
+export const per_domicilios = {
+    table: 'per_domicilios',
+    description: is.object({
+        idper:           is.string,
+        domicilio:       is.bigint,
+        tipo_domicilio:  is.string,
+        provincia:       is.string,
+        localidad:       is.string,
+        barrio:          is.string,
+        codigo_postal:   is.string,
+        calle:           is.string,
+        nombre_calle:    is.string,
+        altura:          is.string,
+        piso:            is.string,
+        depto:           is.string,
+        escalera:        is.string,
+        torre:           is.string,
+        nudo:            is.string,
+        ala:             is.string,
+        confirmado:      is.boolean,
+        fecha_confirmado:is.Date,
+        observaciones:   is.string,
+    })
+}
+
 export const meses = [
     {  value:1, name:'enero' },
     {  value:2, name:'febrero' },
