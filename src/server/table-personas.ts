@@ -43,12 +43,14 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'grado'                   , typeName: 'text', title: 'grado'                   },
             {name: 'domicilio'               , typeName: 'text', title: 'domicilio'               },
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
+            {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
         ],
         primaryKey: [idper.name],
         foreignKeys: [
             {references: 'sectores'         , fields:['sector']       },
             {references: 'paises'           , fields:[{source:'nacionalidad',target:'pais'}]      },
             {references: 'categorias'         , fields:['categoria']       },
+            {references: 'sexos'              , fields:['sexo']            },
         ],
         softForeignKeys: [
             {references: 'situacion_revista', fields:[s_revista.name] },
