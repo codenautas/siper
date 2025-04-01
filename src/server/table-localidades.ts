@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition, sinMinusculas, soloCodigo} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, sinMinusculas} from "./types-principal";
 
 import {provincia} from "./table-provincias";
 
@@ -24,8 +24,8 @@ export function localidades(context:TableContext):TableDefinition{
         ],
         primaryKey: [provincia.name, localidad.name],
         constraints: [
-            soloCodigo(provincia.name),
-            soloCodigo(localidad.name)
+            {constraintType: 'check', consName: "provincia dos digitos", expr: `provincia similar to '\\d{2}'`},
+            {constraintType: 'check', consName: "localidad uno a tres digitos", expr: `localidad similar to '\\d{1,3}'`}
         ],
         foreignKeys: [
             {references:'provincias', fields:[provincia.name]}

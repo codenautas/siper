@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition, sinMinusculas, soloCodigo} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, sinMinusculas} from "./types-principal";
 
 export const provincia:FieldDefinition = {
     name: 'provincia', 
@@ -21,7 +21,7 @@ export function provincias(context:TableContext):TableDefinition{
         ],
         primaryKey: [provincia.name],
         constraints: [
-            soloCodigo(provincia.name)
+            {constraintType: 'check', consName: "provincia dos digitos", expr: `provincia similar to '\\d{2}'`}
         ],
         detailTables: [
             {table:'barrios'    , fields:[provincia.name], abr:'B'},
