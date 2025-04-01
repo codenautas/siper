@@ -6,7 +6,7 @@ import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {sector} from "./table-sectores";
 
-export const sqlParteDiario = `
+export const sqlParteDiario= `
 select 
         p.idper, 
         f.fecha, 
@@ -25,20 +25,19 @@ select
         left join horarios h on h.idper = p.idper and f.dds = h.dds and f.fecha between h.desde and h.hasta 
 `;
 
-// vista para traer las fichadas en el dia. por ahora esta como min(hora) y max(hora) de la fecha. 
-// el nombre no es el mejor. ver si hacer un origen comun para el visor de fichadas
-export function parte_diario(_context: TableContext): TableDefinition{
-    const rrhh = _context.es.rrhh;
+// Función genérica para la configuración base de las tablas
+export function parte_diario(context: TableContext): TableDefinition {
+    const rrhh = context.es.rrhh;
     return {
-        name: 'parte_diario',
-        elementName: 'parte diario',
-        fields:[
+        name: "parte_diario",
+        elementName: "parte_diario",
+        fields: [
             idper,
-            {name: 'fecha' , typeName: 'date'},
+            { name: 'fecha'  , typeName: 'date' },
             sector,
             cod_nov,
-            {name: 'fichada' , typeName: 'text'},
-            {name: 'horario' , typeName: 'text'},
+            { name: 'fichada', typeName: 'text' },
+            { name: 'horario', typeName: 'text' },
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],
         softForeignKeys: [

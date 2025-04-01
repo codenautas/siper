@@ -36,7 +36,7 @@ import { historial_contrataciones} from "./table-historial_contrataciones";
 import { capa_modalidades        } from "./table-capa_modalidades";
 import { capacitaciones          } from "./table-capacitaciones";
 import { per_capa                } from "./table-per_capa";
-import { parte_diario            } from "./table-parte-diario";
+import { parte_diario            } from "./table-parte_diario";
 import { fichadas_vigentes       } from "./table-fichadas_vigentes";
 import { tipos_doc               } from "./table-tipos_doc";
 import { paises                  } from "./table-paises";
@@ -140,6 +140,7 @@ export class AppSiper extends AppBackend{
             ...(es.registra ? [
                 {menuType:'menu', name:'listados', menuContent:[
                     {menuType:'proc', name:'parte_diario'},
+                    {menuType:'proc', name:'informe_mensual'},
                     {menuType:'proc', name:'descanso_anual_remunerado'},
                     // {menuType:'proc', name:'visor_de_fichadas'},
                     {menuType:'table', name:'novedades_totales', table:'nov_per', ff:[{fieldName:'annio', value:date.today().getFullYear()}]},
