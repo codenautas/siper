@@ -265,7 +265,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 
 // @ts-ignore
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean};
-type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate}
+type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate}
+type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__domicilio:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, domicilio:string}
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string, tipos_sec__nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>}
 // @ts-ignore
@@ -655,6 +656,7 @@ function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
 function LegajoPer(props: {conn: Connector, idper:string}) {
     const {idper, conn} = props;
     const [persona, setPersona] = useState<ProvisorioPersonaLegajo>({} as ProvisorioPersonaLegajo);
+    const [domicilios, setDomicilios] = useState<ProvisorioPersonaDomicilio[]>([]);
 
     useEffect(function() {
         setPersona(setEfimero)
@@ -665,7 +667,13 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 paramfun: {}
             }).then(personas => {
                 setPersona(personas[0]);
-                console.log(personas[0])
+            }).catch(logError);
+            conn.ajax.table_data<ProvisorioPersonaDomicilio>({
+                table: 'per_domicilios',
+                fixedFields: [{fieldName:'idper', value:idper}],
+                paramfun: {}
+            }).then(domicilios => {
+                setDomicilios(domicilios);
             }).catch(logError);
         }
     }, [idper])
@@ -712,7 +720,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                     </div>
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">Jerarquia:</div>
-                        <div className="legajo-valor">{persona.jerarquia || '-'}</div>
+                        <div className="legajo-valor">{persona.jerarquias__descripcion || '-'}</div>
                     </div>
                 </div>
                 <div className="legajo-grupo">
@@ -745,9 +753,24 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
             <div className="legajo-seccion">
                 <div className="legajo-grupo">
                     <div className="legajo-campo legajo-campo-largo">
-                        <div className="legajo-etiqueta">Domicilio:</div>
-                        <div className="legajo-valor">{persona.domicilio || '-'}</div>
+                        <div className="legajo-etiqueta">Domicilios:</div>
                     </div>
+                </div>
+            </div>
+            <div className="legajo-seccion">
+                <div className="legajo-grupo">
+                    {domicilios.map(domicilio => (
+                        <div key={domicilio.domicilio} className="legajo-campo legajo-campo-largo">
+                            <div className="legajo-valor">{domicilio.domicilio || '-'} - 
+                                {` ${domicilio.calles__nombre_calle}`} 
+                                {` ${domicilio.altura}`}
+                                {domicilio.piso && ` Piso ${domicilio.piso}`}
+                                {domicilio.depto && ` Depto ${domicilio.depto}`}
+                                {domicilio.codigo_postal && ` CP ${domicilio.codigo_postal}`}
+                                , {domicilio.barrios__nombre_barrio}, {domicilio.provincias__nombre_provincia} 
+                                ({domicilio.tipos_domicilio__domicilio})</div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
