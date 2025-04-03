@@ -426,30 +426,42 @@ function InconsistenciasPersona(props:{conn: Connector, idper:string}){
             console.log(inconsistencias)
         }).catch(logError)
     }, [idper])
+    
     return <Componente componentType="inconsistencias-persona" esEfimero={inconsistencias}>
-        <div className="inconsistencias-contenedor">
-            <div className="inconsistencias-titulo-principal">
-                Inconsistencias
+        {inconsistencias.length > 0 && 
+            <div className="inconsistencias-descripcion">
+                Esta persona posee {inconsistencias.length} {inconsistencias.length === 1 ? 'inconsistencia' : 'inconsistencias'} que requiere atención
             </div>
-            <div className="inconsistencias-renglon">
-                {ctts.info_inconsistencias.map(info => 
-                    <div className="inconsistencias-titulo" key={info.abr} title={info.title}>{info.title}</div>
-                )}
-            </div>
-            {inconsistencias.length > 0 ? (
-                inconsistencias.map((inconsistencia) => (
-                    <div key={inconsistencia.pauta} className="inconsistencias-renglon">
-                        {ctts.info_inconsistencias.map(info => 
-                            <div className="inconsistencias-celda" key={info.abr} title={inconsistencia[info.name]}>{inconsistencia[info.name]}</div>
-                        )}
+        }
+        {inconsistencias.length > 0 ? (
+            <List>
+                {inconsistencias.map((inconsistencia) => (
+                    <div key={inconsistencia.pauta} className="inconsistencia-item">
+                        <div className="inconsistencia-row">
+                            <div className="inconsistencia-left">
+                                <strong>{inconsistencia.pauta}</strong>
+                                {inconsistencia.annio ? ` (${inconsistencia.annio})` : ''}
+                            </div>
+                            {inconsistencia.cod_nov && (
+                                <div className="inconsistencia-right">
+                                    {inconsistencia.cod_nov}
+                                </div>
+                            )}
+                        </div>
+                        <div className="inconsistencia-description">
+                            {inconsistencia.pautas__descripcion}
+                            {inconsistencia.cod_nov__novedad && (
+                                <div className="inconsistencia-detail">{inconsistencia.cod_nov__novedad}</div>
+                            )}
+                        </div>
                     </div>
-                ))
-            ) : (
-                <div className="inconsistencias-renglon">
-                    sin información
-                </div>
-            )}
-        </div>
+                ))}
+            </List>
+        ) : (
+            <div className="inconsistencias-vacio">
+                No se encontraron inconsistencias
+            </div>
+        )}
     </Componente>   
 }
 

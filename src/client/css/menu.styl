@@ -261,52 +261,54 @@ span.box-info
 
 .componente-inconsistencias-persona
   min-width 28em
-
-.inconsistencias-titulo-principal
-  text-align center
-  margin-bottom 1em
-  width 100%
-
-.inconsistencias-contenedor
-  display flex
-  align-items flex-start
-  flex-direction column
-  width 100%
-
-.inconsistencias-renglon
-  display flex
-  flex-direction row
-  font-size 0.8em
-  font-weight bold
-  width 100%
-  min-height 2em
-
-.inconsistencias-celda
-  display flex
-  flex-direction column
-  flex 1
-  font-weight normal
-  font-size 1em
-  border-bottom 0.5px dotted gray
-  border-right 0.5px dotted gray
-  padding 4px
-  text-align center
-  align-items center
-  justify-content center
-  overflow hidden
-  text-overflow ellipsis
-
+  
 .inconsistencias-titulo
+  font-weight bold
+  font-size 1em
+  margin-bottom 0.2em
+
+.inconsistencias-descripcion
+  font-size 0.9em
+  color #aa6600
+  padding 0.4em
+  background-color #fff8d6
+  border-radius 3px
+  border-left 4px solid #f0e8c9
+
+.inconsistencia-item
+  padding 0.7em
+  border-radius 3px
+  margin-bottom 0.3em
+  
+  &:last-child
+    border-bottom none
+
+.inconsistencia-row
   display flex
-  flex-direction column
-  flex 1
-  height 1.5em
-  border-bottom 0.5px dotted gray
-  border-right 0.5px dotted gray
-  padding 4px
+  justify-content space-between
+  margin-bottom 0.3em
+
+.inconsistencia-left
+  font-size 0.9em
+
+.inconsistencia-right
+  color #666
+  font-family monospace
+
+.inconsistencia-description
+  color #333
+  font-size 0.9em
+
+.inconsistencia-detail
+  margin-top 0.3em
+  font-size 0.9em
+  color #666
+
+.inconsistencias-vacio
+  padding 1em
   text-align center
-  align-items center
-  justify-content center
+  color #666
+  font-style italic
 
 .search-box
   padding-left 0.7em
