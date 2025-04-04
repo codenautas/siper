@@ -16,7 +16,7 @@ export function tipos_domicilio(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             tipo_domicilio,
-            {name: 'domicilio',typeName:'text'    },
+            {name: 'domicilio',typeName:'text', isName:true    },
             {name: 'orden'    ,typeName:'integer' },
         ],
         primaryKey: [tipo_domicilio.name],

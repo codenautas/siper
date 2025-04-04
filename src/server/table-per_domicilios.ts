@@ -72,6 +72,7 @@ export function per_domicilios(context: TableContext): TableDefinition{
             {references: 'localidades', fields: [provincia.name, localidad.name]},
             {references: 'barrios'    , fields: [provincia.name, barrio.name]},
             {references: 'calles'     , fields: [provincia.name, calle.name]},
+            {references: 'tipos_domicilio', fields: [tipo_domicilio.name]},
         ],
         constraints: [
         ]

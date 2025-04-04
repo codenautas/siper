@@ -16,7 +16,7 @@ export function jerarquias(context:TableContext):TableDefinition{
         editable : admin,
         fields: [
             jerarquia,
-            {name: 'descripcion', typeName:'text'},
+            {name: 'descripcion', typeName:'text', isName:true},
             {name: 'cod_2024'   , typeName:'text'},
         ],
         primaryKey: ['jerarquia'],
