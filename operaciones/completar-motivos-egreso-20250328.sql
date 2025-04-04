@@ -15,3 +15,6 @@ INSERT INTO siper.motivos_egreso(motivo_egreso, descripcion, cod_2024)
     ('COE', 'CESE COLEGIO DE ESCRIBANO', 18),
     ('CMJ', 'CARGO DE MAYOR JERARQUIA', 19),
     ('INA', 'INASISTENCIAS', 21);
+
+alter table "personas" add constraint "motivo_egreso<>''" check ("motivo_egreso"<>'');
+alter table "personas" add constraint "personas motivos_egreso REL" foreign key ("motivo_egreso") references "motivos_egreso" ("motivo_egreso")  on update cascade;
