@@ -44,6 +44,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'domicilio'               , typeName: 'text', title: 'domicilio'               },
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
             {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
+            {name: 'motivo_egreso'           , typeName: 'text', title: 'motivo de egreso'       },
         ],
         primaryKey: [idper.name],
         foreignKeys: [
@@ -51,6 +52,7 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'paises'           , fields:[{source:'nacionalidad',target:'pais'}]      },
             {references: 'categorias'         , fields:['categoria']       },
             {references: 'sexos'              , fields:['sexo']            },
+            {references: 'motivos_egreso'     , fields:['motivo_egreso']   },
         ],
         softForeignKeys: [
             {references: 'situacion_revista', fields:[s_revista.name] },
