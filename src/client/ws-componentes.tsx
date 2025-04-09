@@ -762,15 +762,20 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                     {domicilios.map(domicilio => (
                         <div key={domicilio.domicilio} className="legajo-campo legajo-campo-largo">
                             <div className="legajo-valor">{domicilio.domicilio || '-'} - 
-                                {` ${domicilio.calles__nombre_calle}`} 
+                                {domicilio.calles__nombre_calle && ` ${domicilio.calles__nombre_calle}`} 
                                 {` ${domicilio.altura}`}
                                 {domicilio.piso && ` Piso ${domicilio.piso}`}
                                 {domicilio.depto && ` Depto ${domicilio.depto}`}
                                 {domicilio.codigo_postal && ` CP ${domicilio.codigo_postal}`}
-                                , {domicilio.barrios__nombre_barrio}, {domicilio.provincias__nombre_provincia} 
-                                ({domicilio.tipos_domicilio__domicilio})</div>
+                                {`, (${domicilio.barrios__nombre_barrio})`} 
+                                {`, (${domicilio.provincias__nombre_provincia})`} 
+                                {` (${domicilio.tipos_domicilio__domicilio})`} 
+                            </div>
                         </div>
                     ))}
+                    {domicilios.length === 0 && 
+                        <div className="legajo-campo legajo-campo-largo">Sin domicilios registrados</div>
+                    }
                 </div>
             </div>
         </div>
