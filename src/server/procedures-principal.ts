@@ -1,14 +1,15 @@
 "use strict";
 
 import {strict as likeAr, createIndex} from 'like-ar';
-import { ProcedureDef, ProcedureContext } from './types-principal';
+import { ProcedureDef, ProcedureContext, UploadedFileInfo } from './types-principal';
 import { NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles } from '../common/contracts';
 import { sqlNovPer } from "./table-nov_per";
 
 import { date, datetime } from 'best-globals'
-import { DefinedType } from 'guarantee-type';
+import { DefinedType} from 'guarantee-type';
 import { FixedFields } from 'frontend-plus';
 import { expected } from 'cast-error';
+import * as fs from 'fs-extra';
 
 export const ProceduresPrincipal:ProcedureDef[] = [
     {
@@ -513,4 +514,54 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             return info.row
         }
     },
+    {
+        action: 'archivo_subir',
+        progress: true,
+        parameters: [
+            { name: 'idper', typeName: 'text' },
+            { name: 'tipo_adjunto_persona', typeName: 'text' },
+            { name: 'numero_adjunto', typeName: 'integer' },
+        ],
+        files: { count: 1 },
+        coreFunction: async function (context, parameters, files) {
+            const { idper, tipo_adjunto_persona, numero_adjunto } = parameters;
+            const client = context.client;
+
+            if (!idper || !tipo_adjunto_persona) {
+                throw new Error("Faltan parámetros necesarios: idper o tipo_adjunto_persona.");
+            }
+
+            const file = files![0];
+            if (!file) {
+                throw new Error("No se recibió ningún archivo para subir.");
+            }
+
+            const originalFilename = file.originalFilename;
+            const extendedFilename = `${idper}-${tipo_adjunto_persona}-adjunto-${numero_adjunto}`;
+
+            const newPath = `local-attachments/adjuntos_persona/${extendedFilename}`;
+
+            // Mueve el archivo al destino final
+            const moveFile = async function (file: UploadedFileInfo, fileName: string) {
+                await fs.move(file.path, fileName, { overwrite: true });
+            };
+    
+            await moveFile(file, newPath);
+
+            const row = await client.query(
+                `UPDATE adjuntos_persona 
+                    SET archivo_nombre = $1, archivo_nombre_extendido = $2
+                    WHERE idper = $3 AND tipo_adjunto_persona = $4 AND numero_adjunto = $5
+                    RETURNING *`,
+                [originalFilename, extendedFilename, idper, tipo_adjunto_persona, numero_adjunto]
+            ).fetchUniqueRow();
+
+
+            return {
+                message: `El archivo ${originalFilename} se subió correctamente.`,
+                nombre: originalFilename,
+                updatedRow: row.row,
+            };
+        },
+    }
 ];

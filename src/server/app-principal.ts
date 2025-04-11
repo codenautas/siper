@@ -56,6 +56,10 @@ import { grados                  } from "./table-grados";
 import { categorias              } from "./table-categorias";
 import { motivos_egreso          } from "./table-motivos_egreso";
 import { jerarquias              } from "./table-jerarquias";
+import { adjuntos_persona        } from './table-adjuntos_persona';
+import { tipos_adjunto_persona   } from "./table-tipos_adjunto_persona";
+import { archivos_borrar         } from "./table-archivos_borrar";
+import { tipos_adjunto_persona_atributos } from "./table-tipos_adjunto_persona_atributos";
 import { expedientes             } from "./table-expedientes";
 import { funciones               } from "./table-funciones";
 import { nivel_grado             } from "./table-nivel_grado";
@@ -70,12 +74,49 @@ import {staticConfigYaml} from './def-config';
 import { Persona } from "../common/contracts"
 
 import { unexpected } from "cast-error";
+import * as backendPlus from "backend-plus";
+import {promises as fs, existsSync } from "fs";
 
 /* Dos líneas para incluir contracts: */
 var persona: Persona | null = null;
 console.log(persona)
 
+const cronMantenimiento = (be:AppBackend) => {
+    const interval = setInterval(async ()=>{
+        try{
+            const d = new Date();
+            const date = `${d.getDate()}/${d.getMonth()}/${d.getFullYear()}, ${d.getHours()}:${d.getMinutes()}`;
+            if(d.getHours() == 23 && d.getMinutes() == 58){
+                const result = await be.inTransaction(null, async (client)=>{
+                    const {rows} = await client.query("select ruta_archivo from archivos_borrar").fetchAll();
+                    if(rows.length>0){
+                        rows.forEach(async (element) => {
+                            const path = `local-attachments/adjuntos_persona/${element.ruta_archivo}`;
+                            await client.query(`delete from archivos_borrar where ruta_archivo = $1`, [element.ruta_archivo]).execute();
+                            if (existsSync(path)) {
+                                await fs.rm(path);
+                            }
+                        });
+                        return `Se borraron archivos adjuntos en la fecha y hora: ${date}`;
+                    }else{
+                        return `No hay archivos adjuntos para borrar en la fecha y hora: ${date}`;
+                    }
+                })
+                console.info("Resultado de cron: ", result);
+            }
+        }catch(err){
+            console.error(`Error en cron. ${err}`);
+        }
+    },60000);
+    be.shutdownCallbackListAdd({
+        message:'cron Mantenimiento',
+        fun:async function(){
+            clearInterval(interval);
+            return Promise.resolve();
+        }
+    });
 
+}
 export class AppSiper extends AppBackend{
     constructor(){
         super();
@@ -111,9 +152,42 @@ export class AppSiper extends AppBackend{
         await actionWithErrorLog();
         setInterval(actionWithErrorLog, 24*60*60*1000 / opts.vecesPorDia);
     }
+    override addSchrödingerServices(mainApp: backendPlus.Express, baseUrl: string) {
+        const be = this;
+        super.addSchrödingerServices(mainApp, baseUrl);
+
+        mainApp.get(baseUrl + '/download/file', async function (req, res) {
+
+            const { idper, tipo_adjunto_persona, numero_adjunto } = req.query;
+
+            if (!idper || !tipo_adjunto_persona) {
+                 res.status(400).send("Faltan parámetros necesarios: idper o tipo_adjunto_persona");
+                return;
+            }
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            await be.inDbClient(req, async (client) => {
+                const result = await client.query(
+                    `SELECT archivo_nombre, archivo_nombre_extendido
+                    FROM adjuntos_persona 
+                    WHERE idper = $1 AND tipo_adjunto_persona = $2 AND numero_adjunto = $3`,
+                    [idper, tipo_adjunto_persona, numero_adjunto]
+                ).fetchUniqueRow();
+
+                if (!result.row.archivo_nombre) {
+                    res.status(404).send("Archivo no encontrado");
+                    return;
+                }
+
+                const path = `local-attachments/adjuntos_persona/${result.row.archivo_nombre_extendido}`;
+                res.download(path, result.row.archivo_nombre); // Descarga con el nombre original
+            });
+        });
+    }
     override async postConfig(){
         const be = this;
         super.postConfig();
+        cronMantenimiento(be);
         be.inCron('avance_de_dia_proc', {vecesPorDia:24*6})
     }
     override async getProcedures(){
@@ -211,6 +285,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'categorias'       },
                             {menuType:'table', name:'motivos_egreso'   },
                             {menuType:'table', name:'jerarquias'       },
+                            {menuType:'table', name:'tipos_adjunto_persona'},
                             {menuType:'table', name:'expedientes'      },
                             {menuType:'table', name:'funciones'        },
                             {menuType:'table', name:'nivel_grado'      },
@@ -271,6 +346,10 @@ export class AppSiper extends AppBackend{
         this.getTableDefinition={
             ... this.getTableDefinition,
             annios               ,
+            adjuntos_persona     ,
+            tipos_adjunto_persona,
+            tipos_adjunto_persona_atributos,
+            archivos_borrar      ,
             roles                ,
             cod_novedades        ,
             fechas               ,

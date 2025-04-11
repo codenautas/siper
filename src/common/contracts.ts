@@ -412,6 +412,44 @@ export const tipos_doc = {
 } satisfies CommonEntityDefinition
 
 export type Tipos_doc = DefinedType<typeof tipos_doc.description>
+export const adjuntos_persona = {
+    table: 'adjuntos',
+    description: is.object({
+        idper: is.string,
+        numero_adjunto: is.nullable.number,
+        tipo_adjunto_persona: is.string,
+        timestamp: is.Date,
+        subir: is.nullable.string,
+        archivo_nombre: is.nullable.string,
+        archivo_nombre_extendido: is.nullable.string,
+        bajar: is.nullable.string,
+    }),
+} satisfies CommonEntityDefinition;
+
+export type Adjuntos_persona = DefinedType<typeof adjuntos_persona.description>;
+
+export const tipos_adjunto_persona = {
+    table: 'tipos_adjunto_persona',
+    description: is.object({
+        tipo_adjunto_persona: is.string,
+        adjunto: is.string
+    })
+} satisfies CommonEntityDefinition
+
+export type Tipos_adjunto_persona = DefinedType<typeof tipos_adjunto_persona.description>
+
+export const tipos_adjunto_atributos = {
+    table: 'tipos_adjunto_atributos',
+    description: is.object({
+        tipo_adjunto_persona: is.string,
+        atributo: is.string,
+        orden: is.number,
+        columna: is.number
+    })
+} satisfies CommonEntityDefinition
+
+export type tipos_adjunto_atributos = DefinedType<typeof tipos_adjunto_atributos.description>
+
 
 export const paises = {
     table : 'paises',
