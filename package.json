@@ -15,7 +15,7 @@
     "npm": ">=10.7"
   },
   "dependencies": {
-    "backend-plus": "^2.2.2",
+    "backend-plus": "^2.2.3",
     "frontend-plus": "^0.0.12",
     "guarantee-type": "^0.2.2",
     "json4all": "^1.4.0",
@@ -25,14 +25,14 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "^22.13.4",
+    "@types/node": "^22.14.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "mixin-patch": "^0.4.1",
     "mocha": "^11.1.0",
-    "type-fest": "4.34.1",
+    "type-fest": "4.39.1",
     "types.d.ts": "^0.6.22",
-    "typescript": "^5.7.3"
+    "typescript": "^5.8.3"
   },
   "mixin-patch": {
     "patch": false
