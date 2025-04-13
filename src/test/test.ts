@@ -199,7 +199,7 @@ describe("connected", function(){
             ], 'all')
         })
         it("verifica que un rrhh se considere registra también", async function(){
-            discrepances.showAndThrow(rrhhSession.config.config.es, {admin:false, rrhh:true, registra:true});
+            discrepances.showAndThrow(rrhhSession.config.config.es, {mantenimiento:false, admin:false, rrhh:true, registra:true});
         })
     })
     async function crearNuevaPersona(nombre:string, opts:{registra_novedades_desde?:Date, para_antiguedad_relativa?:Date}): Promise<ctts.Persona>{
