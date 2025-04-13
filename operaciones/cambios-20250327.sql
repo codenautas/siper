@@ -2937,25 +2937,40 @@ insert into "calles" ("provincia", "calle", "nombre_calle", "cod_2024") values
 alter table "provincias" add constraint "provincia<>''" check ("provincia"<>'');
 alter table "provincias" add constraint "nombre_provincia<>''" check ("nombre_provincia"<>'');
 alter table "provincias" add constraint "cod_2024<>''" check ("cod_2024"<>'');
-alter table "provincias" add constraint "palabra corta y solo mayusculas en provincia" check (provincia similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
+------------------------------------------------------------------
+--alter table "provincias" add constraint "palabra corta y solo mayusculas en provincia" check (provincia similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
+alter table "provincias" add constraint "provincia dos digitos" check (provincia similar to '\d{2}');
+------------------------------------------------------------------
 alter table "barrios" add constraint "provincia<>''" check ("provincia"<>'');
 alter table "barrios" add constraint "barrio<>''" check ("barrio"<>'');
 alter table "barrios" add constraint "nombre_barrio<>''" check ("nombre_barrio"<>'');
 alter table "barrios" add constraint "cod_2024<>''" check ("cod_2024"<>'');
-alter table "barrios" add constraint "palabra corta y solo mayusculas en provincia" check (provincia similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
-alter table "barrios" add constraint "palabra corta y solo mayusculas en barrio" check (barrio similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
+------------------------------------------------------------------
+--alter table "barrios" add constraint "palabra corta y solo mayusculas en provincia" check (provincia similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
+--alter table "barrios" add constraint "palabra corta y solo mayusculas en barrio" check (barrio similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
+alter table "barrios" add constraint "provincia dos digitos" check (provincia similar to '\d{2}');
+alter table "barrios" add constraint "barrio uno o dos digitos" check (barrio similar to '\d{1,2}');
+------------------------------------------------------------------
 alter table "localidades" add constraint "provincia<>''" check ("provincia"<>'');
 alter table "localidades" add constraint "localidad<>''" check ("localidad"<>'');
 alter table "localidades" add constraint "nombre_localidad<>''" check ("nombre_localidad"<>'');
 alter table "localidades" add constraint "cod_2024<>''" check ("cod_2024"<>'');
-alter table "localidades" add constraint "palabra corta y solo mayusculas en provincia" check (provincia similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
-alter table "localidades" add constraint "palabra corta y solo mayusculas en localidad" check (localidad similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
+------------------------------------------------------------------
+--alter table "localidades" add constraint "palabra corta y solo mayusculas en provincia" check (provincia similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
+--alter table "localidades" add constraint "palabra corta y solo mayusculas en localidad" check (localidad similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
+alter table "localidades" add constraint "provincia dos digitos" check (provincia similar to '\d{2}');
+alter table "localidades" add constraint "localidad uno a tres digitos" check (localidad similar to '\d{1,3}');
+------------------------------------------------------------------
 alter table "calles" add constraint "provincia<>''" check ("provincia"<>'');
 alter table "calles" add constraint "calle<>''" check ("calle"<>'');
 alter table "calles" add constraint "nombre_calle<>''" check ("nombre_calle"<>'');
 alter table "calles" add constraint "cod_2024<>''" check ("cod_2024"<>'');
-alter table "calles" add constraint "palabra corta y solo mayusculas en provincia" check (provincia similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
-alter table "calles" add constraint "palabra corta y solo mayusculas en calle" check (calle similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
+------------------------------------------------------------------
+--alter table "calles" add constraint "palabra corta y solo mayusculas en provincia" check (provincia similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
+--alter table "calles" add constraint "palabra corta y solo mayusculas en calle" check (calle similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
+alter table "calles" add constraint "provincia dos digitos" check (provincia similar to '\d{2}');
+alter table "calles" add constraint "calle uno a cinco digitos" check (calle similar to '\d{1,5}');
+------------------------------------------------------------------
 alter table "tipos_domicilio" add constraint "tipo_domicilio<>''" check ("tipo_domicilio"<>'');
 alter table "tipos_domicilio" add constraint "domicilio<>''" check ("domicilio"<>'');
 alter table "tipos_domicilio" add constraint "palabra corta y solo mayusculas en tipo_domicilio" check (tipo_domicilio similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
@@ -2986,9 +3001,11 @@ alter table "per_domicilios" add constraint "per_domicilios barrios REL" foreign
 alter table "per_domicilios" add constraint "per_domicilios calles REL" foreign key ("provincia", "calle") references "calles" ("provincia", "calle")  on update cascade;
 
 
+/*
 PERFORM enance_table('provincias','provincia');
 PERFORM enance_table('barrios','provincia,barrio');
 PERFORM enance_table('localidades','provincia,localidad');
 PERFORM enance_table('calles','provincia,calle');
 PERFORM enance_table('tipos_domicilio','tipo_domicilio');
 PERFORM enance_table('per_domicilios','idper,domicilio');
+*/

@@ -52,6 +52,7 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'paises'           , fields:[{source:'nacionalidad',target:'pais'}]      },
             {references: 'categorias'         , fields:['categoria']       },
             {references: 'sexos'              , fields:['sexo']            },
+            {references: 'jerarquias'         , fields:['jerarquia']       },
             {references: 'motivos_egreso'     , fields:['motivo_egreso']   },
         ],
         softForeignKeys: [
@@ -76,6 +77,7 @@ export function personas(context: TableContext): TableDefinition {
             {table:'historial_contrataciones', fields:[idper.name], abr:'hc'},
             {table:'inconsistencias'      , fields:[idper.name], abr:'⒤'},
             {table:'per_capa'   , fields:[idper.name], abr:'C'},
+            {table:'per_domicilios', fields:[idper.name], abr:'D'}
         ],
         sortColumns: [{column: 'activo', order: -1}, {column: 'idper', order: 1}],
     };
