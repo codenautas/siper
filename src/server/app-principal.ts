@@ -58,7 +58,8 @@ import { adjuntos_persona        } from './table-adjuntos_persona';
 import { tipos_adjunto_persona   } from "./table-tipos_adjunto_persona";
 import { archivos_borrar         } from "./table-archivos_borrar";
 import { tipos_adjunto_persona_atributos } from "./table-tipos_adjunto_persona_atributos";
-import { ProceduresPrincipal } from './procedures-principal'
+import { adjuntos_persona_atributos } from "./table-adjuntos_persona_atributos";
+import { ProceduresPrincipal             } from './procedures-principal'
 
 import {staticConfigYaml} from './def-config';
 
@@ -326,10 +327,11 @@ export class AppSiper extends AppBackend{
         super.prepareGetTables();
         this.getTableDefinition={
             ... this.getTableDefinition,
-            annios               ,
-            adjuntos_persona     ,
-            tipos_adjunto_persona,
+            annios                         ,
+            adjuntos_persona               ,
+            tipos_adjunto_persona          ,
             tipos_adjunto_persona_atributos,
+            adjuntos_persona_atributos     ,
             archivos_borrar      ,
             roles                ,
             cod_novedades        ,
