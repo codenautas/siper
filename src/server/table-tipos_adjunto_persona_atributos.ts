@@ -10,9 +10,9 @@ export function tipos_adjunto_persona_atributos(context: TableContext): TableDef
         editable: admin,
         fields: [
             { name: 'tipo_adjunto_persona', typeName: 'text', nullable: false },
-            { name: 'atributo', typeName: 'text', nullable: false },
-            { name: 'orden', typeName: 'integer', nullable: false },
-            { name: 'columna', typeName: 'integer', nullable: false },
+            { name: 'atributo', typeName: 'text', nullable: false             },
+            { name: 'orden', typeName: 'integer', nullable: false             },
+            { name: 'columna', typeName: 'integer', nullable: false           },
         ],
         primaryKey: ['tipo_adjunto_persona', 'atributo'],
         foreignKeys: [

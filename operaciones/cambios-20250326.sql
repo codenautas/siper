@@ -6,6 +6,7 @@ create table "adjuntos_persona" (
   "idper" text, 
   "numero_adjunto" bigint, 
   "tipo_adjunto_persona" text, 
+  "detalle" text, 
   "timestamp" timestamp default current_timestamp, 
   "archivo_nombre" text, 
   "archivo_nombre_extendido" text
@@ -76,6 +77,7 @@ CREATE TRIGGER archivo_borrar_trg
 --CONSS
 alter table "adjuntos_persona" add constraint "idper<>''" check ("idper"<>'');
 alter table "adjuntos_persona" add constraint "tipo_adjunto_persona<>''" check ("tipo_adjunto_persona"<>'');
+alter table "adjuntos_persona" add constraint "detalle<>''" check ("detalle"<>'');
 alter table "adjuntos_persona" add constraint "archivo_nombre<>''" check ("archivo_nombre"<>'');
 alter table "adjuntos_persona" add constraint "archivo_nombre_extendido<>''" check ("archivo_nombre_extendido"<>'');
 alter table "tipos_adjunto_persona" add constraint "tipo_adjunto_persona<>''" check ("tipo_adjunto_persona"<>'');

@@ -115,7 +115,7 @@ myOwn.clientSides.subirAdjunto = {
                 const { ajaxPath, params } = getSubirArchivoPathAndParams(depot);
 
                 // Verifica que los parámetros necesarios estén definidos
-                if (!params.idper || !params.tipo_adjunto_persona) {
+                if (!params.idper || !params.tipo_adjunto_persona || !params.numero_adjunto) {
                     alert("Faltan parámetros necesarios para subir el archivo.");
                     return;
                 }
