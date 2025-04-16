@@ -162,7 +162,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     from usuarios u 
                         inner join roles r using (rol),
                         (${sqlNovPer({idper, annio:params.annio})}) v
-                    where (con_dato or v.registra and r.puede_cargar_dependientes or puede_cargar_todo)
+                    where ((con_dato and (v.comun is null or v.comun)) or v.registra and r.puede_cargar_dependientes or puede_cargar_todo)
                         and u.usuario = $1
                     order by v.cod_nov`,
                 [context.username]

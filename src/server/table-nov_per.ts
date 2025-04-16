@@ -18,6 +18,7 @@ export const sqlNovPer= (params:{idper?:string, annio?:number})=> `
             nv.saldo,
             pnc.esquema,
             (pnc.cantidad > 0 or nv.usados > 0 or nv.pendientes > 0) as con_dato,
+            cn.comun,
             cn.novedad,
             cn.c_dds,
             cn.con_detalles,
