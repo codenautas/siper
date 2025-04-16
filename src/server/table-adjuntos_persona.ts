@@ -30,7 +30,7 @@ export function adjuntos_persona(context:TableContext):TableDefinition{
         ],
         primaryKey: [idper.name, 'numero_adjunto'],
         foreignKeys: [
-            {references:'tipos_adjunto_persona', fields:['tipo_adjunto_persona'], displayFields:['adjunto']},
+            {references:'tipos_adjunto_persona', fields:['tipo_adjunto_persona'], displayFields:['descripcion']},
         ],
         constraints:[
         ],

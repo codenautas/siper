@@ -16,7 +16,7 @@ export function tipos_adjunto_persona(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             tipo_adjunto_persona,
-            {name: 'adjunto',typeName:'text' },
+            {name: 'descripcion',typeName:'text' },
         ],
         primaryKey: ['tipo_adjunto_persona'],
         constraints: [

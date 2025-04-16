@@ -21,7 +21,7 @@ GRANT USAGE, SELECT ON SEQUENCE "numero_adjunto_seq" TO siper_admin;
 
 create table "tipos_adjunto_persona" (
   "tipo_adjunto_persona" text, 
-  "adjunto" text
+  "descripcion" text
 , primary key ("tipo_adjunto_persona")
 );
 grant select, insert, update, delete on "tipos_adjunto_persona" to siper_admin;
@@ -91,7 +91,7 @@ alter table "adjuntos_persona" add constraint "tipo_adjunto_persona<>''" check (
 alter table "adjuntos_persona" add constraint "archivo_nombre<>''" check ("archivo_nombre"<>'');
 alter table "adjuntos_persona" add constraint "archivo_nombre_fisico<>''" check ("archivo_nombre_fisico"<>'');
 alter table "tipos_adjunto_persona" add constraint "tipo_adjunto_persona<>''" check ("tipo_adjunto_persona"<>'');
-alter table "tipos_adjunto_persona" add constraint "adjunto<>''" check ("adjunto"<>'');
+alter table "tipos_adjunto_persona" add constraint "descripcion<>''" check ("descripcion"<>'');
 alter table "tipos_adjunto_persona" add constraint "palabra corta y solo mayusculas en tipo_adjunto_persona" check (tipo_adjunto_persona similar to '[A-Z][A-Z0-9]{0,9}|[1-9]\d{0,10}');
 alter table "tipos_adjunto_persona_atributos" add constraint "tipo_adjunto_persona<>''" check ("tipo_adjunto_persona"<>'');
 alter table "tipos_adjunto_persona_atributos" alter column "tipo_adjunto_persona" set not null;
@@ -122,7 +122,7 @@ create index "idper,numero_adjunto 4 adjuntos_persona_atributos IDX" ON "adjunto
 
 
 -- table data: ..\siper-data\demo\tipos_adjunto_person.tab
-insert into "tipos_adjunto_persona" ("tipo_adjunto_persona", "adjunto") values
+insert into "tipos_adjunto_persona" ("tipo_adjunto_persona", "descripcion") values
 ('SEC', 'Secreto Estadístico'),
 ('COM', 'Comodato')
 
