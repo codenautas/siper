@@ -432,7 +432,7 @@ export const tipos_adjunto_persona = {
     table: 'tipos_adjunto_persona',
     description: is.object({
         tipo_adjunto_persona: is.string,
-        adjunto: is.string
+        descripcion: is.string
     })
 } satisfies CommonEntityDefinition
 

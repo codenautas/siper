@@ -97,8 +97,8 @@ myOwn.clientSides.timestamp.update = myOwn.clientSides.timestamp.prepare;
 const getSubirArchivoPathAndParams = (depot: myOwn.Depot) => ({
     ajaxPath: 'archivo_subir',
     params: {
-        idper: depot.row.idper?.toString(), // ID de la persona
-        tipo_adjunto_persona: depot.row.tipo_adjunto_persona?.toString(), // Tipo de adjunto
+        idper: depot.row.idper, // ID de la persona
+        tipo_adjunto_persona: depot.row.tipo_adjunto_persona, // Tipo de adjunto
         numero_adjunto: depot.row.numero_adjunto?.toString(), // Número de adjunto    
     },
 });
@@ -116,7 +116,12 @@ myOwn.clientSides.subirAdjunto = {
 
                 // Verifica que los parámetros necesarios estén definidos
                 if (!params.idper || !params.tipo_adjunto_persona || !params.numero_adjunto) {
-                    alert("Faltan parámetros necesarios para subir el archivo.");
+                    const missingParams = [];
+                    if (!params.idper) missingParams.push("ID de la persona (idper)");
+                    if (!params.tipo_adjunto_persona) missingParams.push("Tipo de adjunto (tipo_adjunto_persona)");
+                    if (!params.numero_adjunto) missingParams.push("Número de adjunto (numero_adjunto)");
+                
+                    alert(`Faltan los siguientes parámetros necesarios para subir el archivo:\n- ${missingParams.join("\n- ")}`);
                     return;
                 }
 

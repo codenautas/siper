@@ -76,7 +76,7 @@ import { Persona } from "../common/contracts"
 
 import { unexpected } from "cast-error";
 import * as backendPlus from "backend-plus";
-import {promises as fs, existsSync } from "fs";
+import { rm } from 'fs/promises';
 
 /* Dos líneas para incluir contracts: */
 var persona: Persona | null = null;
@@ -91,13 +91,12 @@ const cronMantenimiento = (be:AppBackend) => {
                 const result = await be.inTransaction(null, async (client)=>{
                     const {rows} = await client.query("select ruta_archivo from archivos_borrar").fetchAll();
                     if(rows.length>0){
-                        rows.forEach(async (element) => {
-                            const path = `local-attachments/adjuntos_persona/${element.ruta_archivo}`;
-                            await client.query(`delete from archivos_borrar where ruta_archivo = $1`, [element.ruta_archivo]).execute();
-                            if (existsSync(path)) {
-                                await fs.rm(path);
-                            }
-                        });
+                        for (const { ruta_archivo } of rows) {
+                            await client.query(`delete from archivos_borrar where ruta_archivo = $1`, [ruta_archivo,]).execute();
+                            await rm(`local-attachments/adjuntos_persona/${ruta_archivo}`, {
+                                force: true,
+                            });
+                        }
                         return `Se borraron archivos adjuntos en la fecha y hora: ${date}`;
                     }else{
                         return `No hay archivos adjuntos para borrar en la fecha y hora: ${date}`;
