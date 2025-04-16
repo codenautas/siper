@@ -3,8 +3,8 @@ CREATE OR REPLACE FUNCTION archivo_borrar_trg()
     LANGUAGE 'plpgsql' 
 AS $BODY$
 begin
-  if old.archivo_nombre_extendido is not null then
-    insert into archivos_borrar ("ruta_archivo") values (old.archivo_nombre_extendido);
+  if old.archivo_nombre_fisico is not null then
+    insert into archivos_borrar ("ruta_archivo") values (old.archivo_nombre_fisico);
   end if;
   return old;
 end;

@@ -421,7 +421,7 @@ export const adjuntos_persona = {
         timestamp: is.Date,
         subir: is.nullable.string,
         archivo_nombre: is.nullable.string,
-        archivo_nombre_extendido: is.nullable.string,
+        archivo_nombre_fisico: is.nullable.string,
         bajar: is.nullable.string,
     }),
 } satisfies CommonEntityDefinition;
@@ -450,6 +450,25 @@ export const tipos_adjunto_atributos = {
 
 export type tipos_adjunto_atributos = DefinedType<typeof tipos_adjunto_atributos.description>
 
+export const archivos_borrar = {
+    table: 'archivos_borrar',
+    description: is.object({
+        ruta_archivo: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type Archivos_borrar = DefinedType<typeof archivos_borrar.description>
+
+export const adjuntos_persona_atributos = {
+    table: 'adjuntos_persona_atributos',
+    description: is.object({
+        idper: is.string,
+        tipo_adjunto_persona: is.string,
+        atributo: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type Adjuntos_persona_atributos = DefinedType<typeof adjuntos_persona_atributos.description>
 
 export const paises = {
     table : 'paises',

@@ -550,7 +550,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
 
             const row = await client.query(
                 `UPDATE adjuntos_persona 
-                    SET archivo_nombre = $1, archivo_nombre_extendido = $2
+                    SET archivo_nombre = $1, archivo_nombre_fisico = $2
                     WHERE idper = $3 AND tipo_adjunto_persona = $4 AND numero_adjunto = $5
                     RETURNING *`,
                 [originalFilename, extendedFilename, idper, tipo_adjunto_persona, numero_adjunto]
