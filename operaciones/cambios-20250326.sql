@@ -15,7 +15,7 @@ grant select, insert, update, delete on "adjuntos_persona" to siper_admin;
 grant all on "adjuntos_persona" to siper_owner;
 
 
-CREATE SEQUENCE "numero_adjunto_seq" START 1;
+CREATE SEQUENCE "numero_adjunto_seq" START 101;
 ALTER TABLE "adjuntos_persona" ALTER COLUMN "numero_adjunto" SET DEFAULT nextval('numero_adjunto_seq'::regclass);
 GRANT USAGE, SELECT ON SEQUENCE "numero_adjunto_seq" TO siper_admin;
 

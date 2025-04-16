@@ -20,7 +20,7 @@ export function adjuntos_persona(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             idper,
-            {...numero_adjunto, sequence:{ firstValue:1, name:'numero_adjunto_seq' }},
+            {...numero_adjunto, sequence:{ firstValue:101, name:'numero_adjunto_seq' }},
             {name:'tipo_adjunto_persona', title: 'tipo adjunto', typeName:'text'},
             {name:'timestamp', typeName:'timestamp', defaultDbValue:'current_timestamp', editable:false, inTable:true, clientSide:'timestamp', title:'📅'},
             {name:'subir', editable:false, clientSide:'subirAdjunto', typeName:'text'},
