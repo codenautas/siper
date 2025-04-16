@@ -58,7 +58,7 @@ import { adjuntos_persona        } from './table-adjuntos_persona';
 import { tipos_adjunto_persona   } from "./table-tipos_adjunto_persona";
 import { archivos_borrar         } from "./table-archivos_borrar";
 import { tipos_adjunto_persona_atributos } from "./table-tipos_adjunto_persona_atributos";
-import { adjuntos_persona_atributos } from "./table-adjuntos_persona_atributos";
+import { adjuntos_persona_atributos      } from "./table-adjuntos_persona_atributos";
 import { ProceduresPrincipal             } from './procedures-principal'
 
 import {staticConfigYaml} from './def-config';
@@ -160,7 +160,7 @@ export class AppSiper extends AppBackend{
             // @ts-ignore
             await be.inDbClient(req, async (client) => {
                 const result = await client.query(
-                    `SELECT archivo_nombre, archivo_nombre_extendido
+                    `SELECT archivo_nombre, archivo_nombre_fisico
                     FROM adjuntos_persona 
                     WHERE idper = $1 AND tipo_adjunto_persona = $2 AND numero_adjunto = $3`,
                     [idper, tipo_adjunto_persona, numero_adjunto]
@@ -171,7 +171,7 @@ export class AppSiper extends AppBackend{
                     return;
                 }
 
-                const path = `local-attachments/adjuntos_persona/${result.row.archivo_nombre_extendido}`;
+                const path = `local-attachments/adjuntos_persona/${result.row.archivo_nombre_fisico}`;
                 res.download(path, result.row.archivo_nombre); // Descarga con el nombre original
             });
         });
