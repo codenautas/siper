@@ -121,6 +121,19 @@ create index "adjuntos_persona_atributos tipos_adjunto_persona_atributos IDX" ON
 create index "idper,numero_adjunto 4 adjuntos_persona_atributos IDX" ON "adjuntos_persona_atributos" ("idper", "numero_adjunto");
 
 
+--ADAPT
+do $SQL_ENANCE$
+ begin
+PERFORM enance_table('adjuntos_persona','idper,numero_adjunto');
+PERFORM enance_table('tipos_adjunto_persona','tipo_adjunto_persona');
+PERFORM enance_table('tipos_adjunto_persona_atributos','tipo_adjunto_persona,atributo');
+PERFORM enance_table('adjuntos_persona_atributos','idper,numero_adjunto,atributo');
+PERFORM enance_table('archivos_borrar','ruta_archivo');
+end
+$SQL_ENANCE$;
+
+
+
 -- table data: ..\siper-data\demo\tipos_adjunto_person.tab
 insert into "tipos_adjunto_persona" ("tipo_adjunto_persona", "descripcion") values
 ('SEC', 'Secreto Estadístico'),
