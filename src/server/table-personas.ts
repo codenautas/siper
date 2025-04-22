@@ -45,6 +45,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
             {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
             {name: 'motivo_egreso'           , typeName: 'text', title: 'motivo de egreso'       },
+            {name: 'cuil_valido'             , typeName: 'boolean', title: 'cuil válido', inTable:false, serverSide:true, editable:false},
         ],
         primaryKey: [idper.name],
         foreignKeys: [
@@ -80,6 +81,12 @@ export function personas(context: TableContext): TableDefinition {
             {table:'per_capa'   , fields:[idper.name], abr:'C'},
             {table:'per_domicilios', fields:[idper.name], abr:'D'}
         ],
+        sql: {
+            fields: {
+                cuil_valido:{ expr:`validar_cuit(cuil)` },
+            }
+        },
+        hiddenColumns: ['cuil_valido'],
         sortColumns: [{column: 'activo', order: -1}, {column: 'idper', order: 1}],
     };
 }
