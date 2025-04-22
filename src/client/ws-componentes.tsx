@@ -412,8 +412,8 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     </Componente>
 }
 
-function InconsistenciasPersona(props:{conn: Connector, idper:string}){
-    const {conn, idper} = props;
+function InconsistenciasPersona(props:{conn: Connector, idper:string, annio:number}){
+    const {conn, idper, annio} = props;
     const [inconsistencias, setInconsistencias] = useState<ProvisorioInconsistencia[]>([]);
     useEffect(function(){
         setInconsistencias(setEfimero)
@@ -435,12 +435,11 @@ function InconsistenciasPersona(props:{conn: Connector, idper:string}){
         }
         {inconsistencias.length > 0 ? (
             <List>
-                {inconsistencias.map((inconsistencia) => (
+                {inconsistencias.filter(inc => inc.annio == annio.toString() || inc.annio == null).map((inconsistencia) => (
                     <div key={inconsistencia.pauta} className="inconsistencia-item">
                         <div className="inconsistencia-row">
                             <div className="inconsistencia-left">
                                 <strong>{inconsistencia.pauta}</strong>
-                                {inconsistencia.annio ? ` (${inconsistencia.annio})` : ''}
                             </div>
                             {inconsistencia.cod_nov && (
                                 <div className="inconsistencia-right">
@@ -930,7 +929,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                     <Typography>{error?.message ?? (guardandoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
                 { es.rrhh && <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>}
-                { es.rrhh && <InconsistenciasPersona conn={conn} idper={idper}/>}
+                { es.rrhh && <InconsistenciasPersona conn={conn} idper={idper} annio={annio}/>}
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
                 </div>
             </Componente>
