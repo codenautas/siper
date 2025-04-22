@@ -705,6 +705,10 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                         <div className="legajo-etiqueta">CUIL:</div>
                         <div className="legajo-valor">{persona.cuil || '-'}</div>
                     </div>
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">ID:</div>
+                        <div className="legajo-valor">{persona.idmeta4 || '-'}</div>
+                    </div>
                 </div>
                 <div className="legajo-grupo">
                     <div className="legajo-campo">
