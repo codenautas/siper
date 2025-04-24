@@ -18,6 +18,7 @@ export function tipos_domicilio(context:TableContext):TableDefinition{
             tipo_domicilio,
             {name: 'domicilio',typeName:'text', isName:true    },
             {name: 'orden'    ,typeName:'integer' },
+            {name: 'visible'  ,typeName:'boolean' },
         ],
         primaryKey: [tipo_domicilio.name],
         constraints: [

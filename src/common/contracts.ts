@@ -556,7 +556,8 @@ export const tipos_domicilio = {
     description: is.object({
         tipo_domicilio: is.string,
         domicilio: is.string,
-        orden: is.number
+        orden: is.number,
+        visible: is.boolean
     })
 } satisfies CommonEntityDefinition
 
