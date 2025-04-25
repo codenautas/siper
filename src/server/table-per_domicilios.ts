@@ -64,6 +64,8 @@ export function per_domicilios(context: TableContext): TableDefinition{
             {name: 'confirmado'       ,typeName:'integer'},
             {name: 'fecha_confirmado' ,typeName:'date'   },
             {name: 'observaciones'    ,typeName:'text'   },
+            {name: 'orden'            ,typeName:'integer', inTable:false, serverSide:true, editable:false },
+            {name: 'visible'          ,typeName:'boolean', inTable:false, serverSide:true, editable:false },
         ],
         primaryKey: [idper.name, 'domicilio'],
         foreignKeys: [
@@ -75,6 +77,19 @@ export function per_domicilios(context: TableContext): TableDefinition{
             {references: 'tipos_domicilio', fields: [tipo_domicilio.name]},
         ],
         constraints: [
-        ]
+        ],
+        sql:{
+            fields: {
+                orden:{ expr:`(SELECT orden 
+                                 FROM tipos_domicilio t 
+                                 WHERE per_domicilios.tipo_domicilio = t.tipo_domicilio
+                )`},
+                visible:{ expr:`(SELECT visible 
+                                   FROM tipos_domicilio t 
+                                   WHERE per_domicilios.tipo_domicilio = t.tipo_domicilio
+                )`},
+           },
+        }
+
     }
 }

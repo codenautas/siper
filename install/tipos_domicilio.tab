@@ -2,4 +2,4 @@ tipo_domicilio|domicilio|orden|visible
 P|PRINCIPAL|3|true
 T|TELETRABAJO|1|true
 TA|TELETRABAJO ALTERNATIVO|2|true
-A|ANTERIOR|4|false
+A|ANTERIOR|4|true
