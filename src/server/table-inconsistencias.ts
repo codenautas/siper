@@ -43,6 +43,14 @@ export function inconsistencias(_context: TableContext): TableDefinition{
                        FROM personas
                        WHERE activo AND para_antiguedad_relativa IS NULL
                      UNION
+                     SELECT idper, NULL::INTEGER as annio, 'CUILINV' pauta, NULL::TEXT as cod_nov 
+                       FROM personas
+                       WHERE validar_cuit(cuil) = false -- Aquí usamos la expresión para calcular cuil_valido
+                     UNION
+                     SELECT idper, NULL::INTEGER as annio, 'CUILINV' pauta, NULL::TEXT as cod_nov 
+                       FROM personas
+                       WHERE cuil IS NULL OR cuil = '' 
+                     UNION
                      SELECT idper, NULL::INTEGER as annio, 'INASINULT' pauta, NULL::TEXT as cod_nov 
                        FROM personas
                        WHERE NOT activo AND fecha_egreso IS NULL

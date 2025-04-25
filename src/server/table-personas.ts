@@ -19,7 +19,7 @@ export function personas(context: TableContext): TableDefinition {
         editable: admin,
         fields:[
             {...idper, nullable:true, editable:false},
-            {name: 'cuil'     , typeName: 'text', isName:false, postInput: soloDigitosPostConfig  },
+            {name: 'cuil'     , typeName: 'text', isName:false, postInput: soloDigitosPostConfig, clientSide: 'cuil_style', serverSide:true },
             {name: 'tipo_doc' , typeName: 'text',                                                 },
             {name: 'documento', typeName: 'text', isName:false, postInput: soloDigitosPostConfig  },
             {name: 'ficha'    , typeName: 'text', isName:false,                                   },
@@ -77,7 +77,7 @@ export function personas(context: TableContext): TableDefinition {
             {table:'nov_per'              , fields:[idper.name], abr:'#'},
             {table:'per_nov_cant'         , fields:[idper.name], abr:'##'},
             {table:'historial_contrataciones', fields:[idper.name], abr:'hc'},
-            {table:'inconsistencias'      , fields:[idper.name], abr:'⒤'},
+            {table:'inconsistencias'      , fields:[idper.name], abr:'⒤', refreshFromParent:true},
             {table:'per_capa'   , fields:[idper.name], abr:'C'},
             {table:'per_domicilios', fields:[idper.name], abr:'D'}
         ],
