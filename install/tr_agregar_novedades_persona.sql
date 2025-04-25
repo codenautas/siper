@@ -1,16 +1,5 @@
-set search_path=siper;
---SET ROLE siper_owner; -- el que corresponda
-
-ALTER TABLE siper.cod_novedades
-ADD COLUMN inicializar BOOLEAN NULL;
-
-ALTER TABLE siper.cod_novedades
-ADD COLUMN cantidad INTEGER NULL;
-
-ALTER TABLE "personas"
-ALTER COLUMN "activo" SET DEFAULT NULL;
-
---select inicializar, cantidad, * from siper.cod_novedades where cod_nov in ('121', '124', '23', '157', '156', '155', '21', '11', '126')
+-- EJECUTAR LOCALMENTE, NO DESCOMENTAR Y COMMITEAR:
+-- SET search_path = siper; SET ROLE siper_owner;
 
 update siper.cod_novedades set inicializar = true where cod_nov in ('121', '124', '23', '157', '156', '155', '21', '11', '126');
 update siper.cod_novedades set cantidad = 4 where cod_nov = '121';
@@ -35,7 +24,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-drop trigger tr_agregar_novedades_persona;
 CREATE TRIGGER tr_agregar_novedades_persona
 AFTER INSERT ON siper.personas
 FOR EACH ROW
