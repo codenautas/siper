@@ -405,7 +405,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                             <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p as ProvisorioPersonas)}} 
                                     className={`${p.idper == idper ? ' seleccionado' : ''} ${p.cargable ? ' seleccionable' : 'no-seleccionable'}`}>
                                 <span className="box-id persona-id">{p.idper}</span>
-                                <span className="box-names">
+                                <span className="box-names" bold-name={p.es_jefe ? 'si' : ''}>
                                     {p.apellido}, {p.nombres}
                                 </span>
                                 <span className="box-info"> {p.cod_nov ? p.cod_nov : 'S/N' } </span>

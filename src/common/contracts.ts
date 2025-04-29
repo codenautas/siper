@@ -289,6 +289,7 @@ export const personas_novedad_actual = {
         sector: is.string,
         nombre_sector: is.string,
         cargable: is.boolean,
+        es_jefe: is.nullable.boolean,
     })
 }
 
