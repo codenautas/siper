@@ -18,12 +18,13 @@ export function tipos_sec(context:TableContext):TableDefinition{
         fields: [
             tipo_sec,
             {name: 'descripcion'   , typeName: 'text'   , title: 'descripción' },
-            {name: 'nivel'         , typeName: 'integer', isName:true, description: 'Nivel dentro de la jerarquía.' },
+            {name: 'nivel'         , typeName: 'integer', description: 'Nivel dentro de la jerarquía.' },
         ],
         lookupFields: ['nivel', 'descripcion'],
         primaryKey: [tipo_sec.name],
         constraints: [
-            soloCodigo(tipo_sec.name)
+            soloCodigo(tipo_sec.name),
+            {constraintType:'unique', consName:'niveles de sectores', fields:['nivel', tipo_sec.name]}
         ],
         detailTables: [
             {table:'sectores_edit', fields:[tipo_sec.name], abr:'S'}
