@@ -33,3 +33,7 @@ INSERT INTO siper.per_nov_cant (annio, cod_nov, idper, origen, cantidad)
 INSERT INTO siper.per_nov_cant (annio, cod_nov, idper, origen, cantidad) 
     (select 2025 as annio, '11' as cod_nov, idper, 2025 as origen, 2 as cantidad from siper.personas where activo)
 	ON CONFLICT (annio, cod_nov, idper, origen) DO NOTHING;
+
+INSERT INTO siper.per_nov_cant(annio, cod_nov, idper, origen, cantidad)
+    (select 2025 as annio, '126' as cod_nov, idper, 2025 as origen, 1 as cantidad from siper.personas where activo)
+	ON CONFLICT (annio, cod_nov, idper, origen) DO NOTHING;

@@ -3001,11 +3001,13 @@ alter table "per_domicilios" add constraint "per_domicilios barrios REL" foreign
 alter table "per_domicilios" add constraint "per_domicilios calles REL" foreign key ("provincia", "calle") references "calles" ("provincia", "calle")  on update cascade;
 
 
-/*
+do $SQL_ENANCE$
+ begin
 PERFORM enance_table('provincias','provincia');
 PERFORM enance_table('barrios','provincia,barrio');
 PERFORM enance_table('localidades','provincia,localidad');
 PERFORM enance_table('calles','provincia,calle');
 PERFORM enance_table('tipos_domicilio','tipo_domicilio');
 PERFORM enance_table('per_domicilios','idper,domicilio');
-*/
+end
+$SQL_ENANCE$;
