@@ -23,7 +23,7 @@ import {
     List, ListItemButton,
     MenuItem, 
     Paper,
-    Select, 
+    Select, Slider,
     Toolbar, Typography, TextField,
     Checkbox,
     Tooltip
@@ -268,7 +268,7 @@ type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombre
 type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string}
 type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__domicilio:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, domicilio:string}
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string, nivel:number};
-type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>}
+type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, hijos:ProvisorioSectoresAumentados[], profundidad:number}
 // @ts-ignore
 type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
@@ -285,7 +285,12 @@ type ProvisorioDetalleNovPer = { detalle: Record<string, DetalleAnioNovPer> }
 
 type IdperFuncionCambio = (persona:ProvisorioPersonas)=>void
 
-function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null, onTodasChange?:(newValue:boolean)=>void, ordenPorNovedad?:boolean|null, onOrdenPorNovedadChange?:(newValue:boolean)=>void}){
+function SearchBox(props: {
+    children?: ReactNode,
+    onChange:(newValue:string)=>void, todas?:boolean|null, 
+    onTodasChange?:(newValue:boolean)=>void, ordenPorNovedad?:boolean|null, 
+    onOrdenPorNovedadChange?:(newValue:boolean)=>void
+}){
     var [textToSearch, setTextToSearch] = useState("");
     return <Paper className="search-box">
         <ICON.Search/>
@@ -294,17 +299,16 @@ function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null
             onChange = {(event)=>{ var newValue = event.target.value; props.onChange(newValue); setTextToSearch(newValue)}}
         />
         <Button onClick={_=>{props.onChange(""); setTextToSearch("")}} className="siper-button" boton-negro="si"><ICON.BackspaceOutlined/></Button>
-        {props.todas != null ?
-        <>
-        <label>
-            <Checkbox
-                checked={props.todas}
-                disabled={!props.onTodasChange}
-                onChange={(_event, checked) => props.onTodasChange?.(checked)}
-                className="check-box"
-                sin-padding="si"
-            /> todas
-        </label>
+        {props.todas != null ? <>
+            <label>
+                <Checkbox
+                    checked={props.todas}
+                    disabled={!props.onTodasChange}
+                    onChange={(_event, checked) => props.onTodasChange?.(checked)}
+                    className="check-box"
+                    sin-padding="si"
+                /> todas
+            </label>
             <Button 
                 className="siper-button" boton-negro="si"
                 onClick={_ => {
@@ -317,8 +321,8 @@ function SearchBox(props: {onChange:(newValue:string)=>void, todas?:boolean|null
                     : <ICON.SortByAlpha />
                 }
             </Button>
-        </>
-        : null }
+        </> : null }
+        {props.children}
     </Paper>;
 }
 
@@ -332,6 +336,33 @@ function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof
     }
 }
 
+function SliderNivel(props:{verNivelSectorHasta:number, onChangeLevel:(level:number)=>void}){
+    const marks = [
+        { value: 0, label: 'DE'},
+        { value: 1, label: 'DG'},
+        { value: 2, label: 'SDG'},
+        { value: 3, label: 'DIR'},
+        { value: 4, label: 'DEP'},
+        { value: 5, label: 'DIV'},
+    ];
+    function valuetext(value: number) {
+        return marks.find(v=>v.value==value)?.label ?? '?';
+    }
+    return (
+        <Box sx={{ width: 150 }}>
+            <Slider
+               defaultValue={2}
+               getAriaValueText={valuetext}
+               step={1}
+               max={5}
+               valueLabelDisplay="on"
+               marks={marks}
+               onChange={(_,v) => props.onChangeLevel(typeof v == "number" ? v : v[0])}
+            />
+        </Box>
+    );
+}
+
 function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:string, fecha:RealDate, onIdper?:IdperFuncionCambio, infoUsuario:InfoUsuario}){
     const {conn, idper, fecha, onIdper, infoUsuario} = props;
     const [sector, _setSector] = useState(props.sector);
@@ -340,6 +371,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     const [abanicoPersonas, setAbanicoPersonas] = useState<Partial<Record<string, PersonasNovedadActualResult[]>>>({});
     const [filtro, setFiltro] = useState("");
     const [expandido, setExpandido] = useState<Record<string, boolean>>({})
+    const [verNivelSectorHasta, setVerNivelSectorHasta] = useState(2);
     const APELLIDOYNOMBRES = 'apellidoynombres' as keyof PersonasNovedadActualResult
     const attributosBuscables:(keyof PersonasNovedadActualResult)[] = ['apellido', 'nombres', 'cuil', 'ficha', 'idmeta4', 'idper', 'nombre_sector', APELLIDOYNOMBRES]
     useEffect(function(){
@@ -367,11 +399,12 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
             fixedFields: [],
             paramfun: {}
         }).then(async (sectores) => {
-            const idxSectores = createIndex(sectores, 'sector');
-            const sectoresAumentados = sectores.map(s => ({...s, profundidad:0, perteneceA:{[s.sector]: true} as Record<string, boolean>}));
-            sectoresAumentados.forEach(s => {
+            const sectoresAumentados = sectores.map(s => ({...s, profundidad:0, hijos:[] as ProvisorioSectoresAumentados[], perteneceA:{[s.sector]: true} as Record<string, boolean>}));
+            const idxSectores = createIndex(sectoresAumentados, 'sector');
+            sectoresAumentados.forEach((s:ProvisorioSectoresAumentados) => {
                 var {pertenece_a} = s;
                 var profundidad = 0
+                idxSectores[pertenece_a]?.hijos.push(s);
                 while (pertenece_a != null && ++profundidad < 100) {
                     s.perteneceA[pertenece_a] = true;
                     pertenece_a = idxSectores[pertenece_a].pertenece_a
@@ -386,13 +419,16 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     var es:{registra:boolean} = conn.config?.config?.es||{}
     if (!es.registra) return <LegajoPer conn={props.conn} idper={idper}/>
     return <Componente componentType="lista-personas" scrollable={true} esEfimero={listaPersonas}>
-        <SearchBox onChange={setFiltro}/>
+        <SearchBox onChange={setFiltro}> 
+            <SliderNivel verNivelSectorHasta={verNivelSectorHasta} onChangeLevel={setVerNivelSectorHasta}/>
+        </SearchBox>
         {sectores.filter(s => s.perteneceA[sector] || infoUsuario.puede_cargar_todo).map(s =>
             filtro && !abanicoPersonas[s.sector]?.length ? null :
             <Accordion key = {s.sector?.toString()} expanded = {!!expandido[s.sector]}
                 onChange={(_, b: boolean) => { setExpandido(e => ({...e, [s.sector]:b })) }}
                 className="accordion-bg"
                 sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}
+                hidden = {s.nivel > verNivelSectorHasta && !expandido[s.pertenece_a] && !expandido[s.sector]}
             >
                 <AccordionSummary className="accordion-summary" id = {s.sector} expandIcon={<ICON.NavigationDown />} > 
                     <span className="box-id" style={{paddingLeft: (s.nivel-1)+"em", paddingRight:"1em"}}> {s.sector} </span>  
