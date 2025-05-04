@@ -2,7 +2,7 @@
 
 import {FieldDefinition, TableDefinition, TableContext} from "./types-principal";
 
-export const sector: FieldDefinition = {name: 'sector', typeName: 'text'}
+export const sector: FieldDefinition = {name: 'sector', typeName: 'text', sortMethod: 'charbychar'}
 
 import {tipo_sec} from "./table-tipos_sec"
 
@@ -14,7 +14,7 @@ function sectores_def(name:string, usuarioPuedeEditar: boolean, extendido: boole
         tableName: 'sectores',
         editable: usuarioPuedeEditar,
         fields: [
-            {...sector, generatedAs:`coalesce(case when nivel<2 or substr(subsector,1) = 'X' then subsector else rpad(pertenece_a,nivel-1,'0')||subsector end, anterior)`},
+            {...sector, generatedAs:`coalesce(case when nivel<2 or substr(subsector,1,1) = 'X' then subsector else rpad(pertenece_a,nivel-1,'0')||subsector end, anterior)`},
             {...sector, name:'anterior'},
             {name: 'nombre_sector', typeName: 'text', isName:true, title:'sector departamento área'},
             {...tipo_sec, nullable:false},
