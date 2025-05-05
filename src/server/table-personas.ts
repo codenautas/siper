@@ -41,7 +41,6 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'agrupamiento'            , typeName: 'text', title: 'agrupamiento'            },
             {name: 'tramo'                   , typeName: 'text', title: 'tramo'                   },
             {name: 'grado'                   , typeName: 'text', title: 'grado'                   },
-            {name: 'domicilio'               , typeName: 'text', title: 'domicilio'               },
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
             {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
             {name: 'motivo_egreso'           , typeName: 'text', title: 'motivo de egreso'       },
