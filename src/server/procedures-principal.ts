@@ -177,7 +177,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         ],
         coreFunction: async function(context: ProcedureContext, params:any){
             const info = await context.client.query(
-                `select pe.idper, pe.cuil, pe.ficha, pe.idmeta4, pe.apellido, pe.nombres, pe.sector, cod_nov, novedad, nombre_sector,
+                `select pe.idper, pe.cuil, pe.ficha, pe.idmeta4, pe.apellido, pe.nombres, pe.sector, cod_nov, novedad, nombre_sector, pe.es_jefe,
                         ((puede_cargar_propio or pe.idper is distinct from u.idper) and (pe.activo is true)) as cargable
                     from personas pe
                         inner join situacion_revista sr using (situacion_revista)
@@ -188,7 +188,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         left join cod_novedades cn using(cod_nov)
                         where pe.activo is true
                     ${context.es.registra ? `` : `and u.idper = pe.idper`}
-                    order by apellido, nombres`
+                    order by es_jefe, apellido, nombres`
                 , [params.fecha, context.username]
             ).fetchAll();
             return info.rows
