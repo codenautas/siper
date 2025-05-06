@@ -19,7 +19,7 @@ export function personas(context: TableContext): TableDefinition {
         editable: admin,
         fields:[
             {...idper, nullable:true, editable:false},
-            {name: 'cuil'     , typeName: 'text', isName:false, postInput: soloDigitosPostConfig, clientSide: 'cuil_style', serverSide:true },
+            {name: 'cuil'     , typeName: 'text', isName:false, postInput: soloDigitosPostConfig, clientSide: 'cuil_style', serverSide:true, inTable:true },
             {name: 'tipo_doc' , typeName: 'text',                                                 },
             {name: 'documento', typeName: 'text', isName:false, postInput: soloDigitosPostConfig  },
             {name: 'ficha'    , typeName: 'text', isName:false,                                   },
