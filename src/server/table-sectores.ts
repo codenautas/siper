@@ -23,6 +23,7 @@ function sectores_def(name:string, usuarioPuedeEditar: boolean, extendido: boole
                 {name: 'jefe'      ,typeName: 'text'   , editable: false},
             ] satisfies FieldDefinition[]:[]),
             {name: 'pertenece_a'  , typeName: sector.typeName},
+            {name: 'activo'       , typeName: 'boolean', nullable: false, defaultValue: true},
             {name: 'cod_2024'     , typeName: 'text'   },
         ],
         primaryKey: [sector.name],

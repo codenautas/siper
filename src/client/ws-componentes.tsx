@@ -267,7 +267,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean};
 type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string}
 type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__domicilio:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, domicilio:string, orden:number}
-type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string, tipos_sec__nivel:number};
+type ProvisorioSectores = {activo: boolean,sector:string, nombre_sector:string, pertenece_a:string, tipos_sec__nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>}
 // @ts-ignore
 type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
@@ -364,7 +364,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
         }).catch(logError);
         conn.ajax.table_data<ProvisorioSectores>({
             table: 'sectores',
-            fixedFields: [],
+            fixedFields: [{fieldName: 'activo', value: true}],
             paramfun: {}
         }).then(async (sectores) => {
             const idxSectores = createIndex(sectores, 'sector');
