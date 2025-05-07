@@ -9,4 +9,4 @@ ANULCONULT|activo null con fecha_egreso
 ANTCOMVSRE|Para activos, la antiguedad computada por suma de rangos no coincide con los días transcurridos hasta la fecha de hoy contados desde para_antiguedad_relativa.
 ACTSINSEC|activo sin sector
 ACTSINSIT|activo sin situacion revista
-CUILINVALIDO|Cuil invalido o inexistente
+CUILINV|Cuil invalido o inexistente
