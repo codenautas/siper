@@ -21,6 +21,7 @@ function sectores_def(name:string, usuarioPuedeEditar: boolean, extendido: boole
                 {name: 'directas'  ,typeName: 'integer', editable: false},
                 {name: 'indirectas',typeName: 'integer', editable: false},
                 {name: 'jefe'      ,typeName: 'text'   , editable: false},
+                {name: 'pactivas'  ,typeName: 'integer', editable: false},
             ] satisfies FieldDefinition[]:[]),
             {name: 'pertenece_a'  , typeName: sector.typeName},
             {name: 'activo'       , typeName: 'boolean', nullable: false, defaultValue: true},
@@ -41,7 +42,8 @@ function sectores_def(name:string, usuarioPuedeEditar: boolean, extendido: boole
                 select *
                     from sectores s left join lateral (
                         select count(*) filter (where p.sector = s.sector) as directas,
-                                count(*) as indirectas, 
+                                count(*) as indirectas,
+                                count(*) filter (where p.activo = true) as pactivas, 
                                 string_agg (p.apellido||', '||p.nombres, '/') filter (where p.sector = s.sector AND p.es_jefe) as jefe
                             from sectores d inner join personas p using (sector)
                             where d.sector = s.sector or sector_pertenece(d.sector, s.sector)                    ) on true

@@ -177,6 +177,8 @@ export const sectores = {
     })
 }
 
+export type Sectores = DefinedType<typeof sectores.description>
+
 export const usuarios = {
     table: 'usuarios',
     description: is.object({
