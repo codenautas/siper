@@ -154,6 +154,7 @@ export class AppSiper extends AppBackend{
                ...es.rrhh ? [{menuType:'table', name:'personas'          },
                 {menuType:'menu', name:'config', label:'configurar', menuContent:[
                 {menuType:'table', name:'sectores', table:'sectores_edit' },
+                {menuType:'table', name:'usuarios'      },
                 ]}
                ] : [],
                ...es.admin ? [{menuType:'menu', name:'capacitaciones', menuContent:[
