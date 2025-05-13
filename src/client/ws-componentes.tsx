@@ -1085,6 +1085,18 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields })
                 <Typography flexGrow={2}>
                     SiPer - Principal - <small>(DEMO)</small>
                 </Typography>
+                <IconButton color="inherit">
+                    <a
+                        href="./docs/manual.pdf"
+                        download="Manual para el usuario SIPER.pdf"
+                        className="link-manual"
+                    >
+                        <ICON.Info />
+                        <Typography>
+                            <small>Ayuda</small>
+                        </Typography>
+                    </a>
+                </IconButton>
             </Toolbar>
         </AppBar>
         <Pantalla1 conn={props.conn} fixedFields={props.fixedFields}/>
