@@ -156,6 +156,9 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
         }
     },[idper, periodo.mes, periodo.annio, ultimaNovedad])
 
+    // @ts-expect-error
+    var es:{rrhh:boolean} = conn.config?.config?.es||{}
+
     const isInRange = (dia: number, mes: number, annio: number) => {
         if (!fecha || !fechaHasta || !Number.isInteger(dia) || dia <= 0) return false;
         try {
@@ -232,7 +235,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         ${isInRange(dia.dia, periodo.mes, periodo.annio) ? 'calendario-dia-seleccionado' : ''}`}
                         
                         onClick={() => {
-                            if (!dia.dia || !props.onFecha || !props.onFechaHasta) return;
+                            if (!dia.dia || !props.onFecha || !props.onFechaHasta || !es.rrhh) return;
                             const selectedDate = date.ymd(periodo.annio, periodo.mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia.dia);
                             if (!fechaHasta || selectedDate <= fechaHasta) {
                                 props.onFecha(selectedDate);
@@ -264,7 +267,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 }
 
 // @ts-ignore
-type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean};
+type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean};
 type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string}
 type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__domicilio:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, domicilio:string, orden:number}
 type ProvisorioSectores = {pactivas: number, activo: boolean,sector:string, nombre_sector:string, pertenece_a:string, tipos_sec__nivel:number};
@@ -704,7 +707,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                     </div>
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">CUIL:</div>
-                        <div className="legajo-valor">{persona.cuil || '-'}</div>
+                        <div className="legajo-valor" red-color={!persona?.cuil_valido ? "si" : ""}>{persona.cuil || '-'}</div>
                     </div>
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">ID:</div>
@@ -966,8 +969,11 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                             </span>
                         </div>
                         <div className="box-line">
-                            <span className="box-names">
-                                CUIL: {persona.cuil}
+                            <span>
+                                CUIL:&nbsp;
+                            </span>
+                            <span className="box-names" red-color={!persona?.cuil_valido ? "si" : ""}>
+                                {persona.cuil}
                             </span>
                         </div>
                         <div className="box-line">
@@ -1037,9 +1043,35 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         </Paper>;
 }
 
-function PantallaPrincipal(props: {conn: Connector, fixedFields:FixedFields}){
+function rederRol(props: { conn: Connector }) {
+    const observer = new MutationObserver(() => {
+        const activeUserElement = document.getElementById('active-user');
+        if (activeUserElement) {
+            //@ts-ignore
+            const userType = props.conn?.config?.config?.es?.admin
+                ? ' (Administrador)'
+                //@ts-ignore
+                : props.conn?.config?.config?.es?.rrhh
+                ? ' (RRHH)'
+                : ' (Básico)';
+
+            if (!activeUserElement.textContent?.includes(userType)) {
+                activeUserElement.textContent = `${activeUserElement.textContent?.trim()}${userType}`;
+            }
+        }
+    });
+
+    // Observar cambios en el body
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Desconectar el observador cuando ya no sea necesario
+    return () => observer.disconnect();
+}
+
+function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields }) {
     useEffect(() => {
-            document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
+        document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
+        rederRol({ conn: props.conn });
     }, []);
 
     return <Paper className="paper-principal">
@@ -1053,6 +1085,18 @@ function PantallaPrincipal(props: {conn: Connector, fixedFields:FixedFields}){
                 <Typography flexGrow={2}>
                     SiPer - Principal - <small>(DEMO)</small>
                 </Typography>
+                <IconButton color="inherit">
+                    <a
+                        href="./docs/manual.pdf"
+                        download="Manual para el usuario SIPER.pdf"
+                        className="link-manual"
+                    >
+                        <ICON.Info />
+                        <Typography>
+                            <small>Ayuda</small>
+                        </Typography>
+                    </a>
+                </IconButton>
             </Toolbar>
         </AppBar>
         <Pantalla1 conn={props.conn} fixedFields={props.fixedFields}/>
