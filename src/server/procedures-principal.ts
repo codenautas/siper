@@ -177,7 +177,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         ],
         coreFunction: async function(context: ProcedureContext, params:any){
             const info = await context.client.query(
-                `select pe.idper, pe.cuil, pe.ficha, pe.idmeta4, pe.apellido, pe.nombres, pe.sector, cod_nov, novedad, nombre_sector, pe.es_jefe,
+                `select pe.idper, pe.cuil, pe.ficha, pe.idmeta4, pe.apellido, pe.nombres, pe.sector, cod_nov, novedad, nombre_sector, pe.es_jefe, validar_cuit(pe.cuil) AS cuil_valido,
                         ((puede_cargar_propio or pe.idper is distinct from u.idper) and (pe.activo is true)) as cargable
                     from personas pe
                         inner join situacion_revista sr using (situacion_revista)
@@ -273,6 +273,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         coalesce(p.nombres, u.nombre) as nombres,
                         p.cuil,
                         p.ficha,
+                        validar_cuit(p.cuil) AS cuil_valido,
                         puede_cargar_todo,
                         roles.*,
                         (puede_cargar_propio and u.activo is true) as cargable,
