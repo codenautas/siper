@@ -156,6 +156,9 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
         }
     },[idper, periodo.mes, periodo.annio, ultimaNovedad])
 
+    // @ts-expect-error
+    var es:{rrhh:boolean} = conn.config?.config?.es||{}
+
     const isInRange = (dia: number, mes: number, annio: number) => {
         if (!fecha || !fechaHasta || !Number.isInteger(dia) || dia <= 0) return false;
         try {
@@ -232,7 +235,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         ${isInRange(dia.dia, periodo.mes, periodo.annio) ? 'calendario-dia-seleccionado' : ''}`}
                         
                         onClick={() => {
-                            if (!dia.dia || !props.onFecha || !props.onFechaHasta) return;
+                            if (!dia.dia || !props.onFecha || !props.onFechaHasta || !es.rrhh) return;
                             const selectedDate = date.ymd(periodo.annio, periodo.mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia.dia);
                             if (!fechaHasta || selectedDate <= fechaHasta) {
                                 props.onFecha(selectedDate);
@@ -266,7 +269,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 // @ts-ignore
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean};
 type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string}
-type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__domicilio:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, domicilio:string}
+type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__domicilio:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, domicilio:string, orden:number}
 type ProvisorioSectores = {sector:string, nombre_sector:string, pertenece_a:string, tipos_sec__nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>}
 // @ts-ignore
@@ -405,7 +408,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                             <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p as ProvisorioPersonas)}} 
                                     className={`${p.idper == idper ? ' seleccionado' : ''} ${p.cargable ? ' seleccionable' : 'no-seleccionable'}`}>
                                 <span className="box-id persona-id">{p.idper}</span>
-                                <span className="box-names">
+                                <span className="box-names" bold-name={p.es_jefe ? 'si' : ''}>
                                     {p.apellido}, {p.nombres}
                                 </span>
                                 <span className="box-info"> {p.cod_nov ? p.cod_nov : 'S/N' } </span>
@@ -677,7 +680,8 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 table: 'per_domicilios',
                 fixedFields: [{fieldName:'idper', value:idper}],
                 paramfun: {}
-            }).then(domicilios => {
+            }).then(function(domicilios){
+                domicilios.sort(compareForOrder([{column:'idper'},{column:'orden'},{column:'domicilio'}])),
                 setDomicilios(domicilios);
                 console.log(domicilios)
             }).catch(logError);
@@ -780,7 +784,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 <div className="legajo-grupo">
                     {domicilios.map(domicilio => (
                         <div key={domicilio.domicilio} className="legajo-campo legajo-campo-largo">
-                            <div className="legajo-valor">{domicilio.domicilio || '-'} - 
+                            <div className="legajo-valor">{'  '} - 
                                 {domicilio.calles__nombre_calle ? ` ${domicilio.calles__nombre_calle}` : ` ${domicilio.nombre_calle}`} 
                                 {domicilio.altura && ` ${domicilio.altura}`}
                                 {domicilio.piso && ` Piso ${domicilio.piso}`}
@@ -1039,9 +1043,35 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         </Paper>;
 }
 
-function PantallaPrincipal(props: {conn: Connector, fixedFields:FixedFields}){
+function rederRol(props: { conn: Connector }) {
+    const observer = new MutationObserver(() => {
+        const activeUserElement = document.getElementById('active-user');
+        if (activeUserElement) {
+            //@ts-ignore
+            const userType = props.conn?.config?.config?.es?.admin
+                ? ' (Administrador)'
+                //@ts-ignore
+                : props.conn?.config?.config?.es?.rrhh
+                ? ' (RRHH)'
+                : ' (Básico)';
+
+            if (!activeUserElement.textContent?.includes(userType)) {
+                activeUserElement.textContent = `${activeUserElement.textContent?.trim()}${userType}`;
+            }
+        }
+    });
+
+    // Observar cambios en el body
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Desconectar el observador cuando ya no sea necesario
+    return () => observer.disconnect();
+}
+
+function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields }) {
     useEffect(() => {
-            document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
+        document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
+        rederRol({ conn: props.conn });
     }, []);
 
     return <Paper className="paper-principal">

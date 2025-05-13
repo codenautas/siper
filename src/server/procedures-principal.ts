@@ -188,7 +188,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         left join cod_novedades cn using(cod_nov)
                         where pe.activo is true
                     ${context.es.registra ? `` : `and u.idper = pe.idper`}
-                    order by apellido, nombres`
+                    order by es_jefe, apellido, nombres`
                 , [params.fecha, context.username]
             ).fetchAll();
             return info.rows
