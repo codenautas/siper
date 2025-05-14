@@ -1043,20 +1043,15 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         </Paper>;
 }
 
-function rederRol(props: { conn: Connector }) {
+function renderRol( infoUsuario: InfoUsuario ) {
     const observer = new MutationObserver(() => {
         const activeUserElement = document.getElementById('active-user');
         if (activeUserElement) {
             //@ts-ignore
-            const userType = props.conn?.config?.config?.es?.admin
-                ? ' (Administrador)'
-                //@ts-ignore
-                : props.conn?.config?.config?.es?.rrhh
-                ? ' (RRHH)'
-                : ' (Básico)';
+            const userType = infoUsuario.rol;
 
             if (!activeUserElement.textContent?.includes(userType)) {
-                activeUserElement.textContent = `${activeUserElement.textContent?.trim()}${userType}`;
+                activeUserElement.textContent = `${activeUserElement.textContent} (${userType})`;
             }
         }
     });
@@ -1068,10 +1063,12 @@ function rederRol(props: { conn: Connector }) {
     return () => observer.disconnect();
 }
 
-function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields }) {
+function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, infoUsuario: InfoUsuario }) {
     useEffect(() => {
         document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
-        rederRol({ conn: props.conn });
+        if (props.infoUsuario.usuario) {
+            renderRol( props.infoUsuario );
+        }
     }, []);
 
     return <Paper className="paper-principal">
@@ -1106,10 +1103,13 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields })
 
 // @ts-ignore
 myOwn.wScreens.principal = function principal(addrParams:any){
-    renderConnectedApp(
-        myOwn as never as Connector,
-        { ...addrParams},
-        document.getElementById('total-layout')!,
-        ({ conn, fixedFields }) => <PantallaPrincipal conn={conn} fixedFields={fixedFields} />
-    )
+    myOwn.ajax.info_usuario().then((infoUsuario: InfoUsuario) => {
+        renderConnectedApp(
+            myOwn as never as Connector,
+            { ...addrParams },
+            document.getElementById('total-layout')!,
+            ({ conn, fixedFields }) => (<PantallaPrincipal conn={conn} fixedFields={fixedFields} infoUsuario={infoUsuario} />
+            )
+        );
+    }).catch(logError);
 }
