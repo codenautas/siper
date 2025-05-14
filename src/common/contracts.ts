@@ -366,6 +366,9 @@ export const info_usuario = {
         usuario: is.string,
         rol: is.string,
         puede_cargar_todo: is.nullable.boolean,
+        puede_cargar_propio: is.nullable.boolean,
+        puede_cargar_dependientes: is.nullable.boolean,
+        puede_corregir_el_pasado: is.nullable.boolean,
     })
 }
 
