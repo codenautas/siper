@@ -102,11 +102,11 @@ export const DDS = {
 type ULTIMA_NOVEDAD = number;
 
 function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, fechaActual: RealDate, 
-    annio:number,
+    annio:number, infoUsuario:InfoUsuario
     onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, ultimaNovedad?: ULTIMA_NOVEDAD
     onAnnio?: (annio:number) => void
 }){
-    const {conn, fecha, fechaHasta, idper, ultimaNovedad, fechaActual, annio} = props;
+    const {conn, fecha, fechaHasta, idper, ultimaNovedad, fechaActual, annio, infoUsuario} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     type Periodo = {mes:number, annio:number}
     const [mes, setMes] = useState(fecha.getMonth()+1);
@@ -116,7 +116,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
     const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
     const [botonRetrocederHabilitado, setBotonRetrocederHabilitado] = useState<boolean>(true); 
     const [botonAvanzarHabilitado, setBotonAvanzarHabilitado] = useState<boolean>(true); 
-    
+    const puede_cargar_novedades = infoUsuario.puede_cargar_propio || infoUsuario.puede_cargar_todo || infoUsuario.puede_cargar_dependientes || infoUsuario.puede_corregir_el_pasado;
+
     useEffect(function(){
         // ver async
         // @ts-ignore infinito
@@ -235,7 +236,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         ${isInRange(dia.dia, periodo.mes, periodo.annio) ? 'calendario-dia-seleccionado' : ''}`}
                         
                         onClick={() => {
-                            if (!dia.dia || !props.onFecha || !props.onFechaHasta || !es.rrhh) return;
+                            if (!dia.dia || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades) return;
                             const selectedDate = date.ymd(periodo.annio, periodo.mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia.dia);
                             if (!fechaHasta || selectedDate <= fechaHasta) {
                                 props.onFecha(selectedDate);
@@ -443,7 +444,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                             <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p as ProvisorioPersonas)}} 
                                     className={`${p.idper == idper ? ' seleccionado' : ''} ${p.cargable ? ' seleccionable' : 'no-seleccionable'}`}>
                                 <span className="box-id persona-id">{p.idper}</span>
-                                <span className="box-names" bold-name={p.es_jefe ? 'si' : ''}>
+                                <span className="box-names" bold-name={p.es_jefe ? 'si' : 'no'}>
                                     {p.apellido}, {p.nombres}
                                 </span>
                                 <span className="box-info"> {p.cod_nov ? p.cod_nov : 'S/N' } </span>
@@ -742,7 +743,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                     </div>
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">CUIL:</div>
-                        <div className="legajo-valor" red-color={!persona?.cuil_valido ? "si" : ""}>{persona.cuil || '-'}</div>
+                        <div className="legajo-valor" red-color={!persona?.cuil_valido ? "si" : "no"}>{persona.cuil || '-'}</div>
                     </div>
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">ID:</div>
@@ -1007,7 +1008,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                             <span>
                                 CUIL:&nbsp;
                             </span>
-                            <span className="box-names" red-color={!persona?.cuil_valido ? "si" : ""}>
+                            <span className="box-names" red-color={!persona?.cuil_valido ? "si" : "no"}>
                                 {persona.cuil}
                             </span>
                         </div>
@@ -1022,7 +1023,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                     </Box>
                 </Box>
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}
-                    fechaActual={fechaActual!} annio={annio} onAnnio={setAnnio}
+                    fechaActual={fechaActual!} annio={annio} onAnnio={setAnnio} infoUsuario={infoUsuario}
                 />
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
                 {cod_nov && idper && fecha && hasta && !guardandoRegistroNovedad && !registrandoNovedad && persona.cargable ? <Box key="setSiCargaraNovedad">
