@@ -1053,6 +1053,9 @@ function rederRol(props: { conn: Connector }) {
                 //@ts-ignore
                 : props.conn?.config?.config?.es?.rrhh
                 ? ' (RRHH)'
+                //@ts-ignore
+                : props.conn?.config?.config?.es?.registra
+                ? ' (Registra)'
                 : ' (Básico)';
 
             if (!activeUserElement.textContent?.includes(userType)) {
