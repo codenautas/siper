@@ -7,14 +7,16 @@ import {rol} from "./table-roles"
 
 export function usuarios(context: TableContext): TableDefinition{
     var admin = context.user.rol==='admin';
+    var rrhh = context.user.rol==='rrhh';
+    var rolConPermisos = admin || rrhh;
     return {
         name: 'usuarios',
         title: 'usuarios de la aplicación',
-        editable: admin,
+        editable: rolConPermisos,
         fields: [
             {name:'usuario'          , typeName:'text'    , nullable:false  },
             {name: rol.name          , typeName:'text'    },
-            {...idper, editable:admin},
+            {...idper, editable:rolConPermisos},
             {name:'md5clave'         , typeName:'text'    , allow:{select: context.forDump} },
             {name:'activo'           , typeName:'boolean' , nullable:false ,defaultValue:false},
             {name:'nombre'           , typeName:'text'                      },
@@ -23,7 +25,7 @@ export function usuarios(context: TableContext): TableDefinition{
             {name:'interno'          , typeName:'text'                      },
             {name:'mail'             , typeName:'text'                      },
             {name:'mail_alternativo' , typeName:'text'                      },
-            {name:'clave_nueva'      , typeName:'text', clientSide:'newPass', allow:{select:admin, update:true, insert:false}},
+            {name:'clave_nueva'      , typeName:'text', clientSide:'newPass', allow:{select:rolConPermisos, update:true, insert:false}},
         ],
         primaryKey: ['usuario'],
         foreignKeys: [
@@ -31,7 +33,7 @@ export function usuarios(context: TableContext): TableDefinition{
             {references: 'roles'   , fields:[rol.name ]},
         ],
         sql: {
-            where:admin || context.forDump?'true':"usuario = "+context.be.db.quoteNullable(context.user.usuario)
+            where:rolConPermisos || context.forDump?'true':"usuario = "+context.be.db.quoteNullable(context.user.usuario)
         }
     };
 }
