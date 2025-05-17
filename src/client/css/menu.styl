@@ -16,6 +16,13 @@
 .accordion-bg
   background-size auto 100%
 
+.link-manual
+  color inherit
+  text-decoration none
+  flex-direction row
+  display flex
+  gap 5px
+
 .accordion-summary
   flex-direction row-reverse
   & .MuiAccordionSummary-content
@@ -161,6 +168,12 @@ span.box-id
 
 span.box-names
   flex-grow 2
+
+span.box-names[red-color=si], 
+td[red-color=si],
+.legajo-valor[red-color=si]
+  color #FF0000
+  font-weight bold
 
 span.box-info
   font-size 90%
@@ -472,3 +485,6 @@ button[es-este-mes]
 @media print 
   .menu-item
     display none
+
+[bold-name=si]
+  font-weight bold

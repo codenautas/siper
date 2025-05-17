@@ -19,7 +19,7 @@ export function personas(context: TableContext): TableDefinition {
         editable: admin,
         fields:[
             {...idper, nullable:true, editable:false},
-            {name: 'cuil'     , typeName: 'text', isName:false, postInput: soloDigitosPostConfig  },
+            {name: 'cuil'     , typeName: 'text', isName:false, postInput: soloDigitosPostConfig, clientSide: 'cuil_style', serverSide:true, inTable:true },
             {name: 'tipo_doc' , typeName: 'text',                                                 },
             {name: 'documento', typeName: 'text', isName:false, postInput: soloDigitosPostConfig  },
             {name: 'ficha'    , typeName: 'text', isName:false,                                   },
@@ -41,10 +41,10 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'agrupamiento'            , typeName: 'text', title: 'agrupamiento'            },
             {name: 'tramo'                   , typeName: 'text', title: 'tramo'                   },
             {name: 'grado'                   , typeName: 'text', title: 'grado'                   },
-            {name: 'domicilio'               , typeName: 'text', title: 'domicilio'               },
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
             {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
             {name: 'motivo_egreso'           , typeName: 'text', title: 'motivo de egreso'       },
+            {name: 'cuil_valido'             , typeName: 'boolean', title: 'cuil válido', inTable:false, serverSide:true, editable:false},
         ],
         primaryKey: [idper.name],
         foreignKeys: [
@@ -76,10 +76,16 @@ export function personas(context: TableContext): TableDefinition {
             {table:'nov_per'              , fields:[idper.name], abr:'#'},
             {table:'per_nov_cant'         , fields:[idper.name], abr:'##'},
             {table:'historial_contrataciones', fields:[idper.name], abr:'hc'},
-            {table:'inconsistencias'      , fields:[idper.name], abr:'⒤'},
+            {table:'inconsistencias'      , fields:[idper.name], abr:'⒤', refreshFromParent:true},
             {table:'per_capa'   , fields:[idper.name], abr:'C'},
             {table:'per_domicilios', fields:[idper.name], abr:'D'}
         ],
+        sql: {
+            fields: {
+                cuil_valido:{ expr:`validar_cuit(cuil)` },
+            }
+        },
+        hiddenColumns: ['cuil_valido'],
         sortColumns: [{column: 'activo', order: -1}, {column: 'idper', order: 1}],
     };
 }
