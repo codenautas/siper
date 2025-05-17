@@ -160,11 +160,12 @@ describe("connected", function(){
                         `select annio_abrir('${DESDE_AÑO}')`,
                         `update parametros set fecha_actual = '${FECHA_ACTUAL.toYmd()}', cod_nov_habitual = 999 where unico_registro`,
                         `insert into sectores (sector, nombre_sector, pertenece_a, tipo_sec) values
-                            ('PRA1'   , 'PRUEBA AUTOMATICA 1'      , null    ,'GRAL'),
-                            ('PRA11'  , 'PRUEBA AUTOMATICA 1.1'    , 'PRA1'  ,'SUB'),
+                            ('M'      , 'PRUEBA AUTOMATICA M'      , null    ,'DG'),
+                            ('PRA1'   , 'PRUEBA AUTOMATICA 1'      , null    ,'DG'),
+                            ('PRA11'  , 'PRUEBA AUTOMATICA 1.1'    , 'PRA1'  ,'SDG'),
                             ('PRA111' , 'PRUEBA AUTOMATICA 1.1.1'  , 'PRA11' ,'DIR'),
-                            ('PRA1111', 'PRUEBA AUTOMATICA 1.1.1.1', 'PRA111','DEPTO'),
-                            ('PRA12'  , 'PRUEBA AUTOMATICA 1.2'    , 'PRA1'  ,'SUB');
+                            ('PRA1111', 'PRUEBA AUTOMATICA 1.1.1.1', 'PRA111','DEP'),
+                            ('PRA12'  , 'PRUEBA AUTOMATICA 1.2'    , 'PRA1'  ,'SDG');
                         `,
                         `insert into situacion_revista (situacion_revista, con_novedad) values ('${SITUACION_REVISTA}', true)`,
                     ])

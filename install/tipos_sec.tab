@@ -1,0 +1,8 @@
+tipo_sec|descripcion|nivel
+DE|Dirección Ejecutiva|0
+DG|Dirección General|1
+SDG|Subdirección General|2
+DIR|Dirección|3
+DEP|Departamento|4
+AREA|NO USAR|5
+DIV|División|5
