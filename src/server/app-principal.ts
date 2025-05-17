@@ -243,8 +243,10 @@ export class AppSiper extends AppBackend{
             { type: 'js', module: 'guarantee-type', file:'guarantee-type.js'},
             { type: 'js', module: 'frontend-plus', file:'frontend-plus.js'},
             { type: 'css', file: 'menu.css' },
+            { type: 'css', file: 'arbol.css' },
             { type: 'js', file: 'common/contracts.js' },
             { type: 'js', file: 'client/ws-componentes.js' },
+            { type: 'js', file: 'client/ws-arbol.js' },
             ... menuedResources
         ] satisfies ClientModuleDefinition[];
         return list;
