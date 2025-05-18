@@ -48,10 +48,15 @@ function NodoArbol(props:{
             <tr className="arbol-linea-nodo">
                 <td className="arbol-margen-lateral"/>
                 <td className={"arbol-contenido-nodo "+(abierto && hijos.length > 0 ? "arbol-contenido-nodo-abierto" : "" )} 
-                    colSpan={2} onClick={() => {setAbiertos({...abiertos, [sector.sector]:!abierto})}}
+                    colSpan={2} onClick={event => {
+                        if(!event.ctrlKey && event.button!=1){
+                            setAbiertos({...abiertos, [sector.sector]:!abierto})
+                            event.preventDefault();
+                        }
+                    }}
                     arbol-nodo-estado={abierto ? "abierto" : (hijos.length ? "abrible" : "final")}
                 >
-                    <div>
+                    <a href={`./menu#w=sectores&ff=,sector:${sector.sector}`} className="arbol-nodo">
                         <div className="arbol-nodo-encabezado">
                             <span className="arbol-codigo">{sector.sector}</span>
                             {hijos.length ? <span className="arbol-hijos">{hijos.length}</span> : null}
@@ -61,7 +66,7 @@ function NodoArbol(props:{
                             <div arbol-jefe="apellido">{jefe.apellido}</div>
                             <div arbol-jefe="nombre"  >{jefe.nombres}</div>
                         </>)}
-                    </div>
+                    </a>
                 </td>
                 <td className="arbol-margen-lateral"/>
             </tr>

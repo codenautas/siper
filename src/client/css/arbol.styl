@@ -3,10 +3,16 @@
     border-collapse collapse
     border-spacing 0
 
+.arbol-nodo
+  display block
+  color black
+  text-decoration none
+  cursor inherit
+
 td.arbol-contenido-nodo
   min-width 11em
   max-width 12em
-  > div
+  > .arbol-nodo
     border 2px solid black
     padding 2px
     padding-left 0.5em
@@ -36,7 +42,7 @@ td.arbol-contenido-nodo-abierto
   left -5px
   right -5px
   border 0
-  > div
+  > .arbol-nodo
     border 2px solid black
 
 [arbol-jefe=apellido]
