@@ -17,26 +17,52 @@ export function logError(error:Error){
     my.log(error);
 }
 
-function NodoArbol(props:{sector: ctts.Sectores}){
-    const { sector } = props;
+function NodoArbol(props:{
+    sector: ctts.Sectores, 
+    sectores: ctts.Sectores[], 
+    esPrimero?: boolean,
+    esUltimo?: boolean,
+    abiertos: Record<string,boolean>, setAbiertos: React.Dispatch<React.SetStateAction<Record<string,boolean>>>
+}){
+    const { sector, sectores, abiertos, setAbiertos, esPrimero, esUltimo } = props;
+    const abierto = abiertos[sector.sector];
+    const hijos = sectores.filter((s) => s.pertenece_a === sector.sector);
+    const esRaiz = !sector.pertenece_a;
+    const techoIzquierdo = !esPrimero && !esRaiz ? "arbol-techo" : "";
+    const techoDerecho = !esUltimo && !esRaiz ? "arbol-techo" : "";
     return <table className="nodo-arbol">
         <tbody>
-            <tr className="arbol-margen-superior">
-                <td/>
-                <td/>
-                <td className="arbol-conector-superior"/>
-                <td/>
+            <tr className="arbol-margen-horizontal">
+                <td className={techoIzquierdo}/>
+                <td className={techoIzquierdo}/>
+                <td className={techoDerecho + (!esRaiz ? " arbol-conector-superior" : "")}/>
+                <td className={techoDerecho}/>
             </tr>
             <tr className="arbol-linea-nodo">
-                <td/>
-                <td className="arbol-contenido-nodo" colSpan={2}>
+                <td className="arbol-margen-lateral"/>
+                <td className="arbol-contenido-nodo" colSpan={2} onClick={() => {setAbiertos({...abiertos, [sector.sector]:!abierto})}}>
                     <h2>{sector.sector}</h2>
                     <p>{sector.nombre_sector}</p>
                 </td>
-                <td/>
+                <td className="arbol-margen-lateral"/>
             </tr>
-            <tr className="arbol-linea-subnodos">
-            </tr>
+            {abierto && hijos.length > 0 ?
+                <tr className="arbol-margen-horizontal">
+                    <td/>
+                    <td/>
+                    <td className="arbol-conector-superior"/>
+                    <td/>
+                </tr>
+            :null}
+            {abierto && hijos.length > 0 ?
+                <tr className="arbol-linea-subnodos">
+                    <td colSpan={4}>
+                    {hijos.map((hijo, i) => <span className="arbol-subnodo" key={hijo.sector}>{NodoArbol({
+                        sector: hijo, sectores, esPrimero: i == 0, esUltimo: i == hijos.length - 1, abiertos, setAbiertos
+                    })}</span>)}
+                    </td>
+                </tr>
+            :null}
         </tbody>
     </table>;
 }
@@ -44,6 +70,7 @@ function NodoArbol(props:{sector: ctts.Sectores}){
 function MarcoArbol(props:{conn:Connector, fixedFields: FixedFields}){
     const { conn, fixedFields } = props;
     const [sectores, setSectores] = useState<ctts.Sectores[]>([]);
+    const [abiertos, setAbiertos] = useState<Record<string,boolean>>({});
     const sectorRaiz = fixedFields.find((field) => field.fieldName === 'sector') ?? '1';
     useEffect(() => {
         conn.ajax.table_data<ctts.Sectores>({table:'sectores', fixedFields:[], paramfun: {}}).then((sectores) => {
@@ -52,10 +79,10 @@ function MarcoArbol(props:{conn:Connector, fixedFields: FixedFields}){
             logError(error);
         });
     }, [fixedFields]);
-    return <div>
+    return <div className="marco-arbol">
         <h1>Marco de Árbol</h1>
         <div>
-            {sectores.filter((sector) => sector.sector === sectorRaiz).map(sector => NodoArbol({sector}))}
+            {sectores.filter((sector) => sector.sector === sectorRaiz).map(sector => NodoArbol({sector, sectores, abiertos, setAbiertos}))}
         </div>
     </div>
 }

@@ -1,4 +1,37 @@
+.marco-arbol
+  table
+    border-collapse collapse
+    border-spacing 0
+
+td
+  border 0.5px dashed gray
+
 .arbol-contenido-nodo
   border 2px solid black
   padding 2px
   border-radius 5px
+  max-width 11em
+  width 11em
+
+.arbol-conector-superior
+  border-left 2px solid black
+
+.arbol-techo
+  border-top 2px solid black
+
+.arbol-margen-horizontal 
+  & > td
+    height 1em
+
+.arbol-linea-subnodos
+  vertical-align top
+  text-align center
+  & > td
+    overflow-wrap normal
+
+.arbol-subnodo
+  display inline-block
+  vertical-align top
+
+.arbol-margen-lateral
+  min-width 1em
