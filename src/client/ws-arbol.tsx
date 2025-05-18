@@ -23,6 +23,7 @@ type Sectores = ctts.Sectores & {
 
 function NodoArbol(props:{
     sector: Sectores, 
+    salto?: number
     sectores: Sectores[], 
     esPrimero?: boolean,
     esUltimo?: boolean,
@@ -39,7 +40,9 @@ function NodoArbol(props:{
             <tr className="arbol-margen-horizontal">
                 <td className={techoIzquierdo}/>
                 <td className={techoIzquierdo}/>
-                <td className={techoDerecho + (!esRaiz ? " arbol-conector-superior" : "")}/>
+                <td className={techoDerecho + (!esRaiz ? " arbol-conector-superior" : "")}>
+                    {props.salto != null && props.salto > 0 ? <div className="arbol-salto" style={{height: `${props.salto * 10}em`}}/> : null}
+                </td>
                 <td className={techoDerecho}/>
             </tr>
             <tr className="arbol-linea-nodo">
@@ -65,7 +68,7 @@ function NodoArbol(props:{
                 <tr className="arbol-linea-subnodos">
                     <td colSpan={4} className="arbol-td-subnodo">
                     {hijos.map((hijo, i) => <span className="arbol-subnodo" key={hijo.sector}>{NodoArbol({
-                        sector: hijo, sectores, esPrimero: i == 0, esUltimo: i == hijos.length - 1, abiertos, setAbiertos
+                        sector: hijo, salto: hijo.nivel - sector.nivel - 1, sectores, esPrimero: i == 0, esUltimo: i == hijos.length - 1, abiertos, setAbiertos
                     })}</span>)}
                     </td>
                 </tr>

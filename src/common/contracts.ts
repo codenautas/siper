@@ -173,6 +173,7 @@ export const sectores = {
         nombre_sector: is.string,
         tipo_sec: is.nullable.string,
         pertenece_a: is.nullable.string,
+        nivel: is.number,
         activo: is.boolean
     })
 }
