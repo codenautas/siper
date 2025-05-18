@@ -4,21 +4,54 @@
     border-spacing 0
 
 td.arbol-contenido-nodo
-  border 2px solid black
   min-width 11em
-  max-width 11em
+  max-width 12em
   > div
+    border 2px solid black
     padding 2px
+    padding-left 0.5em
     min-height 6em
+    text-align left
+    overflow hidden
+
+.arbol-nodo-encabezado
+  display flex
+  justify-content space-between
+
+@media print
+  .arbol-hijos
+    display none
+
+.arbol-hijos
+  font-color #666
+  font-size 85%
+  padding-right 2px
+
+.arbol-hijos::before
+  content '+'
 
 td.arbol-contenido-nodo-abierto
-  position sticky
+  @media screen
+    position sticky
   left -5px
   right -5px
   border 0
   > div
     border 2px solid black
 
+[arbol-jefe=apellido]
+  margin-top 3px
+
+[arbol-nodo-estado=abierto]
+  cursor zoom-out
+  .arbol-hijos
+    visibility hidden
+
+[arbol-nodo-estado=final]
+  cursor not-allowed
+
+[arbol-nodo-estado=abrible]
+  cursor zoom-in
 
 .arbol-conector-superior
   border-left 2px solid black

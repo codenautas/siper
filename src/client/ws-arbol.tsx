@@ -18,7 +18,7 @@ export function logError(error:Error){
 }
 
 type Sectores = ctts.Sectores & {
-    jefe?: string;      
+    jefes?: ctts.Persona[]
 }
 
 function NodoArbol(props:{
@@ -31,7 +31,7 @@ function NodoArbol(props:{
 }){
     const { sector, sectores, abiertos, setAbiertos, esPrimero, esUltimo } = props;
     const abierto = abiertos[sector.sector];
-    const hijos = sectores.filter((s) => s.pertenece_a === sector.sector);
+    const hijos = sectores.filter((s) => s.pertenece_a == sector.sector);
     const esRaiz = !sector.pertenece_a;
     const techoIzquierdo = !esPrimero && !esRaiz ? "arbol-techo" : "";
     const techoDerecho = !esUltimo && !esRaiz ? "arbol-techo" : "";
@@ -47,11 +47,20 @@ function NodoArbol(props:{
             </tr>
             <tr className="arbol-linea-nodo">
                 <td className="arbol-margen-lateral"/>
-                <td className={"arbol-contenido-nodo "+(abierto && hijos.length > 0 ? "arbol-contenido-nodo-abierto" : "" )} colSpan={2} onClick={() => {setAbiertos({...abiertos, [sector.sector]:!abierto})}}>
+                <td className={"arbol-contenido-nodo "+(abierto && hijos.length > 0 ? "arbol-contenido-nodo-abierto" : "" )} 
+                    colSpan={2} onClick={() => {setAbiertos({...abiertos, [sector.sector]:!abierto})}}
+                    arbol-nodo-estado={abierto ? "abierto" : (hijos.length ? "abrible" : "final")}
+                >
                     <div>
-                        <div className="arbol-codigo">{sector.sector}</div>
+                        <div className="arbol-nodo-encabezado">
+                            <span className="arbol-codigo">{sector.sector}</span>
+                            {hijos.length ? <span className="arbol-hijos">{hijos.length}</span> : null}
+                        </div>
                         <div className="arbol-sector">{sector.nombre_sector}</div>
-                        <div className="arbol-jefe">{sector.jefe}</div>
+                        {sector.jefes?.map(jefe=> <>
+                            <div arbol-jefe="apellido">{jefe.apellido}</div>
+                            <div arbol-jefe="nombre"  >{jefe.nombres}</div>
+                        </>)}
                     </div>
                 </td>
                 <td className="arbol-margen-lateral"/>
@@ -81,19 +90,20 @@ function MarcoArbol(props:{conn:Connector, fixedFields: FixedFields}){
     const { conn, fixedFields } = props;
     const [sectores, setSectores] = useState<Sectores[]>([]);
     const [abiertos, setAbiertos] = useState<Record<string,boolean>>({});
-    const sectorRaiz = fixedFields.find((field) => field.fieldName === 'sector') ?? '1';
+    const sectorRaiz = fixedFields.find((field) => field.fieldName == 'sector')?.value ?? '1';
     useEffect(() => {
-        conn.ajax.table_data<Sectores>({table:'sectores', fixedFields:[], paramfun: {}}).then((sectores) => {
+        conn.ajax.table_data<ctts.Sectores>({table:'sectores', fixedFields:[], paramfun: {}}).then((s) => {
+            const sectores:Sectores[] = s.filter(s => s.activo);
             setSectores(sectores);
             conn.ajax.table_data<
                 // @ts-expect-error confunde RealDate con Date
                 ctts.Persona
             >({table:'personas', fixedFields:[], paramfun: {}}).then((persona) => {
                 setSectores(sectores.map((sector) => {
-                    const jefe = persona.find((p) => p.sector === sector.sector && p.es_jefe);
+                    const jefes = persona.filter((p) => p.sector == sector.sector && p.es_jefe);
                     return {
                         ...sector,
-                        jefe: jefe ? `${jefe.apellido}, ${jefe.nombres}` : '',
+                        jefes
                     };
                 }))
             }).catch((error) => {
@@ -106,7 +116,7 @@ function MarcoArbol(props:{conn:Connector, fixedFields: FixedFields}){
     return <div className="marco-arbol">
         <h1>Estructura</h1>
         <div>
-            {sectores.filter((sector) => sector.sector === sectorRaiz).map(sector => NodoArbol({sector, sectores, abiertos, setAbiertos}))}
+            {sectores.filter((sector) => sector.sector == sectorRaiz).map(sector => NodoArbol({sector, sectores, abiertos, setAbiertos}))}
         </div>
     </div>
 }
