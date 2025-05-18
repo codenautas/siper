@@ -3,15 +3,22 @@
     border-collapse collapse
     border-spacing 0
 
-td
-  border 0.5px dashed gray
-
-.arbol-contenido-nodo
+td.arbol-contenido-nodo
   border 2px solid black
-  padding 2px
-  border-radius 5px
+  min-width 11em
   max-width 11em
-  width 11em
+  > div
+    padding 2px
+    min-height 6em
+
+td.arbol-contenido-nodo-abierto
+  position sticky
+  left -5px
+  right -5px
+  border 0
+  > div
+    border 2px solid black
+
 
 .arbol-conector-superior
   border-left 2px solid black
@@ -26,12 +33,22 @@ td
 .arbol-linea-subnodos
   vertical-align top
   text-align center
-  & > td
-    overflow-wrap normal
 
 .arbol-subnodo
   display inline-block
   vertical-align top
 
+td.arbol-td-subnodo  
+  white-space nowrap
+
+td
+  white-space normal
+  padding 0
+
 .arbol-margen-lateral
   min-width 1em
+  width 50%
+
+.arbol-sector
+  font-size 85%
+  margin-bottom 2px  
