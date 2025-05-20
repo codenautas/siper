@@ -1084,7 +1084,7 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, i
                 </Typography>
                 <IconButton color="inherit">
                     <a
-                        href={props.infoUsuario.rol.trim() === "basico" ? "./docs/manual-basico.pdf" : "./docs/manual.pdf"}
+                        href={props.infoUsuario.rol.trim() === "basico" ? "./docs/Manual-SIPER-Basico.pdf" : "./docs/Manual-SIPER.pdf"}
                         download="Manual para el usuario SIPER.pdf"
                         className="link-manual"
                     >
