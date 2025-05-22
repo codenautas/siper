@@ -439,7 +439,6 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                 <AccordionDetails>
                     <List>
                         {abanicoPersonas[s.sector]?.map(p=>
-                            <>
                             <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p as ProvisorioPersonas)}} 
                                     className={`${p.idper == idper ? ' seleccionado' : ''} ${p.cargable ? ' seleccionable' : 'no-seleccionable'}`}>
                                 <span className="box-id persona-id">{p.idper}</span>
@@ -448,8 +447,6 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                                 </span>
                                 <span className="box-info"> {p.cod_nov ? p.cod_nov : 'S/N' } </span>
                             </ListItemButton>
-                            {p.idper == idper && <LegajoPer conn={props.conn} idper={p.idper}/>}
-                            </>
                         )}
                     </List>
                 </AccordionDetails>
@@ -699,6 +696,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
     const {idper, conn} = props;
     const [persona, setPersona] = useState<ProvisorioPersonaLegajo>({} as ProvisorioPersonaLegajo);
     const [domicilios, setDomicilios] = useState<ProvisorioPersonaDomicilio[]>([]);
+    const [cargandoLegajo, setCargandoLegajo] = useState(true);
 
     useEffect(function() {
         setPersona(setEfimero)
@@ -709,6 +707,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 paramfun: {}
             }).then(personas => {
                 setPersona(personas[0]);
+                setCargandoLegajo(false);
                 console.log(personas[0])
             }).catch(logError);
             conn.ajax.table_data<ProvisorioPersonaDomicilio>({
@@ -726,16 +725,16 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
     // @ts-expect-error
     var es:{registra:boolean} = conn.config?.config?.es||{}
 
-    return <Componente componentType="legajo-per" esEfimero={persona}>
+    return cargandoLegajo ? <CircularProgress /> : <Componente componentType="legajo-per" esEfimero={persona}>
         <div className="legajo-contenedor">
             <div className="legajo-seccion">
-                {!es.registra && <div className="legajo-grupo">
+                <div className="legajo-grupo">
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">Sector:</div>
                         <div className="legajo-valor">{persona.sectores__nombre_sector}</div>
                     </div>
-                </div>}
-                <div className="legajo-grupo">
+                </div>
+                {!es.registra && <div className="legajo-grupo">
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">Ficha:</div>
                         <div className="legajo-valor">{persona.ficha || '-'}</div>
@@ -744,12 +743,12 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                         <div className="legajo-etiqueta">CUIL:</div>
                         <div className="legajo-valor" red-color={!persona?.cuil_valido ? "si" : ""}>{persona.cuil || '-'}</div>
                     </div>
+                </div>}
+                <div className="legajo-grupo">
                     <div className="legajo-campo">
-                        <div className="legajo-etiqueta">ID:</div>
+                        <div className="legajo-etiqueta">IDMeta4:</div>
                         <div className="legajo-valor">{persona.idmeta4 || '-'}</div>
                     </div>
-                </div>
-                <div className="legajo-grupo">
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">Nacionalidad:</div>
                         <div className="legajo-valor">{persona.nacionalidad || '-'}</div>
@@ -868,6 +867,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     const [annio, setAnnio] = useState((defaults.fecha ?? date.today()).getFullYear());
     const [fechaActual, setFechaActual] =  useState<RealDate>(date.today()); // corresponde today, es un default provisorio
     const [detalleVacacionesPersona, setDetalleVacacionesPersona] = useState<ProvisorioDetalleNovPer|null>({} as ProvisorioDetalleNovPer)
+    const [mostrandoLegajo, setMostrandoLegajo] = useState(false);
 
     function resetDias() {
         setNovedadRegistrada((prev) => ({
@@ -994,13 +994,18 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             <Componente componentType="del-medio" scrollable={true}>
                 <div className="container-del-medio">
                 <Box className="box-flex-gap">
-                    <Paper className="paper-flex">
+                    <Paper className="paper-flex" 
+                        onClick={() => setMostrandoLegajo(!mostrandoLegajo)}
+                        sx={{ cursor: 'pointer' }}>
                         <div className="box-line">
                             <span className="box-id">
                                 {idper}
                             </span>
                             <span className="box-names">
                                 {persona.apellido}, {persona.nombres}
+                            </span>
+                            <span className="box-info">
+                                {mostrandoLegajo ? <ICON.ExpandLess /> : <ICON.ExpandMore />}
                             </span>
                         </div>
                         <div className="box-line">
@@ -1021,6 +1026,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                         <DetalleAniosNovPer detalleVacacionesPersona={detalleVacacionesPersona}/>
                     </Box>
                 </Box>
+                {mostrandoLegajo && (<LegajoPer conn={props.conn} idper={persona.idper}/>)}
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}
                     fechaActual={fechaActual!} annio={annio} onAnnio={setAnnio}
                 />
