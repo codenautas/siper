@@ -268,7 +268,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 
 // @ts-ignore
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean};
-type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string}
+type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, situacion_revista__descripcion:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string}
 type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__domicilio:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, domicilio:string, orden:number}
 type ProvisorioSectores = {pactivas: number, activo: boolean,sector:string, nombre_sector:string, pertenece_a:string, nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, hijos:ProvisorioSectoresAumentados[], profundidad:number}
@@ -768,7 +768,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                     </div>
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">Sit. Revista:</div>
-                        <div className="legajo-valor">{persona.situacion_revista || '-'}</div>
+                        <div className="legajo-valor">{persona.situacion_revista__descripcion || '-'}</div>
                     </div>
                 </div>
                 <div className="legajo-grupo">
