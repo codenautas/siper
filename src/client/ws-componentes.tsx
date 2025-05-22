@@ -101,6 +101,15 @@ export const DDS = {
 
 type ULTIMA_NOVEDAD = number;
 
+function puedeCargarNovedades(infoUsuario: InfoUsuario) {
+    return !!(
+        infoUsuario.puede_cargar_propio ||
+        infoUsuario.puede_cargar_todo ||
+        infoUsuario.puede_cargar_dependientes ||
+        infoUsuario.puede_corregir_el_pasado
+    );
+}
+
 function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, fechaActual: RealDate, 
     annio:number, infoUsuario:InfoUsuario
     onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, ultimaNovedad?: ULTIMA_NOVEDAD
@@ -116,7 +125,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
     const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
     const [botonRetrocederHabilitado, setBotonRetrocederHabilitado] = useState<boolean>(true); 
     const [botonAvanzarHabilitado, setBotonAvanzarHabilitado] = useState<boolean>(true); 
-    const puede_cargar_novedades = infoUsuario.puede_cargar_propio || infoUsuario.puede_cargar_todo || infoUsuario.puede_cargar_dependientes || infoUsuario.puede_corregir_el_pasado;
+    const puede_cargar_novedades = puedeCargarNovedades(infoUsuario);
 
     useEffect(function(){
         // ver async
@@ -293,7 +302,8 @@ function SearchBox(props: {
     children?: ReactNode,    
     onChange:(newValue:string)=>void, 
     todas?:boolean|null, onTodasChange?:(newValue:boolean)=>void, 
-    ordenPorNovedad?:boolean|null, onOrdenPorNovedadChange?:(newValue:boolean)=>void
+    ordenPorNovedad?:boolean|null, onOrdenPorNovedadChange?:(newValue:boolean)=>void,
+    permisos?:boolean|null
 }){
     var [textToSearch, setTextToSearch] = useState("");
     return <Paper className="search-box">
@@ -304,6 +314,7 @@ function SearchBox(props: {
         />
         <Button onClick={_=>{props.onChange(""); setTextToSearch("")}} className="siper-button" boton-negro="si"><ICON.BackspaceOutlined/></Button>
         {props.todas != null ? <>
+            {props.permisos && 
             <label>
                 <Checkbox
                     checked={props.todas}
@@ -313,6 +324,7 @@ function SearchBox(props: {
                     sin-padding="si"
                 /> todas
             </label>
+            }
             <Button 
                 className="siper-button" boton-negro="si"
                 onClick={_ => {
@@ -577,15 +589,16 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     </Componente>
 }
 
-function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, annio:number, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean, c_dds: boolean)=>void, ultimaNovedad?: ULTIMA_NOVEDAD}){
+function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, annio:number, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean, c_dds: boolean)=>void, ultimaNovedad?: ULTIMA_NOVEDAD, infoUsuario:InfoUsuario}){
     // @ts-ignore
-    const {idper, cod_nov, annio, onCodNov, conn, ultimaNovedad} = props;
+    const {idper, cod_nov, annio, onCodNov, conn, ultimaNovedad, infoUsuario} = props;
     const [codNovedades, setCodNovedades] = useState<NovedadesDisponiblesResult[]>([]);
     const [codNovedadesFiltradas, setCodNovedadesFiltradas] = useState<NovedadesDisponiblesResult[]>([]);
     const [filtro, setFiltro] = useState("");
     const [todas, setTodas] = useState(false);
     const [ordenPorNovedad, setOrdenPorNovedad] = useState(false);
-
+    const puede_cargar_novedades = puedeCargarNovedades(infoUsuario);
+    
     useEffect(function(){
         setCodNovedades(setEfimero)
         if (idper != null) {
@@ -601,7 +614,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
     },[codNovedades, filtro, todas, ordenPorNovedad])
 
     return <Componente componentType="codigo-novedades" scrollable={true} esEfimero={codNovedades}>
-        <SearchBox onChange={setFiltro} todas={todas} onTodasChange={setTodas} ordenPorNovedad={ordenPorNovedad} onOrdenPorNovedadChange={setOrdenPorNovedad}/>
+        <SearchBox onChange={setFiltro} todas={todas} onTodasChange={setTodas} ordenPorNovedad={ordenPorNovedad} onOrdenPorNovedadChange={setOrdenPorNovedad} permisos={puede_cargar_novedades}/>
         <List>
             {codNovedadesFiltradas.map(c=>
                 <ListItemButton key = {c.cod_nov} 
@@ -1075,7 +1088,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
                 </div>
             </Componente>
-            <NovedadesPer conn={conn} idper={idper} annio={annio} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
+            <NovedadesPer conn={conn} idper={idper} annio={annio} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario}/>
         </Paper>;
 }
 
