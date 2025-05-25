@@ -11,11 +11,12 @@ db:
   user: siper_admin
 login:
   table: usuarios
+  from: usuarios u left join personas p using (idper)
   userFieldName: usuario
   passFieldName: md5clave
   rolFieldName: rol
-  infoFieldList: [usuario, rol]
-  activeClausule: activo
+  infoFieldList: [usuario, rol, idper, sector]
+  activeClausule: u.activo
   unloggedLandPage: false
   plus:
     successRedirect: /menu#i=principal

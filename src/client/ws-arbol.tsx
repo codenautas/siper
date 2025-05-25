@@ -42,7 +42,7 @@ function SliderNivel(props:{verNivelSectorHasta:number, onChangeLevel:(level:num
     return (
         <Box sx={{ width: 150, paddingRight: 6 }}>
             <Slider
-               defaultValue={2}
+               defaultValue={0}
                getAriaValueText={valuetext}
                step={1}
                max={5}
@@ -62,11 +62,10 @@ function NodoArbol(props:{
     sectores: Sectores[], 
     esPrimero?: boolean,
     esUltimo?: boolean,
-    nivelSectorHasta: number,
     abiertos: Record<string,boolean>, setAbiertos: React.Dispatch<React.SetStateAction<Record<string,boolean>>>
 }){
-    const { sector, sectores, nivelSectorHasta, abiertos, setAbiertos, esPrimero, esUltimo } = props;
-    const abierto = abiertos[sector.sector] || sector.nivel <= (nivelSectorHasta ?? 0);
+    const { sector, sectores, abiertos, setAbiertos, esPrimero, esUltimo } = props;
+    const abierto = abiertos[sector.sector] ?? false;
     const hijos = sectores.filter((s) => s.pertenece_a == sector.sector);
     const esRaiz = !sector.pertenece_a;
     const techoIzquierdo = !esPrimero && !esRaiz ? "arbol-techo" : "";
@@ -118,7 +117,7 @@ function NodoArbol(props:{
                 <tr className="arbol-linea-subnodos">
                     <td colSpan={4} className="arbol-td-subnodo">
                     {hijos.map((hijo, i) => <span className="arbol-subnodo" key={hijo.sector}>{NodoArbol({
-                        sector: hijo, salto: hijo.nivel - sector.nivel - 1, sectores, esPrimero: i == 0, esUltimo: i == hijos.length - 1, nivelSectorHasta, abiertos, setAbiertos
+                        sector: hijo, salto: hijo.nivel - sector.nivel - 1, sectores, esPrimero: i == 0, esUltimo: i == hijos.length - 1, abiertos, setAbiertos
                     })}</span>)}
                     </td>
                 </tr>
@@ -132,7 +131,21 @@ function MarcoArbol(props:{conn:Connector, fixedFields: FixedFields}){
     const [sectores, setSectores] = useState<Sectores[]>([]);
     const [abiertos, setAbiertos] = useState<Record<string,boolean>>({});
     const sectorRaiz = fixedFields.find((field) => field.fieldName == 'sector')?.value ?? '1';
-    const [nivelSectorHasta, setNivelSectorHasta] = useState(0);
+    const [nivelSectorHasta, setNivelSectorHasta] = useState<number>(0);
+    function fijarNivelSectorHasta(level:number){
+        setNivelSectorHasta(level);
+        setAbiertos((abiertos) => {
+            const nuevosAbiertos = {...abiertos};
+            sectores.forEach((sector) => {
+                if(sector.nivel <= level){
+                    nuevosAbiertos[sector.sector] = true;
+                }else{
+                    delete nuevosAbiertos[sector.sector];
+                }
+            });
+            return nuevosAbiertos;
+        });
+    }
     useEffect(() => {
         conn.ajax.table_data<ctts.Sectores>({table:'sectores', fixedFields:[], paramfun: {}}).then((s) => {
             const sectores:Sectores[] = s.filter(s => s.activo);
@@ -158,9 +171,9 @@ function MarcoArbol(props:{conn:Connector, fixedFields: FixedFields}){
     setInterval(prepareGrab, 2000);
     prepareGrab();
     return <div className="marco-arbol">
-        <h1 className="arbol-barra-titulo"><span>Estructura</span> <SliderNivel verNivelSectorHasta={nivelSectorHasta} onChangeLevel={setNivelSectorHasta}/></h1>
+        <h1 className="arbol-barra-titulo"><span>Estructura</span> <SliderNivel verNivelSectorHasta={nivelSectorHasta} onChangeLevel={fijarNivelSectorHasta}/></h1>
         <div>
-            {sectores.filter((sector) => sector.sector == sectorRaiz).map(sector => NodoArbol({sector, sectores, nivelSectorHasta, abiertos, setAbiertos}))}
+            {sectores.filter((sector) => sector.sector == sectorRaiz).map(sector => NodoArbol({sector, sectores, abiertos, setAbiertos}))}
         </div>
     </div>
 }

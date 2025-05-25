@@ -12,11 +12,11 @@ export const idper: FieldDefinition = {
 }
 
 export function personas(context: TableContext): TableDefinition {
-    var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
+    var {es, user, be:{db:{quoteLiteral}}} = context;
     return {
         name: 'personas',
         elementName: 'persona',
-        editable: admin,
+        editable: es.rrhh,
         fields:[
             {...idper, nullable:true, editable:false},
             {name: 'cuil'     , typeName: 'text', isName:false, postInput: soloDigitosPostConfig, clientSide: 'cuil_style', serverSide:true, inTable:true },
@@ -83,7 +83,8 @@ export function personas(context: TableContext): TableDefinition {
         sql: {
             fields: {
                 cuil_valido:{ expr:`validar_cuit(cuil)` },
-            }
+            },
+            where: es.rrhh ? 'true' : es.registra ? `personas.activo AND sector_pertenece(personas.sector, ${quoteLiteral(user.sector)})` : `personas.idper = ${quoteLiteral(user.idper)}`
         },
         hiddenColumns: ['cuil_valido'],
         sortColumns: [{column: 'activo', order: -1}, {column: 'idper', order: 1}],
