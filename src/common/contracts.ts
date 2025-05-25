@@ -622,7 +622,10 @@ export const ERROR_COD_NOVEDAD_NO_INDICA_TOTAL     = 'P1005';
 export const ERROR_COD_NOVEDAD_NO_INDICA_PARCIAL   = 'P1006';
 export const ERROR_COD_NOVEDAD_NO_INDICA_CON_HORARIO= 'P1007';
 export const ERROR_COD_NOVEDAD_NO_INDICA_CON_NOVEDAD= 'P1008';
+export const ERROR_SECTORES_DESNIVELADOS            = 'P1009';
+export const ERROR_SECTOR_HUERFANO_NO_TOPE          = 'P1010';
 
-//////////// ERRORES POSTGRES:
+//////////// ERRORES POSTGRES: https://www.postgresql.org/docs/current/errcodes-appendix.html
 export const insufficient_privilege = '42501';
-export const check_sin_superponer = '23P01';
+export const exclusion_violation = '23P01';
+export const unique_violation = '23505';

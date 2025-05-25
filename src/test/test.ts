@@ -56,7 +56,7 @@ const HASTA_AÑO = `2001`;
 const AÑOS_DE_PRUEBA = `annio BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
 const FECHAS_DE_PRUEBA = `extract(year from fecha) BETWEEN ${DESDE_AÑO} AND ${DESDE_AÑO}`;
 const IDPER_DE_PRUEBA = `idper like 'XX%'`;
-const SECTOR = 'M';
+const SECTOR = 'T';
 const SITUACION_REVISTA = "XX";
 
 const COD_VACACIONES = "1";
@@ -159,13 +159,13 @@ describe("connected", function(){
                         `update annios set horario_habitual_desde = '10:00', horario_habitual_hasta = '17:00' where annio = '${DESDE_AÑO}'`,
                         `select annio_abrir('${DESDE_AÑO}')`,
                         `update parametros set fecha_actual = '${FECHA_ACTUAL.toYmd()}', cod_nov_habitual = 999 where unico_registro`,
-                        `insert into sectores (sector, nombre_sector, pertenece_a, tipo_sec) values
-                            ('M'      , 'PRUEBA AUTOMATICA M'      , null    ,'DG'),
-                            ('PRA1'   , 'PRUEBA AUTOMATICA 1'      , null    ,'DG'),
-                            ('PRA11'  , 'PRUEBA AUTOMATICA 1.1'    , 'PRA1'  ,'SDG'),
-                            ('PRA111' , 'PRUEBA AUTOMATICA 1.1.1'  , 'PRA11' ,'DIR'),
-                            ('PRA1111', 'PRUEBA AUTOMATICA 1.1.1.1', 'PRA111','DEP'),
-                            ('PRA12'  , 'PRUEBA AUTOMATICA 1.2'    , 'PRA1'  ,'SDG');
+                        `insert into sectores (subsector, nombre_sector, pertenece_a, nivel, tipo_sec) values
+                            ('${SECTOR}', 'PRUEBA AUTOMATICA ${SECTOR}', null , 1, 'DG'),
+                            ('P', 'PRUEBA AUTOMATICA P'      , null , 1, 'DG'),
+                            ('1', 'PRUEBA AUTOMATICA P.1'    , 'P'  , 2, 'SDG'),
+                            ('3', 'PRUEBA AUTOMATICA P.1.3'  , 'P1' , 3, 'DIR'),
+                            ('1', 'PRUEBA AUTOMATICA P.1.3.1', 'P13', 4, 'DEP'),
+                            ('2', 'PRUEBA AUTOMATICA P.2'    , 'P'  , 2, 'SDG');
                         `,
                         `insert into situacion_revista (situacion_revista, con_novedad) values ('${SITUACION_REVISTA}', true)`,
                     ])
@@ -177,6 +177,7 @@ describe("connected", function(){
             }
             console.log('/// fin del borrado', new Date())
         } catch(err) {
+            console.error("Error en el borrado de la base de datos");
             console.log(err);
             throw err;
         }
@@ -322,7 +323,7 @@ describe("connected", function(){
             await enNuevaPersona("persona para usuario básico de sesión", {usuario:{sesion:true}}, async (_, {sesion}) => {
                 basicoSession = sesion;
             });
-            await enNuevaPersona("persona para usuario jefe de sector 11", {usuario:{sesion:true, rol:'registra', sector:'PRA11'}}, async (_, {sesion}) => {
+            await enNuevaPersona("persona para usuario jefe de sector P1", {usuario:{sesion:true, rol:'registra', sector:'P1'}}, async (_, {sesion}) => {
                 jefe11Session = sesion;
             });
         })
@@ -347,7 +348,7 @@ describe("connected", function(){
                 await rrhhSession.tableDataTest('nov_per', [
                     {annio:2000, cod_nov:COD_VACACIONES, cantidad:20, usados:5, pendientes:0, saldo:15},
                     {annio:2000, cod_nov:COD_PRED_PAS, cantidad:null, usados:16, pendientes:0, saldo:null},
-                ], 'all', {fixedFields:{idper}})
+                ], 'all', {fixedFields:{idper, annio:DESDE_AÑO}})
             })
         })
         it("insertar una semana de vacaciones en una semana con feriados", async function(){
@@ -371,7 +372,7 @@ describe("connected", function(){
                 await rrhhSession.tableDataTest('nov_per', [
                     {annio:2000, cod_nov:COD_VACACIONES, cantidad:15, usados:0, pendientes:3, saldo:12},
                     {annio:2000, cod_nov:COD_PRED_PAS, cantidad:null, usados:21, pendientes:0, saldo:null}, // días hábiles hasta el 31 de enero
-                ], 'all', {fixedFields:{idper}})
+                ], 'all', {fixedFields:{idper, annio:DESDE_AÑO}})
             })
         })
         it("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
@@ -416,7 +417,7 @@ describe("connected", function(){
                     {annio:2000, cod_nov:COD_VACACIONES, cantidad:20, usados:0, pendientes:4, saldo:16},
                     {annio:2000, cod_nov:COD_TRAMITE   , cantidad:4 , usados:0, pendientes:1, saldo:3 },
                     {annio:2000, cod_nov:COD_PRED_PAS, cantidad:null, usados:21, pendientes:0, saldo:null}, // días hábiles hasta el 31 de enero
-                ], 'all', {fixedFields:{idper}})
+                ], 'all', {fixedFields:{idper, annio:DESDE_AÑO}})
             })
         })
         it("cargo un día de trámite", async function(){
@@ -542,7 +543,7 @@ describe("connected", function(){
         it("un jefe puede cargar a alguien de su equipo", async function(){
             this.timeout(TIMEOUT_SPEED * 10);
             // fallaEnLaQueQuieroOmitirElBorrado = true;
-            await enNuevaPersona(this.test?.title!, {usuario:{sector:'PRA11'}}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {usuario:{sector:'P1'}}, async ({idper}) => {
                 await jefe11Session.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
@@ -557,7 +558,7 @@ describe("connected", function(){
             fallaEnLaQueQuieroOmitirElBorrado = false;
         })
         it("un jefe puede cargar a alguien de un equipo perteneciente", async function(){
-            await enNuevaPersona(this.test?.title!, {usuario:{sector:'PRA1111'}}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {usuario:{sector:'P131'}}, async ({idper}) => {
                 await jefe11Session.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
@@ -571,7 +572,7 @@ describe("connected", function(){
             })
         })
         it("un jefe no puede cargar a alguien de un equipo no perteneciente", async function(){
-            await enNuevaPersona(this.test?.title!, {usuario:{sector:'PRA12'}}, async (persona) => {
+            await enNuevaPersona(this.test?.title!, {usuario:{sector:'P2'}}, async (persona) => {
                 await expectError( async () => {
                     await jefe11Session.saveRecord(
                         ctts.novedades_registradas, 
@@ -628,11 +629,11 @@ describe("connected", function(){
         })
         it("un usuario común puede ver SOLO SUS novedades pasadas", async function(){
             await enNuevaPersona(this.test?.title!,
-                {usuario:{sector:'PRA11',sesion:true}, hoy:date.iso('2000-02-02')},
+                {usuario:{sector:'P1',sesion:true}, hoy:date.iso('2000-02-02')},
                 async (persona, {sesion}
             ) => {
                 var otrapersona = await crearNuevaPersona("segunda persona en test "+this.test?.title!, {});
-                await rrhhSession.saveRecord(ctts.personas,{idper:otrapersona.idper,sector:'PRA11'}, 'update')
+                await rrhhSession.saveRecord(ctts.personas,{idper:otrapersona.idper,sector:'P1'}, 'update')
                 await rrhhAdminSession.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: otrapersona.idper},
@@ -644,7 +645,7 @@ describe("connected", function(){
             })
         })
         it("un usuario no puede cargarse novedades a sí mismo", async function(){
-            await enNuevaPersona(this.test?.title!, {usuario:{sector:'PRA12', sesion:true}}, async ({idper}, {sesion}) => {
+            await enNuevaPersona(this.test?.title!, {usuario:{sector:'P2', sesion:true}}, async ({idper}, {sesion}) => {
                 await expectError( async () => {
                     await sesion.saveRecord(
                         ctts.novedades_registradas, 
@@ -668,7 +669,7 @@ describe("connected", function(){
                         {idper:persona.idper, fecha:date.iso('2000-03-05'), desde_hora:DESDE_HORA ,cod_nov:COD_COMISION}, 
                         'new'
                     );
-                }, ctts.check_sin_superponer);
+                }, ctts.exclusion_violation);
             })
         })
         it("no puede cargarse una novedad horaria cuando el codigo de novedad NO indica PARCIAL", async function(){
@@ -888,50 +889,51 @@ describe("connected", function(){
     })
     describe("jerarquía de sectores", function(){
         async function pertenceceSector(sector:string, perteneceA:string){
-            return (await server.inDbClient(ADMIN_REQ, client => client.query(
+            return (await server.inDbClient(ADMIN_REQ, async client => await client.query(
                 'select sector_pertenece($1, $2)',
                 [sector, perteneceA]
             ).fetchUniqueValue())).value
         }
-        it("detecta que PRA111 pertenece a PRA11", async function(){
-            var result = await pertenceceSector('PRA111','PRA11')
+        it("detecta que P13 pertenece a P1", async function(){
+            var result = await pertenceceSector('P13','P1')
             discrepances.showAndThrow(result, true);
         })
-        it("detecta que PRA1111 pertenece a PRA1 (salto de 3 niveles)", async function(){
-            var result = await pertenceceSector('PRA1111','PRA1')
+        it("detecta que P131 pertenece a P (salto de 3 niveles)", async function(){
+            var result = await pertenceceSector('P131','P')
             discrepances.showAndThrow(result, true);
         })
-        it("detecta que PRA1 no pertenece a PRA11 (invertido)", async function(){
-            var result = await pertenceceSector('PRA1','PRA11')
+        it("detecta que P no pertenece a P1 (invertido)", async function(){
+            var result = await pertenceceSector('P','P1')
             discrepances.showAndThrow(result, false);
             
         })
-        it("detecta que PRA111 no pertenece a PRA12 (otra rama)", async function(){
-            var result = await pertenceceSector('PRA111','PRA12')
+        it("detecta que P13 no pertenece a P2 (otra rama)", async function(){
+            var result = await pertenceceSector('P13','P2')
             discrepances.showAndThrow(result, false);
         })
         describe("controla las referencias circulares", async function(){
-            async function verifcaImpedirReferenciaCircular(sector:string, nuevoPertenceA:string){
+            async function verifcaImpedirReferenciaCircular(sector:string, nuevoPertenceA:string, errorCode:string){
                 await expectError( async () => {
                     await rrhhAdminSession.saveRecord(ctts.sectores, {sector, pertenece_a: nuevoPertenceA}, 'update');
                     throw new Error("se esperaba un error para impedir la referencia circular")
-                }, ctts.ERROR_REFERENCIA_CIRCULAR_EN_SECTORES);
+                }, errorCode);
             }
-            it("permite cambia de quién depende", async function(){
-                await rrhhAdminSession.saveRecord(ctts.sectores, {sector: 'PRA12', pertenece_a:'PRA1111'}, 'update');
+            it("permite cambiar de quién depende", async function(){
+                var sectorCambiado = 'T1';
+                await rrhhAdminSession.saveRecord(ctts.sectores, {sector: 'P1', pertenece_a:'T'}, 'update');
                 await rrhhAdminSession.tableDataTest('sectores', [
-                    {sector: 'PRA12', pertenece_a:'PRA1111'}
-                ], 'all', {fixedFields:[{fieldName:'sector', value:'PRA12'}]})
-                await rrhhAdminSession.saveRecord(ctts.sectores, {sector: 'PRA12', pertenece_a:'PRA1'}, 'update');
+                    {sector: sectorCambiado, pertenece_a: 'T'}
+                ], 'all', {fixedFields:[{fieldName:'sector', value: sectorCambiado}]})
+                await rrhhAdminSession.saveRecord(ctts.sectores, {sector: sectorCambiado, pertenece_a:'P'}, 'update');
             })
             it("impiede una referencia circular corta", async function(){
-                await verifcaImpedirReferenciaCircular('PRA11', 'PRA111');
+                await verifcaImpedirReferenciaCircular('P1', 'P13', ctts.unique_violation);
             })
             it("impiede una referencia circular larga", async function(){
-                await verifcaImpedirReferenciaCircular('PRA1', 'PRA1111');
+                await verifcaImpedirReferenciaCircular('P', 'P131', ctts.ERROR_SECTORES_DESNIVELADOS);
             })
             it("impiede una referencia a sí mismo", async function(){
-                await verifcaImpedirReferenciaCircular('PRA11', 'PRA11');
+                await verifcaImpedirReferenciaCircular('P1', 'P1', ctts.ERROR_SECTORES_DESNIVELADOS);
             })
         })
     })

@@ -20,7 +20,6 @@ export function situacion_revista(context:TableContext):TableDefinition{
             s_revista,
             {name: 'con_novedad', typeName: 'boolean', description: 'si permite registrar una novedad' },
             {name: 'cod_2024'   , typeName: 'integer'},
-            {name: 'descripcion', typeName: 'text', title: 'descripción', isName:true},
         ],
         primaryKey:[s_revista.name],
         constraints:[

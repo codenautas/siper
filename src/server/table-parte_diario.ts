@@ -33,6 +33,10 @@ export function parte_diario(context: TableContext): TableDefinition {
         elementName: "parte_diario",
         fields: [
             idper,
+            { name: 'personas__ficha'   , typeName: 'text' },
+            { name: 'personas__cuil'    , typeName: 'text' },
+            { name: 'personas__apellido', typeName: 'text' },
+            { name: 'personas__nombres' , typeName: 'text' },
             { name: 'fecha'  , typeName: 'date' },
             sector,
             cod_nov,

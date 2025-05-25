@@ -58,7 +58,7 @@ install:
       - ../install/novedades_registradas_trg.sql
       - ../install/novedades_horarias_trg.sql
       - ../install/fechas_nov_trg.sql
-      - ../install/sectores_circulares_trg.sql
+      - ../install/sectores_desnivelados_trg.sql
       - ../install/novedades_registradas_detalles_trg.sql
       - ../install/novedades_horarias_parcial_trg.sql
       - ../install/novedades_registradas_total_trg.sql
