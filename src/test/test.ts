@@ -160,8 +160,9 @@ describe("connected", function(){
                         `select annio_abrir('${DESDE_AÑO}')`,
                         `update parametros set fecha_actual = '${FECHA_ACTUAL.toYmd()}', cod_nov_habitual = 999 where unico_registro`,
                         `insert into sectores (subsector, nombre_sector, pertenece_a, nivel, tipo_sec) values
-                            ('${SECTOR}', 'PRUEBA AUTOMATICA ${SECTOR}', null , 1, 'DG'),
-                            ('P', 'PRUEBA AUTOMATICA P'      , null , 1, 'DG'),
+                            ('Z', 'PRUEBA AUTOMATICA Z'      , null , 0, 'DE'),
+                            ('${SECTOR}', 'PRUEBA AUTOMATICA ${SECTOR}', 'Z' , 1, 'DG'),
+                            ('P', 'PRUEBA AUTOMATICA P'      , 'Z' , 1, 'DG'),
                             ('1', 'PRUEBA AUTOMATICA P.1'    , 'P'  , 2, 'SDG'),
                             ('3', 'PRUEBA AUTOMATICA P.1.3'  , 'P1' , 3, 'DIR'),
                             ('1', 'PRUEBA AUTOMATICA P.1.3.1', 'P13', 4, 'DEP'),
