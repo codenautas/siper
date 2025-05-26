@@ -983,7 +983,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             ? "debe marcar alguno de los días de la semana" : null;
 
     // @ts-expect-error
-    var es:{rrhh:boolean} = conn.config?.config?.es||{}
+    var es:{rrhh:boolean, registra:boolean} = conn.config?.config?.es||{}
 
     return infoUsuario.usuario == null ?  
             <CircularProgress />
@@ -995,7 +995,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                 <div className="container-del-medio">
                 <Box className="box-flex-gap">
                     <Paper className="paper-flex" 
-                        onClick={() => setMostrandoLegajo(!mostrandoLegajo)}
+                        onClick={() => setMostrandoLegajo(!mostrandoLegajo && es.registra)}
                         sx={{ cursor: 'pointer' }}>
                         <div className="box-line">
                             <span className="box-id">
@@ -1004,9 +1004,9 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                             <span className="box-names">
                                 {persona.apellido}, {persona.nombres}
                             </span>
-                            <span className="box-info">
+                            {es.registra && <span className="box-info">
                                 {mostrandoLegajo ? <ICON.ExpandLess /> : <ICON.ExpandMore />}
-                            </span>
+                            </span>}
                         </div>
                         <div className="box-line">
                             <span>
