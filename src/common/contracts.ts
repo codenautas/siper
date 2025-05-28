@@ -567,6 +567,17 @@ export const tipos_domicilio = {
 
 export type Tipos_domicilio = DefinedType<typeof tipos_domicilio.description>
 
+export const tipos_telefono = {
+    table: 'tipos_telefono',
+    description: is.object({
+        tipo_telefono: is.string,
+        descripcion: is.string,
+        orden: is.number
+    })
+} satisfies CommonEntityDefinition
+
+export type Tipos_telefono = DefinedType<typeof tipos_telefono.description>
+
 export const per_domicilios = {
     table: 'per_domicilios',
     description: is.object({
@@ -588,6 +599,17 @@ export const per_domicilios = {
         ala:             is.string,
         confirmado:      is.boolean,
         fecha_confirmado:is.Date,
+        observaciones:   is.string,
+    })
+}
+
+export const per_telefonos = {
+    table: 'per_telefonos',
+    description: is.object({
+        idper:           is.string,
+        nro_item:        is.bigint,
+        tipo_telefono:   is.string,
+        telefono:        is.string,
         observaciones:   is.string,
     })
 }
