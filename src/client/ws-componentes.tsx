@@ -280,6 +280,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean};
 type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string}
 type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__domicilio:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, domicilio:string, orden:number}
+type ProvisorioPersonaTelefono = {idper: string, tipo_telefono: string, tipos_telefono__descripcion?: string, telefono: string, observaciones?: string, nro_item?: number, orden?: number}
 type ProvisorioSectores = {pactivas: number, activo: boolean,sector:string, nombre_sector:string, pertenece_a:string, nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, hijos:ProvisorioSectoresAumentados[], profundidad:number}
 // @ts-ignore
@@ -710,6 +711,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
     const {idper, conn} = props;
     const [persona, setPersona] = useState<ProvisorioPersonaLegajo>({} as ProvisorioPersonaLegajo);
     const [domicilios, setDomicilios] = useState<ProvisorioPersonaDomicilio[]>([]);
+    const [telefonos, setTelefonos] = useState<ProvisorioPersonaTelefono[]>([]);
     const [cargandoLegajo, setCargandoLegajo] = useState(true);
 
     useEffect(function() {
@@ -732,6 +734,15 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 domicilios.sort(compareForOrder([{column:'idper'},{column:'orden'},{column:'domicilio'}])),
                 setDomicilios(domicilios);
                 console.log(domicilios)
+            }).catch(logError);
+            conn.ajax.table_data<ProvisorioPersonaTelefono>({
+                table: 'per_telefonos',
+                fixedFields: [{ fieldName: 'idper', value: idper }],
+                paramfun: {}
+            }).then(function (telefonos) {
+                telefonos.sort(compareForOrder([{ column: 'idper' }, { column: 'orden' }, { column: 'nro_item' }]));
+                setTelefonos(telefonos);
+                console.log(telefonos)
             }).catch(logError);
         }
     }, [idper])
@@ -846,6 +857,26 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                     ))}
                     {domicilios.length === 0 && 
                         <div className="legajo-campo legajo-campo-largo">Sin domicilios registrados</div>
+                    }
+                </div>
+            </div>
+            <div className="legajo-seccion">
+                <div className="legajo-grupo">
+                    <div className="legajo-campo legajo-campo-largo">
+                        <div className="legajo-etiqueta">Teléfonos:</div>
+                    </div>
+                </div>
+                <div className="legajo-grupo">
+                    {telefonos.map(telefono => (
+                        <div key={telefono.nro_item} className="legajo-campo legajo-campo-largo">
+                            <div className="legajo-valor">
+                                {'  '} - {telefono.tipos_telefono__descripcion || telefono.tipo_telefono}: {telefono.telefono}
+                                {telefono.observaciones && ` (${telefono.observaciones})`}
+                            </div>
+                        </div>
+                    ))}
+                    {telefonos.length === 0 &&
+                        <div className="legajo-campo legajo-campo-largo">Sin teléfonos registrados</div>
                     }
                 </div>
             </div>

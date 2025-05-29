@@ -46,6 +46,8 @@ import { localidades             } from "./table-localidades";
 import { calles                  } from "./table-calles";
 import { tipos_domicilio         } from "./table-tipos_domicilio";
 import { per_domicilios          } from "./table-per_domicilios";
+import { tipos_telefono          } from "./table-tipos_telefono";
+import { per_telefonos           } from "./table-per_telefonos";
 import { sexos                   } from "./table-sexos";
 import { estados_civiles         } from "./table-estados_civiles";
 import { agrupamientos           } from "./table-agrupamientos";
@@ -191,6 +193,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'localidades'      },
                             {menuType:'table', name:'calles'           },
                             {menuType:'table', name:'tipos_domicilio'  },
+                            {menuType:'table', name:'tipos_telefono'   },
                             {menuType:'table', name:'tipos_doc'        },
                             {menuType:'table', name:'tipos_sec'        },
                             {menuType:'table', name:'sexos'            },
@@ -294,6 +297,8 @@ export class AppSiper extends AppBackend{
             calles               ,
             tipos_domicilio      ,
             per_domicilios       ,
+            tipos_telefono       ,
+            per_telefonos        ,
             sexos                ,
             estados_civiles      ,
             agrupamientos        ,
