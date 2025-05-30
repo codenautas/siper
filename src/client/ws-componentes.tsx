@@ -851,7 +851,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                                 {domicilio.codigo_postal && ` CP ${domicilio.codigo_postal}`}
                                 {domicilio.barrios__nombre_barrio && `, (${domicilio.barrios__nombre_barrio})`} 
                                 {domicilio.provincias__nombre_provincia && `, (${domicilio.provincias__nombre_provincia})`} 
-                                {domicilio.tipos_domicilio__domicilio && ` (${domicilio.tipos_domicilio__domicilio})`} 
+                                {domicilio.tipos_domicilio__domicilio && domicilio.tipos_domicilio__domicilio !== "PRINCIPAL" && ` (${domicilio.tipos_domicilio__domicilio})`}
                             </div>
                         </div>
                     ))}
