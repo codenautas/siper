@@ -55,8 +55,6 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'jerarquias'         , fields:['jerarquia']       },
             {references: 'motivos_egreso'     , fields:['motivo_egreso']   },
             {references: 'tipos_doc'          , fields:['tipo_doc']        },
-        ],
-        softForeignKeys: [
             {references: 'situacion_revista', fields:[s_revista.name] },
         ],
         constraints: [
