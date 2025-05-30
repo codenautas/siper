@@ -1151,6 +1151,13 @@ function renderRol( infoUsuario: InfoUsuario ) {
 }
 
 function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, infoUsuario: InfoUsuario }) {
+    
+    const getManualHref = (rol: string) => {
+        const userRol = rol.trim();
+        if (userRol === "basico") return "./docs/manual-basico.pdf";
+        if (userRol === "registra") return "./docs/manual-registra.pdf";
+        return "./docs/manual.pdf";
+    }
     useEffect(() => {
         document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
         if (props.infoUsuario.usuario) {
@@ -1171,7 +1178,7 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, i
                 </Typography>
                 <IconButton color="inherit">
                     <a
-                        href={props.infoUsuario.rol.trim() === "basico" ? "./docs/manual-basico.pdf" : "./docs/manual.pdf"}
+                        href={getManualHref(props.infoUsuario.rol)}
                         download="Manual para el usuario SIPER.pdf"
                         className="link-manual"
                     >
