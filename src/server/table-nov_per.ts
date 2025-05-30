@@ -47,7 +47,7 @@ export const sqlNovPer= (params:{idper?:string, annio?:number})=> `
             ${params.idper? ` and p.idper = ${sqlTools.quoteLiteral(params.idper)} `:''}
 `;
 
-export function nov_per(_context: TableContext): TableDefinition {
+export function nov_per(_context: TableContext): TableDefinition { 
     return {
         name:'nov_per',
         title: 'cantidad de novedades por persona',
@@ -78,7 +78,14 @@ export function nov_per(_context: TableContext): TableDefinition {
             isTable:false,
             from:`(select *
                    from (${sqlNovPer({})}) x
-                   where con_dato
+                   INNER JOIN usuarios USING (idper) 
+                   where con_dato and 
+                   sector_pertenece(
+                        x.sector,
+                        (SELECT sector 
+                        FROM personas 
+                        INNER JOIN usuarios USING (idper) 
+                        WHERE usuario = get_app_user()))
             )`
         },
         hiddenColumns: ['esquema', 'detalle'],
