@@ -277,11 +277,13 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         puede_cargar_todo,
                         roles.*,
                         (puede_cargar_propio and u.activo is true) as cargable,
-                        fecha_actual
+                        fecha_actual,
+                        s.nivel as sector_nivel
                     from usuarios u 
                         inner join parametros on true
                         inner join roles using(rol)
                         left join personas p using (idper)
+                        left join sectores s using (sector)
                     where usuario = $1`,
                 [context.username]
             ).fetchUniqueRow();

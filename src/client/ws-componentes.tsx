@@ -368,7 +368,7 @@ function SliderNivel(props:{verNivelSectorHasta:number, onChangeLevel:(level:num
     return (
         <Box sx={{ width: 150 }}>
             <Slider
-               defaultValue={2}
+               defaultValue={props.verNivelSectorHasta}
                getAriaValueText={valuetext}
                step={1}
                max={5}
@@ -388,7 +388,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     const [abanicoPersonas, setAbanicoPersonas] = useState<Partial<Record<string, PersonasNovedadActualResult[]>>>({});
     const [filtro, setFiltro] = useState("");
     const [expandido, setExpandido] = useState<Record<string, boolean>>({})
-    const [verNivelSectorHasta, setVerNivelSectorHasta] = useState(2);
+    const [verNivelSectorHasta, setVerNivelSectorHasta] = useState(Math.max(2,Math.min(5,infoUsuario.sector_nivel + 1 || 2)));
     const APELLIDOYNOMBRES = 'apellidoynombres' as keyof PersonasNovedadActualResult
     const attributosBuscables:(keyof PersonasNovedadActualResult)[] = ['apellido', 'nombres', 'cuil', 'ficha', 'idmeta4', 'idper', 'nombre_sector', APELLIDOYNOMBRES]
     useEffect(function(){

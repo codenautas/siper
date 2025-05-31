@@ -353,10 +353,11 @@ export const historico_persona = {
 export type HistoricoResult = DefinedType<typeof historico_persona.result>
 
 export const info_usuario = {
-    procedure: 'info_usaurio',
+    procedure: 'info_usuario',
     result: is.object({
         fecha_actual: is.Date,
         sector: is.string, 
+        sector_nivel: is.number,
         idper: is.string, 
         apellido: is.string, 
         nombres: is.string, 
