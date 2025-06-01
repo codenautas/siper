@@ -71,8 +71,6 @@ export function parte_diario(_context: TableContext): TableDefinition {
                     hora_texto(fichada_entrada) || ' - ' || hora_texto(fichada_salida) as fichada,
                     hora_texto(horario_entrada) || ' - ' || hora_texto(horario_Salida) as horario
                 from (${sqlParteDiario}) x
-                    inner join usuarios u on u.usuario = get_app_user()
-                    inner join roles using (rol)
             )`,
         },
         sortColumns:[{column:'personas__apellido'}, {column:'personas__nombres'}],

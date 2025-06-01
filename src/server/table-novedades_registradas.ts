@@ -16,40 +16,39 @@ export const idr: FieldDefinition = {name: 'idr', typeName: 'bigint', descriptio
         delete?:{using?:string}
     }
 */
-export function politicaNovedadesComun(alias:string){
-    return `( 
-                SELECT puede_cargar_todo FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user()
-            ) OR (
-                SELECT puede_cargar_propio FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user() and idper = ${alias}.idper
-            ) OR (
-                SELECT sector_pertenece(
-                    (SELECT sector FROM personas WHERE idper = ${alias}.idper),
-                    (SELECT sector 
-                        FROM personas INNER JOIN usuarios USING (idper) 
-                        WHERE usuario = get_app_user() AND idper <> ${alias}.idper)
-                )
-                AND (
-                    SELECT puede_cargar_dependientes FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user()
+export function politicaNovedadesComun(alias:string, cargarOver:'cargar'|'ver'){
+    const tieneSector:boolean = alias == 'personas';
+    return `( -- PUEDE TODO:
+                SELECT puede_${cargarOver}_todo FROM roles WHERE rol = get_app_user('rol')
+            ) OR ( -- PUEDE LO PROPIO:
+                SELECT puede_${cargarOver}_propio FROM roles WHERE rol = get_app_user('rol') AND idper = ${alias}.idper
+            ) OR ( -- PUEDE LO DEPENDIENTE:
+                (
+                    SELECT puede_${cargarOver}_dependientes FROM roles WHERE rol = get_app_user('rol')
+                ) AND (
+                    SELECT sector_pertenece(
+                        ${tieneSector?`sector`:`(SELECT sector FROM personas WHERE idper = ${alias}.idper)`},
+                        get_app_user('sector')
+                    )
                 )
             )
         `;
 }
 
 export function politicaNovedades(alias:string, nombreFecha:string){
-    var politicaModficacion = `(${politicaNovedadesComun(alias)})
+    var politicaModficacion = `(${politicaNovedadesComun(alias, 'cargar')})
         AND (
             (${nombreFecha} 
                 >= (SELECT fecha_actual FROM parametros WHERE unico_registro)
-            )
-            OR (
-                SELECT puede_cargar_todo FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user()
+            ) OR (
+                SELECT puede_corregir_el_pasado FROM roles WHERE rol = get_app_user('rol')
             )
         )
     `
-    var politicaVisibilidad = `${politicaNovedadesComun(alias)}
-        OR (
-            SELECT true FROM usuarios INNER JOIN roles USING (rol) WHERE usuario = get_app_user() and idper = ${alias}.idper
-        )`
+    var politicaVisibilidad = politicaNovedadesComun(alias, 'ver');
+    if (alias == 'personas') {
+        politicaVisibilidad = `(case when get_app_user('mode') = 'login' then true else ${politicaVisibilidad} end)`;
+    }
     return {
         select: {
             using: politicaVisibilidad

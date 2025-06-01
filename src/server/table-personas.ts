@@ -4,6 +4,8 @@ import {FieldDefinition, TableDefinition, TableContext, soloDigitosCons, soloDig
 
 import { s_revista  } from "./table-situacion_revista";
 
+import { politicaNovedades } from "./table-novedades_registradas";
+
 export const idper: FieldDefinition = {
     name: 'idper', 
     typeName: 'text', 
@@ -12,7 +14,7 @@ export const idper: FieldDefinition = {
 }
 
 export function personas(context: TableContext): TableDefinition {
-    var {es, user, be:{db:{quoteLiteral}}} = context;
+    var {es} = context;
     return {
         name: 'personas',
         elementName: 'persona',
@@ -80,10 +82,11 @@ export function personas(context: TableContext): TableDefinition {
             {table:'per_telefonos' , fields:[idper.name], abr:'T'}
         ],
         sql: {
+            policies: politicaNovedades('personas', 'registra_novedades_desde'),
             fields: {
                 cuil_valido:{ expr:`validar_cuit(cuil)` },
             },
-            where: es.rrhh ? 'true' : es.registra ? `personas.activo AND sector_pertenece(personas.sector, ${quoteLiteral(user.sector)})` : `personas.idper = ${quoteLiteral(user.idper)}`
+            // where: es.rrhh ? 'true' : es.registra ? `personas.activo AND sector_pertenece(personas.sector, ${quoteLiteral(user.sector)})` : `personas.idper = ${quoteLiteral(user.idper)}`
         },
         hiddenColumns: ['cuil_valido'],
         sortColumns: [{column: 'activo', order: -1}, {column: 'idper', order: 1}],
