@@ -21,7 +21,7 @@ export function politicaNovedadesComun(alias:string, cargarOver:'cargar'|'ver'){
     return `( -- PUEDE TODO:
                 SELECT puede_${cargarOver}_todo FROM roles WHERE rol = get_app_user('rol')
             ) OR ( -- PUEDE LO PROPIO:
-                SELECT puede_${cargarOver}_propio FROM roles WHERE rol = get_app_user('rol') AND idper = ${alias}.idper
+                SELECT puede_${cargarOver}_propio FROM roles WHERE rol = get_app_user('rol') AND ${alias}.idper = get_app_user('idper')
             ) OR ( -- PUEDE LO DEPENDIENTE:
                 (
                     SELECT puede_${cargarOver}_dependientes FROM roles WHERE rol = get_app_user('rol')
@@ -36,15 +36,15 @@ export function politicaNovedadesComun(alias:string, cargarOver:'cargar'|'ver'){
 }
 
 export function politicaNovedades(alias:string, nombreFecha:string){
-    var politicaModficacion = `(${politicaNovedadesComun(alias, 'cargar')})
-        AND (
+    var politicaModficacion = `(${politicaNovedadesComun(alias, 'cargar')})`
+    + (alias == 'personas' ? '' : ` AND (
             (${nombreFecha} 
                 >= (SELECT fecha_actual FROM parametros WHERE unico_registro)
             ) OR (
                 SELECT puede_corregir_el_pasado FROM roles WHERE rol = get_app_user('rol')
             )
         )
-    `
+    `)
     var politicaVisibilidad = politicaNovedadesComun(alias, 'ver');
     if (alias == 'personas') {
         politicaVisibilidad = `(case when get_app_user('mode') = 'login' then true else ${politicaVisibilidad} end)`;

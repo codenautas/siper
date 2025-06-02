@@ -298,12 +298,12 @@ describe("connected", function(){
                 'update'
             )
             haciendo = 'registrando los movimientos'
-            await rrhhSession.saveRecord(
+            await rrhhAdminSession.saveRecord(
                 ctts.novedades_registradas, 
                 {desde:date.iso('2000-01-10'), hasta:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
                 'new'
             );
-            await rrhhSession.saveRecord(
+            await rrhhAdminSession.saveRecord(
                 ctts.novedades_registradas, 
                 {desde:date.iso('2000-01-10'), hasta:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
                 'new'
@@ -335,7 +335,7 @@ describe("connected", function(){
                 // TODO: volver a calcular el informe de coincidencias
                 // var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 // discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:5, dias_coincidentes:0})
-                await rrhhSession.saveRecord(ctts.novedades_registradas, novedadRegistradaPorCargar, 'new');
+                await rrhhAdminSession.saveRecord(ctts.novedades_registradas, novedadRegistradaPorCargar, 'new');
                 await rrhhSession.tableDataTest('novedades_vigentes', [
                     {fecha:date.iso('2000-01-01'), cod_nov:null          , idper, trabajable: false},
                     {fecha:date.iso('2000-01-02'), cod_nov:null          , idper, trabajable: false},
@@ -424,7 +424,7 @@ describe("connected", function(){
         it("cargo un día de trámite", async function(){
             fallaEnLaQueQuieroOmitirElBorrado = true;
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
-                await rrhhSession.saveRecord(
+                await rrhhAdminSession.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper},
                     'new'
@@ -450,19 +450,18 @@ describe("connected", function(){
         })
         it("intento de cargar novedades en el pasado", async function(){
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
-                // TODO ESPERAR EL ERROR
-                //await expectError( async () => {
+                await expectError( async () => {
                     await rrhhSession.saveRecord(
                         ctts.novedades_registradas, 
                         {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper},
                         'new'
                     );
-                //}, ctts.ERROR_NO_SE_PUEDE_CARGAR_EN_EL_PASADO);
+                }, ctts.insufficient_privilege);
             })
         })
         it("intento ver novedades de otra persona", async function(){
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
-                await rrhhSession.saveRecord(
+                await rrhhAdminSession.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-01-03'), hasta:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, idper},
                     'new'
@@ -478,7 +477,7 @@ describe("connected", function(){
         it("quito un feriado y veo que hay más novedades", async function(){
             await enDosNuevasPersonasConFeriado10EneroFeriadoy11No(this.test?.title!, '10001', async (persona1, persona2, cod_nov) => {
                 /* Verifico que ese día tenga 2 novedades cargadas */
-                await rrhhSession.tableDataTest('novedades_vigentes', [
+                await rrhhAdminSession.tableDataTest('novedades_vigentes', [
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
