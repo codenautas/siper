@@ -307,13 +307,24 @@ function SearchBox(props: {
     permisos?:boolean|null
 }){
     var [textToSearch, setTextToSearch] = useState("");
+    const inputRef = React.useRef<HTMLInputElement>(null);
+
     return <Paper className="search-box">
-        <ICON.Search/>
+        <IconButton
+            onClick={() => {
+                inputRef.current?.focus();
+            }}
+            className="siper-button"
+            boton-negro="si"
+        >
+            <ICON.Search/>
+        </IconButton>
         <InputBase
+            inputRef={inputRef}
             value = {textToSearch} 
             onChange = {(event)=>{ var newValue = event.target.value; props.onChange(newValue); setTextToSearch(newValue)}}
         />
-        <Button onClick={_=>{props.onChange(""); setTextToSearch("")}} className="siper-button" boton-negro="si"><ICON.BackspaceOutlined/></Button>
+        <Button onClick={_=>{props.onChange(""); setTextToSearch("")}} className="siper-button" boton-negro="si" es-visible={textToSearch? "si" : "no"}><ICON.BackspaceOutlined/></Button>
         {props.todas != null ? <>
             {props.permisos && 
             <label>
@@ -1174,7 +1185,7 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, i
                     location.hash="";
                 }}><ICON.Menu/></IconButton>
                 <Typography flexGrow={2}>
-                    SiPer - Principal - <small>(DEMO)</small>
+                    SiPer - Principal
                 </Typography>
                 <IconButton color="inherit">
                     <a
