@@ -69,6 +69,7 @@ install:
       - ../install/avance_de_dia_proc.sql
       - ../install/parametros_trg.sql
       - ../install/poblar_pernovcant.sql
+      - ../install/actualizar_cod_novedades_inicializar.sql
 logo: 
   path: client/img
 `;

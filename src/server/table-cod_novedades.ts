@@ -31,6 +31,8 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {name: 'registra'    , typeName: 'boolean', description:'novedades que pueden ser registradas por los registras'},
             {name: 'prioritario' , typeName: 'boolean', description:'aparecen en la lista reducida'},
             {name: 'comun'       , typeName: 'boolean', description:'aparecen en la lista del usuario básico'},
+            {name: 'inicializar' , typeName: 'boolean', description:'insertar en per_nov_cant al agregar persona'},
+            {name: 'cantidad'    , typeName: 'integer', description:'table_per_nov_cant cantidad'},
         ],
         primaryKey:[cod_nov.name],
         constraints:[
