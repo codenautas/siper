@@ -54,6 +54,14 @@ export function soloMayusculas(fieldName: string):Constraint{
     }
 }
 
+export function sinEspaciosMail(fieldName: string):Constraint{
+    return {
+        constraintType:'check', 
+        consName:`Sin espacios ni saltos en ${fieldName}`, 
+        expr: `${fieldName} similar to '[^[:space:]]+@[^[:space:]]+'`
+    }
+}
+
 export type Constructor<T> = new(...args: any[]) => T;
 
 export const idImportacion:FieldDefinition = {name: 'id_importacion', typeName: 'bigint', nullable:true, editable:false, // @ts-ignore */ 
