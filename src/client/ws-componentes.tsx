@@ -279,7 +279,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 // @ts-ignore
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean};
 type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string}
-type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__domicilio:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, domicilio:string, orden:number}
+type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__descripcion:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, nro_item:string, orden:number}
 type ProvisorioPersonaTelefono = {idper: string, tipo_telefono: string, tipos_telefono__descripcion?: string, telefono: string, observaciones?: string, nro_item?: number, orden?: number}
 type ProvisorioSectores = {pactivas: number, activo: boolean,sector:string, nombre_sector:string, pertenece_a:string, nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, hijos:ProvisorioSectoresAumentados[], profundidad:number}
@@ -742,7 +742,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 fixedFields: [{fieldName:'idper', value:idper}],
                 paramfun: {}
             }).then(function(domicilios){
-                domicilios.sort(compareForOrder([{column:'idper'},{column:'orden'},{column:'domicilio'}])),
+                domicilios.sort(compareForOrder([{column:'idper'},{column:'orden'},{column:'nro_item'}])),
                 setDomicilios(domicilios);
                 console.log(domicilios)
             }).catch(logError);
@@ -853,7 +853,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
             <div className="legajo-seccion">
                 <div className="legajo-grupo">
                     {domicilios.map(domicilio => (
-                        <div key={domicilio.domicilio} className="legajo-campo legajo-campo-largo">
+                        <div key={domicilio.nro_item} className="legajo-campo legajo-campo-largo">
                             <div className="legajo-valor">{'  '} - 
                                 {domicilio.calles__nombre_calle ? ` ${domicilio.calles__nombre_calle}` : ` ${domicilio.nombre_calle}`} 
                                 {domicilio.altura && ` ${domicilio.altura}`}
@@ -862,7 +862,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                                 {domicilio.codigo_postal && ` CP ${domicilio.codigo_postal}`}
                                 {domicilio.barrios__nombre_barrio && `, (${domicilio.barrios__nombre_barrio})`} 
                                 {domicilio.provincias__nombre_provincia && `, (${domicilio.provincias__nombre_provincia})`} 
-                                {domicilio.tipos_domicilio__domicilio && domicilio.tipos_domicilio__domicilio !== "PRINCIPAL" && ` (${domicilio.tipos_domicilio__domicilio})`}
+                                {domicilio.tipos_domicilio__descripcion && domicilio.tipos_domicilio__descripcion !== "PRINCIPAL" && ` (${domicilio.tipos_domicilio__descripcion})`}
                             </div>
                         </div>
                     ))}
