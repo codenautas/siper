@@ -851,7 +851,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 </div>
             </div>
             <div className="legajo-seccion">
-                <div className="legajo-grupo">
+                <div className="legajo-grupo legajo-grupo-domicilios">
                     {domicilios.map(domicilio => (
                         <div key={domicilio.nro_item} className="legajo-campo legajo-campo-largo">
                             <div className="legajo-valor">{'  '} - 
@@ -877,7 +877,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                         <div className="legajo-etiqueta">Teléfonos:</div>
                     </div>
                 </div>
-                <div className="legajo-grupo">
+                <div className="legajo-grupo legajo-grupo-telefonos">
                     {telefonos.map(telefono => (
                         <div key={telefono.nro_item} className="legajo-campo legajo-campo-largo">
                             <div className="legajo-valor">
