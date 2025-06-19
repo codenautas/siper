@@ -96,6 +96,11 @@ export function inconsistencias(_context: TableContext): TableDefinition{
                        FROM personas
                        WHERE activo AND situacion_revista IS NULL
                      ) q
+                     UNION
+                     SELECT v.idper, NULL::INTEGER as annio, 'NOVPOSTEGR' pauta, v.cod_nov
+                       FROM novedades_vigentes v
+                       JOIN personas p ON v.idper = p.idper
+                       WHERE p.fecha_egreso IS NOT NULL AND v.fecha > p.fecha_egreso 
             )`
         }
     };
