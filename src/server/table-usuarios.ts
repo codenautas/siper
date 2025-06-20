@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition} from "./types-principal";
 
 import {idper} from "./table-personas"
 import {rol} from "./table-roles"
