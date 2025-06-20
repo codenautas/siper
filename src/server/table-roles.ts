@@ -16,7 +16,7 @@ export function roles(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             rol,
-            {name: 'descripcion'              , typeName: 'text', isName:true},
+            {name: 'descripcion'              , typeName: 'text'   },
             {name: 'puede_ver_novedades'      , typeName: 'boolean'},
             {name: 'puede_cargar_todo'        , typeName: 'boolean'},
             {name: 'puede_ver_todo'           , typeName: 'boolean'},

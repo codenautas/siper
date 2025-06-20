@@ -857,11 +857,11 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                             <div className="legajo-valor">{'  '} - 
                                 {domicilio.calles__nombre_calle ? ` ${domicilio.calles__nombre_calle}` : ` ${domicilio.nombre_calle}`} 
                                 {domicilio.altura && ` ${domicilio.altura}`}
-                                {domicilio.piso && ` Piso ${domicilio.piso}`}
-                                {domicilio.depto && ` Depto ${domicilio.depto}`}
-                                {domicilio.codigo_postal && ` CP ${domicilio.codigo_postal}`}
-                                {domicilio.barrios__nombre_barrio && `, (${domicilio.barrios__nombre_barrio})`} 
-                                {domicilio.provincias__nombre_provincia && `, (${domicilio.provincias__nombre_provincia})`} 
+                                {domicilio.piso && ` piso ${domicilio.piso}`}
+                                {domicilio.depto && ` pepto ${domicilio.depto}`}
+                                {domicilio.codigo_postal && ` (${domicilio.codigo_postal})`}
+                                {domicilio.barrios__nombre_barrio && `, ${domicilio.barrios__nombre_barrio}`} 
+                                {domicilio.provincias__nombre_provincia && ` \u2014 ${domicilio.provincias__nombre_provincia}`} 
                                 {domicilio.tipos_domicilio__descripcion && domicilio.tipos_domicilio__descripcion !== "PRINCIPAL" && ` (${domicilio.tipos_domicilio__descripcion})`}
                             </div>
                         </div>
