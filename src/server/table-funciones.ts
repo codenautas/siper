@@ -25,7 +25,7 @@ export function funciones(context:TableContext):TableDefinition{
             //soloCodigo(funcion.name),
         ],
         detailTables:[
-            {table:'personas'       , fields:[funcion.name], abr:'P'},
+            {table:'historial_contrataciones'       , fields:[funcion.name], abr:'H'},
         ]
     };
 }

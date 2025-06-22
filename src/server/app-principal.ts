@@ -291,8 +291,7 @@ export class AppSiper extends AppBackend{
             parametros           ,
             horarios             ,
             fichadas             ,
-            historial_contrataciones,
-            capa_modalidades       ,
+            capa_modalidades     ,
             capacitaciones       ,
             per_capa             ,
             parte_diario         ,
@@ -318,7 +317,8 @@ export class AppSiper extends AppBackend{
             expedientes          ,
             funciones            ,
             nivel_grado          ,
-            tareas
+            tareas               ,
+            historial_contrataciones,
         }
     }       
 }

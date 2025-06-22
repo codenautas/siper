@@ -22,6 +22,8 @@ export function tramos(context:TableContext):TableDefinition{
         constraints: [
         ],
         detailTables: [
+            {table:'personas'                       , fields:[tramo.name], abr:'P'},
+            {table:'historial_contrataciones'       , fields:[tramo.name], abr:'H'},
         ]
     }
 };

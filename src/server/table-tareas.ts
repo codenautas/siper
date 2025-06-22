@@ -32,10 +32,9 @@ export function tareas(context:TableContext):TableDefinition{
         ],
         primaryKey:[tarea.name],
         constraints:[
-            //soloCodigo(funcion.name),
         ],
         detailTables:[
-            {table:'personas'       , fields:[tarea.name], abr:'P'},
+            {table:'historial_contrataciones'       , fields:[tarea.name], abr:'H'},
         ]
     };
 }

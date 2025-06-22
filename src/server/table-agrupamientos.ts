@@ -22,6 +22,8 @@ export function agrupamientos(context:TableContext):TableDefinition{
         constraints: [
         ],
         detailTables: [
+            {table:'personas'                       , fields:[agrupamiento.name], abr:'P'},
+            {table:'historial_contrataciones'       , fields:[agrupamiento.name], abr:'H'},
         ]
     }
 };

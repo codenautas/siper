@@ -3,6 +3,7 @@
 import {FieldDefinition, TableDefinition, TableContext, soloDigitosCons, soloDigitosPostConfig, soloCodigo, soloMayusculas} from "./types-principal";
 
 import { s_revista  } from "./table-situacion_revista";
+import { agrupamiento  } from "./table-agrupamientos";
 
 import { politicaNovedades } from "./table-novedades_registradas";
 
@@ -41,7 +42,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'nacionalidad'            , typeName: 'text', title: 'nacionalidad'            },
             {name: 'jerarquia'               , typeName: 'text', title: 'jerarquía'               },
             {name: 'cargo_atgc'              , typeName: 'text', title: 'cargo/ATGC'              },
-            {name: 'agrupamiento'            , typeName: 'text', title: 'agrupamiento'            },
+            agrupamiento,
             {name: 'tramo'                   , typeName: 'text', title: 'tramo'                   },
             {name: 'grado'                   , typeName: 'text', title: 'grado'                   },
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
@@ -58,6 +59,7 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'motivos_egreso'     , fields:['motivo_egreso']   },
             {references: 'tipos_doc'          , fields:['tipo_doc']        },
             {references: 'situacion_revista', fields:[s_revista.name] },
+            {references: 'agrupamientos'    , fields:[agrupamiento.name] },
         ],
         constraints: [
             soloCodigo(idper.name),

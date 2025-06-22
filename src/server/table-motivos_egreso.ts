@@ -24,6 +24,8 @@ export function motivos_egreso(context:TableContext):TableDefinition{
             soloCodigo(motivo_egreso.name),
         ],
         detailTables: [
+            {table:'personas'                       , fields:[motivo_egreso.name], abr:'P'},
+            {table:'historial_contrataciones'       , fields:[motivo_egreso.name], abr:'H'},
         ]
     }
 };
