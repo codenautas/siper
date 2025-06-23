@@ -869,7 +869,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                                 {domicilio.calles__nombre_calle ? ` ${domicilio.calles__nombre_calle}` : ` ${domicilio.nombre_calle}`} 
                                 {domicilio.altura && ` ${domicilio.altura}`}
                                 {domicilio.piso && ` piso ${domicilio.piso}`}
-                                {domicilio.depto && ` pepto ${domicilio.depto}`}
+                                {domicilio.depto && ` depto ${domicilio.depto}`}
                                 {domicilio.codigo_postal && ` (${domicilio.codigo_postal})`}
                                 {domicilio.barrios__nombre_barrio && `, ${domicilio.barrios__nombre_barrio}`} 
                                 {domicilio.provincias__nombre_provincia && ` \u2014 ${domicilio.provincias__nombre_provincia}`} 
