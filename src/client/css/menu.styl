@@ -243,6 +243,10 @@ span.box-info
   gap 0.5em 1em
   margin-bottom 0.5em
 
+.legajo-grupo-domicilios,
+.legajo-grupo-telefonos
+  flex-direction column
+
 .legajo-campo
   display flex
   flex-direction row
@@ -386,6 +390,9 @@ button.boton-confirmar-registro-novedades
 .siper-button[boton-negro = si]
   color #000
 
+.siper-button[es-visible = no]
+  visibility hidden
+
 div.novedades-renglon
   display flex
   flex-direction row
@@ -487,4 +494,8 @@ button[es-este-mes]
     display none
 
 [bold-name=si]
+  font-weight bold
+
+[tiene-problemas=si]
+  color #f00
   font-weight bold

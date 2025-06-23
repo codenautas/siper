@@ -277,9 +277,10 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 }
 
 // @ts-ignore
-type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean};
+type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean, 
+    fecha_ingreso?:RealDate, fecha_egreso?:RealDate /*, activo?:boolean, fecha_nacimiento?:RealDate, nombre_sector?:string, jerarquia?:string, jerarquias__descripcion?:string, cargo_atgc?:string, agrupamiento?:string, tramo?:string, grado?:string, domicilio?:string, nacionalidad?:string, sectores__nombre_sector?:string*/};
 type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string}
-type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__domicilio:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, domicilio:string, orden:number}
+type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__descripcion:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, nro_item:string, orden:number}
 type ProvisorioPersonaTelefono = {idper: string, tipo_telefono: string, tipos_telefono__descripcion?: string, telefono: string, observaciones?: string, nro_item?: number, orden?: number}
 type ProvisorioSectores = {pactivas: number, activo: boolean,sector:string, nombre_sector:string, pertenece_a:string, nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, hijos:ProvisorioSectoresAumentados[], profundidad:number}
@@ -307,13 +308,24 @@ function SearchBox(props: {
     permisos?:boolean|null
 }){
     var [textToSearch, setTextToSearch] = useState("");
+    const inputRef = React.useRef<HTMLInputElement>(null);
+
     return <Paper className="search-box">
-        <ICON.Search/>
+        <IconButton
+            onClick={() => {
+                inputRef.current?.focus();
+            }}
+            className="siper-button"
+            boton-negro="si"
+        >
+            <ICON.Search/>
+        </IconButton>
         <InputBase
+            inputRef={inputRef}
             value = {textToSearch} 
             onChange = {(event)=>{ var newValue = event.target.value; props.onChange(newValue); setTextToSearch(newValue)}}
         />
-        <Button onClick={_=>{props.onChange(""); setTextToSearch("")}} className="siper-button" boton-negro="si"><ICON.BackspaceOutlined/></Button>
+        <Button onClick={_=>{props.onChange(""); setTextToSearch("")}} className="siper-button" boton-negro="si" es-visible={textToSearch? "si" : "no"}><ICON.BackspaceOutlined/></Button>
         {props.todas != null ? <>
             {props.permisos && 
             <label>
@@ -469,12 +481,11 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     </Componente>
 }
 
-function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number, ultimaNovedad?:number, infoUsuario:InfoUsuario, 
+function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number, ultimaNovedad?:number, persona:ProvisorioPersonas
     fechaActual:RealDate,
     onBorrado:()=>void}
 ){
-    const {idper, conn, ultimaNovedad, infoUsuario, fechaActual, annio} = props;
-    console.log(infoUsuario)
+    const {idper, conn, ultimaNovedad, fechaActual, annio, persona} = props;
     const [novedades, setNovedades] = useState<ProvisorioNovedadesRegistradas[]>([]);
     const [quiereBorrar, setQuiereBorrar] = useState<ProvisorioNovedadesRegistradas|null>(null);
     const [eliminando, setEliminando] = useState(false);
@@ -506,15 +517,26 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
         {novedades.map(n => {
             const diasSeleccionados = Object.entries(n)
                 .filter(([key, value]) => key.startsWith("dds") && value === true)
-                .map(([key]) => diasSemana[key]); 
+                .map(([key]) => diasSemana[key]);
+            const problemas = [
+                persona.fecha_ingreso && n.desde < persona.fecha_ingreso ? "Fecha desde anterior a la fecha de ingreso" : null,
+                persona.fecha_egreso && n.hasta > persona.fecha_egreso ? "Fecha hasta posterior a la fecha de egreso" : null,
+            ].filter(Boolean);
             return (
-            <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar?' por-borrar':''}`}>
-                <div className="fechas">{n.desde.toDmy().replace(/\/\d\d\d\d$/,'') + (n.desde == n.hasta ? '' : ` - ${n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')} (${n.dias_hoc})`)}</div>
-                <div className="cod_nov">{n.cod_nov}</div>
-                <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' } 
+            <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar?' por-borrar':''}`} 
+                tiene-problemas={problemas.length ? 'si' : 'no'} title={problemas.join('. ')}
+            >
+                <span className="fechas">
+                    <span>{n.desde.toDmy().replace(/\/\d\d\d\d$/,'')}</span>
+                    {n.desde.sameValue(n.hasta) ? null : <span> - </span>}
+                    {n.desde.sameValue(n.hasta) ? null : <span>{n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')}</span>}
+                </span>
+                <span className="cant">{n.dias_hoc.substring(0,n.dias_hoc.length-1)}<sub>{n.dias_hoc.substring(n.dias_hoc.length-1)}</sub></span>
+                <span className="box-id cod_nov">{n.cod_nov}</span>
+                <span className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' } 
                     {diasSeleccionados.length > 0 ? ' / ' + diasSeleccionados.join(', ') : ''}
-                </div>
-                <div className="borrar">{n.desde > fechaActual && es.rrhh ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
+                </span>
+                <span className="borrar">{n.desde > fechaActual && es.rrhh ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</span>
             </Box>)
         })}
         <Dialog open={quiereBorrar != null}>
@@ -731,7 +753,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 fixedFields: [{fieldName:'idper', value:idper}],
                 paramfun: {}
             }).then(function(domicilios){
-                domicilios.sort(compareForOrder([{column:'idper'},{column:'orden'},{column:'domicilio'}])),
+                domicilios.sort(compareForOrder([{column:'idper'},{column:'orden'},{column:'nro_item'}])),
                 setDomicilios(domicilios);
                 console.log(domicilios)
             }).catch(logError);
@@ -840,18 +862,18 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 </div>
             </div>
             <div className="legajo-seccion">
-                <div className="legajo-grupo">
+                <div className="legajo-grupo legajo-grupo-domicilios">
                     {domicilios.map(domicilio => (
-                        <div key={domicilio.domicilio} className="legajo-campo legajo-campo-largo">
+                        <div key={domicilio.nro_item} className="legajo-campo legajo-campo-largo">
                             <div className="legajo-valor">{'  '} - 
                                 {domicilio.calles__nombre_calle ? ` ${domicilio.calles__nombre_calle}` : ` ${domicilio.nombre_calle}`} 
                                 {domicilio.altura && ` ${domicilio.altura}`}
-                                {domicilio.piso && ` Piso ${domicilio.piso}`}
-                                {domicilio.depto && ` Depto ${domicilio.depto}`}
-                                {domicilio.codigo_postal && ` CP ${domicilio.codigo_postal}`}
-                                {domicilio.barrios__nombre_barrio && `, (${domicilio.barrios__nombre_barrio})`} 
-                                {domicilio.provincias__nombre_provincia && `, (${domicilio.provincias__nombre_provincia})`} 
-                                {domicilio.tipos_domicilio__domicilio && domicilio.tipos_domicilio__domicilio !== "PRINCIPAL" && ` (${domicilio.tipos_domicilio__domicilio})`}
+                                {domicilio.piso && ` piso ${domicilio.piso}`}
+                                {domicilio.depto && ` depto ${domicilio.depto}`}
+                                {domicilio.codigo_postal && ` (${domicilio.codigo_postal})`}
+                                {domicilio.barrios__nombre_barrio && `, ${domicilio.barrios__nombre_barrio}`} 
+                                {domicilio.provincias__nombre_provincia && ` \u2014 ${domicilio.provincias__nombre_provincia}`} 
+                                {domicilio.tipos_domicilio__descripcion && domicilio.tipos_domicilio__descripcion !== "PRINCIPAL" && ` (${domicilio.tipos_domicilio__descripcion})`}
                             </div>
                         </div>
                     ))}
@@ -866,7 +888,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                         <div className="legajo-etiqueta">Teléfonos:</div>
                     </div>
                 </div>
-                <div className="legajo-grupo">
+                <div className="legajo-grupo legajo-grupo-telefonos">
                     {telefonos.map(telefono => (
                         <div key={telefono.nro_item} className="legajo-campo legajo-campo-largo">
                             <div className="legajo-valor">
@@ -1122,7 +1144,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                 <Box>{guardandoRegistroNovedad || error ?
                     <Typography>{error?.message ?? (guardandoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
-                { es.rrhh && <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>}
+                { es.rrhh && <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} persona={persona} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>}
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
                 </div>
             </Componente>
@@ -1174,7 +1196,7 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, i
                     location.hash="";
                 }}><ICON.Menu/></IconButton>
                 <Typography flexGrow={2}>
-                    SiPer - Principal - <small>(DEMO)</small>
+                    SiPer - Principal
                 </Typography>
                 <IconButton color="inherit">
                     <a

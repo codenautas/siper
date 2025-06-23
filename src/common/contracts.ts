@@ -566,7 +566,7 @@ export const tipos_domicilio = {
     table: 'tipos_domicilio',
     description: is.object({
         tipo_domicilio: is.string,
-        domicilio: is.string,
+        descripcion: is.string,
         orden: is.number
     })
 } satisfies CommonEntityDefinition
@@ -588,7 +588,7 @@ export const per_domicilios = {
     table: 'per_domicilios',
     description: is.object({
         idper:           is.string,
-        domicilio:       is.bigint,
+        nro_item:        is.bigint,
         tipo_domicilio:  is.string,
         provincia:       is.string,
         localidad:       is.string,
