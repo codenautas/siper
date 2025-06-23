@@ -28,8 +28,8 @@ export function grados(context:TableContext):TableDefinition{
         constraints: [
         ],
         detailTables: [
-            {table:'personas'                       , fields:[grado.name], abr:'P'},
-            {table:'historial_contrataciones'       , fields:[grado.name], abr:'H'},
+            {table:'personas'                       , fields:[tramo.name, grado.name], abr:'P'},
+            {table:'historial_contrataciones'       , fields:[tramo.name, grado.name], abr:'H'},
         ]
     }
 };

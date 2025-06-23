@@ -17,7 +17,7 @@ export function tareas(context:TableContext):TableDefinition{
         editable:admin,
         fields:[
             tarea,
-            {name: 'descripcion'         , typeName: 'text'   },
+            {name: 'descripcion'         , typeName: 'text', isName: true  },
             {name: 'horas_semanales'     , typeName: 'integer'},
             {name: 'horas_dia'           , typeName: 'integer'},
             {name: 'minimo_horas_por_dia', typeName: 'integer'},

@@ -17,7 +17,7 @@ export function funciones(context:TableContext):TableDefinition{
         editable:admin,
         fields:[
             funcion,
-            {name: 'descripcion', typeName: 'text'},
+            {name: 'descripcion', typeName: 'text', isName: true  },
             {name: 'cod_2024'   , typeName: 'integer'},
         ],
         primaryKey:[funcion.name],

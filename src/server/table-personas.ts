@@ -60,6 +60,7 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'tipos_doc'          , fields:['tipo_doc']        },
             {references: 'situacion_revista', fields:[s_revista.name] },
             {references: 'agrupamientos'    , fields:[agrupamiento.name] },
+            {references: 'grados'           , fields:['tramo','grado']     },
         ],
         constraints: [
             soloCodigo(idper.name),

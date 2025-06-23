@@ -16,7 +16,7 @@ export function agrupamientos(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             agrupamiento,
-            {name: 'descripcion',typeName:'text' },
+            {name: 'descripcion',typeName:'text', isName: true},
         ],
         primaryKey: ['agrupamiento'],
         constraints: [
