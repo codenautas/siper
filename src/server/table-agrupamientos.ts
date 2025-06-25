@@ -16,12 +16,14 @@ export function agrupamientos(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             agrupamiento,
-            {name: 'descripcion',typeName:'text' },
+            {name: 'descripcion',typeName:'text', isName: true},
         ],
         primaryKey: ['agrupamiento'],
         constraints: [
         ],
         detailTables: [
+            {table:'personas'                       , fields:[agrupamiento.name], abr:'P'},
+            {table:'historial_contrataciones'       , fields:[agrupamiento.name], abr:'H'},
         ]
     }
 };

@@ -22,6 +22,8 @@ export function categorias(context:TableContext):TableDefinition{
         constraints: [
         ],
         detailTables: [
+            {table:'personas'                       , fields:[categoria.name], abr:'P'},
+            {table:'historial_contrataciones'       , fields:[categoria.name], abr:'H'},
         ]
     }
 };

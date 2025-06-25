@@ -491,6 +491,57 @@ export const situacion_revista = {
 
 export type situacion_revista = DefinedType<typeof situacion_revista.description>
 
+export const expedientes = {
+    table : 'expedientes',
+    description : is.object({
+        expediente: is.string,
+        cod_2024: is.number
+    })
+}
+
+export type expedientes = DefinedType<typeof expedientes.description>
+
+export const funciones = {
+    table : 'funciones',
+    description : is.object({
+        funcion: is.string,
+        descripcion: is.string,
+        cod_2024: is.number
+    })
+}
+
+export type funciones = DefinedType<typeof funciones.description>
+
+export const nivel_grado = {
+    table : 'nivel_grado',
+    description : is.object({
+        nivel_grado: is.string,
+        cod_2024: is.number
+    })
+}
+
+export type nivel_grado = DefinedType<typeof nivel_grado.description>
+
+export const tareas = {
+    table : 'tareas',
+    description : is.object({
+        tarea: is.string,
+        horas_semanales: is.number,
+        horas_dia: is.number,
+        minimo_horas_por_dia: is.number,
+        maximo_horas_por_dia: is.number,
+        nocturno: is.boolean,
+        fin_semana: is.boolean,
+        guardia: is.boolean,
+        hora_entrada_desde: is.string,
+        hora_salida_hasta: is.string,
+        horario_flexible: is.boolean,
+        cod_2024: is.number
+    })
+}
+
+export type tareas = DefinedType<typeof tareas.description>
+
 export const motivos_egreso = {
     table : 'motivos_egreso',
     description : is.object({

@@ -16,12 +16,14 @@ export function tramos(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             tramo,
-            {name: 'descripcion',typeName:'text' },
+            {name: 'descripcion',typeName:'text', isName: true},
         ],
         primaryKey: ['tramo'],
         constraints: [
         ],
         detailTables: [
+            {table:'personas'                       , fields:[tramo.name], abr:'P'},
+            {table:'historial_contrataciones'       , fields:[tramo.name], abr:'H'},
         ]
     }
 };

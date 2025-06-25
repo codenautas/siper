@@ -24,6 +24,8 @@ export function jerarquias(context:TableContext):TableDefinition{
             soloCodigo(jerarquia.name),
         ],
         detailTables: [
+            {table:'personas'                       , fields:[jerarquia.name], abr:'P'},
+            {table:'historial_contrataciones'       , fields:[jerarquia.name], abr:'H'},
         ]
     }
 }
