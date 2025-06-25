@@ -17,6 +17,8 @@ export const cod_nov = {
         total: is.nullable.boolean,
         parcial: is.nullable.boolean,
         comun: is.nullable.boolean,
+        inicializar: is.nullable.boolean,
+        cantidad: is.nullable.number
     })
 }
 export type CodNovedades = DefinedType<typeof cod_nov.description>
