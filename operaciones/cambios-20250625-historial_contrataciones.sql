@@ -397,3 +397,88 @@ do $SQL_ENANCE$
 
  end
 $SQL_ENANCE$;
+
+
+ALTER TABLE "historial_contrataciones" ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "bp base" ON "historial_contrataciones" AS PERMISSIVE FOR all TO siper_muleto_admin USING ( true );
+CREATE POLICY "bp select" ON "historial_contrataciones" AS RESTRICTIVE FOR select TO siper_muleto_admin USING ( ( -- PUEDE TODO:
+                SELECT puede_ver_todo FROM roles WHERE rol = get_app_user('rol')
+            ) OR ( -- PUEDE LO PROPIO:
+                SELECT puede_ver_propio FROM roles WHERE rol = get_app_user('rol') AND historial_contrataciones.idper = get_app_user('idper')
+            ) OR ( -- PUEDE LO DEPENDIENTE:
+                (
+                    SELECT puede_ver_dependientes FROM roles WHERE rol = get_app_user('rol')
+                ) AND (
+                    SELECT sector_pertenece(
+                        (SELECT sector FROM personas WHERE idper = historial_contrataciones.idper),
+                        get_app_user('sector')
+                    )
+                )
+            )
+         );
+CREATE POLICY "bp insert" ON "historial_contrataciones" AS RESTRICTIVE FOR insert TO siper_muleto_admin WITH CHECK ( (( -- PUEDE TODO:
+                SELECT puede_cargar_todo FROM roles WHERE rol = get_app_user('rol')
+            ) OR ( -- PUEDE LO PROPIO:
+                SELECT puede_cargar_propio FROM roles WHERE rol = get_app_user('rol') AND historial_contrataciones.idper = get_app_user('idper')
+            ) OR ( -- PUEDE LO DEPENDIENTE:
+                (
+                    SELECT puede_cargar_dependientes FROM roles WHERE rol = get_app_user('rol')
+                ) AND (
+                    SELECT sector_pertenece(
+                        (SELECT sector FROM personas WHERE idper = historial_contrataciones.idper),
+                        get_app_user('sector')
+                    )
+                )
+            )
+        ) AND (
+            (desde 
+                >= (SELECT fecha_actual FROM parametros WHERE unico_registro)
+            ) OR (
+                SELECT puede_corregir_el_pasado FROM roles WHERE rol = get_app_user('rol')
+            )
+        )
+     );
+CREATE POLICY "bp update" ON "historial_contrataciones" AS RESTRICTIVE FOR update TO siper_muleto_admin USING ( (( -- PUEDE TODO:
+                SELECT puede_cargar_todo FROM roles WHERE rol = get_app_user('rol')
+            ) OR ( -- PUEDE LO PROPIO:
+                SELECT puede_cargar_propio FROM roles WHERE rol = get_app_user('rol') AND historial_contrataciones.idper = get_app_user('idper')
+            ) OR ( -- PUEDE LO DEPENDIENTE:
+                (
+                    SELECT puede_cargar_dependientes FROM roles WHERE rol = get_app_user('rol')
+                ) AND (
+                    SELECT sector_pertenece(
+                        (SELECT sector FROM personas WHERE idper = historial_contrataciones.idper),
+                        get_app_user('sector')
+                    )
+                )
+            )
+        ) AND (
+            (desde 
+                >= (SELECT fecha_actual FROM parametros WHERE unico_registro)
+            ) OR (
+                SELECT puede_corregir_el_pasado FROM roles WHERE rol = get_app_user('rol')
+            )
+        )
+     );
+CREATE POLICY "bp delete" ON "historial_contrataciones" AS RESTRICTIVE FOR delete TO siper_muleto_admin USING ( (( -- PUEDE TODO:
+                SELECT puede_cargar_todo FROM roles WHERE rol = get_app_user('rol')
+            ) OR ( -- PUEDE LO PROPIO:
+                SELECT puede_cargar_propio FROM roles WHERE rol = get_app_user('rol') AND historial_contrataciones.idper = get_app_user('idper')
+            ) OR ( -- PUEDE LO DEPENDIENTE:
+                (
+                    SELECT puede_cargar_dependientes FROM roles WHERE rol = get_app_user('rol')
+                ) AND (
+                    SELECT sector_pertenece(
+                        (SELECT sector FROM personas WHERE idper = historial_contrataciones.idper),
+                        get_app_user('sector')
+                    )
+                )
+            )
+        ) AND (
+            (desde 
+                >= (SELECT fecha_actual FROM parametros WHERE unico_registro)
+            ) OR (
+                SELECT puede_corregir_el_pasado FROM roles WHERE rol = get_app_user('rol')
+            )
+        )
+     );
