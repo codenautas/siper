@@ -2,6 +2,8 @@
 
 import {TableDefinition, TableContext, soloMayusculas} from "./types-principal";
 
+import { politicaNovedades } from "./table-novedades_registradas";
+
 import {idper} from "./table-personas"
 import { s_revista } from "./table-situacion_revista";
 import { expediente } from "./table-expedientes";
@@ -67,6 +69,10 @@ export function historial_contrataciones(context: TableContext): TableDefinition
             soloMayusculas(jerarquia.name),
             soloMayusculas(n_grado.name),
             soloMayusculas(motivo_egreso.name),
-        ]
+        ],
+        sql: {
+            policies: politicaNovedades('historial_contrataciones', 'desde'),
+        },
+
     };
 }
