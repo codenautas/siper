@@ -11,3 +11,4 @@ ACTSINSEC|activo sin sector
 ACTSINSIT|activo sin situacion revista
 CUILINV|Cuil invalido o inexistente
 NOVPOSTEGR|Existencia de novedades después de la fecha de egreso
+NOVPREVING|Existencia de novedades previas a la fecha de ingreso
