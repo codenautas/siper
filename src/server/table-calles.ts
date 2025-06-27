@@ -11,7 +11,7 @@ export const calle:FieldDefinition = {
 }
 
 export function calles(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'calles',
         elementName: 'calle',

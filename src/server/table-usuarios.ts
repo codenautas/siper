@@ -6,8 +6,8 @@ import {idper} from "./table-personas"
 import {rol} from "./table-roles"
 
 export function usuarios(context: TableContext): TableDefinition{
-    var admin = context.user.rol==='admin';
-    var rrhh = context.user.rol==='rrhh';
+    var admin = context.es.admin;
+    var rrhh = context.es.rrhh;
     var rolConPermisos = admin || rrhh || context.forDump;
     return {
         name: 'usuarios',

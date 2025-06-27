@@ -37,7 +37,7 @@ import {calle} from "./table-calles";
 export const nro_item: FieldDefinition = {name: 'nro_item', typeName: 'bigint', description: 'identificador del domicilio para una persona'}
 
 export function per_domicilios(context: TableContext): TableDefinition{
-    var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
+    var admin = context.es.admin || context.es.rrhh;
     return {
         name: 'per_domicilios',
         title: 'Domicilios',

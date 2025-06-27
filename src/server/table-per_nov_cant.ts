@@ -7,7 +7,7 @@ import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades"
 
 export function per_nov_cant(context: TableContext): TableDefinition {
-    var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
+    var admin = context.es.admin || context.es.rrhh;
     return {
         name:'per_nov_cant',
         title: 'cantidad de novedades por persona',

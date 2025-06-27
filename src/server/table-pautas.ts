@@ -10,7 +10,7 @@ export const pauta: FieldDefinition = {
 };
 
 export function pautas(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name:'pautas',
         elementName: 'pauta',

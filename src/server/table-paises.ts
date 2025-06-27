@@ -9,7 +9,7 @@ export const pais:FieldDefinition = {
 }
 
 export function paises(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'paises',
         elementName: 'pais',

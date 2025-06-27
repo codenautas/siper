@@ -3,7 +3,7 @@
 import {TableDefinition, TableContext, idImportacion} from "./types-principal";
 
 export function nov_per_importado(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name:'nov_per_importado',
         /* tabla temporaria que permite importar desde un Excel externo */

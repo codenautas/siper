@@ -6,7 +6,7 @@ import {idper} from "./table-personas"
 import {año} from "./table-annios"
 
 export function horarios(context: TableContext): TableDefinition{
-    var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
+    var admin = context.es.admin || context.es.rrhh;
     return {
         name: 'horarios',
         elementName: 'horario',

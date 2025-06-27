@@ -10,7 +10,7 @@ export const fecha: FieldDefinition = {name: 'fecha', typeName: 'date'};
 export const añoEnBaseAFecha = {...año, editable:false, generatedAs:`extract(year from ${fecha.name})`}
 
 export function fechas(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'fechas',
         elementName: 'fecha',
