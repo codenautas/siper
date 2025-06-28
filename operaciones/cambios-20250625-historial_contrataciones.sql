@@ -1,8 +1,7 @@
 set search_path = siper;
 SET ROLE siper_muleto_owner;
 
-update grados set grado = '0'||grado where grado::integer <= 9;
-
+update personas set grado = substr(grado, 2) where grado like '0%' and length(grado) > 1;
 
 drop table if exists "historial_contrataciones"; 
 create table "historial_contrataciones" (
