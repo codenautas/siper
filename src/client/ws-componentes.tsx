@@ -29,7 +29,7 @@ import {
     Tooltip
 } from "@mui/material";
 
-import { date, RealDate, compareForOrder } from "best-globals";
+import { date, RealDate, compareForOrder, sameValue } from "best-globals";
 
 import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, NovedadRegistrada, ParametrosResult,
     InfoUsuario
@@ -145,39 +145,33 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
         if (idper != null) {
             setCalendario(setEfimero)
             conn.ajax.calendario_persona({idper, ...periodo}).then(dias => {
-                var semanas = [];
-                var semana = [];
-                for(var i = 0; i < dias[0]?.dds; i++) {
-                    semana.push({});
-                }
-                for(var dia of dias){
-                    if (dia?.dds == 0 && dia.dia !=1) {
-                        semanas.push(semana);   
-                        semana = []
+                var primerSemana: number = Number.MAX_SAFE_INTEGER;
+                type Dia = (typeof dias)[number]
+                var semanas: Dia[][] = [];
+                for (var dia of dias) {
+                if (dia.semana != null && primerSemana > dia.semana) primerSemana = dia.semana;
+                    var semana = semanas[dia.semana];
+                    if (!semana) {
+                        semana = [
+                            {dds: 0} as Dia,
+                            {dds: 1} as Dia,
+                            {dds: 2} as Dia,
+                            {dds: 3} as Dia,
+                            {dds: 4} as Dia,
+                            {dds: 5} as Dia,
+                            {dds: 6} as Dia,
+                        ]
+                        semanas[dia.semana] = semana
                     }
-                    semana.push(dia);
+                    semana[dia.dds] = dia
                 }
-                for(var j = dia?.dds + 1; j <= 6; j++) {
-                    semana.push({});
-                }
-                semanas.push(semana);
-                setCalendario(semanas)
+                setCalendario(semanas.slice(primerSemana ?? 0))
             }).catch(logError)
         }
     },[idper, periodo.mes, periodo.annio, ultimaNovedad])
 
     // @ts-expect-error
     var es:{rrhh:boolean} = conn.config?.config?.es||{}
-
-    const isInRange = (dia: number, mes: number, annio: number) => {
-        if (!fecha || !fechaHasta || !Number.isInteger(dia) || dia <= 0) return false;
-        try {
-            const current = date.ymd(annio, mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia);
-            return current >= fecha && current <= fechaHasta;
-        } catch (error) {
-            return false;
-        }
-    };
 
     const isPastMonth = periodo.mes < fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio < fechaActual.getFullYear();
     const isFutureMonth = periodo.mes > fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio > fechaActual.getFullYear();
@@ -235,26 +229,28 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                     <div key={dds.abr} className={"calendario-nombre-dia " + (dds.habil ? "" : "tipo-dia-no-laborable")}>{dds.abr}</div>
                 ).array()}
             </Box>
-            {calendario.map(semana => <Box key={semana[0].dia} className="calendario-semana">
+            {calendario.map(semana => <Box key={semana[0].semana} className="calendario-semana">
                 {semana.map(dia => 
                 <Tooltip key={dia.dia} title={dia.novedad || "Sin novedad"} arrow>
                 <div
                     className={`calendario-dia tipo-dia-${dia.tipo_dia} 
-                        ${fecha && dia.dia === fecha.getDate() && periodo.mes === fecha.getMonth() + 1 && periodo.annio === fecha.getFullYear() ? 'calendario-dia-seleccionado' : ''}
-                        ${fechaHasta && dia.dia === fechaHasta.getDate() && periodo.mes === fechaHasta.getMonth() + 1 && periodo.annio === fechaHasta.getFullYear() ? 'calendario-dia-seleccionado' : ''}
-                        ${isInRange(dia.dia, periodo.mes, periodo.annio) ? 'calendario-dia-seleccionado' : ''}`}
-                        
-                        onClick={() => {
-                            if (!dia.dia || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades) return;
-                            const selectedDate = date.ymd(periodo.annio, periodo.mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia.dia);
-                            if (!fechaHasta || selectedDate <= fechaHasta) {
-                                props.onFecha(selectedDate);
-                                props.onFechaHasta(selectedDate);
-                            } 
-                            else {
-                                props.onFechaHasta(selectedDate);
-                            }
-                        }}
+                        ${fecha && sameValue(dia.fecha, fecha) ? 'calendario-dia-seleccionado' : ''}
+                        ${fechaHasta != null && fecha <= dia.fecha && dia.fecha <= fechaHasta ? 'calendario-dia-seleccionado' : ''}`}
+                    es-otro-mes={dia.mismo_mes ? "no" : "si"}
+                    onClick={() => {
+                        if (!dia.fecha || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades) return;
+                        const selectedDate = dia.fecha as RealDate;
+                        if (!fechaHasta || selectedDate <= fechaHasta) {
+                            props.onFecha(selectedDate);
+                            props.onFechaHasta(selectedDate);
+                        } 
+                        else {
+                            props.onFechaHasta(selectedDate);
+                        }
+                        if (dia.fecha.getMonth() + 1 !== periodo.mes) {
+                            setPeriodo({mes: dia.fecha.getMonth() + 1, annio: dia.fecha.getFullYear()});
+                        }
+                    }}
                 >
                     <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
                     <span className={`calendario-dia-contenido ${dia ? 'con_novedad_si' : 'con_novedad_no' }`}>{dia.cod_nov ?? ''}</span>
@@ -441,7 +437,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
             })
             setSectores(sectoresAumentados);
         }).catch(logError)
-    }, [fecha]);
+    }, [fecha.getMilliseconds()]);
 
     // @ts-expect-error
     var es:{registra:boolean} = conn.config?.config?.es||{}
@@ -528,8 +524,8 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
             >
                 <span className="fechas">
                     <span>{n.desde.toDmy().replace(/\/\d\d\d\d$/,'')}</span>
-                    {n.desde.sameValue(n.hasta) ? null : <span> - </span>}
-                    {n.desde.sameValue(n.hasta) ? null : <span>{n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')}</span>}
+                    {sameValue(n.desde, n.hasta) ? null : <span> - </span>}
+                    {sameValue(n.desde, n.hasta) ? null : <span>{n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')}</span>}
                 </span>
                 <span className="cant">{n.dias_hoc.substring(0,n.dias_hoc.length-1)}<sub>{n.dias_hoc.substring(n.dias_hoc.length-1)}</sub></span>
                 <span className="box-id cod_nov">{n.cod_nov}</span>
@@ -576,7 +572,7 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
                 setHorario(result);
             }).catch(logError);
         }
-    },[idper, fecha])
+    },[idper, fecha.getMilliseconds()])
 
     const desdeFecha = horario.desde;
     const hastaFecha = horario.hasta;
@@ -664,9 +660,7 @@ type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean, 
 declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: () => Promise<DefinedType<typeof ctts.info_usuario.result>>;
-        calendario_persona: (params:{
-
-        }) => Promise<any>;
+        calendario_persona: (params:DefinedType<typeof ctts.calendario_persona.parameters>) => Promise<CalendarioResult[]>;
         novedades_disponibles: (params:{
 
         }) => Promise<NovedadesDisponiblesResult[]>;
@@ -967,7 +961,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         setSiCargaraNovedad(null);
         setError(null);
         resetDias();
-    },[idper,cod_nov,fecha,hasta])
+    },[idper,cod_nov,fecha.getMilliseconds(),hasta.getMilliseconds()])
     useEffect(() => {
         if (idper) {
             setDetalleVacacionesPersona(setEfimero)
