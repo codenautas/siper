@@ -33,7 +33,7 @@ export const sinMinusculas = 'sinMinusculas' as PostInputOptions
 export function soloDigitosCons(fieldName: string):Constraint{
     return {
         constraintType:'check', 
-        consName:`solo digitos sin ceros a la izqueirda en ${fieldName}`, 
+        consName:`solo digitos sin ceros a la izquierda en ${fieldName}`, 
         expr: `${fieldName} similar to '[1-9][0-9]*|0'`
     }
 }
