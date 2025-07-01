@@ -238,7 +238,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         ${fechaHasta != null && fecha <= dia.fecha && dia.fecha <= fechaHasta ? 'calendario-dia-seleccionado' : ''}`}
                     es-otro-mes={dia.mismo_mes ? "no" : "si"}
                     onClick={() => {
-                        if (!dia.fecha || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades) return;
+                        if (!dia.fecha || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades || (dia.fecha <= fechaActual && !infoUsuario.puede_corregir_el_pasado)) return;
                         const selectedDate = dia.fecha as RealDate;
                         if (!fechaHasta || selectedDate <= fechaHasta) {
                             props.onFecha(selectedDate);
