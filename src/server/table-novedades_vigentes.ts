@@ -37,7 +37,7 @@ select idper, fecha, cod_nov, ficha, ent_fich, sal_fich, sector, annio, trabajab
   from novedades_vigentes_desde_hasta`
 
 export function novedades_vigentes(context: TableContext): TableDefinition {
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name:'novedades_vigentes',
         elementName:'novedad',

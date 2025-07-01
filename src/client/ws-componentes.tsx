@@ -1093,7 +1093,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                     fechaActual={fechaActual!} annio={annio} onAnnio={setAnnio} infoUsuario={infoUsuario}
                 />
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
-                {cod_nov && idper && fecha && hasta && !guardandoRegistroNovedad && !registrandoNovedad && persona.cargable && puede_cargar_novedades ? <Box key="setSiCargaraNovedad">
+                {cod_nov && idper && fecha && hasta && !guardandoRegistroNovedad && !registrandoNovedad && persona.cargable && puede_cargar_novedades && (fecha >= fechaActual || infoUsuario.puede_corregir_el_pasado) ? <Box key="setSiCargaraNovedad">
                     <Button key="button" variant="outlined" onClick={() => {
                         setRegistrandoNovedad(true);
                         conn.ajax.si_cargara_novedad({idper, cod_nov, desde:fecha, hasta}).then(setSiCargaraNovedad).catch(logError)

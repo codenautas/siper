@@ -18,7 +18,7 @@ import { grado } from "./table-grados";
 import { categoria } from "./table-categorias";
 
 export function historial_contrataciones(context: TableContext): TableDefinition{
-    var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
+    var admin = context.es.rrhh;
     return {
         name: 'historial_contrataciones',
         elementName: 'historial de contratación',

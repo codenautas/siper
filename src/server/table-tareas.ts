@@ -9,7 +9,7 @@ export const tarea: FieldDefinition = {
 };
 
 export function tareas(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name:'tareas',
         elementName: 'tarea',

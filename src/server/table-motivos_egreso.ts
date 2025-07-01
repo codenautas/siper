@@ -9,7 +9,7 @@ export const motivo_egreso:FieldDefinition = {
 }
 
 export function motivos_egreso(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name : 'motivos_egreso',
         elementName : 'motivo_egreso',

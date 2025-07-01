@@ -9,7 +9,7 @@ export const tipo_telefono:FieldDefinition = {
 }
 
 export function tipos_telefono(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'tipos_telefono',
         elementName: 'tipo_telefono',

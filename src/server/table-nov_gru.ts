@@ -8,7 +8,7 @@ import {grupo} from "./table-grupos";
 import {cod_nov} from "./table-cod_novedades";
 
 export function nov_gru(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'nov_gru',
         title: 'límite de novedades por persona',
