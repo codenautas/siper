@@ -96,6 +96,24 @@ export function inconsistencias(_context: TableContext): TableDefinition{
                        FROM personas
                        WHERE activo AND situacion_revista IS NULL
                      ) q
+                     UNION
+                     SELECT v.idper, NULL::INTEGER as annio, 'NOVPOSTEGR' pauta, v.cod_nov
+                       FROM novedades_registradas v
+                       JOIN personas p ON v.idper = p.idper
+                       WHERE p.fecha_egreso IS NOT NULL
+                         AND (
+                               v.desde > p.fecha_egreso
+                            OR (v.hasta IS NOT NULL AND v.hasta > p.fecha_egreso)
+                     )
+                     UNION
+                     SELECT v.idper, NULL::INTEGER as annio, 'NOVPREVING' pauta, v.cod_nov
+                       FROM novedades_registradas v
+                       JOIN personas p ON v.idper = p.idper
+                       WHERE p.registra_novedades_desde IS NOT NULL
+                         AND (
+                               v.desde < p.registra_novedades_desde
+                            OR (v.hasta IS NOT NULL AND v.hasta < p.registra_novedades_desde)
+                         )
             )`
         }
     };
