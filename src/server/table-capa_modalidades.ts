@@ -8,7 +8,7 @@ export const modalidad:FieldDefinition = {
 }
 
 export function capa_modalidades(context: TableContext): TableDefinition{
-    var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
+    var admin = context.es.admin || context.es.rrhh;
     return {
         name: 'capa_modalidades',
         elementName: 'modalidad',

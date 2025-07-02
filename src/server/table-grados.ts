@@ -11,7 +11,7 @@ export const grado:FieldDefinition = {
 }
 
 export function grados(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'grados',
         elementName: 'grado',

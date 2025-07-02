@@ -9,7 +9,7 @@ export const jerarquia:FieldDefinition = {
 }
 
 export function jerarquias(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name : 'jerarquias',
         elementName : 'jerarquia',
