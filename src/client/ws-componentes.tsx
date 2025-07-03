@@ -519,7 +519,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 persona.fecha_egreso && n.hasta > persona.fecha_egreso ? "Fecha hasta posterior a la fecha de egreso" : null,
             ].filter(Boolean);
             return (
-            <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar?' por-borrar':''}`} 
+            <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar && quiereBorrar.idr === n.idr?' por-borrar':''}`} 
                 tiene-problemas={problemas.length ? 'si' : 'no'} title={problemas.join('. ')}
             >
                 <span className="fechas">
@@ -540,8 +540,14 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 eliminando ? <div>
                     <div>Eliminando</div>
                     <CircularProgress/>
-                </div> : <div>
-                    ¿Confirma el borrado de las novedades registradas entre {quiereBorrar!.desde.toDmy()} y {quiereBorrar!.hasta.toDmy()}?
+                </div> : <div className="modal-borrar-novedad">
+                    ¿Confirma el borrado de la novedad registrada <strong>"{quiereBorrar!.cod_novedades__novedad}"</strong>
+                    {
+                        sameValue(quiereBorrar!.desde, quiereBorrar!.hasta)
+                            ? `en ${quiereBorrar!.desde.toDmy()}`
+                            : `entre ${quiereBorrar!.desde.toDmy()} y ${quiereBorrar!.hasta.toDmy()}`
+                    }?
+                    <div>
                     <Button variant="outlined" onClick={()=>setQuiereBorrar(null)}>Conservar</Button>
                     <Button variant="outlined" color="error" onClick={()=>{
                         setEliminando(true);
@@ -554,7 +560,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                             props.onBorrado();
                         }).catch(logError);
                     }}>Eliminar</Button>
-                    
+                    </div>
                 </div>
             )}
         </Dialog>
