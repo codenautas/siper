@@ -238,7 +238,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         ${fechaHasta != null && fecha <= dia.fecha && dia.fecha <= fechaHasta ? 'calendario-dia-seleccionado' : ''}`}
                     es-otro-mes={dia.mismo_mes ? "no" : "si"}
                     onClick={() => {
-                        if (!dia.fecha || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades) return;
+                        if (!dia.fecha || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades || (dia.fecha < fechaActual && !infoUsuario.puede_corregir_el_pasado)) return;
                         const selectedDate = dia.fecha as RealDate;
                         if (!fechaHasta || selectedDate <= fechaHasta) {
                             props.onFecha(selectedDate);
@@ -1099,7 +1099,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                     fechaActual={fechaActual!} annio={annio} onAnnio={setAnnio} infoUsuario={infoUsuario}
                 />
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
-                {cod_nov && idper && fecha && hasta && !guardandoRegistroNovedad && !registrandoNovedad && persona.cargable && puede_cargar_novedades ? <Box key="setSiCargaraNovedad">
+                {cod_nov && idper && fecha && hasta && !guardandoRegistroNovedad && !registrandoNovedad && persona.cargable && puede_cargar_novedades && (fecha >= fechaActual || infoUsuario.puede_corregir_el_pasado) ? <Box key="setSiCargaraNovedad">
                     <Button key="button" variant="outlined" onClick={() => {
                         setRegistrandoNovedad(true);
                         conn.ajax.si_cargara_novedad({idper, cod_nov, desde:fecha, hasta}).then(setSiCargaraNovedad).catch(logError)

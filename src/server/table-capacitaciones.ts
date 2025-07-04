@@ -21,7 +21,7 @@ export const fecha_inicio:FieldDefinition = {
 }
 
 export function capacitaciones(context: TableContext): TableDefinition{
-    var admin = context.es.admin || context.es.rrhh;
+    var admin = context.es.rrhh;
     return {
         name: 'capacitaciones',
         elementName: 'capacitacion',

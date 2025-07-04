@@ -124,9 +124,10 @@ export class AppSiper extends AppBackend{
     completeContext(context:Context){
         var es = context.es ?? {} as Context["es"]
         es.mantenimiento = context.user && context.user.rol=="mantenimiento" 
-        es.admin = es.mantenimiento || context.user && context.user.rol=="admin" 
-        es.rrhh = es.admin || context.user && context.user.rol=="rrhh" 
-        es.registra = es.rrhh || context.user && context.user.rol=="registra" 
+        es.admin = es.mantenimiento || context.user && context.user.rol=="admin"
+        es.rrhh_admin = es.admin || context.user && context.user.rol=="rrhh_admin" 
+        es.rrhh = es.rrhh_admin || context.user && context.user.rol=="rrhh" 
+        es.registra = es.rrhh || context.user && context.user.rol=="registra"
         context.es = es;
     }
     override isAdmin(reqOrContext:Request|Context){
