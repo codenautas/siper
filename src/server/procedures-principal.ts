@@ -230,7 +230,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         h.hasta,
                         coalesce(bh.hora_desde, h.hora_desde, horario_habitual_desde) as hora_desde,
                         coalesce(bh.hora_hasta, h.hora_hasta, horario_habitual_hasta) as hora_hasta,
-                        coalesce(h.trabaja, d.dds BETWEEN 1 AND 5) as trabaja,
+                        coalesce(h.trabaja, d.dds BETWEEN 1 AND 5 OR (d.dds = 0 OR d.dds = 6) AND bh.con_fin_de_semana) as trabaja,
                         coalesce(nv.cod_nov, case when d.dds BETWEEN 1 AND 5 then /* cod_nov_habitual */ null else null end) as cod_nov
                     FROM dias_semana d
                         INNER JOIN annios a USING (annio)

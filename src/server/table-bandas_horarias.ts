@@ -19,6 +19,7 @@ export function bandas_horarias(context:TableContext):TableDefinition{
             {name: 'descripcion', typeName:'text' },
             {name: 'hora_desde' , typeName:'time', nullable:false  },
             {name: 'hora_hasta' , typeName:'time', nullable:false  },
+            {name: 'con_fin_de_semana' , typeName:'boolean', nullable:false  },
         ],
         primaryKey: ['banda_horaria'],
         constraints: [
