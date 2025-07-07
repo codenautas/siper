@@ -8,7 +8,7 @@ import {tipo_telefono} from "./table-tipos_telefono";
 export const nro_item: FieldDefinition = {name: 'nro_item', typeName: 'bigint', description: 'identificador del teléfono para una persona'}
 
 export function per_telefonos(context: TableContext): TableDefinition{
-    var admin = context.es.admin || context.es.rrhh;
+    var admin = context.es.rrhh;
     return {
         name: 'per_telefonos',
         title: 'Telefonos',
