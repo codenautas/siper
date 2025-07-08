@@ -5,7 +5,6 @@ import {TableDefinition, TableContext} from "./types-principal";
 import {año} from "./table-annios"
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades"
-import {fecha} from "./table-fechas"
 
 export function per_nov_cant(context: TableContext): TableDefinition {
     var admin = context.es.admin || context.es.rrhh;
@@ -27,11 +26,13 @@ export function per_nov_cant(context: TableContext): TableDefinition {
             {references: 'annios'       , fields: [año.name], onUpdate: 'no action'},
             {references: 'personas'     , fields: [idper.name]},
             {references: 'cod_novedades', fields: [cod_nov.name]},
-            {references: 'fechas'       , fields: [{source:'comienzo', target:fecha.name}], alias:'comienzo'},
-            {references: 'fechas'       , fields: [{source:'vencimiento', target:fecha.name}], alias:'vencimiento'},
         ],
         detailTables: [
             {table:'novedades_vigentes', fields:[año.name, cod_nov.name, idper.name], abr:'N'}
         ],
+        constraints: [
+            {constraintType:'check', consName:'annio de comienzo debe ser igual a annio', expr:`extract(year from comienzo) is not distinct from annio or comienzo is null`},
+            {constraintType:'check', consName:'annio de vencimiento debe ser igual a annio', expr:`extract(year from vencimiento) is not distinct from annio or vencimiento is null`},
+        ]
     };
 }
