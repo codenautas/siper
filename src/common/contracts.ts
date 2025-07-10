@@ -677,7 +677,6 @@ export const bandas_horarias = {
         descripcion: is.string,
         hora_desde: is.string,
         hora_hasta: is.string,
-        con_fin_de_semana: is.boolean,
     })
 } satisfies CommonEntityDefinition
 
