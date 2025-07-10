@@ -3,6 +3,7 @@
 import {TableDefinition, TableContext} from "./types-principal";
 
 import {cod_nov} from "./table-cod_novedades";
+import {fecha} from "./table-fechas";
 
 export function parametros(context: TableContext): TableDefinition {
     var admin = context.es.admin;
@@ -17,7 +18,8 @@ export function parametros(context: TableContext): TableDefinition {
         ],
         primaryKey: ['unico_registro'],
         foreignKeys: [
-            {references: 'cod_novedades', fields: [{source: 'cod_nov_habitual', target:cod_nov.name}]}
+            {references: 'cod_novedades', fields: [{source: 'cod_nov_habitual', target:cod_nov.name}]},
+            {references: 'fechas', fields: [{source: 'fecha_actual', target:fecha.name}]},
         ],
         constraints: [
             {constraintType: 'check', expr: 'unico_registro is true'}
