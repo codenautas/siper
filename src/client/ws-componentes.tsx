@@ -361,9 +361,10 @@ function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof
             .replace(/[^A-Z0-9Ñ ]+/g, '');
 
     var principales:(row:T) => boolean = todas || !principalesKey ? ()=>true :(row) => principalesKey.some((a) => row[a])
-    if (filter == "") return principales
-    var normalizedFilter = normalize(filter);
-    var regExp = new RegExp(normalizedFilter.replace(/\s+/, '(\\w* \\w*)+'), 'i');
+    if (!filter.trim()) return principales;
+    var normalizedFilter = normalize(filter).trim().replace(/\s+/g, ' ');
+    var palabras = normalizedFilter.split(' ').filter(Boolean);
+    var regExp = new RegExp(palabras.map(p=>`(${p})`).join('.*'), 'i');
     return function(row: T){
         return principales(row) && attributteList.some((a) => regExp.test(normalize(String(row[a] ?? ''))))
     }
