@@ -2,8 +2,14 @@
 
 import {TableDefinition, TableContext, idImportacion} from "./types-principal";
 
+import { agrupamiento } from "./table-agrupamientos";
+import { s_revista } from "./table-situacion_revista";
+import { tramo } from "./table-tramos";
+import { grado } from "./table-grados";
+import { categoria } from "./table-categorias";
+
 export function personas_importadas(context: TableContext): TableDefinition {
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'personas_importadas',
         elementName: 'persona',
@@ -29,11 +35,11 @@ export function personas_importadas(context: TableContext): TableDefinition {
             {name:'oficina'              , typeName:'text', title: 'Oficina'              },
             {name:'jerarquia'            , typeName:'text', title: 'Jerarquia'            },
             {name:'cargo_/atgc'          , typeName:'text', title: 'Cargo /ATGC'          },
-            {name:'agrupamiento'         , typeName:'text', title: 'Agrupamiento'         },
-            {name:'tramo'                , typeName:'text', title: 'Tramo'                },
-            {name:'grado'                , typeName:'text', title: 'Grado'                },
-            {name:'categoria'            , typeName:'text', title: 'Categoria'            },
-            {name:'situacion_revista'    , typeName:'text', title: 'Situacion de Revista' },
+            agrupamiento,
+            tramo,
+            grado,
+            categoria,
+            s_revista,
             {name:'fecha_inicio_cargo'   , typeName:'date', title: 'Fecha Inicio Cargo'   },
             {name:'fecha_fin_cargo'      , typeName:'date', title: 'Fecha Fin Cargo'      },
             {name:'horario'              , typeName:'text', title: 'Horario'              },
@@ -47,5 +53,12 @@ export function personas_importadas(context: TableContext): TableDefinition {
             {name:'comu_descripcion'     , typeName:'text', title: 'comu_Descripcion'     },
         ],
         primaryKey: [idImportacion.name],
+        foreignKeys: [
+            {references: 'agrupamientos', fields:[agrupamiento.name]},
+            {references: 'tramos', fields:[tramo.name]},
+            {references: 'grados', fields:[tramo.name, grado.name]},
+            {references: 'categorias', fields:[categoria.name]},
+            {references: 'situacion_revista', fields:[s_revista.name]},
+        ],
     };
 }

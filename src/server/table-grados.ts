@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition, sinMinusculas} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, sinMinusculas, soloDigitosCons} from "./types-principal";
 
 import {tramo} from "./table-tramos";
 
@@ -11,7 +11,7 @@ export const grado:FieldDefinition = {
 }
 
 export function grados(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'grados',
         elementName: 'grado',
@@ -26,6 +26,7 @@ export function grados(context:TableContext):TableDefinition{
             {references: 'tramos'  , fields: [tramo.name]},
         ],
         constraints: [
+            soloDigitosCons(grado.name),
         ],
         detailTables: [
             {table:'personas'                       , fields:[tramo.name, grado.name], abr:'P'},

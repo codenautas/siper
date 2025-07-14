@@ -9,7 +9,7 @@ export const expediente: FieldDefinition = {
 };
 
 export function expedientes(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name:'expedientes',
         elementName: 'expediente',

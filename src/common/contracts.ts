@@ -299,7 +299,6 @@ export const personas_novedad_actual = {
 
 export type PersonasNovedadActualResult = DefinedType<typeof personas_novedad_actual.result>
 
-
 export const calendario_persona = {
     procedure: 'calendario_persona',
     parameters: is.object({
@@ -308,12 +307,14 @@ export const calendario_persona = {
         mes: is.number
     }),
     result: is.object({
+        fecha: is.Date,
         dia: is.number,
         dds: is.number,
         semana: is.number,
         cod_nov: is.string,
         tipo_dia: is.string,
         novedad: is.string,
+        mismo_mes: is.boolean,
     })
 }
 
@@ -657,6 +658,16 @@ export const per_domicilios = {
         observaciones:   is.string,
     })
 }
+export const puestos = {
+    table : 'puestos',
+    description : is.object({
+        puesto: is.number,
+        descripcion: is.string,
+        objetivo: is.string
+    })
+}
+
+export type puestos = DefinedType<typeof puestos.description>
 
 export const per_telefonos = {
     table: 'per_telefonos',

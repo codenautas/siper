@@ -2,6 +2,8 @@
 
 import {TableDefinition, TableContext, soloMayusculas} from "./types-principal";
 
+import { politicaNovedades } from "./table-novedades_registradas";
+
 import {idper} from "./table-personas"
 import { s_revista } from "./table-situacion_revista";
 import { expediente } from "./table-expedientes";
@@ -16,7 +18,7 @@ import { grado } from "./table-grados";
 import { categoria } from "./table-categorias";
 
 export function historial_contrataciones(context: TableContext): TableDefinition{
-    var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
+    var admin = context.es.rrhh;
     return {
         name: 'historial_contrataciones',
         elementName: 'historial de contratación',
@@ -67,6 +69,10 @@ export function historial_contrataciones(context: TableContext): TableDefinition
             soloMayusculas(jerarquia.name),
             soloMayusculas(n_grado.name),
             soloMayusculas(motivo_egreso.name),
-        ]
+        ],
+        sql: {
+            policies: politicaNovedades('historial_contrataciones', 'desde'),
+        },
+
     };
 }

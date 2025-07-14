@@ -93,11 +93,12 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const {idper, annio, mes} = params;
             const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
             const info = await context.client.query(
-                `select extract(day from f.fecha) as dia,
+                `select case when extract(year from f.fecha) = x.annio then f.fecha else null end as fecha,
+                        extract(day from f.fecha) as dia,
                         extract(dow from f.fecha) as dds,
-                        extract(day from f.fecha) - extract(dow from f.fecha) as semana,
+                        (f.fecha - '2001-01-01'::date - dds) / 7 as semana,
                         v.cod_nov,
-                        case extract(dow from f.fecha) 
+                        case extract(dow from f.fecha)
                             when 0 then 'no-laborable' 
                             when 6 then 'no-laborable' 
                             else 
@@ -106,13 +107,23 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                                     else 'normal' 
                                 end 
                         end as tipo_dia,
-                        cn.novedad
-                    from fechas f
+                        cn.novedad,
+                        extract(month from f.fecha) = mes as mismo_mes
+                    from (
+                        select  fecha - 2 - extract(dow from fecha - 2)::integer      as desde,
+                                fecha - 2 - extract(dow from fecha - 2)::integer + 41 as hasta,
+                                -- (fecha + interval '1 month')::date - extract(dow from (fecha + interval '1 month'))::integer + 6 as hasta,
+                                extract(month from fecha) as mes,
+                                extract(year from fecha) as annio
+                            from fechas f
+                            where fecha = $2::date
+                        ) x, 
+                        lateral (select * from fechas where annio = x.annio) f
                         left join novedades_vigentes v on v.fecha = f.fecha and v.idper = $1
                         left join cod_novedades cn on cn.cod_nov = v.cod_nov
-                    where f.fecha between $2 and ($3::date + interval '1 month'  - interval '1 day')
+                    where f.fecha between desde and hasta
                     order by f.fecha`,
-                [idper, desde, desde]
+                [idper, desde]
             ).fetchAll();
             return info.rows
         }

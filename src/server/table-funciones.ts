@@ -9,7 +9,7 @@ export const funcion: FieldDefinition = {
 };
 
 export function funciones(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name:'funciones',
         elementName: 'funcion',

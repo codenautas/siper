@@ -9,7 +9,7 @@ export const tramo:FieldDefinition = {
 }
 
 export function tramos(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'tramos',
         elementName: 'tramo',

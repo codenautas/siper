@@ -9,7 +9,7 @@ export const n_grado: FieldDefinition = {
 };
 
 export function nivel_grado(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name:'nivel_grado',
         elementName: 'nivel_grado',

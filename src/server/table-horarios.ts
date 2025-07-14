@@ -6,7 +6,7 @@ import {idper} from "./table-personas"
 import {año} from "./table-annios"
 
 export function horarios(context: TableContext): TableDefinition{
-    var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
+    var admin = context.es.rrhh;
     return {
         name: 'horarios',
         elementName: 'horario',
@@ -27,6 +27,8 @@ export function horarios(context: TableContext): TableDefinition{
         foreignKeys: [
             {references: 'personas', fields:[idper.name], onDelete:'cascade'},
             {references: 'annios'  , fields: [año.name], onUpdate: 'no action'},
+            {references: 'fechas'  , fields:[{source:'desde', target:'fecha'}], alias:'desde', onDelete:'cascade'},
+            {references: 'fechas'  , fields:[{source:'hasta', target:'fecha'}], alias:'hasta', onDelete:'cascade'},
         ],
         constraints: [
             {constraintType: 'check', consName:'dia de la semana entre 0 y 6', expr: 'dds between 0 and 6'},

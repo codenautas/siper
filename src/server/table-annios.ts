@@ -5,7 +5,7 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 export const año: FieldDefinition = {name: 'annio', typeName: 'integer', title: 'año'};
 
 export function annios(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name:'annios',
         elementName: 'año',
