@@ -352,12 +352,21 @@ function SearchBox(props: {
 }
 
 function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof T)[], todas?:boolean, principalesKey?:(keyof T)[]){
-    var principales:(row:T) => boolean = todas || !principalesKey ? function(){ return true } : row => principalesKey.some(a => row[a])
-    if (filter == "") return principales
-    var f = filter.replace(/[^A-Z0-9 ]+/gi,'');
-    var regExp = new RegExp(f.replace(/\s+/, '(\\w* \\w*)+'), 'i');
+    // Normaliza texto
+    const normalize = (text: string) =>
+        text
+            .toUpperCase()
+            .normalize("NFD") // separa letras de los acentos
+            .replace(/[\u0300-\u036f]/g, '') // elimina los acentos
+            .replace(/[^A-Z0-9Ñ ]+/g, '');
+
+    var principales:(row:T) => boolean = todas || !principalesKey ? ()=>true :(row) => principalesKey.some((a) => row[a])
+    if (!filter.trim()) return principales;
+    var normalizedFilter = normalize(filter).trim().replace(/\s+/g, ' ');
+    var palabras = normalizedFilter.split(' ').filter(Boolean);
+    var regExp = new RegExp(palabras.map(p=>`(${p})`).join('.*'), 'i');
     return function(row: T){
-        return principales(row) && attributteList.some(a => regExp.test(row[a]+''))
+        return principales(row) && attributteList.some((a) => regExp.test(normalize(String(row[a] ?? ''))))
     }
 }
 
