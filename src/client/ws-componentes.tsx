@@ -788,7 +788,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                     </div>
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">CUIL:</div>
-                        <div className="legajo-valor" red-color={!persona?.cuil_valido ? "si" : "no"}>{persona.cuil || '-'}</div>
+                        <div className="legajo-valor" red-color={!persona?.cuil_valido ? "si" : "no"}>{persona.cuil || 'sin CUIL'}</div>
                     </div>
                 </div>}
                 <div className="legajo-grupo">
@@ -1081,7 +1081,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                                 CUIL:&nbsp;
                             </span>
                             <span className="box-names" red-color={!persona?.cuil_valido ? "si" : "no"}>
-                                {persona.cuil}
+                                {persona.cuil || 'sin CUIL'}
                             </span>
                         </div>
                         <div className="box-line">
