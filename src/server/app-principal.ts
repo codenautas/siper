@@ -56,6 +56,12 @@ import { grados                  } from "./table-grados";
 import { categorias              } from "./table-categorias";
 import { motivos_egreso          } from "./table-motivos_egreso";
 import { jerarquias              } from "./table-jerarquias";
+import { expedientes             } from "./table-expedientes";
+import { funciones               } from "./table-funciones";
+import { nivel_grado             } from "./table-nivel_grado";
+import { tareas                  } from "./table-tareas";
+import { puestos                 } from "./table-puestos";
+import { bandas_horarias         } from "./table-bandas_horarias";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -120,9 +126,10 @@ export class AppSiper extends AppBackend{
     completeContext(context:Context){
         var es = context.es ?? {} as Context["es"]
         es.mantenimiento = context.user && context.user.rol=="mantenimiento" 
-        es.admin = es.mantenimiento || context.user && context.user.rol=="admin" 
-        es.rrhh = es.admin || context.user && context.user.rol=="rrhh" 
-        es.registra = es.rrhh || context.user && context.user.rol=="registra" 
+        es.admin = es.mantenimiento || context.user && context.user.rol=="admin"
+        es.rrhh_admin = es.admin || context.user && context.user.rol=="rrhh_admin" 
+        es.rrhh = es.rrhh_admin || context.user && context.user.rol=="rrhh" 
+        es.registra = es.rrhh || context.user && context.user.rol=="registra"
         context.es = es;
     }
     override isAdmin(reqOrContext:Request|Context){
@@ -204,6 +211,12 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'categorias'       },
                             {menuType:'table', name:'motivos_egreso'   },
                             {menuType:'table', name:'jerarquias'       },
+                            {menuType:'table', name:'expedientes'      },
+                            {menuType:'table', name:'funciones'        },
+                            {menuType:'table', name:'nivel_grado'      },
+                            {menuType:'table', name:'tareas'           },
+                            {menuType:'table', name:'puestos'          },
+                            {menuType:'table', name:'bandas_horarias'  },
                         ]},
                         {menuType:'table', name:'cod_novedades' },
                         {menuType:'table', name:'usuarios'      },
@@ -283,8 +296,7 @@ export class AppSiper extends AppBackend{
             parametros           ,
             horarios             ,
             fichadas             ,
-            historial_contrataciones,
-            capa_modalidades       ,
+            capa_modalidades     ,
             capacitaciones       ,
             per_capa             ,
             parte_diario         ,
@@ -306,7 +318,14 @@ export class AppSiper extends AppBackend{
             grados               ,
             categorias           ,
             motivos_egreso       ,
-            jerarquias
+            jerarquias           ,
+            expedientes          ,
+            funciones            ,
+            nivel_grado          ,
+            tareas               ,
+            puestos              ,
+            historial_contrataciones,
+            bandas_horarias,
         }
     }       
 }

@@ -29,7 +29,7 @@ import {
     Tooltip
 } from "@mui/material";
 
-import { date, RealDate, compareForOrder } from "best-globals";
+import { date, RealDate, compareForOrder, sameValue } from "best-globals";
 
 import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, NovedadRegistrada, ParametrosResult,
     InfoUsuario
@@ -145,39 +145,33 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
         if (idper != null) {
             setCalendario(setEfimero)
             conn.ajax.calendario_persona({idper, ...periodo}).then(dias => {
-                var semanas = [];
-                var semana = [];
-                for(var i = 0; i < dias[0]?.dds; i++) {
-                    semana.push({});
-                }
-                for(var dia of dias){
-                    if (dia?.dds == 0 && dia.dia !=1) {
-                        semanas.push(semana);   
-                        semana = []
+                var primerSemana: number = Number.MAX_SAFE_INTEGER;
+                type Dia = (typeof dias)[number]
+                var semanas: Dia[][] = [];
+                for (var dia of dias) {
+                if (dia.semana != null && primerSemana > dia.semana) primerSemana = dia.semana;
+                    var semana = semanas[dia.semana];
+                    if (!semana) {
+                        semana = [
+                            {dds: 0} as Dia,
+                            {dds: 1} as Dia,
+                            {dds: 2} as Dia,
+                            {dds: 3} as Dia,
+                            {dds: 4} as Dia,
+                            {dds: 5} as Dia,
+                            {dds: 6} as Dia,
+                        ]
+                        semanas[dia.semana] = semana
                     }
-                    semana.push(dia);
+                    semana[dia.dds] = dia
                 }
-                for(var j = dia?.dds + 1; j <= 6; j++) {
-                    semana.push({});
-                }
-                semanas.push(semana);
-                setCalendario(semanas)
+                setCalendario(semanas.slice(primerSemana ?? 0))
             }).catch(logError)
         }
     },[idper, periodo.mes, periodo.annio, ultimaNovedad])
 
     // @ts-expect-error
     var es:{rrhh:boolean} = conn.config?.config?.es||{}
-
-    const isInRange = (dia: number, mes: number, annio: number) => {
-        if (!fecha || !fechaHasta || !Number.isInteger(dia) || dia <= 0) return false;
-        try {
-            const current = date.ymd(annio, mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia);
-            return current >= fecha && current <= fechaHasta;
-        } catch (error) {
-            return false;
-        }
-    };
 
     const isPastMonth = periodo.mes < fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio < fechaActual.getFullYear();
     const isFutureMonth = periodo.mes > fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio > fechaActual.getFullYear();
@@ -235,26 +229,28 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                     <div key={dds.abr} className={"calendario-nombre-dia " + (dds.habil ? "" : "tipo-dia-no-laborable")}>{dds.abr}</div>
                 ).array()}
             </Box>
-            {calendario.map(semana => <Box key={semana[0].dia} className="calendario-semana">
+            {calendario.map(semana => <Box key={semana[0].semana} className="calendario-semana">
                 {semana.map(dia => 
                 <Tooltip key={dia.dia} title={dia.novedad || "Sin novedad"} arrow>
                 <div
                     className={`calendario-dia tipo-dia-${dia.tipo_dia} 
-                        ${fecha && dia.dia === fecha.getDate() && periodo.mes === fecha.getMonth() + 1 && periodo.annio === fecha.getFullYear() ? 'calendario-dia-seleccionado' : ''}
-                        ${fechaHasta && dia.dia === fechaHasta.getDate() && periodo.mes === fechaHasta.getMonth() + 1 && periodo.annio === fechaHasta.getFullYear() ? 'calendario-dia-seleccionado' : ''}
-                        ${isInRange(dia.dia, periodo.mes, periodo.annio) ? 'calendario-dia-seleccionado' : ''}`}
-                        
-                        onClick={() => {
-                            if (!dia.dia || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades) return;
-                            const selectedDate = date.ymd(periodo.annio, periodo.mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia.dia);
-                            if (!fechaHasta || selectedDate <= fechaHasta) {
-                                props.onFecha(selectedDate);
-                                props.onFechaHasta(selectedDate);
-                            } 
-                            else {
-                                props.onFechaHasta(selectedDate);
-                            }
-                        }}
+                        ${fecha && sameValue(dia.fecha, fecha) ? 'calendario-dia-seleccionado' : ''}
+                        ${fechaHasta != null && fecha <= dia.fecha && dia.fecha <= fechaHasta ? 'calendario-dia-seleccionado' : ''}`}
+                    es-otro-mes={dia.mismo_mes ? "no" : "si"}
+                    onClick={() => {
+                        if (!dia.fecha || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades || (dia.fecha < fechaActual && !infoUsuario.puede_corregir_el_pasado)) return;
+                        const selectedDate = dia.fecha as RealDate;
+                        if (!fechaHasta || selectedDate <= fechaHasta) {
+                            props.onFecha(selectedDate);
+                            props.onFechaHasta(selectedDate);
+                        } 
+                        else {
+                            props.onFechaHasta(selectedDate);
+                        }
+                        if (dia.fecha.getMonth() + 1 !== periodo.mes) {
+                            setPeriodo({mes: dia.fecha.getMonth() + 1, annio: dia.fecha.getFullYear()});
+                        }
+                    }}
                 >
                     <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
                     <span className={`calendario-dia-contenido ${dia ? 'con_novedad_si' : 'con_novedad_no' }`}>{dia.cod_nov ?? ''}</span>
@@ -356,12 +352,21 @@ function SearchBox(props: {
 }
 
 function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof T)[], todas?:boolean, principalesKey?:(keyof T)[]){
-    var principales:(row:T) => boolean = todas || !principalesKey ? function(){ return true } : row => principalesKey.some(a => row[a])
-    if (filter == "") return principales
-    var f = filter.replace(/[^A-Z0-9 ]+/gi,'');
-    var regExp = new RegExp(f.replace(/\s+/, '(\\w* \\w*)+'), 'i');
+    // Normaliza texto
+    const normalize = (text: string) =>
+        text
+            .toUpperCase()
+            .normalize("NFD") // separa letras de los acentos
+            .replace(/[\u0300-\u036f]/g, '') // elimina los acentos
+            .replace(/[^A-Z0-9Ñ ]+/g, '');
+
+    var principales:(row:T) => boolean = todas || !principalesKey ? ()=>true :(row) => principalesKey.some((a) => row[a])
+    if (!filter.trim()) return principales;
+    var normalizedFilter = normalize(filter).trim().replace(/\s+/g, ' ');
+    var palabras = normalizedFilter.split(' ').filter(Boolean);
+    var regExp = new RegExp(palabras.map(p=>`(${p})`).join('.*'), 'i');
     return function(row: T){
-        return principales(row) && attributteList.some(a => regExp.test(row[a]+''))
+        return principales(row) && attributteList.some((a) => regExp.test(normalize(String(row[a] ?? ''))))
     }
 }
 
@@ -441,7 +446,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
             })
             setSectores(sectoresAumentados);
         }).catch(logError)
-    }, [fecha]);
+    }, [fecha.getMilliseconds()]);
 
     // @ts-expect-error
     var es:{registra:boolean} = conn.config?.config?.es||{}
@@ -523,13 +528,13 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 persona.fecha_egreso && n.hasta > persona.fecha_egreso ? "Fecha hasta posterior a la fecha de egreso" : null,
             ].filter(Boolean);
             return (
-            <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar?' por-borrar':''}`} 
+            <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar && quiereBorrar.idr === n.idr?' por-borrar':''}`} 
                 tiene-problemas={problemas.length ? 'si' : 'no'} title={problemas.join('. ')}
             >
                 <span className="fechas">
                     <span>{n.desde.toDmy().replace(/\/\d\d\d\d$/,'')}</span>
-                    {n.desde.sameValue(n.hasta) ? null : <span> - </span>}
-                    {n.desde.sameValue(n.hasta) ? null : <span>{n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')}</span>}
+                    {sameValue(n.desde, n.hasta) ? null : <span> - </span>}
+                    {sameValue(n.desde, n.hasta) ? null : <span>{n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')}</span>}
                 </span>
                 <span className="cant">{n.dias_hoc.substring(0,n.dias_hoc.length-1)}<sub>{n.dias_hoc.substring(n.dias_hoc.length-1)}</sub></span>
                 <span className="box-id cod_nov">{n.cod_nov}</span>
@@ -544,8 +549,14 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 eliminando ? <div>
                     <div>Eliminando</div>
                     <CircularProgress/>
-                </div> : <div>
-                    ¿Confirma el borrado de las novedades registradas entre {quiereBorrar!.desde.toDmy()} y {quiereBorrar!.hasta.toDmy()}?
+                </div> : <div className="modal-borrar-novedad">
+                    ¿Confirma el borrado de la novedad registrada <strong>"{quiereBorrar!.cod_novedades__novedad}"</strong>
+                    {
+                        sameValue(quiereBorrar!.desde, quiereBorrar!.hasta)
+                            ? `en ${quiereBorrar!.desde.toDmy()}`
+                            : `entre ${quiereBorrar!.desde.toDmy()} y ${quiereBorrar!.hasta.toDmy()}`
+                    }?
+                    <div>
                     <Button variant="outlined" onClick={()=>setQuiereBorrar(null)}>Conservar</Button>
                     <Button variant="outlined" color="error" onClick={()=>{
                         setEliminando(true);
@@ -558,7 +569,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                             props.onBorrado();
                         }).catch(logError);
                     }}>Eliminar</Button>
-                    
+                    </div>
                 </div>
             )}
         </Dialog>
@@ -567,7 +578,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
 
 function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     const {fecha, idper, conn} = props
-    const horarioVacio:HorarioSemanaVigenteResult = {desde: date.today(), hasta: date.today(), dias:{}} // corresponde today, es un default provisorio
+    const horarioVacio:HorarioSemanaVigenteResult = {desde: date.today(), hasta: date.today(), dias:{}, bh_descripcion:''} // corresponde today, es un default provisorio
     const [horario, setHorario] = useState(horarioVacio);
     useEffect(function(){
         setHorario(setEfimero)
@@ -576,7 +587,7 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
                 setHorario(result);
             }).catch(logError);
         }
-    },[idper, fecha])
+    },[idper, fecha.getMilliseconds()])
 
     const desdeFecha = horario.desde;
     const hastaFecha = horario.hasta;
@@ -590,6 +601,9 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     }
     
     return <Componente componentType="horario" esEfimero={horario}>
+        <div className="banda-horaria">
+            Banda horaria: {horario.bh_descripcion ?? 'no definida'}
+        </div>
         <div className="horario-vigente">
             Horario vigente desde {desdeFecha.toDmy()} hasta {hastaFecha.toDmy()}.
         </div>
@@ -659,14 +673,12 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
 type Hora = string;
 
 type HorarioSemanaVigenteDia = {hora_desde:Hora, hora_hasta:Hora, cod_nov:string, trabaja:boolean, dds:0 | 1 | 2 | 3 | 4 | 5 | 6}
-type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, dias:Record<string, HorarioSemanaVigenteDia>}
+type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, bh_descripcion:string, dias:Record<string, HorarioSemanaVigenteDia>}
 type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean, dias_habiles: number}
 declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: () => Promise<DefinedType<typeof ctts.info_usuario.result>>;
-        calendario_persona: (params:{
-
-        }) => Promise<any>;
+        calendario_persona: (params:DefinedType<typeof ctts.calendario_persona.parameters>) => Promise<CalendarioResult[]>;
         novedades_disponibles: (params:{
 
         }) => Promise<NovedadesDisponiblesResult[]>;
@@ -788,7 +800,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                     </div>
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">CUIL:</div>
-                        <div className="legajo-valor" red-color={!persona?.cuil_valido ? "si" : "no"}>{persona.cuil || '-'}</div>
+                        <div className="legajo-valor" red-color={!persona?.cuil_valido ? "si" : "no"}>{persona.cuil || 'sin CUIL'}</div>
                     </div>
                 </div>}
                 <div className="legajo-grupo">
@@ -967,7 +979,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         setSiCargaraNovedad(null);
         setError(null);
         resetDias();
-    },[idper,cod_nov,fecha,hasta])
+    },[idper,cod_nov,fecha.getMilliseconds(),hasta.getMilliseconds()])
     useEffect(() => {
         if (idper) {
             setDetalleVacacionesPersona(setEfimero)
@@ -1081,7 +1093,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                                 CUIL:&nbsp;
                             </span>
                             <span className="box-names" red-color={!persona?.cuil_valido ? "si" : "no"}>
-                                {persona.cuil}
+                                {persona.cuil || 'sin CUIL'}
                             </span>
                         </div>
                         <div className="box-line">
@@ -1099,7 +1111,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                     fechaActual={fechaActual!} annio={annio} onAnnio={setAnnio} infoUsuario={infoUsuario}
                 />
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
-                {cod_nov && idper && fecha && hasta && !guardandoRegistroNovedad && !registrandoNovedad && persona.cargable && puede_cargar_novedades ? <Box key="setSiCargaraNovedad">
+                {cod_nov && idper && fecha && hasta && !guardandoRegistroNovedad && !registrandoNovedad && persona.cargable && puede_cargar_novedades && (fecha >= fechaActual || infoUsuario.puede_corregir_el_pasado) ? <Box key="setSiCargaraNovedad">
                     <Button key="button" variant="outlined" onClick={() => {
                         setRegistrandoNovedad(true);
                         conn.ajax.si_cargara_novedad({idper, cod_nov, desde:fecha, hasta}).then(setSiCargaraNovedad).catch(logError)

@@ -3,6 +3,8 @@
 import {FieldDefinition, TableDefinition, TableContext, soloDigitosCons, soloDigitosPostConfig, soloCodigo, soloMayusculas} from "./types-principal";
 
 import { s_revista  } from "./table-situacion_revista";
+import { agrupamiento  } from "./table-agrupamientos";
+import { puesto  } from "./table-puestos";
 
 import { politicaNovedades } from "./table-novedades_registradas";
 
@@ -41,12 +43,14 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'nacionalidad'            , typeName: 'text', title: 'nacionalidad'            },
             {name: 'jerarquia'               , typeName: 'text', title: 'jerarquía'               },
             {name: 'cargo_atgc'              , typeName: 'text', title: 'cargo/ATGC'              },
-            {name: 'agrupamiento'            , typeName: 'text', title: 'agrupamiento'            },
+            agrupamiento,
             {name: 'tramo'                   , typeName: 'text', title: 'tramo'                   },
             {name: 'grado'                   , typeName: 'text', title: 'grado'                   },
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
             {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
             {name: 'cuil_valido'             , typeName: 'boolean', title: 'cuil válido', inTable:false, serverSide:true, editable:false},
+            puesto,
+            {name: 'banda_horaria'           , typeName: 'text', title: 'banda horaria'           },
         ],
         primaryKey: [idper.name],
         foreignKeys: [
@@ -58,6 +62,10 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'motivos_egreso'     , fields:['motivo_egreso']   },
             {references: 'tipos_doc'          , fields:['tipo_doc']        },
             {references: 'situacion_revista', fields:[s_revista.name] },
+            {references: 'agrupamientos'    , fields:[agrupamiento.name] },
+            {references: 'grados'           , fields:['tramo','grado']     },
+            {references: 'puestos'          , fields:[puesto.name] },
+            {references: 'bandas_horarias'  , fields:['banda_horaria']     },
         ],
         constraints: [
             soloCodigo(idper.name),

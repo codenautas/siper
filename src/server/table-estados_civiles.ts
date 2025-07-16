@@ -9,7 +9,7 @@ export const estado_civil:FieldDefinition = {
 }
 
 export function estados_civiles(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'estados_civiles',
         elementName: 'estado_civil',

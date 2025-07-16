@@ -1,5 +1,6 @@
-rol      |puede_cargar_todo|puede_ver_todo|puede_cargar_dependientes|puede_ver_dependientes|puede_cargar_propio|puede_ver_propio|puede_corregir_el_pasado
-admin    |true             |true          |true                     |true                  |true               |true            |true                    
-rrhh     |true             |true          |true                     |true                  |true               |true            |false                   
-basico   |false            |false         |false                    |false                 |false              |true            |false                   
-registra |false            |false         |true                     |true                  |false              |true            |false                   
+rol         |puede_cargar_todo|puede_ver_todo|puede_cargar_dependientes|puede_ver_dependientes|puede_cargar_propio|puede_ver_propio|puede_corregir_el_pasado
+admin       |true             |true          |true                     |true                  |true               |true            |true                    
+rrhh        |true             |true          |true                     |true                  |true               |true            |false                   
+basico      |false            |false         |false                    |false                 |false              |true            |false                   
+registra    |false            |false         |true                     |true                  |false              |true            |false                   
+rrhh_admin  |true             |true          |true                     |true                  |true               |true            |true                   

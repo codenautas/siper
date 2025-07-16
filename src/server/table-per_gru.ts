@@ -7,7 +7,7 @@ import {clase} from "./table-clases";
 import {grupo} from "./table-grupos";
 
 export function per_gru(context: TableContext): TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name:'per_gru',
         elementName: 'persona-grupo',

@@ -93,11 +93,12 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const {idper, annio, mes} = params;
             const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
             const info = await context.client.query(
-                `select extract(day from f.fecha) as dia,
+                `select case when extract(year from f.fecha) = x.annio then f.fecha else null end as fecha,
+                        extract(day from f.fecha) as dia,
                         extract(dow from f.fecha) as dds,
-                        extract(day from f.fecha) - extract(dow from f.fecha) as semana,
+                        (f.fecha - '2001-01-01'::date - dds) / 7 as semana,
                         v.cod_nov,
-                        case extract(dow from f.fecha) 
+                        case extract(dow from f.fecha)
                             when 0 then 'no-laborable' 
                             when 6 then 'no-laborable' 
                             else 
@@ -106,13 +107,23 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                                     else 'normal' 
                                 end 
                         end as tipo_dia,
-                        cn.novedad
-                    from fechas f
+                        cn.novedad,
+                        extract(month from f.fecha) = mes as mismo_mes
+                    from (
+                        select  fecha - 2 - extract(dow from fecha - 2)::integer      as desde,
+                                fecha - 2 - extract(dow from fecha - 2)::integer + 41 as hasta,
+                                -- (fecha + interval '1 month')::date - extract(dow from (fecha + interval '1 month'))::integer + 6 as hasta,
+                                extract(month from fecha) as mes,
+                                extract(year from fecha) as annio
+                            from fechas f
+                            where fecha = $2::date
+                        ) x, 
+                        lateral (select * from fechas where annio = x.annio) f
                         left join novedades_vigentes v on v.fecha = f.fecha and v.idper = $1
                         left join cod_novedades cn on cn.cod_nov = v.cod_nov
-                    where f.fecha between $2 and ($3::date + interval '1 month'  - interval '1 day')
+                    where f.fecha between desde and hasta
                     order by f.fecha`,
-                [idper, desde, desde]
+                [idper, desde]
             ).fetchAll();
             return info.rows
         }
@@ -217,26 +228,31 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         d.dds,
                         h.desde,
                         h.hasta,
+                        bh.descripcion as bh_descripcion,
                         coalesce(h.hora_desde, horario_habitual_desde) as hora_desde,
                         coalesce(h.hora_hasta, horario_habitual_hasta) as hora_hasta,
                         coalesce(h.trabaja, d.dds BETWEEN 1 AND 5) as trabaja,
                         coalesce(nv.cod_nov, case when d.dds BETWEEN 1 AND 5 then /* cod_nov_habitual */ null else null end) as cod_nov
                     FROM dias_semana d
                         INNER JOIN annios a USING (annio)
+                        INNER JOIN personas p ON p.idper = $1
+                        LEFT JOIN bandas_horarias bh 
+                            ON bh.banda_horaria = p.banda_horaria
                         LEFT JOIN horarios h 
                             ON h.dds = d.dds
                             AND d.fecha >= h.desde 
                             AND (h.hasta IS NULL OR d.fecha <= h.hasta)
-                            AND h.idper = $1
+                            AND h.idper = p.idper
                         LEFT JOIN novedades_vigentes nv
                             ON extract(dow from nv.fecha) = d.dds
                             AND d.fecha >= nv.fecha 
                             AND (nv.fecha IS NULL OR d.fecha <= nv.fecha)
-                            AND nv.idper = $1
+                            AND nv.idper = p.idper
                     ORDER BY d.fecha
                     )
                     SELECT coalesce(max(desde), make_date(extract(year from $2)::integer,1,1)) as desde, 
                             coalesce(min(hasta), make_date(extract(year from $2)::integer,12,31)) as hasta, 
+                            min(bh_descripcion) as bh_descripcion,
                             json_object_agg(dds, to_jsonb(hs.*) - 'desde' - 'hasta' order by dds) as dias
                         FROM horarios_semana hs;`
                 , [params.idper, params.fecha]

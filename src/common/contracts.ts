@@ -301,7 +301,6 @@ export const personas_novedad_actual = {
 
 export type PersonasNovedadActualResult = DefinedType<typeof personas_novedad_actual.result>
 
-
 export const calendario_persona = {
     procedure: 'calendario_persona',
     parameters: is.object({
@@ -310,12 +309,14 @@ export const calendario_persona = {
         mes: is.number
     }),
     result: is.object({
+        fecha: is.Date,
         dia: is.number,
         dds: is.number,
         semana: is.number,
         cod_nov: is.string,
         tipo_dia: is.string,
         novedad: is.string,
+        mismo_mes: is.boolean,
     })
 }
 
@@ -493,6 +494,57 @@ export const situacion_revista = {
 
 export type situacion_revista = DefinedType<typeof situacion_revista.description>
 
+export const expedientes = {
+    table : 'expedientes',
+    description : is.object({
+        expediente: is.string,
+        cod_2024: is.number
+    })
+}
+
+export type expedientes = DefinedType<typeof expedientes.description>
+
+export const funciones = {
+    table : 'funciones',
+    description : is.object({
+        funcion: is.string,
+        descripcion: is.string,
+        cod_2024: is.number
+    })
+}
+
+export type funciones = DefinedType<typeof funciones.description>
+
+export const nivel_grado = {
+    table : 'nivel_grado',
+    description : is.object({
+        nivel_grado: is.string,
+        cod_2024: is.number
+    })
+}
+
+export type nivel_grado = DefinedType<typeof nivel_grado.description>
+
+export const tareas = {
+    table : 'tareas',
+    description : is.object({
+        tarea: is.string,
+        horas_semanales: is.number,
+        horas_dia: is.number,
+        minimo_horas_por_dia: is.number,
+        maximo_horas_por_dia: is.number,
+        nocturno: is.boolean,
+        fin_semana: is.boolean,
+        guardia: is.boolean,
+        hora_entrada_desde: is.string,
+        hora_salida_hasta: is.string,
+        horario_flexible: is.boolean,
+        cod_2024: is.number
+    })
+}
+
+export type tareas = DefinedType<typeof tareas.description>
+
 export const motivos_egreso = {
     table : 'motivos_egreso',
     description : is.object({
@@ -608,6 +660,16 @@ export const per_domicilios = {
         observaciones:   is.string,
     })
 }
+export const puestos = {
+    table : 'puestos',
+    description : is.object({
+        puesto: is.number,
+        descripcion: is.string,
+        objetivo: is.string
+    })
+}
+
+export type puestos = DefinedType<typeof puestos.description>
 
 export const per_telefonos = {
     table: 'per_telefonos',
@@ -619,6 +681,18 @@ export const per_telefonos = {
         observaciones:   is.string,
     })
 }
+
+export const bandas_horarias = {
+    table: 'bandas_horarias',
+    description: is.object({
+        banda_horaria: is.string,
+        descripcion: is.string,
+        hora_desde: is.string,
+        hora_hasta: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type bandas_horarias = DefinedType<typeof bandas_horarias.description>
 
 export const meses = [
     {  value:1, name:'enero' },
