@@ -20,6 +20,9 @@ insert into "bandas_horarias" ("banda_horaria", "descripcion", "hora_desde", "ho
 ('CAMPO', 'Lunes a Domingo de 8 a 22', '08:00', '22:00'),
 ('GABINETE', 'Lunes a Viernes 8 a 20', '08:00', '20:00');
 
+alter table annios drop CONSTRAINT "annio abierto completo";
+update annios set horario_habitual_desde = null, horario_habitual_hasta = null;
+
 alter table "bandas_horarias" add constraint "banda_horaria<>''" check ("banda_horaria"<>'');
 alter table "bandas_horarias" add constraint "descripcion<>''" check ("descripcion"<>'');
 alter table "bandas_horarias" alter column "hora_desde" set not null;

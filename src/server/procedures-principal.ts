@@ -228,26 +228,31 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         d.dds,
                         h.desde,
                         h.hasta,
+                        bh.descripcion as bh_descripcion,
                         coalesce(h.hora_desde, horario_habitual_desde) as hora_desde,
                         coalesce(h.hora_hasta, horario_habitual_hasta) as hora_hasta,
                         coalesce(h.trabaja, d.dds BETWEEN 1 AND 5) as trabaja,
                         coalesce(nv.cod_nov, case when d.dds BETWEEN 1 AND 5 then /* cod_nov_habitual */ null else null end) as cod_nov
                     FROM dias_semana d
                         INNER JOIN annios a USING (annio)
+                        INNER JOIN personas p ON p.idper = $1
+                        LEFT JOIN bandas_horarias bh 
+                            ON bh.banda_horaria = p.banda_horaria
                         LEFT JOIN horarios h 
                             ON h.dds = d.dds
                             AND d.fecha >= h.desde 
                             AND (h.hasta IS NULL OR d.fecha <= h.hasta)
-                            AND h.idper = $1
+                            AND h.idper = p.idper
                         LEFT JOIN novedades_vigentes nv
                             ON extract(dow from nv.fecha) = d.dds
                             AND d.fecha >= nv.fecha 
                             AND (nv.fecha IS NULL OR d.fecha <= nv.fecha)
-                            AND nv.idper = $1
+                            AND nv.idper = p.idper
                     ORDER BY d.fecha
                     )
                     SELECT coalesce(max(desde), make_date(extract(year from $2)::integer,1,1)) as desde, 
                             coalesce(min(hasta), make_date(extract(year from $2)::integer,12,31)) as hasta, 
+                            min(bh_descripcion) as bh_descripcion,
                             json_object_agg(dds, to_jsonb(hs.*) - 'desde' - 'hasta' order by dds) as dias
                         FROM horarios_semana hs;`
                 , [params.idper, params.fecha]

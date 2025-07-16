@@ -569,7 +569,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
 
 function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     const {fecha, idper, conn} = props
-    const horarioVacio:HorarioSemanaVigenteResult = {desde: date.today(), hasta: date.today(), dias:{}} // corresponde today, es un default provisorio
+    const horarioVacio:HorarioSemanaVigenteResult = {desde: date.today(), hasta: date.today(), dias:{}, bh_descripcion:''} // corresponde today, es un default provisorio
     const [horario, setHorario] = useState(horarioVacio);
     useEffect(function(){
         setHorario(setEfimero)
@@ -592,6 +592,9 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     }
     
     return <Componente componentType="horario" esEfimero={horario}>
+        <div className="banda-horaria">
+            Banda horaria: {horario.bh_descripcion ?? 'no definida'}
+        </div>
         <div className="horario-vigente">
             Horario vigente desde {desdeFecha.toDmy()} hasta {hastaFecha.toDmy()}.
         </div>
@@ -661,7 +664,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
 type Hora = string;
 
 type HorarioSemanaVigenteDia = {hora_desde:Hora, hora_hasta:Hora, cod_nov:string, trabaja:boolean, dds:0 | 1 | 2 | 3 | 4 | 5 | 6}
-type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, dias:Record<string, HorarioSemanaVigenteDia>}
+type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, bh_descripcion:string, dias:Record<string, HorarioSemanaVigenteDia>}
 type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean, dias_habiles: number}
 declare module "frontend-plus" {
     interface BEAPI {
