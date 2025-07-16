@@ -60,6 +60,7 @@ import { expedientes             } from "./table-expedientes";
 import { funciones               } from "./table-funciones";
 import { nivel_grado             } from "./table-nivel_grado";
 import { tareas                  } from "./table-tareas";
+import { puestos                 } from "./table-puestos";
 import { bandas_horarias         } from "./table-bandas_horarias";
 
 import { ProceduresPrincipal } from './procedures-principal'
@@ -214,6 +215,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'funciones'        },
                             {menuType:'table', name:'nivel_grado'      },
                             {menuType:'table', name:'tareas'           },
+                            {menuType:'table', name:'puestos'          },
                             {menuType:'table', name:'bandas_horarias'  },
                         ]},
                         {menuType:'table', name:'cod_novedades' },
@@ -321,6 +323,7 @@ export class AppSiper extends AppBackend{
             funciones            ,
             nivel_grado          ,
             tareas               ,
+            puestos              ,
             historial_contrataciones,
             bandas_horarias,
         }

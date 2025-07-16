@@ -22,7 +22,7 @@ export function per_nov_cant(context: TableContext): TableDefinition {
             {name: 'vencimiento', typeName: 'date'   },
         ],
         primaryKey: [año.name, cod_nov.name, idper.name, 'origen'],
-        softForeignKeys: [
+        foreignKeys: [
             {references: 'annios'       , fields: [año.name], onUpdate: 'no action'},
             {references: 'personas'     , fields: [idper.name]},
             {references: 'cod_novedades', fields: [cod_nov.name]},
@@ -30,5 +30,9 @@ export function per_nov_cant(context: TableContext): TableDefinition {
         detailTables: [
             {table:'novedades_vigentes', fields:[año.name, cod_nov.name, idper.name], abr:'N'}
         ],
+        constraints: [
+            {constraintType:'check', consName:'annio de comienzo debe ser igual a annio', expr:`extract(year from comienzo) is not distinct from annio or comienzo is null`},
+            {constraintType:'check', consName:'annio de vencimiento debe ser igual a annio', expr:`extract(year from vencimiento) is not distinct from annio or vencimiento is null`},
+        ]
     };
 }

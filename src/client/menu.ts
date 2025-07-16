@@ -41,7 +41,7 @@ myOwn.clientSides.cuil_style = {
     prepare: function (depot, fieldName) {
         const cuilValido = depot.row.cuil_valido;
         const fieldControl = depot.rowControls[fieldName];
-        if (cuilValido === false || cuilValido === null) {
+        if (cuilValido === false) {
             fieldControl.setAttribute('red-color', 'si');
         }
     },
@@ -51,10 +51,10 @@ myOwn.clientSides.cuil_style = {
 
         if (fieldControl) {
             // Muestra el valor de cuil
-            fieldControl.textContent = depot.row.cuil || 'Sin CUIL';
+            fieldControl.textContent = depot.row.cuil;
 
             // Aplica el atributo condicional
-            if (cuilValido === false || cuilValido === null) {
+            if (cuilValido === false) {
                 fieldControl.setAttribute('red-color', 'si');
             } else {
                 fieldControl.removeAttribute('red-color');
