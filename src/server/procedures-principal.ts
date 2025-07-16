@@ -325,6 +325,20 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             };
         }
     },
+
+    {
+        action: 'cargar_tot_nov',
+        parameters: [
+            {name:'idper', references: 'personas'}
+        ],
+        coreFunction : async function(context: ProcedureContext, params:any) {
+            await context.client.query(
+                `call agregar_novedades_persona_idper($1)`, [params.idper]
+            ).execute();
+            return true
+        }
+    },
+
     {
         action: 'informe_mensual',
         parameters: [
