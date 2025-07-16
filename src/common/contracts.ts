@@ -680,6 +680,18 @@ export const per_telefonos = {
     })
 }
 
+export const bandas_horarias = {
+    table: 'bandas_horarias',
+    description: is.object({
+        banda_horaria: is.string,
+        descripcion: is.string,
+        hora_desde: is.string,
+        hora_hasta: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type bandas_horarias = DefinedType<typeof bandas_horarias.description>
+
 export const meses = [
     {  value:1, name:'enero' },
     {  value:2, name:'febrero' },
