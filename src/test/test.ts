@@ -7,7 +7,7 @@ import { AppSiper } from '../server/app-principal';
 
 import {promises as fs} from 'fs'
 
-import { startServer, EmulatedSession, expectError, loadLocalFile, saveLocalFile, benchmarksSave, someTestFails} from "./probador-serial";
+import { startServer, EmulatedSession, expectError, loadLocalFile, saveLocalFile, benchmarksSave, someTestFails} from "serial-tester";
 
 import * as ctts from "../common/contracts"
 
