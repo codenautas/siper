@@ -16,7 +16,7 @@ export function puestos(context:TableContext):TableDefinition{
         editable:admin,
         fields:[
             puesto,
-            {name: 'descripcion', typeName: 'text', isName: true  },
+            {name: 'nombre'      , typeName: 'text', isName: true  },
             {name: 'objetivo'    , typeName: 'text'},
         ],
         primaryKey:[puesto.name],
