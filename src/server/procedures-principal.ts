@@ -57,23 +57,36 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             'novedad', cn.cod_nov, 
                             'a', p.apellido||',', p.nombres, 
                             '(persona', p.idper,
-                            ')?'
+                            ')?' || case 
+                                when (case when corridos then cantidad - total_corridos else cantidad - total_habiles end) < 0
+                                    then ' ¡ATENCIÓN: NO LE QUEDAN DÍAS SUFICIENTES!'
+                                    else '' end
                         ) as mensaje,
                         dias_corridos, dias_habiles, dias_coincidentes,
                         con_detalles,
-                        cn.c_dds
-                    from personas p
+                        cn.c_dds,
+                        case when corridos then cantidad - total_corridos else cantidad - total_habiles end as saldo
+                    from personas p 
+                        inner join (select $1::date as desde, $2::date as hasta) params on true
                         left join cod_novedades cn on cn.cod_nov = $3,
+                        lateral (select sum(cantidad) as cantidad from per_nov_cant pnc where pnc.idper = p.idper and pnc.cod_nov = cn.cod_nov) s,
                         lateral (
-                            select count(*) as dias_corridos,
+                            select count(*) filter (where f.fecha between params.desde and params.hasta) as dias_corridos,
                                     count(*) filter (
                                         where extract(dow from f.fecha) between 1 and 5
                                             and laborable is not false
+                                            and f.fecha between params.desde and params.hasta
                                     ) as dias_habiles,
-                                    count(*) filter (where cod_nov is not null) as dias_coincidentes
+                                    count(*) filter (where (f.fecha between params.desde and params.hasta or v.cod_nov = cn.cod_nov)) as total_corridos,
+                                    count(*) filter (
+                                        where extract(dow from f.fecha) between 1 and 5
+                                            and laborable is not false
+                                            and (f.fecha between params.desde and params.hasta or v.cod_nov = cn.cod_nov)
+                                    ) as total_habiles,
+                                    count(*) filter (where cod_nov is not null and f.fecha between params.desde and params.hasta) as dias_coincidentes
                                 from fechas f
                                     left join novedades_vigentes v on v.fecha = f.fecha and v.idper = p.idper -- es correcto no juntar con cn.cod_nov
-                                where f.fecha between $1 and $2
+                                where f.annio = extract(year from params.desde)
                         ) x
                     where p.idper = $4
 `, 
