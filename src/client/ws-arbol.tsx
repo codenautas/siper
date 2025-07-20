@@ -65,7 +65,7 @@ function NodoArbol(props:{
     nivelSectorHasta: number,
     abiertos: Record<string,boolean>, setAbiertos: React.Dispatch<React.SetStateAction<Record<string,boolean>>>
 }){
-    const { sector, sectores, abiertos, setAbiertos, esPrimero, esUltimo } = props;
+    const { sector, sectores, abiertos, setAbiertos, esPrimero, esUltimo, nivelSectorHasta } = props;
     const abierto = abiertos[sector.sector] ?? false;
     const hijos = sectores.filter((s) => s.pertenece_a == sector.sector);
     const esRaiz = !sector.pertenece_a;
