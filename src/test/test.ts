@@ -90,15 +90,21 @@ describe("connected", function(){
     var server: AppSiper;
     var rrhhSession: EmulatedSession<AppSiper>;
     var rrhhAdminSession: EmulatedSession<AppSiper>; // no cualquier rrhh
+    var adminMetadatosSession: EmulatedSession<AppSiper>; // admin de metadatos, por ahora un admin
     var borradoExitoso: boolean = false;
     var fallaEnLaQueQuieroOmitirElBorrado: boolean = false;
     before(async function(){
         try{
             server = await startServer(AppSiper);
-            rrhhAdminSession = new EmulatedSession(server, PORT || server.config.server.port);
-            await rrhhAdminSession.login({
+            adminMetadatosSession = new EmulatedSession(server, PORT || server.config.server.port);
+            await adminMetadatosSession.login({
                 username: 'perry',
                 password: 'white',
+            });
+            rrhhAdminSession = new EmulatedSession(server, PORT || server.config.server.port);
+            await rrhhAdminSession.login({
+                username: 'lois',
+                password: 'lane',
             });
             rrhhSession = new EmulatedSession(server, PORT || server.config.server.port);
             await rrhhSession.login({
@@ -245,7 +251,7 @@ describe("connected", function(){
         try {
             var persona = await crearNuevaPersona(nombre, {registra_novedades_desde: opciones.registra_novedades_desde, para_antiguedad_relativa: opciones.para_antiguedad_relativa});
             var {vacaciones, tramites, hoy} = opciones;
-            await rrhhAdminSession.saveRecord(ctts.per_gru, {idper: persona.idper, clase: 'U', grupo: 'T'}, 'new');
+            // await rrhhAdminSession.saveRecord(ctts.per_gru, {idper: persona.idper, clase: 'U', grupo: 'T'}, 'new');
             var usuario = null as unknown as UsuarioConCredenciales;
             var sesion = null as unknown as EmulatedSession<AppSiper>;
             if (opciones.usuario) {
@@ -290,9 +296,9 @@ describe("connected", function(){
         try {
             var persona1 = await crearNuevaPersona(numero, {});
             var persona2 = await crearNuevaPersona(numero + " segunda persona", {});
-            await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA agregar feriado', total:true }, 'new')
+            await adminMetadatosSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA agregar feriado', total:true }, 'new')
             haciendo = 'poniendo el feriado'
-            await rrhhAdminSession.saveRecord(
+            await adminMetadatosSession.saveRecord(
                 ctts.fecha, 
                 {fecha:date.iso('2000-01-10'), laborable:false, repite:false, inamovible:false, leyenda:'PRUEBA AUTOMÁTICA agregar feriado'}, 
                 'update'
@@ -482,7 +488,7 @@ describe("connected", function(){
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
                 /* quito el feriado */
-                await rrhhAdminSession.saveRecord(
+                await adminMetadatosSession.saveRecord(
                     ctts.fecha, 
                     {fecha:date.iso('2000-01-10'), laborable:null, repite:null, inamovible:null, leyenda:'PRUEBA AUTOMÁTICA agregar feriado'}, 
                     'update'
@@ -505,7 +511,7 @@ describe("connected", function(){
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
                 /* agrego otro feriado */
-                await rrhhAdminSession.saveRecord(
+                await adminMetadatosSession.saveRecord(
                     ctts.fecha, 
                     {fecha:date.iso('2000-01-11'), laborable:false, repite:false, inamovible:false, leyenda:'PRUEBA AUTOMÁTICA agregar feriado'}, 
                     'update'
@@ -596,7 +602,7 @@ describe("connected", function(){
         it("no puede cargarse una novedad con detalles cuando el codigo de novedad indica sin detalles", async function(){
             await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
                 await expectError( async () => {
-                    await rrhhAdminSession.saveRecord(
+                    await adminMetadatosSession.saveRecord(
                         ctts.cod_nov, 
                         {cod_nov:COD_MUDANZA, con_detalles:false}, 
                         'update'
@@ -606,7 +612,7 @@ describe("connected", function(){
                         {desde:date.iso('2000-02-09'), hasta:date.iso('2000-02-09'), cod_nov:COD_MUDANZA, idper: persona.idper, detalles:TEXTO_PRUEBA},
                         'new'
                     );
-                    await rrhhAdminSession.saveRecord(
+                    await adminMetadatosSession.saveRecord(
                         ctts.cod_nov, 
                         {cod_nov:COD_MUDANZA, con_detalles:null}, 
                         'update'
@@ -616,7 +622,7 @@ describe("connected", function(){
         })
         it("un detalle para una novedad se copia en novedades_vigentes", async function(){
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
-                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov:COD_MUDANZA, con_detalles:null}, 'update');
+                    await adminMetadatosSession.saveRecord(ctts.cod_nov, {cod_nov:COD_MUDANZA, con_detalles:null}, 'update');
                     await rrhhAdminSession.saveRecord(
                     ctts.novedades_registradas, 
                     {desde:date.iso('2000-02-10'), hasta:date.iso('2000-02-10'), cod_nov:COD_MUDANZA, idper, detalles:TEXTO_PRUEBA},
@@ -658,7 +664,7 @@ describe("connected", function(){
         it("no puede cargarse una novedad horaria con superposición", async function(){
             await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
                 await expectError( async () => {
-                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov:COD_COMISION, parcial:true}, 'update');
+                    await adminMetadatosSession.saveRecord(ctts.cod_nov, {cod_nov:COD_COMISION, parcial:true}, 'update');
                     await rrhhAdminSession.saveRecord(
                         ctts.novedades_horarias, 
                         {idper:persona.idper, fecha:date.iso('2000-03-05'), hasta_hora:HASTA_HORA ,cod_nov:COD_COMISION}, 
@@ -687,7 +693,7 @@ describe("connected", function(){
             await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
                 await expectError( async () => {
                     const cod_nov = '10003';
-                    await rrhhAdminSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA intengo agregar no total', total: false}, 'new')
+                    await adminMetadatosSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA intengo agregar no total', total: false}, 'new')
                     await rrhhAdminSession.saveRecord(
                         ctts.novedades_registradas, 
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov, idper: persona.idper},
@@ -914,17 +920,17 @@ describe("connected", function(){
         describe("controla las referencias circulares", async function(){
             async function verifcaImpedirReferenciaCircular(sector:string, nuevoPertenceA:string, errorCode:string){
                 await expectError( async () => {
-                    await rrhhAdminSession.saveRecord(ctts.sectores, {sector, pertenece_a: nuevoPertenceA}, 'update');
+                    await adminMetadatosSession.saveRecord(ctts.sectores, {sector, pertenece_a: nuevoPertenceA}, 'update');
                     throw new Error("se esperaba un error para impedir la referencia circular")
                 }, errorCode);
             }
             it("permite cambiar de quién depende", async function(){
                 var sectorCambiado = 'T1';
-                await rrhhAdminSession.saveRecord(ctts.sectores, {sector: 'P1', pertenece_a:'T'}, 'update');
+                await adminMetadatosSession.saveRecord(ctts.sectores, {sector: 'P1', pertenece_a:'T'}, 'update');
                 await rrhhAdminSession.tableDataTest('sectores', [
                     {sector: sectorCambiado, pertenece_a: 'T'}
                 ], 'all', {fixedFields:[{fieldName:'sector', value: sectorCambiado}]})
-                await rrhhAdminSession.saveRecord(ctts.sectores, {sector: sectorCambiado, pertenece_a:'P'}, 'update');
+                await adminMetadatosSession.saveRecord(ctts.sectores, {sector: sectorCambiado, pertenece_a:'P'}, 'update');
             })
             it("impiede una referencia circular corta", async function(){
                 await verifcaImpedirReferenciaCircular('P1', 'P13', ctts.unique_violation);

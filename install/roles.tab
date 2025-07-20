@@ -3,4 +3,4 @@ admin       |true             |true          |true                     |true    
 rrhh        |true             |true          |true                     |true                  |true               |true            |false                   
 basico      |false            |false         |false                    |false                 |false              |true            |false                   
 registra    |false            |false         |true                     |true                  |false              |true            |false                   
-rrhh_admin  |true             |true          |true                     |true                  |true               |true            |true                   
+superior    |true             |true          |true                     |true                  |true               |true            |true                   

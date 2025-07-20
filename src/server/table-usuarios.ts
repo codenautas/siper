@@ -33,7 +33,7 @@ export function usuarios(context: TableContext): TableDefinition{
         primaryKey: ['usuario'],
         foreignKeys: [
             {references: 'personas', fields:[idper.name]},
-            {references: 'roles'   , fields:[rol.name ]},
+            {references: 'roles'   , fields:[rol.name  ], onUpdate: 'no action'},
         ],
         sql: {
             where:rolConPermisos || context.forDump?'true':"usuario = "+context.be.db.quoteNullable(context.user.usuario),
