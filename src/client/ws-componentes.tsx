@@ -698,6 +698,7 @@ declare module "frontend-plus" {
             primaryKeyValues: any[];    
         }) => Promise<void>;
         parametros: (params:{}) => Promise<ParametrosResult>;
+        registrar_novedad: (params:NovedadRegistrada) => Promise<NovedadRegistrada & { idr: number }>;
     }
     interface Connector {
         config: AppConfigClientSetup
@@ -1019,7 +1020,8 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             dds3:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds3,
             dds4:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds4,
             dds5:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds5,
-            dds6:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds6
+            dds6:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds6,
+            cancela: cod_nov == null
         }).then(function(result){
             setUltimaNovedad(result.idr as number);
             // setFecha(fechaActual);
