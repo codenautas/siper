@@ -1007,27 +1007,21 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     }, [idper, annio, ultimaNovedad]);
     function registrarNovedad(){
         setGuardandoRegistroNovedad(true);
-        conn.ajax.table_record_save({
-            table:'novedades_registradas',
-            primaryKeyValues:[],
-            newRow:{
-                idper, 
-                desde:fecha, 
-                hasta, 
-                cod_nov, 
-                detalles: detalles == "" ? null : detalles,
-                dds0:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds0,
-                dds1:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds1,
-                dds2:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds2,
-                dds3:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds3,
-                dds4:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds4,
-                dds5:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds5,
-                dds6:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds6
-            },
-            oldRow:{},
-            status:'new'
+        conn.ajax.registrar_novedad({
+            idper, 
+            desde:fecha, 
+            hasta, 
+            cod_nov, 
+            detalles: detalles == "" ? null : detalles,
+            dds0:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds0,
+            dds1:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds1,
+            dds2:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds2,
+            dds3:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds3,
+            dds4:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds4,
+            dds5:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds5,
+            dds6:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds6
         }).then(function(result){
-            setUltimaNovedad(result.row.idr as number);
+            setUltimaNovedad(result.idr as number);
             // setFecha(fechaActual);
             // setHasta(fechaActual);
             // setCodNov("");

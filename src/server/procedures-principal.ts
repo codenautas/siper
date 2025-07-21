@@ -8,6 +8,7 @@ import { sqlNovPer } from "./table-nov_per";
 import { date, datetime } from 'best-globals'
 import { DefinedType } from 'guarantee-type';
 import { FixedFields } from 'frontend-plus';
+import { expected } from 'cast-error';
 
 export const ProceduresPrincipal:ProcedureDef[] = [
     {
@@ -93,6 +94,45 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 [desde, hasta, cod_nov, idper]
             ).fetchUniqueRow();
             return info.row
+        }
+    },
+    {
+        action: 'registrar_novedad',
+        parameters: [
+            {name: 'idper'    , typeName: 'text'   , references:'personas'},
+            {name: 'cod_nov'  , typeName: 'text'   , defaultValue:null, references:'cod_novedades'},
+            {name: 'desde'    , typeName: 'date'   },
+            {name: 'hasta'    , typeName: 'date'   },
+            {name: 'dds0'     , typeName: 'boolean', defaultValue:null, label:'domingo'    },
+            {name: 'dds1'     , typeName: 'boolean', defaultValue:null, label:'lunes'      },
+            {name: 'dds2'     , typeName: 'boolean', defaultValue:null, label:'martes'     },
+            {name: 'dds3'     , typeName: 'boolean', defaultValue:null, label:'miércoles'  },
+            {name: 'dds4'     , typeName: 'boolean', defaultValue:null, label:'jueves'     },
+            {name: 'dds5'     , typeName: 'boolean', defaultValue:null, label:'viernes'    },
+            {name: 'dds6'     , typeName: 'boolean', defaultValue:null, label:'sabado'     },
+            {name: 'cancela'  , typeName: 'boolean', defaultValue:null, description:'cancelación de novedades'},
+            {name: 'detalles' , typeName: 'text'   , defaultValue:null,                                       },
+        ],
+        coreFunction: async function(context: ProcedureContext, params:NovedadRegistrada){
+            var result = await context.be.procedure.table_record_save.coreFunction(context, {
+                table: 'novedades_registradas',
+                primaryKeyValues: [],
+                newRow: params,
+                oldRow: {},
+                status: 'new'
+            });
+            const {idper, desde} = result.row as NovedadRegistrada;
+            var inconsistencias = await context.client.query(`
+                SELECT cod_nov, saldo
+                    FROM (${sqlNovPer({idper, annio:desde.getFullYear()})}) x
+                    WHERE error_saldo_negativo
+            `, []).fetchAll();
+            if (inconsistencias.rows.length > 0) {
+                var error = expected(new Error(`La novedad registrada genera saldos negativos. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}, saldo: ${r.saldo}`).join('; ')}`));
+                error.code = 'B9001'; // ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES
+                throw error;
+            }
+            return result.row;
         }
     },
     {

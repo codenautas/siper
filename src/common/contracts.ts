@@ -387,6 +387,12 @@ export const parametros = {
 
 export type ParametrosResult = DefinedType<typeof parametros.result>
 
+export const registrar_novedad = {
+    procedure: 'registrar_novedad',
+    parameters: novedades_registradas.description,
+    result: novedades_registradas.description
+}
+
 export const annio = {
     table: 'annio',
     description: is.object({
@@ -725,6 +731,9 @@ export const ERROR_COD_NOVEDAD_NO_INDICA_CON_HORARIO= 'P1007';
 export const ERROR_COD_NOVEDAD_NO_INDICA_CON_NOVEDAD= 'P1008';
 export const ERROR_SECTORES_DESNIVELADOS            = 'P1009';
 export const ERROR_SECTOR_HUERFANO_NO_TOPE          = 'P1010';
+
+//////////// ERRORES PROPIOS DEL BACKEND:
+export const ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES   = 'B9001';
 
 //////////// ERRORES POSTGRES: https://www.postgresql.org/docs/current/errcodes-appendix.html
 export const insufficient_privilege = '42501';
