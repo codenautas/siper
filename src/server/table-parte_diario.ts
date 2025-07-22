@@ -14,6 +14,7 @@ select
         f.fecha, 
         nv.cod_nov,
         p.sector,
+        bh.descripcion as bh_descripcion,
         fi.entrada as fichada_entrada,
         fi.salida as fichada_salida,
         coalesce(h.hora_desde, horario_habitual_desde) horario_entrada, 
@@ -33,6 +34,7 @@ select
         left join (${sqlNovedadesVigentesConDesdeHastaHabiles}) nv using(idper, fecha)
         left join lateral (select min(hora) as entrada, max(hora) as salida from fichadas where fecha = f.fecha and idper = p.idper) fi on true
         left join horarios h on h.idper = p.idper and f.dds = h.dds and f.fecha between h.desde and h.hasta 
+        left join bandas_horarias bh on p.banda_horaria = bh.banda_horaria
 `;
 
 // Función genérica para la configuración base de las tablas
@@ -49,6 +51,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
             { name: 'fecha'  , typeName: 'date' },
             sector,
             cod_nov,
+            { name: 'bh_descripcion', typeName: 'text', title: 'descripcion' },
             { name: 'fichada', typeName: 'text' },
             { name: 'horario', typeName: 'text' },
             { name: 'desde', typeName: 'date' },
@@ -58,7 +61,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],
         softForeignKeys: [
-            {references: 'personas', fields: [idper.name], displayFields:['ficha', 'cuil', 'apellido', 'nombres']},
+            {references: 'personas', fields: [idper.name], displayFields:['ficha', 'cuil', 'apellido', 'nombres', 'banda_horaria'], displayAfterFieldName:cod_nov.name},
             {references: 'cod_novedades', fields: [cod_nov.name], displayFields:['novedad']},
             {references: 'sectores', fields: [sector.name], displayFields:['nombre_sector']},
         ],
