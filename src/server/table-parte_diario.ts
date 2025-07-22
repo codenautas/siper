@@ -14,11 +14,16 @@ select
         f.fecha, 
         nv.cod_nov,
         p.sector,
-        bh.descripcion as bh_descripcion,
+        p.ficha as persona_ficha,
+        p.cuil,
+        p.apellido,
+        p.nombres,
+        s.nombre_sector as sector_nombre,
         fi.entrada as fichada_entrada,
         fi.salida as fichada_salida,
         coalesce(h.hora_desde, horario_habitual_desde) horario_entrada, 
         coalesce(h.hora_hasta, horario_habitual_hasta) as horario_salida,
+        cn.novedad,
         nv.ficha,
         nv.annio,
         nv.trabajable,
@@ -26,12 +31,16 @@ select
         nv.desde,
         nv.hasta,
         nv.habiles,
-        nv.corridos
+        nv.corridos,
+        p.banda_horaria,
+        bh.descripcion as bh_descripcion
     from
         personas p
         inner join fechas f on f.fecha between p.registra_novedades_desde and coalesce(p.fecha_egreso, '3000-01-01'::date)
         left join annios using (annio)
+        left join sectores s on p.sector = s.sector
         left join (${sqlNovedadesVigentesConDesdeHastaHabiles}) nv using(idper, fecha)
+        left join cod_novedades cn on nv.cod_nov = cn.cod_nov
         left join lateral (select min(hora) as entrada, max(hora) as salida from fichadas where fecha = f.fecha and idper = p.idper) fi on true
         left join horarios h on h.idper = p.idper and f.dds = h.dds and f.fecha between h.desde and h.hasta 
         left join bandas_horarias bh on p.banda_horaria = bh.banda_horaria
@@ -44,27 +53,25 @@ export function parte_diario(_context: TableContext): TableDefinition {
         elementName: "parte_diario",
         fields: [
             idper,
-            { name: 'personas__ficha'   , typeName: 'text' , title: 'ficha'      },
-            { name: 'personas__cuil'    , typeName: 'text' , title: 'cuil'       },
-            { name: 'personas__apellido', typeName: 'text' , title: 'apellido'   },
-            { name: 'personas__nombres' , typeName: 'text' , title: 'nombres'    },
+            { name: 'persona_ficha'   , typeName: 'text' , title: 'ficha'},
+            { name: 'cuil'    , typeName: 'text' },
+            { name: 'apellido', typeName: 'text'},
+            { name: 'nombres' , typeName: 'text'},
             { name: 'fecha'  , typeName: 'date' },
             sector,
+            { name: 'sector_nombre', typeName: 'text', title: 'sector departamento área' },        // <-- AGREGADO
             cod_nov,
-            { name: 'bh_descripcion', typeName: 'text', title: 'descripcion' },
+            { name: 'novedad', typeName: 'text'},
             { name: 'fichada', typeName: 'text' },
             { name: 'horario', typeName: 'text' },
             { name: 'desde', typeName: 'date' },
             { name: 'hasta', typeName: 'date' },
             { name: 'habiles', typeName: 'integer' },
             { name: 'corridos', typeName: 'integer' },
+            { name: 'banda_horaria', typeName: 'text'},
+            { name: 'bh_descripcion', typeName: 'text', title: 'descripcion' },
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],
-        softForeignKeys: [
-            {references: 'personas', fields: [idper.name], displayFields:['ficha', 'cuil', 'apellido', 'nombres', 'banda_horaria'], displayAfterFieldName:cod_nov.name},
-            {references: 'cod_novedades', fields: [cod_nov.name], displayFields:['novedad']},
-            {references: 'sectores', fields: [sector.name], displayFields:['nombre_sector']},
-        ],
         hiddenColumns: ['fichada'],
         constraints: [
         ],
@@ -76,6 +83,6 @@ export function parte_diario(_context: TableContext): TableDefinition {
                 from (${sqlParteDiario}) x
             )`,
         },
-        sortColumns:[{column:'personas__apellido'}, {column:'personas__nombres'}],
+        sortColumns:[{column:'apellido'}, {column:'nombres'}],
     };
 }
