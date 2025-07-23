@@ -97,7 +97,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {references: 'fechas', fields: [{source:'hasta', target:'fecha'}], alias:'hasta'},
         ],
         constraints: [
-            {constraintType:'check', consName:'desde y hasta deben ser del mismo annio', expr:`extract(year from desde) is not distinct from extract(year from desde)`},
+            {constraintType:'check', consName:'desde y hasta deben ser del mismo annio', expr:`extract(year from desde) is not distinct from extract(year from hasta)`},
             {constraintType:'check', consName:'cod_nov obligatorio si no cancela', expr:'(cod_nov is null) = (cancela is true)'},
         ],
         hiddenColumns: [idr.name],
