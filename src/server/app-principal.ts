@@ -174,6 +174,7 @@ export class AppSiper extends AppBackend{
             menuContent.push(
                 {menuType:'menu', name:'en_desarrollo', menuContent:[
                     {menuType:'menu', name:'novedades', menuContent:[
+                        {menuType:'proc', name:'cargar_tot_nov'},
                         {menuType:'registroNovedades', name:'registro'},
                         {menuType:'statusPersona', name:'status'},
                         {menuType:'menu', name:'tablas', menuContent:[
