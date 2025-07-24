@@ -854,7 +854,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                         <div className="legajo-valor">{persona.grado || '-'}</div>
                     </div>
                     <div className="legajo-campo">
-                        <div className="legajo-etiqueta">Puesto:</div>
+                        <div className="legajo-etiqueta">Perfil SGC:</div>
                         <div className="legajo-valor">{persona.puesto || '-'} {persona.puestos__nombre}</div>
                     </div>
                 </div>
