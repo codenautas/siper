@@ -13,7 +13,7 @@ export function puestos(context:TableContext):TableDefinition{
     return {
         name:'puestos',
         elementName: 'puesto',
-        title:'puestos',
+        title:'Perfil SGC',
         editable:admin,
         fields:[
             puesto,
