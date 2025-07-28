@@ -35,7 +35,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'categoria', typeName: 'text',               title:'categoría'                 },
             s_revista,
             {name: 'registra_novedades_desde', typeName: 'date'                                   },
-            {name: 'para_antiguedad_relativa', typeName: 'date'                                   },
+            {name: 'para_antiguedad_relativa', typeName: 'date', title: 'para antigüedad relativa'},
             {name: 'activo' , typeName: 'boolean', nullable:false , defaultValue:false            },
             {name: 'fecha_ingreso'           , typeName: 'date'                                   },
             {name: 'fecha_egreso'            , typeName: 'date'                                   },

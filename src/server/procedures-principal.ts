@@ -8,6 +8,7 @@ import { sqlNovPer } from "./table-nov_per";
 import { date, datetime } from 'best-globals'
 import { DefinedType } from 'guarantee-type';
 import { FixedFields } from 'frontend-plus';
+import { expected } from 'cast-error';
 
 export const ProceduresPrincipal:ProcedureDef[] = [
     {
@@ -57,29 +58,81 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             'novedad', cn.cod_nov, 
                             'a', p.apellido||',', p.nombres, 
                             '(persona', p.idper,
-                            ')?'
+                            ')?' || case 
+                                when (case when corridos then cantidad - total_corridos else cantidad - total_habiles end) < 0
+                                    then ' ¡ATENCIÓN: NO LE QUEDAN DÍAS SUFICIENTES!'
+                                    else '' end
                         ) as mensaje,
                         dias_corridos, dias_habiles, dias_coincidentes,
                         con_detalles,
-                        cn.c_dds
-                    from personas p
+                        cn.c_dds,
+                        case when corridos then cantidad - total_corridos else cantidad - total_habiles end as saldo
+                    from personas p 
+                        inner join (select $1::date as desde, $2::date as hasta) params on true
                         left join cod_novedades cn on cn.cod_nov = $3,
+                        lateral (select sum(cantidad) as cantidad from per_nov_cant pnc where pnc.idper = p.idper and pnc.cod_nov = cn.cod_nov) s,
                         lateral (
-                            select count(*) as dias_corridos,
+                            select count(*) filter (where f.fecha between params.desde and params.hasta) as dias_corridos,
                                     count(*) filter (
                                         where extract(dow from f.fecha) between 1 and 5
                                             and laborable is not false
+                                            and f.fecha between params.desde and params.hasta
                                     ) as dias_habiles,
-                                    count(*) filter (where cod_nov is not null) as dias_coincidentes
+                                    count(*) filter (where (f.fecha between params.desde and params.hasta or v.cod_nov = cn.cod_nov)) as total_corridos,
+                                    count(*) filter (
+                                        where extract(dow from f.fecha) between 1 and 5
+                                            and laborable is not false
+                                            and (f.fecha between params.desde and params.hasta or v.cod_nov = cn.cod_nov)
+                                    ) as total_habiles,
+                                    count(*) filter (where cod_nov is not null and f.fecha between params.desde and params.hasta) as dias_coincidentes
                                 from fechas f
                                     left join novedades_vigentes v on v.fecha = f.fecha and v.idper = p.idper -- es correcto no juntar con cn.cod_nov
-                                where f.fecha between $1 and $2
+                                where f.annio = extract(year from params.desde)
                         ) x
                     where p.idper = $4
 `, 
                 [desde, hasta, cod_nov, idper]
             ).fetchUniqueRow();
             return info.row
+        }
+    },
+    {
+        action: 'registrar_novedad',
+        parameters: [
+            {name: 'idper'    , typeName: 'text'   , references:'personas'},
+            {name: 'cod_nov'  , typeName: 'text'   , defaultValue:null, references:'cod_novedades'},
+            {name: 'desde'    , typeName: 'date'   },
+            {name: 'hasta'    , typeName: 'date'   },
+            {name: 'dds0'     , typeName: 'boolean', defaultValue:null, label:'domingo'    },
+            {name: 'dds1'     , typeName: 'boolean', defaultValue:null, label:'lunes'      },
+            {name: 'dds2'     , typeName: 'boolean', defaultValue:null, label:'martes'     },
+            {name: 'dds3'     , typeName: 'boolean', defaultValue:null, label:'miércoles'  },
+            {name: 'dds4'     , typeName: 'boolean', defaultValue:null, label:'jueves'     },
+            {name: 'dds5'     , typeName: 'boolean', defaultValue:null, label:'viernes'    },
+            {name: 'dds6'     , typeName: 'boolean', defaultValue:null, label:'sabado'     },
+            {name: 'cancela'  , typeName: 'boolean', defaultValue:null, description:'cancelación de novedades'},
+            {name: 'detalles' , typeName: 'text'   , defaultValue:null,                                       },
+        ],
+        coreFunction: async function(context: ProcedureContext, params:NovedadRegistrada){
+            var result = await context.be.procedure.table_record_save.coreFunction(context, {
+                table: 'novedades_registradas',
+                primaryKeyValues: [],
+                newRow: params,
+                oldRow: {},
+                status: 'new'
+            });
+            const {idper, desde} = result.row as NovedadRegistrada;
+            var inconsistencias = await context.client.query(`
+                SELECT cod_nov, saldo
+                    FROM (${sqlNovPer({idper, annio:desde.getFullYear()})}) x
+                    WHERE error_saldo_negativo
+            `, []).fetchAll();
+            if (inconsistencias.rows.length > 0) {
+                var error = expected(new Error(`La novedad registrada genera saldos negativos. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}, saldo: ${r.saldo}`).join('; ')}`));
+                error.code = 'B9001'; // ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES
+                throw error;
+            }
+            return result.row;
         }
     },
     {
