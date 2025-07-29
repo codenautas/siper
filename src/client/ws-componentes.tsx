@@ -1191,7 +1191,7 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, i
         const userRol = rol.trim();
         if (userRol === "basico") return "./docs/manual-basico.pdf";
         if (userRol === "registra") return "./docs/manual-registra.pdf";
-        return "./docs/manual.pdf";
+        return "./docs/manual-rrhh.pdf";
     }
     useEffect(() => {
         document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
