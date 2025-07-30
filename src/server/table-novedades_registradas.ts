@@ -87,6 +87,8 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {name: 'cancela'  , typeName: 'boolean', description:'cancelación de novedades'},
             {name: 'detalles' , typeName: 'text'   ,                                    },
             {name: 'dias_hoc' , typeName: 'text', inTable:false, serverSide:true, editable:false },
+            {name: 'fecha'    , typeName: 'date'   ,                                    },
+            {name: 'usuario' , typeName: 'text'   ,                                    },
         ],         
         primaryKey: [idper.name, 'desde', idr.name],
         foreignKeys: [

@@ -1021,6 +1021,8 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             dds4:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds4,
             dds5:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds5,
             dds6:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds6,
+            fecha: infoUsuario.fecha_actual,
+            usuario: infoUsuario.usuario,
             cancela: cod_nov == null
         }).then(function(result){
             setUltimaNovedad(result.idr as number);
