@@ -283,7 +283,7 @@ type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<str
 // @ts-ignore
 type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
-type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, dds0: boolean, dds1: boolean, dds2: boolean, dds3: boolean, dds4: boolean, dds5: boolean, dds6: boolean, detalles:string, idr:number, dias_hoc:string}
+type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, dds0: boolean, dds1: boolean, dds2: boolean, dds3: boolean, dds4: boolean, dds5: boolean, dds6: boolean, detalles:string, idr:number, dias_hoc:string, usuario:string, fecha:RealDate}
 
 interface DetalleAnioNovPer {
     cantidad: number;
@@ -503,6 +503,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
         dds5: "Vie",
         dds6: "Sab",
       };
+    const [verInfo, setVerInfo] = useState(false);
 
     useEffect(function(){
         setNovedades(setEfimero)
@@ -519,6 +520,9 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
     // @ts-expect-error
     var es:{rrhh:boolean} = conn.config?.config?.es||{}
     return <Componente componentType="novedades-registradas" esEfimero={novedades}>
+        <Box>
+        <Button size="small" variant="outlined" onClick={() => setVerInfo(!verInfo)}>+ info</Button>
+        </Box>
         {novedades.map(n => {
             const diasSeleccionados = Object.entries(n)
                 .filter(([key, value]) => key.startsWith("dds") && value === true)
@@ -528,6 +532,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 persona.fecha_egreso && n.hasta > persona.fecha_egreso ? "Fecha hasta posterior a la fecha de egreso" : null,
             ].filter(Boolean);
             return (
+            <Box>
             <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar && quiereBorrar.idr === n.idr?' por-borrar':''}`} 
                 tiene-problemas={problemas.length ? 'si' : 'no'} title={problemas.join('. ')}
             >
@@ -542,7 +547,14 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                     {diasSeleccionados.length > 0 ? ' / ' + diasSeleccionados.join(', ') : ''}
                 </span>
                 <span className="borrar">{n.desde > fechaActual && es.rrhh ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</span>
-            </Box>)
+            </Box>
+            {verInfo &&
+                <Box>
+                <span style={{ display: 'block'}}> {n.fecha?.toDmy()} - {n.usuario} </span>
+                </Box>
+            }
+            </Box>
+            )
         })}
         <Dialog open={quiereBorrar != null}>
             {quiereBorrar == null ? null : (
@@ -1021,6 +1033,8 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             dds4:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds4,
             dds5:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds5,
             dds6:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds6,
+            fecha: infoUsuario.fecha_actual,
+            usuario: infoUsuario.usuario,
             cancela: cod_nov == null
         }).then(function(result){
             setUltimaNovedad(result.idr as number);

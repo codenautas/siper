@@ -97,7 +97,9 @@ export const novedades_registradas = {
         dds4: is.nullable.boolean,
         dds5: is.nullable.boolean,
         dds6: is.nullable.boolean,
-        detalles: is.nullable.string
+        detalles: is.nullable.string,
+        fecha: is.nullable.Date,
+        usuario: is.nullable.string
     })
 } satisfies CommonEntityDefinition
 

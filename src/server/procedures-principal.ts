@@ -112,6 +112,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name: 'dds6'     , typeName: 'boolean', defaultValue:null, label:'sabado'     },
             {name: 'cancela'  , typeName: 'boolean', defaultValue:null, description:'cancelación de novedades'},
             {name: 'detalles' , typeName: 'text'   , defaultValue:null,                                       },
+            {name: 'fecha'    , typeName: 'date'  , defaultValue:null, },
+            {name: 'usuario' , typeName: 'text'   , defaultValue:null,                                       },
         ],
         coreFunction: async function(context: ProcedureContext, params:NovedadRegistrada){
             var result = await context.be.procedure.table_record_save.coreFunction(context, {
