@@ -838,12 +838,12 @@ describe("connected", function(){
             it.skip("Activos, antiguedad por suma de rangos no coincide con días desde para_antiguedad_relativa hasta hoy", async function(){
                 await enNuevaPersona(this.test?.title!, {hoy:date.iso('2024-11-20'), para_antiguedad_relativa: date.iso('2021-10-31')}, async (persona, {}) => {
                     await rrhhSession.saveRecord(
-                        ctts.historial_contrataciones,
+                        ctts.trayectoria_laboral,
                         {idper:persona.idper, desde:date.iso('2015-05-05'), hasta:date.iso('2017-05-05'), computa_antiguedad:true},
                         'new'
                     );
                     await rrhhSession.saveRecord(
-                        ctts.historial_contrataciones,
+                        ctts.trayectoria_laboral,
                         {idper:persona.idper, desde:date.iso('2024-01-01'), computa_antiguedad:true},
                         'new'
                     );

@@ -69,7 +69,7 @@ export function inconsistencias(_context: TableContext): TableDefinition{
                        FROM personas pe 
                        JOIN (SELECT idper, fecha_actual, SUM(coalesce(hasta,fecha_actual)-desde) antiguedad
                              /*case when hasta is NULL then current_date else hasta end*/
-                             FROM historial_contrataciones h
+                             FROM trayectoria_laboral h
                              JOIN parametros p ON unico_registro
                              GROUP BY idper, fecha_actual
                             ) q1

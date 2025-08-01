@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, soloMayusculas} from "./types-principal";
+import {FieldDefinition, TableDefinition, TableContext, soloMayusculas} from "./types-principal";
 
 import { politicaNovedades } from "./table-novedades_registradas";
 
@@ -16,20 +16,23 @@ import { agrupamiento } from "./table-agrupamientos";
 import { tramo } from "./table-tramos";
 import { grado } from "./table-grados";
 import { categoria } from "./table-categorias";
+export const idt: FieldDefinition = {name: 'idt', typeName: 'bigint', description: 'identificador de trayectoria laboral'}
 
-export function historial_contrataciones(context: TableContext): TableDefinition{
+export function trayectoria_laboral(context: TableContext): TableDefinition{
     var admin = context.es.rrhh;
     return {
-        name: 'historial_contrataciones',
-        elementName: 'historial de contratación',
-        title: 'historial de contrataciones',
+        name: 'trayectoria_laboral',
+        elementName: 'trayectoria laboral',
+        title: 'trayectoria laboral',
         editable: admin,
         fields: [
             {...idper, editable:admin},
             {name:'desde'             , typeName:'date',                    },
             {name:'hasta'             , typeName:'date',                    },
+            {...idt, sequence:{madMax:['idper', 'desde']}                   },
             {name:'lapso_fechas'      , typeName:'daterange', visible:false, generatedAs:'daterange(desde, hasta)'},
             {name:'computa_antiguedad', typeName:'boolean',                 },
+            {name:'propio'            , typeName:'boolean',                 },
             {name:'organismo'         , typeName:'text',                    },
             {name:'observaciones'     , typeName:'text',                    },
             s_revista,
@@ -46,7 +49,7 @@ export function historial_contrataciones(context: TableContext): TableDefinition
             {name:'fecha_nombramiento', typeName:'date',                    },
             {name:'resolucion'        , typeName:'text',                    },
         ],
-        primaryKey: [idper.name, 'desde'],
+        primaryKey: [idper.name, 'desde', idt.name],
         foreignKeys: [
             {references: 'personas', fields:[idper.name], onDelete:'cascade'},
             {references: 'situacion_revista', fields:[s_revista.name]},
@@ -70,8 +73,9 @@ export function historial_contrataciones(context: TableContext): TableDefinition
             soloMayusculas(n_grado.name),
             soloMayusculas(motivo_egreso.name),
         ],
+        hiddenColumns: [idt.name],
         sql: {
-            policies: politicaNovedades('historial_contrataciones', 'desde'),
+            policies: politicaNovedades('trayectoria_laboral', 'desde'),
         },
 
     };

@@ -220,8 +220,8 @@ export const per_capa = {
     })
 }
 
-export const historial_contrataciones = {
-    table: 'historial_contrataciones',
+export const trayectoria_laboral = {
+    table: 'trayectoria_laboral',
     description: is.object({
         idper: is.string,
         desde: is.Date,
@@ -232,7 +232,7 @@ export const historial_contrataciones = {
     })
 } satisfies CommonEntityDefinition
 
-export type Historial_contratacion = DefinedType<typeof historial_contrataciones.description>
+export type Trayectoria_laboral = DefinedType<typeof trayectoria_laboral.description>
 
 ////////////// PROCEDIMEINTOS
 

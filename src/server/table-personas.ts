@@ -83,7 +83,7 @@ export function personas(context: TableContext): TableDefinition {
             {table:'fichadas'             , fields:[idper.name], abr:'F'},
             {table:'nov_per'              , fields:[idper.name], abr:'#'},
             {table:'per_nov_cant'         , fields:[idper.name], abr:'##'},
-            {table:'historial_contrataciones', fields:[idper.name], abr:'hc'},
+            {table:'trayectoria_laboral'  , fields:[idper.name], abr:'tl'},
             {table:'inconsistencias'      , fields:[idper.name], abr:'⒤', refreshFromParent:true},
             {table:'per_capa'   , fields:[idper.name], abr:'C'},
             {table:'per_domicilios', fields:[idper.name], abr:'D'},

@@ -30,7 +30,7 @@ export function grados(context:TableContext):TableDefinition{
         ],
         detailTables: [
             {table:'personas'                       , fields:[tramo.name, grado.name], abr:'P'},
-            {table:'historial_contrataciones'       , fields:[tramo.name, grado.name], abr:'H'},
+            {table:'trayectoria_laboral'            , fields:[tramo.name, grado.name], abr:'H'},
         ]
     }
 };
