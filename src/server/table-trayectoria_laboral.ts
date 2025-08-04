@@ -48,6 +48,7 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             categoria,
             {name:'fecha_nombramiento', typeName:'date',                    },
             {name:'resolucion'        , typeName:'text',                    },
+            {name: 'cargo_atgc'       , typeName: 'text', title: 'cargo/ATGC'},
         ],
         primaryKey: [idper.name, idt.name],
         foreignKeys: [

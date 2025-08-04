@@ -25,6 +25,17 @@ export const agrupamiento_personas = {
   inTable: false
 };
 
+export const sqlPersonas= `SELECT p.idper, p.cuil, p.tipo_doc, p.documento, p.ficha, p.idmeta4, p.apellido, p.nombres, p.sector, p.es_jefe, t.categoria,
+                           p.situacion_revista, p.registra_novedades_desde, p.para_antiguedad_relativa, p.activo, p.fecha_ingreso, p.fecha_egreso,
+                           p.motivo_egreso, p.nacionalidad, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado, p.fecha_nacimiento, p.sexo,
+                           p.puesto, p.banda_horaria
+                           FROM personas p 
+                           LEFT JOIN (SELECT * 
+                                       FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY idper ORDER BY desde, idt DESC) AS rn
+                                       FROM trayectoria_laboral) l 
+                                       WHERE rn = 1) t ON p.idper = t.idper
+`;
+
 export function personas(context: TableContext): TableDefinition {
     var {es} = context;
     return {
@@ -52,7 +63,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'motivo_egreso'           , typeName: 'text', title: 'motivo de egreso'        },
             {name: 'nacionalidad'            , typeName: 'text', title: 'nacionalidad'            },
             {name: 'jerarquia'               , typeName: 'text', title: 'jerarquía', inTable:false},
-            {name: 'cargo_atgc'              , typeName: 'text', title: 'cargo/ATGC'              },
+            {name: 'cargo_atgc'              , typeName: 'text', title: 'cargo/ATGC', inTable:false},
             agrupamiento_personas,
             {name: 'tramo'                   , typeName: 'text', title: 'tramo', inTable:false    },
             {name: 'grado'                   , typeName: 'text', title: 'grado', inTable:false    },
@@ -106,16 +117,7 @@ export function personas(context: TableContext): TableDefinition {
                 cuil_valido:{ expr:`validar_cuit(cuil)` },
             },
             // where: es.rrhh ? 'true' : es.registra ? `personas.activo AND sector_pertenece(personas.sector, ${quoteLiteral(user.sector)})` : `personas.idper = ${quoteLiteral(user.idper)}`
-            from:`(SELECT p.idper, p.cuil, p.tipo_doc, p.documento, p.ficha, p.idmeta4, p.apellido, p.nombres, p.sector, p.es_jefe, t.categoria,
-                   p.situacion_revista, p.registra_novedades_desde, p.para_antiguedad_relativa, p.activo, p.fecha_ingreso, p.fecha_egreso,
-                   p.motivo_egreso, p.nacionalidad, t.jerarquia, p.cargo_atgc, t.agrupamiento, t.tramo, t.grado, p.fecha_nacimiento, p.sexo,
-                   p.puesto, p.banda_horaria
-                   FROM personas p 
-                   LEFT JOIN (SELECT * 
-                                FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY idper ORDER BY desde, idt DESC) AS rn
-                                       FROM trayectoria_laboral) l 
-                              WHERE rn = 1) t ON p.idper = t.idper
-            )`
+            from:`(${sqlPersonas})`
         },
         hiddenColumns: ['cuil_valido'],
         sortColumns: [{column: 'activo', order: -1}, {column: 'idper', order: 1}],
