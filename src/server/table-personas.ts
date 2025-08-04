@@ -15,6 +15,16 @@ export const idper: FieldDefinition = {
     postInput: 'upperWithoutDiacritics',
 }
 
+//export const s_revista_personas = {
+//  ...s_revista,
+//  inTable: false
+//};
+
+export const agrupamiento_personas = {
+  ...agrupamiento,
+  inTable: false
+};
+
 export function personas(context: TableContext): TableDefinition {
     var {es} = context;
     return {
@@ -32,20 +42,20 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'nombres'  , typeName: 'text', isName:true , nullable:false                    },
             {name: 'sector'   , typeName: 'text',                                                 },
             {name: 'es_jefe'  , typeName: 'boolean'                                               },
-            {name: 'categoria', typeName: 'text',               title:'categoría'                 },
+            {name: 'categoria', typeName: 'text', title:'categoría', inTable:false                },
             s_revista,
             {name: 'registra_novedades_desde', typeName: 'date'                                   },
             {name: 'para_antiguedad_relativa', typeName: 'date', title: 'para antigüedad relativa'},
             {name: 'activo' , typeName: 'boolean', nullable:false , defaultValue:false            },
             {name: 'fecha_ingreso'           , typeName: 'date'                                   },
             {name: 'fecha_egreso'            , typeName: 'date'                                   },
-            {name: 'motivo_egreso'           , typeName: 'text', title: 'motivo de egreso'       },
+            {name: 'motivo_egreso'           , typeName: 'text', title: 'motivo de egreso'        },
             {name: 'nacionalidad'            , typeName: 'text', title: 'nacionalidad'            },
-            {name: 'jerarquia'               , typeName: 'text', title: 'jerarquía'               },
+            {name: 'jerarquia'               , typeName: 'text', title: 'jerarquía', inTable:false},
             {name: 'cargo_atgc'              , typeName: 'text', title: 'cargo/ATGC'              },
-            agrupamiento,
-            {name: 'tramo'                   , typeName: 'text', title: 'tramo'                   },
-            {name: 'grado'                   , typeName: 'text', title: 'grado'                   },
+            agrupamiento_personas,
+            {name: 'tramo'                   , typeName: 'text', title: 'tramo', inTable:false    },
+            {name: 'grado'                   , typeName: 'text', title: 'grado', inTable:false    },
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
             {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
             {name: 'cuil_valido'             , typeName: 'boolean', title: 'cuil válido', inTable:false, serverSide:true, editable:false},
@@ -56,14 +66,14 @@ export function personas(context: TableContext): TableDefinition {
         foreignKeys: [
             {references: 'sectores'         , fields:['sector']       },
             {references: 'paises'           , fields:[{source:'nacionalidad',target:'pais'}]      },
-            {references: 'categorias'         , fields:['categoria']       },
+            //{references: 'categorias'         , fields:['categoria']       },
             {references: 'sexos'              , fields:['sexo']            },
-            {references: 'jerarquias'         , fields:['jerarquia']       },
+            //{references: 'jerarquias'         , fields:['jerarquia']       },
             {references: 'motivos_egreso'     , fields:['motivo_egreso']   },
             {references: 'tipos_doc'          , fields:['tipo_doc']        },
             {references: 'situacion_revista', fields:[s_revista.name] },
-            {references: 'agrupamientos'    , fields:[agrupamiento.name] },
-            {references: 'grados'           , fields:['tramo','grado']     },
+            //{references: 'agrupamientos'    , fields:[agrupamiento_personas.name] },
+            //{references: 'grados'           , fields:['tramo','grado']     },
             {references: 'puestos'          , fields:[puesto.name] },
             {references: 'bandas_horarias'  , fields:['banda_horaria']     },
         ],
@@ -90,11 +100,22 @@ export function personas(context: TableContext): TableDefinition {
             {table:'per_telefonos' , fields:[idper.name], abr:'T'}
         ],
         sql: {
+            isTable: true,
             policies: politicaNovedades('personas', 'registra_novedades_desde'),
             fields: {
                 cuil_valido:{ expr:`validar_cuit(cuil)` },
             },
             // where: es.rrhh ? 'true' : es.registra ? `personas.activo AND sector_pertenece(personas.sector, ${quoteLiteral(user.sector)})` : `personas.idper = ${quoteLiteral(user.idper)}`
+            from:`(SELECT p.idper, p.cuil, p.tipo_doc, p.documento, p.ficha, p.idmeta4, p.apellido, p.nombres, p.sector, p.es_jefe, t.categoria,
+                   p.situacion_revista, p.registra_novedades_desde, p.para_antiguedad_relativa, p.activo, p.fecha_ingreso, p.fecha_egreso,
+                   p.motivo_egreso, p.nacionalidad, t.jerarquia, p.cargo_atgc, t.agrupamiento, t.tramo, t.grado, p.fecha_nacimiento, p.sexo,
+                   p.puesto, p.banda_horaria
+                   FROM personas p 
+                   LEFT JOIN (SELECT * 
+                                FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY idper ORDER BY desde, idt DESC) AS rn
+                                       FROM trayectoria_laboral) l 
+                              WHERE rn = 1) t ON p.idper = t.idper
+            )`
         },
         hiddenColumns: ['cuil_valido'],
         sortColumns: [{column: 'activo', order: -1}, {column: 'idper', order: 1}],
