@@ -5,6 +5,7 @@ import {FieldDefinition, TableDefinition, TableContext, soloDigitosCons, soloDig
 import { s_revista  } from "./table-situacion_revista";
 import { agrupamiento  } from "./table-agrupamientos";
 import { puesto  } from "./table-puestos";
+import { banda_horaria  } from "./table-bandas_horarias";
 
 import { politicaNovedades } from "./table-novedades_registradas";
 
@@ -25,14 +26,26 @@ export const agrupamiento_personas = {
   inTable: false
 };
 
+export const puesto_personas = {
+  ...puesto,
+  inTable: false
+};
+
+export const bh_personas = {
+  ...banda_horaria,
+  inTable: false,
+  title: 'banda horaria'
+};
+
 export const sqlPersonas= `SELECT p.idper, p.cuil, p.tipo_doc, p.documento, p.ficha, p.idmeta4, p.apellido, p.nombres, p.sector, p.es_jefe, t.categoria,
                            p.situacion_revista, p.registra_novedades_desde, p.para_antiguedad_relativa, p.activo, p.fecha_ingreso, p.fecha_egreso,
                            p.motivo_egreso, p.nacionalidad, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado, p.fecha_nacimiento, p.sexo,
-                           p.puesto, p.banda_horaria
+                           t.puesto, t.banda_horaria
                            FROM personas p 
                            LEFT JOIN (SELECT * 
-                                       FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY idper ORDER BY desde, idt DESC) AS rn
-                                       FROM trayectoria_laboral) l 
+                                       FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY idper ORDER BY desde DESC, idt DESC) AS rn
+                                       FROM trayectoria_laboral
+                                       where propio) l 
                                        WHERE rn = 1) t ON p.idper = t.idper
 `;
 
@@ -70,8 +83,8 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
             {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
             {name: 'cuil_valido'             , typeName: 'boolean', title: 'cuil válido', inTable:false, serverSide:true, editable:false},
-            puesto,
-            {name: 'banda_horaria'           , typeName: 'text', title: 'banda horaria'           },
+            puesto_personas,
+            bh_personas,
         ],
         primaryKey: [idper.name],
         foreignKeys: [
@@ -85,8 +98,8 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'situacion_revista', fields:[s_revista.name] },
             //{references: 'agrupamientos'    , fields:[agrupamiento_personas.name] },
             //{references: 'grados'           , fields:['tramo','grado']     },
-            {references: 'puestos'          , fields:[puesto.name] },
-            {references: 'bandas_horarias'  , fields:['banda_horaria']     },
+            //{references: 'puestos'          , fields:[puesto.name] },
+            //{references: 'bandas_horarias'  , fields:['banda_horaria']     },
         ],
         constraints: [
             soloCodigo(idper.name),

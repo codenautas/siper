@@ -9,6 +9,7 @@ import { date, datetime } from 'best-globals'
 import { DefinedType } from 'guarantee-type';
 import { FixedFields } from 'frontend-plus';
 import { expected } from 'cast-error';
+import { sqlPersonas } from "./table-personas";
 
 export const ProceduresPrincipal:ProcedureDef[] = [
     {
@@ -288,7 +289,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         coalesce(nv.cod_nov, case when d.dds BETWEEN 1 AND 5 then /* cod_nov_habitual */ null else null end) as cod_nov
                     FROM dias_semana d
                         INNER JOIN annios a USING (annio)
-                        INNER JOIN personas p ON p.idper = $1
+                        INNER JOIN (${sqlPersonas}) p ON p.idper = $1
                         LEFT JOIN bandas_horarias bh 
                             ON bh.banda_horaria = p.banda_horaria
                         LEFT JOIN horarios h 
