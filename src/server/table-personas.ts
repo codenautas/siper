@@ -37,9 +37,9 @@ export const bh_personas = {
   title: 'banda horaria'
 };
 
-export const sqlPersonas= `SELECT p.idper, p.cuil, p.tipo_doc, p.documento, p.ficha, p.idmeta4, p.apellido, p.nombres, p.sector, p.es_jefe, t.categoria,
+export const sqlPersonas= `SELECT p.idper, p.cuil, p.tipo_doc, p.documento, p.ficha, p.idmeta4, p.apellido, p.nombres, p.sector, t.es_jefe, t.categoria,
                            p.situacion_revista, p.registra_novedades_desde, p.para_antiguedad_relativa, p.activo, p.fecha_ingreso, p.fecha_egreso,
-                           p.motivo_egreso, p.nacionalidad, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado, p.fecha_nacimiento, p.sexo,
+                           t.motivo_egreso, p.nacionalidad, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado, p.fecha_nacimiento, p.sexo,
                            t.puesto, t.banda_horaria
                            FROM personas p 
                            LEFT JOIN (SELECT * 
@@ -64,8 +64,8 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'idmeta4'  , typeName: 'text', isName:false, title:'id meta4'                  },
             {name: 'apellido' , typeName: 'text', isName:true , nullable:false                    },
             {name: 'nombres'  , typeName: 'text', isName:true , nullable:false                    },
-            {name: 'sector'   , typeName: 'text',                                                 },
-            {name: 'es_jefe'  , typeName: 'boolean'                                               },
+            {name: 'sector'   , typeName: 'text'                                                  },
+            {name: 'es_jefe'  , typeName: 'boolean', inTable:false                                },
             {name: 'categoria', typeName: 'text', title:'categoría', inTable:false                },
             s_revista,
             {name: 'registra_novedades_desde', typeName: 'date'                                   },
@@ -73,7 +73,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'activo' , typeName: 'boolean', nullable:false , defaultValue:false            },
             {name: 'fecha_ingreso'           , typeName: 'date'                                   },
             {name: 'fecha_egreso'            , typeName: 'date'                                   },
-            {name: 'motivo_egreso'           , typeName: 'text', title: 'motivo de egreso'        },
+            {name: 'motivo_egreso'           , typeName: 'text', title: 'motivo de egreso', inTable:false},
             {name: 'nacionalidad'            , typeName: 'text', title: 'nacionalidad'            },
             {name: 'jerarquia'               , typeName: 'text', title: 'jerarquía', inTable:false},
             {name: 'cargo_atgc'              , typeName: 'text', title: 'cargo/ATGC', inTable:false},
@@ -90,16 +90,18 @@ export function personas(context: TableContext): TableDefinition {
         foreignKeys: [
             {references: 'sectores'         , fields:['sector']       },
             {references: 'paises'           , fields:[{source:'nacionalidad',target:'pais'}]      },
-            //{references: 'categorias'         , fields:['categoria']       },
             {references: 'sexos'              , fields:['sexo']            },
-            //{references: 'jerarquias'         , fields:['jerarquia']       },
-            {references: 'motivos_egreso'     , fields:['motivo_egreso']   },
             {references: 'tipos_doc'          , fields:['tipo_doc']        },
             {references: 'situacion_revista', fields:[s_revista.name] },
-            //{references: 'agrupamientos'    , fields:[agrupamiento_personas.name] },
-            //{references: 'grados'           , fields:['tramo','grado']     },
-            //{references: 'puestos'          , fields:[puesto.name] },
-            //{references: 'bandas_horarias'  , fields:['banda_horaria']     },
+        ],
+        softForeignKeys: [
+            {references: 'jerarquias'      , fields:['jerarquia']     },
+            {references: 'puestos'         , fields:[puesto.name]     },
+            {references: 'bandas_horarias' , fields:[bh_personas.name]},
+            {references: 'motivos_egreso'  , fields:['motivo_egreso'] },
+            {references: 'categorias'      , fields:['categoria']     },
+            {references: 'agrupamientos'   , fields:[agrupamiento_personas.name]},
+            {references: 'grados'          , fields:['tramo','grado'] },
         ],
         constraints: [
             soloCodigo(idper.name),

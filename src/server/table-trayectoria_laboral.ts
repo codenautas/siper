@@ -53,6 +53,8 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             {name: 'cargo_atgc'       , typeName: 'text', title: 'cargo/ATGC'},
             puesto,
             banda_horaria,
+            {name: 'es_jefe'  , typeName: 'boolean'                         },
+            //{name: 'sector'   , typeName: 'text'                            },
         ],
         primaryKey: [idper.name, idt.name],
         foreignKeys: [
@@ -70,6 +72,7 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             {references: 'categorias', fields:[categoria.name]},
             {references: 'puestos', fields:[puesto.name]},
             {references: 'bandas_horarias', fields:[banda_horaria.name]},
+            //{references: 'sectores', fields:['sector']},
         ],
         constraints: [
             {constraintType:'exclude', consName:'sin superponer fechas contratación', using:'GIST', fields:[idper.name, {fieldName:'lapso_fechas', operator:'&&'}], where:'computa_antiguedad'},
