@@ -275,7 +275,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 // @ts-ignore
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean, 
     fecha_ingreso?:RealDate, fecha_egreso?:RealDate, registra_novedades_desde?:RealDate /*, activo?:boolean, fecha_nacimiento?:RealDate, nombre_sector?:string, jerarquia?:string, jerarquias__descripcion?:string, cargo_atgc?:string, agrupamiento?:string, tramo?:string, grado?:string, domicilio?:string, nacionalidad?:string, sectores__nombre_sector?:string*/};
-type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string}
+type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string, puesto:number, puestos__nombre:string, banda_horaria:string, bandas_horarias__descripcion:string, sexo:string, sexos__descripcion:string, motivo_egreso?:string, motivos_egreso__descripcion?:string, cuil_valido?:boolean};
 type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__descripcion:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, nro_item:string, orden:number}
 type ProvisorioPersonaTelefono = {idper: string, tipo_telefono: string, tipos_telefono__descripcion?: string, telefono: string, observaciones?: string, nro_item?: number, orden?: number}
 type ProvisorioSectores = {pactivas: number, activo: boolean,sector:string, nombre_sector:string, pertenece_a:string, nivel:number};
@@ -578,7 +578,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
 
 function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     const {fecha, idper, conn} = props
-    const horarioVacio:HorarioSemanaVigenteResult = {desde: date.today(), hasta: date.today(), dias:{}} // corresponde today, es un default provisorio
+    const horarioVacio:HorarioSemanaVigenteResult = {desde: date.today(), hasta: date.today(), dias:{}, bh_descripcion:''} // corresponde today, es un default provisorio
     const [horario, setHorario] = useState(horarioVacio);
     useEffect(function(){
         setHorario(setEfimero)
@@ -601,6 +601,9 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     }
     
     return <Componente componentType="horario" esEfimero={horario}>
+        <div className="banda-horaria">
+            Banda horaria: {horario.bh_descripcion ?? 'no definida'}
+        </div>
         <div className="horario-vigente">
             Horario vigente desde {desdeFecha.toDmy()} hasta {hastaFecha.toDmy()}.
         </div>
@@ -670,8 +673,8 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
 type Hora = string;
 
 type HorarioSemanaVigenteDia = {hora_desde:Hora, hora_hasta:Hora, cod_nov:string, trabaja:boolean, dds:0 | 1 | 2 | 3 | 4 | 5 | 6}
-type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, dias:Record<string, HorarioSemanaVigenteDia>}
-type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean, dias_habiles: number}
+type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, bh_descripcion:string, dias:Record<string, HorarioSemanaVigenteDia>}
+type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean, dias_habiles: number, saldo: number}
 declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: () => Promise<DefinedType<typeof ctts.info_usuario.result>>;
@@ -695,6 +698,7 @@ declare module "frontend-plus" {
             primaryKeyValues: any[];    
         }) => Promise<void>;
         parametros: (params:{}) => Promise<ParametrosResult>;
+        registrar_novedad: (params:NovedadRegistrada) => Promise<NovedadRegistrada & { idr: number }>;
     }
     interface Connector {
         config: AppConfigClientSetup
@@ -849,6 +853,10 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                         <div className="legajo-etiqueta">Grado:</div>
                         <div className="legajo-valor">{persona.grado || '-'}</div>
                     </div>
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">Perfil SGC:</div>
+                        <div className="legajo-valor">{persona.puesto || '-'} {persona.puestos__nombre}</div>
+                    </div>
                 </div>
             </div>
             <div className="legajo-seccion">
@@ -1000,27 +1008,22 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     }, [idper, annio, ultimaNovedad]);
     function registrarNovedad(){
         setGuardandoRegistroNovedad(true);
-        conn.ajax.table_record_save({
-            table:'novedades_registradas',
-            primaryKeyValues:[],
-            newRow:{
-                idper, 
-                desde:fecha, 
-                hasta, 
-                cod_nov, 
-                detalles: detalles == "" ? null : detalles,
-                dds0:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds0,
-                dds1:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds1,
-                dds2:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds2,
-                dds3:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds3,
-                dds4:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds4,
-                dds5:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds5,
-                dds6:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds6
-            },
-            oldRow:{},
-            status:'new'
+        conn.ajax.registrar_novedad({
+            idper, 
+            desde:fecha, 
+            hasta, 
+            cod_nov, 
+            detalles: detalles == "" ? null : detalles,
+            dds0:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds0,
+            dds1:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds1,
+            dds2:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds2,
+            dds3:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds3,
+            dds4:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds4,
+            dds5:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds5,
+            dds6:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds6,
+            cancela: cod_nov == null
         }).then(function(result){
-            setUltimaNovedad(result.row.idr as number);
+            setUltimaNovedad(result.idr as number);
             // setFecha(fechaActual);
             // setHasta(fechaActual);
             // setCodNov("");
@@ -1061,7 +1064,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
 
     // @ts-expect-error
     var es:{rrhh:boolean, registra:boolean} = conn.config?.config?.es||{}
-
+    var inconsistente = siCargaraNovedad?.saldo != null && siCargaraNovedad.saldo < 0;
     return infoUsuario.usuario == null ?  
             <CircularProgress />
         : infoUsuario.idper == null ?
@@ -1143,7 +1146,8 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                         error={siCargaraNovedad.con_detalle && !detalles}
                         helperText={siCargaraNovedad.con_detalle && !detalles ? "El campo es obligatorio." : ""}
                     />
-                    <Button className="boton-confirmar-registro-novedades" key="button" variant="outlined" 
+                    <Button className="boton-confirmar-registro-novedades" key="button" variant={inconsistente ? "contained" : "outlined"}
+                        color={inconsistente ? "error" : "primary"}
                         disabled={!!noPuedeConfirmarPorque}
                         onClick={() => registrarNovedad()}
                     >
@@ -1187,7 +1191,7 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, i
         const userRol = rol.trim();
         if (userRol === "basico") return "./docs/manual-basico.pdf";
         if (userRol === "registra") return "./docs/manual-registra.pdf";
-        return "./docs/manual.pdf";
+        return "./docs/manual-rrhh.pdf";
     }
     useEffect(() => {
         document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;

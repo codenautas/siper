@@ -35,7 +35,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'categoria', typeName: 'text',               title:'categoría'                 },
             s_revista,
             {name: 'registra_novedades_desde', typeName: 'date'                                   },
-            {name: 'para_antiguedad_relativa', typeName: 'date'                                   },
+            {name: 'para_antiguedad_relativa', typeName: 'date', title: 'para antigüedad relativa'},
             {name: 'activo' , typeName: 'boolean', nullable:false , defaultValue:false            },
             {name: 'fecha_ingreso'           , typeName: 'date'                                   },
             {name: 'fecha_egreso'            , typeName: 'date'                                   },
@@ -50,6 +50,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
             {name: 'cuil_valido'             , typeName: 'boolean', title: 'cuil válido', inTable:false, serverSide:true, editable:false},
             puesto,
+            {name: 'banda_horaria'           , typeName: 'text', title: 'banda horaria'           },
         ],
         primaryKey: [idper.name],
         foreignKeys: [
@@ -62,8 +63,9 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'tipos_doc'          , fields:['tipo_doc']        },
             {references: 'situacion_revista', fields:[s_revista.name] },
             {references: 'agrupamientos'    , fields:[agrupamiento.name] },
-            {references: 'grados'           , fields:['tramo','grado'] },
+            {references: 'grados'           , fields:['tramo','grado']     },
             {references: 'puestos'          , fields:[puesto.name] },
+            {references: 'bandas_horarias'  , fields:['banda_horaria']     },
         ],
         constraints: [
             soloCodigo(idper.name),

@@ -252,6 +252,7 @@ export const si_cargara_novedad = {
         dias_coincidentes: is.number,
         con_detalles: is.nullable.boolean,
         c_dds: is.nullable.boolean,
+        saldo: is.nullable.number,
     })
 }
 
@@ -385,6 +386,12 @@ export const parametros = {
 }
 
 export type ParametrosResult = DefinedType<typeof parametros.result>
+
+export const registrar_novedad = {
+    procedure: 'registrar_novedad',
+    parameters: novedades_registradas.description,
+    result: novedades_registradas.description
+}
 
 export const annio = {
     table: 'annio',
@@ -680,6 +687,18 @@ export const per_telefonos = {
     })
 }
 
+export const bandas_horarias = {
+    table: 'bandas_horarias',
+    description: is.object({
+        banda_horaria: is.string,
+        descripcion: is.string,
+        hora_desde: is.string,
+        hora_hasta: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type bandas_horarias = DefinedType<typeof bandas_horarias.description>
+
 export const meses = [
     {  value:1, name:'enero' },
     {  value:2, name:'febrero' },
@@ -712,6 +731,9 @@ export const ERROR_COD_NOVEDAD_NO_INDICA_CON_HORARIO= 'P1007';
 export const ERROR_COD_NOVEDAD_NO_INDICA_CON_NOVEDAD= 'P1008';
 export const ERROR_SECTORES_DESNIVELADOS            = 'P1009';
 export const ERROR_SECTOR_HUERFANO_NO_TOPE          = 'P1010';
+
+//////////// ERRORES PROPIOS DEL BACKEND:
+export const ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES   = 'B9001';
 
 //////////// ERRORES POSTGRES: https://www.postgresql.org/docs/current/errcodes-appendix.html
 export const insufficient_privilege = '42501';

@@ -4,8 +4,7 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 
 export const rol:FieldDefinition = {
     name: 'rol', 
-    typeName: 'text', 
-    postInput: 'upperWithoutDiacritics'
+    typeName: 'text'
 }
 
 export function roles(context:TableContext):TableDefinition{
@@ -29,6 +28,7 @@ export function roles(context:TableContext):TableDefinition{
         primaryKey: [rol.name],
         constraints: [
             {constraintType: 'unique', fields: ['descripcion']},
+            {constraintType: 'check', consName: 'solo minusculas', expr: `rol similar to '[a-z_]+'`}, // Ensure 'rol' is in lowercase
         ],
         detailTables: [
             {table: 'personas', fields: [rol.name], abr:'p'},

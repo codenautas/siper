@@ -6,6 +6,7 @@ import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {año} from "./table-annios"
 import {pauta} from "./table-pautas"
+import { sqlNovPer } from "./table-nov_per";
 
 export function inconsistencias(_context: TableContext): TableDefinition{
     return {
@@ -95,6 +96,10 @@ export function inconsistencias(_context: TableContext): TableDefinition{
                      SELECT idper, NULL::INTEGER as annio, 'ACTSINSIT' pauta, NULL::TEXT as cod_nov 
                        FROM personas
                        WHERE activo AND situacion_revista IS NULL
+                     UNION
+                     SELECT idper, annio, 'EXCEDIDO' as pauta, cod_nov
+                       FROM (${sqlNovPer({})}) q3
+                       WHERE q3.error_saldo_negativo
                      ) q
                      UNION
                      SELECT v.idper, NULL::INTEGER as annio, 'NOVPOSTEGR' pauta, v.cod_nov

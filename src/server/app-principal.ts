@@ -61,6 +61,7 @@ import { funciones               } from "./table-funciones";
 import { nivel_grado             } from "./table-nivel_grado";
 import { tareas                  } from "./table-tareas";
 import { puestos                 } from "./table-puestos";
+import { bandas_horarias         } from "./table-bandas_horarias";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -126,7 +127,7 @@ export class AppSiper extends AppBackend{
         var es = context.es ?? {} as Context["es"]
         es.mantenimiento = context.user && context.user.rol=="mantenimiento" 
         es.admin = es.mantenimiento || context.user && context.user.rol=="admin"
-        es.rrhh_admin = es.admin || context.user && context.user.rol=="rrhh_admin" 
+        es.rrhh_admin = es.admin || context.user && (context.user.rol=="rrhh_admin" || context.user.rol=="superior")
         es.rrhh = es.rrhh_admin || context.user && context.user.rol=="rrhh" 
         es.registra = es.rrhh || context.user && context.user.rol=="registra"
         context.es = es;
@@ -215,6 +216,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'nivel_grado'      },
                             {menuType:'table', name:'tareas'           },
                             {menuType:'table', name:'puestos'          },
+                            {menuType:'table', name:'bandas_horarias'  },
                         ]},
                         {menuType:'table', name:'cod_novedades' },
                         {menuType:'table', name:'usuarios'      },
@@ -323,6 +325,7 @@ export class AppSiper extends AppBackend{
             tareas               ,
             puestos              ,
             historial_contrataciones,
+            bandas_horarias,
         }
     }       
 }

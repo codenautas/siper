@@ -19,7 +19,6 @@ export function annios(context:TableContext):TableDefinition{
        ],
         primaryKey: [año.name],
         constraints:[
-            {constraintType: 'check', consName: "annio abierto completo", expr: 'not abierto or (horario_habitual_desde is not null and horario_habitual_hasta is not null)'}
         ],
         detailTables:[
             {table: 'fechas'            , fields:[año.name], abr:'f'},

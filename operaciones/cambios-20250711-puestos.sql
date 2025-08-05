@@ -5,7 +5,7 @@ alter table personas add column puesto integer;
 
 create table "puestos" (
   "puesto" integer, 
-  "descripcion" text, 
+  "nombre" text, 
   "objetivo" text
 , primary key ("puesto")
 );
@@ -14,7 +14,7 @@ grant all on "puestos" to siper_owner;
 
 
 -- table data: ..\siper-data\version2\puestos.tab
-insert into "puestos" ("puesto", "descripcion", "objetivo") values
+insert into "puestos" ("puesto", "nombre", "objetivo") values
 ('1', 'Analista Administrativo', 'Planear, organizar, dirigir, supervisar, controlar y evaluar las actividades administrativas de la organización. Establecer y proponer los procedimientos que permitan optimizar la administración de los recursos humanos, materiales, financieros y de servicios generales, para atender las necesidades de las áreas.'),
 ('2', 'Analista en cartografía', 'Realizar y coordinar las actividades de actualización y procesamiento de la información cartográfica digital, georeferenciada y espacial que garantice el levantamiento de información en las diferentes investigaciones estadísticas.'),
 ('3', 'Analista en comunicación y diseño', 'Realizar los procesos de diseño, difusión y comunicación de los proyectos, programas y publicaciones que realiza la organización, manteniendo un contacto fluido con el GCBA y los medios masivos de comunicación con la finalidad de impulsar el desarrollo de una cultura estadística en la CABA.'),
@@ -47,7 +47,7 @@ insert into "puestos" ("puesto", "descripcion", "objetivo") values
 ('30', 'Encuestador', 'Recolectar datos de forma veraz y acorde con los objetivos definidos en el operativo, con la finalidad de obtener datos primarios consistentes y actuales. Asegurándose de tratarlos con discreción, reserva, confiabilidad y rigor técnico.'),
 ('31', 'Chofer', 'Prestar servicio de transporte a los funcionarios y personal de la organización tanto en las actividades diarias como en las extraordinarias que se programen.');
 
-alter table "puestos" add constraint "descripcion<>''" check ("descripcion"<>'');
+alter table "puestos" add constraint "nombre<>''" check ("nombre"<>'');
 alter table "puestos" add constraint "objetivo<>''" check ("objetivo"<>'');
 
 create index "puesto 4 personas IDX" ON "personas" ("puesto");

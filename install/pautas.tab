@@ -1,14 +1,16 @@
-pauta|descripcion
-CORRIDOS|las novedades de días corridos no pueden tener feriados o fines de semana intermedios sin novedad
-ACTULTDIA|activo con fecha_egreso
-ACTREGDES|activo sin registra_novedades_desde
-ACTSINANT|activo sin para_antiguedad_relativa,
-INASINULT|inactivo sin fecha_egreso
-ANULREGDES|activo null con registra_novedades_desde
-ANULCONULT|activo null con fecha_egreso
-ANTCOMVSRE|Para activos, la antiguedad computada por suma de rangos no coincide con los días transcurridos hasta la fecha de hoy contados desde para_antiguedad_relativa.
-ACTSINSEC|activo sin sector
-ACTSINSIT|activo sin situacion revista
-CUILINV|Cuil invalido o inexistente
-NOVPOSTEGR|Existencia de novedades después de la fecha de egreso
-NOVPREVING|Existencia de novedades previas a la fecha de ingreso
+pauta|gravedad|descripcion
+CORRIDOS|GRAVE|las novedades de días corridos no pueden tener feriados o fines de semana intermedios sin novedad
+ACTULTDIA|MEDIO|activo con fecha_egreso
+ACTREGDES|MEDIO|activo sin registra_novedades_desde
+ACTSINANT|MEDIO|activo sin para_antigüedad_relativa,
+INASINULT|MEDIO|inactivo sin fecha_egreso
+ANULREGDES|MEDIO|campo activo sin dato y dato en registra_novedades_desde
+ANULCONULT|MEDIO|campo activo sin dato y dato en fecha_egreso
+ANTCOMVSRE|MEDIO|Para activos, la antiguedad computada por suma de rangos no coincide con los días transcurridos hasta la fecha de hoy contados desde para_antiguedad_relativa.
+ACTSINSEC|MEDIO|activo sin sector
+ACTSINSIT|MEDIO|activo sin situacion revista
+CUILINV|MEDIO|CUIL inválido o inexistente
+EXCEDIDO|GRAVE|la cantidad de dias tomados por novedad excede la cantidad de días disponibles
+NOVPOSTEGR|MEDIO|Existencia de novedades después de la fecha de egreso
+NOVPREVING|MEDIO|Existencia de novedades previas a la fecha de ingreso
+
