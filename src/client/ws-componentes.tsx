@@ -274,7 +274,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 
 // @ts-ignore
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean, 
-    fecha_ingreso?:RealDate, fecha_egreso?:RealDate /*, activo?:boolean, fecha_nacimiento?:RealDate, nombre_sector?:string, jerarquia?:string, jerarquias__descripcion?:string, cargo_atgc?:string, agrupamiento?:string, tramo?:string, grado?:string, domicilio?:string, nacionalidad?:string, sectores__nombre_sector?:string*/};
+    fecha_ingreso?:RealDate, fecha_egreso?:RealDate, registra_novedades_desde?:RealDate /*, activo?:boolean, fecha_nacimiento?:RealDate, nombre_sector?:string, jerarquia?:string, jerarquias__descripcion?:string, cargo_atgc?:string, agrupamiento?:string, tramo?:string, grado?:string, domicilio?:string, nacionalidad?:string, sectores__nombre_sector?:string*/};
 type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string, puesto:number, puestos__nombre:string, banda_horaria:string, bandas_horarias__descripcion:string, sexo:string, sexos__descripcion:string, motivo_egreso?:string, motivos_egreso__descripcion?:string, cuil_valido?:boolean};
 type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__descripcion:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, nro_item:string, orden:number}
 type ProvisorioPersonaTelefono = {idper: string, tipo_telefono: string, tipos_telefono__descripcion?: string, telefono: string, observaciones?: string, nro_item?: number, orden?: number}
@@ -524,7 +524,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 .filter(([key, value]) => key.startsWith("dds") && value === true)
                 .map(([key]) => diasSemana[key]);
             const problemas = [
-                persona.fecha_ingreso && n.desde < persona.fecha_ingreso ? "Fecha desde anterior a la fecha de ingreso" : null,
+                persona.registra_novedades_desde && n.desde < persona.registra_novedades_desde ? "Fecha desde anterior a la fecha de ingreso" : null,
                 persona.fecha_egreso && n.hasta > persona.fecha_egreso ? "Fecha hasta posterior a la fecha de egreso" : null,
             ].filter(Boolean);
             return (

@@ -11,3 +11,6 @@ ACTSINSEC|MEDIO|activo sin sector
 ACTSINSIT|MEDIO|activo sin situacion revista
 CUILINV|MEDIO|CUIL inválido o inexistente
 EXCEDIDO|GRAVE|la cantidad de dias tomados por novedad excede la cantidad de días disponibles
+NOVPOSTEGR|MEDIO|Existencia de novedades después de la fecha de egreso
+NOVPREVING|MEDIO|Existencia de novedades previas a la fecha de ingreso
+

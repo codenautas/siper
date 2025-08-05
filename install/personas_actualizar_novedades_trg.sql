@@ -31,7 +31,7 @@ $BODY$;
 
 DROP TRIGGER IF EXISTS personas_actualizar_novedades_trg on personas;
 CREATE TRIGGER personas_actualizar_novedades_trg
-  AFTER INSERT OR DELETE OR UPDATE OF activo, registra_novedades_desde
+  AFTER INSERT OR DELETE OR UPDATE OF activo, registra_novedades_desde, fecha_egreso
   ON personas
   FOR EACH ROW
   EXECUTE PROCEDURE personas_actualizar_novedades_trg();
