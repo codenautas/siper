@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition, sinEspaciosMail, } from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, sinEspaciosMail } from "./types-principal";
 
 import {idper} from "./table-personas"
 import {rol} from "./table-roles"
@@ -48,3 +48,4 @@ export function usuarios(context: TableContext): TableDefinition{
         }
     };
 }
+
