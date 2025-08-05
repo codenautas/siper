@@ -111,7 +111,7 @@ alter table "archivos_borrar" add constraint "ruta_archivo<>''" check ("ruta_arc
 alter table "adjuntos_persona" add constraint "adjuntos_persona tipos_adjunto_persona REL" foreign key ("tipo_adjunto_persona") references "tipos_adjunto_persona" ("tipo_adjunto_persona")  on update cascade;
 alter table "tipos_adjunto_persona_atributos" add constraint "tipos_adjunto_persona_atributos tipos_adjunto_persona REL" foreign key ("tipo_adjunto_persona") references "tipos_adjunto_persona" ("tipo_adjunto_persona")  on update cascade;
 alter table "adjuntos_persona_atributos" add constraint "adjuntos_persona_atributos tipos_adjunto_persona_atributos REL" foreign key ("tipo_adjunto_persona", "atributo") references "tipos_adjunto_persona_atributos" ("tipo_adjunto_persona", "atributo")  on update cascade;
-alter table "adjuntos_persona_atributos" add constraint "adjuntos_persona_atributos adjuntos_persona REL" foreign key ("idper", "numero_adjunto") references "adjuntos_persona" ("idper", "numero_adjunto")  on update cascade;
+alter table "adjuntos_persona_atributos" add constraint "adjuntos_persona_atributos adjuntos_persona REL" foreign key ("idper", "numero_adjunto") references "adjuntos_persona" ("idper", "numero_adjunto")  on delete cascade on update cascade;
 
 
 --INDEX

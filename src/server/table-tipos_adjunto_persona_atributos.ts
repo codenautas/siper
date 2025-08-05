@@ -3,7 +3,7 @@
 import { TableDefinition, TableContext } from "./types-principal";
 
 export function tipos_adjunto_persona_atributos(context: TableContext): TableDefinition {
-    const admin = context.user.rol === 'admin';
+    var admin = context.es.admin;
     return {
         name: 'tipos_adjunto_persona_atributos',
         elementName: 'tipo_adjunto_persona_atributo',

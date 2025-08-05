@@ -12,7 +12,7 @@ export const numero_adjunto: FieldDefinition = {
 }
 
 export function adjuntos_persona(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
+    var admin = context.es.rrhh;
     return {
         name: 'adjuntos_persona',
         elementName: 'adjunto_persona',

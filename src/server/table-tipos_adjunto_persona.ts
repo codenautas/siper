@@ -9,7 +9,7 @@ export const tipo_adjunto_persona:FieldDefinition = {
 }
 
 export function tipos_adjunto_persona(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'tipos_adjunto_persona',
         elementName: 'tipo_adjunto_persona',

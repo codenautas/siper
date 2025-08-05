@@ -6,7 +6,7 @@ import { numero_adjunto } from "./table-adjuntos_persona";
 import { TableDefinition, TableContext } from "./types-principal";
 
 export function adjuntos_persona_atributos(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
+    var admin = context.es.rrhh;
     return {
         name: 'adjuntos_persona_atributos',
         elementName: 'adjunto_persona_atributo',
@@ -22,7 +22,7 @@ export function adjuntos_persona_atributos(context:TableContext):TableDefinition
         primaryKey: [idper.name, 'numero_adjunto', 'atributo'],
         foreignKeys: [
             {references:'tipos_adjunto_persona_atributos',  fields: ['tipo_adjunto_persona', 'atributo']},
-            {references:'adjuntos_persona', fields: [idper.name, numero_adjunto.name]},
+            {references:'adjuntos_persona', fields: [idper.name, numero_adjunto.name], onDelete:'cascade'},
         ],
         hiddenColumns: ['tipo_adjunto_persona'],
     }
