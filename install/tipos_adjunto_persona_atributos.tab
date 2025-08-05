@@ -1,0 +1,8 @@
+tipo_adjunto_persona|atributo|orden|columna
+SEC|fecha_firma|1|1
+COM|ficha_estante|1|1
+COM|responsable|2|2
+COM|bien|3|3
+COM|marca|4|4
+COM|serie|5|5
+COM|destinatario|6|6
