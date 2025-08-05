@@ -61,7 +61,6 @@ import { tipos_adjunto_persona   } from "./table-tipos_adjunto_persona";
 import { archivos_borrar         } from "./table-archivos_borrar";
 import { tipos_adjunto_persona_atributos } from "./table-tipos_adjunto_persona_atributos";
 import { adjuntos_persona_atributos      } from "./table-adjuntos_persona_atributos";
-import { ProceduresPrincipal             } from './procedures-principal'
 import { expedientes             } from "./table-expedientes";
 import { funciones               } from "./table-funciones";
 import { nivel_grado             } from "./table-nivel_grado";
