@@ -1,11 +1,14 @@
 -- EJECUTAR LOCALMENTE, NO DESCOMENTAR Y COMMITEAR:
 -- SET search_path = siper; SET ROLE siper_owner;
+DROP FUNCTION IF EXISTS sector_pertenece(p_sector text, p_pertenece_a text);
 
-CREATE OR REPLACE FUNCTION sector_pertenece(p_sector text, p_pertenece_a text) RETURNS boolean
+CREATE OR REPLACE FUNCTION sector_pertenece(p_sector text, p_pertenece_a text, p_iteraciones numeric = 10) RETURNS boolean
   LANGUAGE SQL STABLE
 AS
 $BODY$
-  select sector is not null and (sector = p_pertenece_a or sector_pertenece(pertenece_a, p_pertenece_a)) is true
+  select case p_iteraciones when 0 then null
+      else sector is not null and (sector = p_pertenece_a or sector_pertenece(pertenece_a, p_pertenece_a, p_iteraciones -1)) is true
+    end
     from sectores where sector = p_sector;
 $BODY$;
 

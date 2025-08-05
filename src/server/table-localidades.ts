@@ -11,7 +11,7 @@ export const localidad:FieldDefinition = {
 }
 
 export function localidades(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'localidades',
         elementName: 'localidad',

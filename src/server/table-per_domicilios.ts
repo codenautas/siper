@@ -34,10 +34,10 @@ import {localidad} from "./table-localidades";
 import {barrio} from "./table-barrios";
 import {calle} from "./table-calles";
 
-export const domicilio: FieldDefinition = {name: 'domicilio', typeName: 'bigint', description: 'identificador del domicilio para una persona'}
+export const nro_item: FieldDefinition = {name: 'nro_item', typeName: 'bigint', description: 'identificador del domicilio para una persona'}
 
 export function per_domicilios(context: TableContext): TableDefinition{
-    var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
+    var admin = context.es.rrhh;
     return {
         name: 'per_domicilios',
         title: 'Domicilios',
@@ -45,7 +45,7 @@ export function per_domicilios(context: TableContext): TableDefinition{
         fields: [
             {...idper, editable:admin},
             //gestik
-            {name:'domicilio'        , typeName:'bigint', /*siempre:true ,*/ nullable:true, editable:false, defaultDbValue:'0'},
+            {name:'nro_item'        , typeName:'bigint', /*siempre:true ,*/ nullable:true, editable:false},
             //{...domicilio, sequence:{name:'domicilio_seq', firstValue:1}, nullable:true, editable:false },
             tipo_domicilio,
             provincia,
@@ -66,7 +66,7 @@ export function per_domicilios(context: TableContext): TableDefinition{
             {name: 'observaciones'    ,typeName:'text'   },
             {name: 'orden'            ,typeName:'integer', inTable:false, serverSide:true, editable:false },
         ],
-        primaryKey: [idper.name, 'domicilio'],
+        primaryKey: [idper.name, 'nro_item'],
         foreignKeys: [
             {references: 'personas'   , fields: [idper.name]},
             {references: 'provincias' , fields: [provincia.name]},

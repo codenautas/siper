@@ -29,7 +29,7 @@ import {
     Tooltip
 } from "@mui/material";
 
-import { date, RealDate, compareForOrder } from "best-globals";
+import { date, RealDate, compareForOrder, sameValue } from "best-globals";
 
 import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, NovedadRegistrada, ParametrosResult,
     InfoUsuario
@@ -101,12 +101,21 @@ export const DDS = {
 
 type ULTIMA_NOVEDAD = number;
 
+function puedeCargarNovedades(infoUsuario: InfoUsuario) {
+    return !!(
+        infoUsuario.puede_cargar_propio ||
+        infoUsuario.puede_cargar_todo ||
+        infoUsuario.puede_cargar_dependientes ||
+        infoUsuario.puede_corregir_el_pasado
+    );
+}
+
 function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, fechaActual: RealDate, 
-    annio:number,
+    annio:number, infoUsuario:InfoUsuario
     onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, ultimaNovedad?: ULTIMA_NOVEDAD
     onAnnio?: (annio:number) => void
 }){
-    const {conn, fecha, fechaHasta, idper, ultimaNovedad, fechaActual, annio} = props;
+    const {conn, fecha, fechaHasta, idper, ultimaNovedad, fechaActual, annio, infoUsuario} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     type Periodo = {mes:number, annio:number}
     const [mes, setMes] = useState(fecha.getMonth()+1);
@@ -116,7 +125,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
     const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
     const [botonRetrocederHabilitado, setBotonRetrocederHabilitado] = useState<boolean>(true); 
     const [botonAvanzarHabilitado, setBotonAvanzarHabilitado] = useState<boolean>(true); 
-    
+    const puede_cargar_novedades = puedeCargarNovedades(infoUsuario);
+
     useEffect(function(){
         // ver async
         // @ts-ignore infinito
@@ -135,39 +145,33 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
         if (idper != null) {
             setCalendario(setEfimero)
             conn.ajax.calendario_persona({idper, ...periodo}).then(dias => {
-                var semanas = [];
-                var semana = [];
-                for(var i = 0; i < dias[0]?.dds; i++) {
-                    semana.push({});
-                }
-                for(var dia of dias){
-                    if (dia?.dds == 0 && dia.dia !=1) {
-                        semanas.push(semana);   
-                        semana = []
+                var primerSemana: number = Number.MAX_SAFE_INTEGER;
+                type Dia = (typeof dias)[number]
+                var semanas: Dia[][] = [];
+                for (var dia of dias) {
+                if (dia.semana != null && primerSemana > dia.semana) primerSemana = dia.semana;
+                    var semana = semanas[dia.semana];
+                    if (!semana) {
+                        semana = [
+                            {dds: 0} as Dia,
+                            {dds: 1} as Dia,
+                            {dds: 2} as Dia,
+                            {dds: 3} as Dia,
+                            {dds: 4} as Dia,
+                            {dds: 5} as Dia,
+                            {dds: 6} as Dia,
+                        ]
+                        semanas[dia.semana] = semana
                     }
-                    semana.push(dia);
+                    semana[dia.dds] = dia
                 }
-                for(var j = dia?.dds + 1; j <= 6; j++) {
-                    semana.push({});
-                }
-                semanas.push(semana);
-                setCalendario(semanas)
+                setCalendario(semanas.slice(primerSemana ?? 0))
             }).catch(logError)
         }
     },[idper, periodo.mes, periodo.annio, ultimaNovedad])
 
     // @ts-expect-error
     var es:{rrhh:boolean} = conn.config?.config?.es||{}
-
-    const isInRange = (dia: number, mes: number, annio: number) => {
-        if (!fecha || !fechaHasta || !Number.isInteger(dia) || dia <= 0) return false;
-        try {
-            const current = date.ymd(annio, mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia);
-            return current >= fecha && current <= fechaHasta;
-        } catch (error) {
-            return false;
-        }
-    };
 
     const isPastMonth = periodo.mes < fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio < fechaActual.getFullYear();
     const isFutureMonth = periodo.mes > fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio > fechaActual.getFullYear();
@@ -225,26 +229,28 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                     <div key={dds.abr} className={"calendario-nombre-dia " + (dds.habil ? "" : "tipo-dia-no-laborable")}>{dds.abr}</div>
                 ).array()}
             </Box>
-            {calendario.map(semana => <Box key={semana[0].dia} className="calendario-semana">
+            {calendario.map(semana => <Box key={semana[0].semana} className="calendario-semana">
                 {semana.map(dia => 
                 <Tooltip key={dia.dia} title={dia.novedad || "Sin novedad"} arrow>
                 <div
                     className={`calendario-dia tipo-dia-${dia.tipo_dia} 
-                        ${fecha && dia.dia === fecha.getDate() && periodo.mes === fecha.getMonth() + 1 && periodo.annio === fecha.getFullYear() ? 'calendario-dia-seleccionado' : ''}
-                        ${fechaHasta && dia.dia === fechaHasta.getDate() && periodo.mes === fechaHasta.getMonth() + 1 && periodo.annio === fechaHasta.getFullYear() ? 'calendario-dia-seleccionado' : ''}
-                        ${isInRange(dia.dia, periodo.mes, periodo.annio) ? 'calendario-dia-seleccionado' : ''}`}
-                        
-                        onClick={() => {
-                            if (!dia.dia || !props.onFecha || !props.onFechaHasta || !es.rrhh) return;
-                            const selectedDate = date.ymd(periodo.annio, periodo.mes as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12, dia.dia);
-                            if (!fechaHasta || selectedDate <= fechaHasta) {
-                                props.onFecha(selectedDate);
-                                props.onFechaHasta(selectedDate);
-                            } 
-                            else {
-                                props.onFechaHasta(selectedDate);
-                            }
-                        }}
+                        ${fecha && sameValue(dia.fecha, fecha) ? 'calendario-dia-seleccionado' : ''}
+                        ${fechaHasta != null && fecha <= dia.fecha && dia.fecha <= fechaHasta ? 'calendario-dia-seleccionado' : ''}`}
+                    es-otro-mes={dia.mismo_mes ? "no" : "si"}
+                    onClick={() => {
+                        if (!dia.fecha || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades || (dia.fecha < fechaActual && !infoUsuario.puede_corregir_el_pasado)) return;
+                        const selectedDate = dia.fecha as RealDate;
+                        if (!fechaHasta || selectedDate <= fechaHasta) {
+                            props.onFecha(selectedDate);
+                            props.onFechaHasta(selectedDate);
+                        } 
+                        else {
+                            props.onFechaHasta(selectedDate);
+                        }
+                        if (dia.fecha.getMonth() + 1 !== periodo.mes) {
+                            setPeriodo({mes: dia.fecha.getMonth() + 1, annio: dia.fecha.getFullYear()});
+                        }
+                    }}
                 >
                     <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
                     <span className={`calendario-dia-contenido ${dia ? 'con_novedad_si' : 'con_novedad_no' }`}>{dia.cod_nov ?? ''}</span>
@@ -267,9 +273,11 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 }
 
 // @ts-ignore
-type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean};
-type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string}
-type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__domicilio:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, domicilio:string, orden:number}
+type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean, 
+    fecha_ingreso?:RealDate, fecha_egreso?:RealDate /*, activo?:boolean, fecha_nacimiento?:RealDate, nombre_sector?:string, jerarquia?:string, jerarquias__descripcion?:string, cargo_atgc?:string, agrupamiento?:string, tramo?:string, grado?:string, domicilio?:string, nacionalidad?:string, sectores__nombre_sector?:string*/};
+type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string, puesto:number, puestos__nombre:string, banda_horaria:string, bandas_horarias__descripcion:string, sexo:string, sexos__descripcion:string, motivo_egreso?:string, motivos_egreso__descripcion?:string, cuil_valido?:boolean};
+type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__descripcion:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, nro_item:string, orden:number}
+type ProvisorioPersonaTelefono = {idper: string, tipo_telefono: string, tipos_telefono__descripcion?: string, telefono: string, observaciones?: string, nro_item?: number, orden?: number}
 type ProvisorioSectores = {pactivas: number, activo: boolean,sector:string, nombre_sector:string, pertenece_a:string, nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, hijos:ProvisorioSectoresAumentados[], profundidad:number}
 // @ts-ignore
@@ -292,17 +300,30 @@ function SearchBox(props: {
     children?: ReactNode,    
     onChange:(newValue:string)=>void, 
     todas?:boolean|null, onTodasChange?:(newValue:boolean)=>void, 
-    ordenPorNovedad?:boolean|null, onOrdenPorNovedadChange?:(newValue:boolean)=>void
+    ordenPorNovedad?:boolean|null, onOrdenPorNovedadChange?:(newValue:boolean)=>void,
+    permisos?:boolean|null
 }){
     var [textToSearch, setTextToSearch] = useState("");
+    const inputRef = React.useRef<HTMLInputElement>(null);
+
     return <Paper className="search-box">
-        <ICON.Search/>
+        <IconButton
+            onClick={() => {
+                inputRef.current?.focus();
+            }}
+            className="siper-button"
+            boton-negro="si"
+        >
+            <ICON.Search/>
+        </IconButton>
         <InputBase
+            inputRef={inputRef}
             value = {textToSearch} 
             onChange = {(event)=>{ var newValue = event.target.value; props.onChange(newValue); setTextToSearch(newValue)}}
         />
-        <Button onClick={_=>{props.onChange(""); setTextToSearch("")}} className="siper-button" boton-negro="si"><ICON.BackspaceOutlined/></Button>
+        <Button onClick={_=>{props.onChange(""); setTextToSearch("")}} className="siper-button" boton-negro="si" es-visible={textToSearch? "si" : "no"}><ICON.BackspaceOutlined/></Button>
         {props.todas != null ? <>
+            {props.permisos && 
             <label>
                 <Checkbox
                     checked={props.todas}
@@ -312,6 +333,7 @@ function SearchBox(props: {
                     sin-padding="si"
                 /> todas
             </label>
+            }
             <Button 
                 className="siper-button" boton-negro="si"
                 onClick={_ => {
@@ -330,12 +352,21 @@ function SearchBox(props: {
 }
 
 function GetRecordFilter<T extends RowType>(filter:string, attributteList:(keyof T)[], todas?:boolean, principalesKey?:(keyof T)[]){
-    var principales:(row:T) => boolean = todas || !principalesKey ? function(){ return true } : row => principalesKey.some(a => row[a])
-    if (filter == "") return principales
-    var f = filter.replace(/[^A-Z0-9 ]+/gi,'');
-    var regExp = new RegExp(f.replace(/\s+/, '(\\w* \\w*)+'), 'i');
+    // Normaliza texto
+    const normalize = (text: string) =>
+        text
+            .toUpperCase()
+            .normalize("NFD") // separa letras de los acentos
+            .replace(/[\u0300-\u036f]/g, '') // elimina los acentos
+            .replace(/[^A-Z0-9Ñ ]+/g, '');
+
+    var principales:(row:T) => boolean = todas || !principalesKey ? ()=>true :(row) => principalesKey.some((a) => row[a])
+    if (!filter.trim()) return principales;
+    var normalizedFilter = normalize(filter).trim().replace(/\s+/g, ' ');
+    var palabras = normalizedFilter.split(' ').filter(Boolean);
+    var regExp = new RegExp(palabras.map(p=>`(${p})`).join('.*'), 'i');
     return function(row: T){
-        return principales(row) && attributteList.some(a => regExp.test(row[a]+''))
+        return principales(row) && attributteList.some((a) => regExp.test(normalize(String(row[a] ?? ''))))
     }
 }
 
@@ -354,7 +385,7 @@ function SliderNivel(props:{verNivelSectorHasta:number, onChangeLevel:(level:num
     return (
         <Box sx={{ width: 150 }}>
             <Slider
-               defaultValue={2}
+               defaultValue={props.verNivelSectorHasta}
                getAriaValueText={valuetext}
                step={1}
                max={5}
@@ -374,7 +405,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     const [abanicoPersonas, setAbanicoPersonas] = useState<Partial<Record<string, PersonasNovedadActualResult[]>>>({});
     const [filtro, setFiltro] = useState("");
     const [expandido, setExpandido] = useState<Record<string, boolean>>({})
-    const [verNivelSectorHasta, setVerNivelSectorHasta] = useState(2);
+    const [verNivelSectorHasta, setVerNivelSectorHasta] = useState(Math.max(2,Math.min(5,infoUsuario.sector_nivel + 1 || 2)));
     const APELLIDOYNOMBRES = 'apellidoynombres' as keyof PersonasNovedadActualResult
     const attributosBuscables:(keyof PersonasNovedadActualResult)[] = ['apellido', 'nombres', 'cuil', 'ficha', 'idmeta4', 'idper', 'nombre_sector', APELLIDOYNOMBRES]
     useEffect(function(){
@@ -415,7 +446,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
             })
             setSectores(sectoresAumentados);
         }).catch(logError)
-    }, [fecha]);
+    }, [fecha.getMilliseconds()]);
 
     // @ts-expect-error
     var es:{registra:boolean} = conn.config?.config?.es||{}
@@ -439,17 +470,14 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
                 <AccordionDetails>
                     <List>
                         {abanicoPersonas[s.sector]?.map(p=>
-                            <>
                             <ListItemButton key = {p.idper} onClick={() => {if (onIdper != null) onIdper(p as ProvisorioPersonas)}} 
                                     className={`${p.idper == idper ? ' seleccionado' : ''} ${p.cargable ? ' seleccionable' : 'no-seleccionable'}`}>
                                 <span className="box-id persona-id">{p.idper}</span>
-                                <span className="box-names" bold-name={p.es_jefe ? 'si' : ''}>
+                                <span className="box-names" bold-name={p.es_jefe ? 'si' : 'no'}>
                                     {p.apellido}, {p.nombres}
                                 </span>
                                 <span className="box-info"> {p.cod_nov ? p.cod_nov : 'S/N' } </span>
                             </ListItemButton>
-                            {p.idper == idper && <LegajoPer conn={props.conn} idper={p.idper}/>}
-                            </>
                         )}
                     </List>
                 </AccordionDetails>
@@ -458,12 +486,11 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
     </Componente>
 }
 
-function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number, ultimaNovedad?:number, infoUsuario:InfoUsuario, 
+function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number, ultimaNovedad?:number, persona:ProvisorioPersonas
     fechaActual:RealDate,
     onBorrado:()=>void}
 ){
-    const {idper, conn, ultimaNovedad, infoUsuario, fechaActual, annio} = props;
-    console.log(infoUsuario)
+    const {idper, conn, ultimaNovedad, fechaActual, annio, persona} = props;
     const [novedades, setNovedades] = useState<ProvisorioNovedadesRegistradas[]>([]);
     const [quiereBorrar, setQuiereBorrar] = useState<ProvisorioNovedadesRegistradas|null>(null);
     const [eliminando, setEliminando] = useState(false);
@@ -495,15 +522,26 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
         {novedades.map(n => {
             const diasSeleccionados = Object.entries(n)
                 .filter(([key, value]) => key.startsWith("dds") && value === true)
-                .map(([key]) => diasSemana[key]); 
+                .map(([key]) => diasSemana[key]);
+            const problemas = [
+                persona.fecha_ingreso && n.desde < persona.fecha_ingreso ? "Fecha desde anterior a la fecha de ingreso" : null,
+                persona.fecha_egreso && n.hasta > persona.fecha_egreso ? "Fecha hasta posterior a la fecha de egreso" : null,
+            ].filter(Boolean);
             return (
-            <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar?' por-borrar':''}`}>
-                <div className="fechas">{n.desde.toDmy().replace(/\/\d\d\d\d$/,'') + (n.desde == n.hasta ? '' : ` - ${n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')} (${n.dias_hoc})`)}</div>
-                <div className="cod_nov">{n.cod_nov}</div>
-                <div className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' } 
+            <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar && quiereBorrar.idr === n.idr?' por-borrar':''}`} 
+                tiene-problemas={problemas.length ? 'si' : 'no'} title={problemas.join('. ')}
+            >
+                <span className="fechas">
+                    <span>{n.desde.toDmy().replace(/\/\d\d\d\d$/,'')}</span>
+                    {sameValue(n.desde, n.hasta) ? null : <span> - </span>}
+                    {sameValue(n.desde, n.hasta) ? null : <span>{n.hasta.toDmy().replace(/\/\d\d\d\d$/,'')}</span>}
+                </span>
+                <span className="cant">{n.dias_hoc.substring(0,n.dias_hoc.length-1)}<sub>{n.dias_hoc.substring(n.dias_hoc.length-1)}</sub></span>
+                <span className="box-id cod_nov">{n.cod_nov}</span>
+                <span className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' } 
                     {diasSeleccionados.length > 0 ? ' / ' + diasSeleccionados.join(', ') : ''}
-                </div>
-                <div className="borrar">{n.desde > fechaActual && es.rrhh ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</div>
+                </span>
+                <span className="borrar">{n.desde > fechaActual && es.rrhh ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</span>
             </Box>)
         })}
         <Dialog open={quiereBorrar != null}>
@@ -511,8 +549,14 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 eliminando ? <div>
                     <div>Eliminando</div>
                     <CircularProgress/>
-                </div> : <div>
-                    ¿Confirma el borrado de las novedades registradas entre {quiereBorrar!.desde.toDmy()} y {quiereBorrar!.hasta.toDmy()}?
+                </div> : <div className="modal-borrar-novedad">
+                    ¿Confirma el borrado de la novedad registrada <strong>"{quiereBorrar!.cod_novedades__novedad}"</strong>
+                    {
+                        sameValue(quiereBorrar!.desde, quiereBorrar!.hasta)
+                            ? `en ${quiereBorrar!.desde.toDmy()}`
+                            : `entre ${quiereBorrar!.desde.toDmy()} y ${quiereBorrar!.hasta.toDmy()}`
+                    }?
+                    <div>
                     <Button variant="outlined" onClick={()=>setQuiereBorrar(null)}>Conservar</Button>
                     <Button variant="outlined" color="error" onClick={()=>{
                         setEliminando(true);
@@ -525,7 +569,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                             props.onBorrado();
                         }).catch(logError);
                     }}>Eliminar</Button>
-                    
+                    </div>
                 </div>
             )}
         </Dialog>
@@ -534,7 +578,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
 
 function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     const {fecha, idper, conn} = props
-    const horarioVacio:HorarioSemanaVigenteResult = {desde: date.today(), hasta: date.today(), dias:{}} // corresponde today, es un default provisorio
+    const horarioVacio:HorarioSemanaVigenteResult = {desde: date.today(), hasta: date.today(), dias:{}, bh_descripcion:''} // corresponde today, es un default provisorio
     const [horario, setHorario] = useState(horarioVacio);
     useEffect(function(){
         setHorario(setEfimero)
@@ -543,7 +587,7 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
                 setHorario(result);
             }).catch(logError);
         }
-    },[idper, fecha])
+    },[idper, fecha.getMilliseconds()])
 
     const desdeFecha = horario.desde;
     const hastaFecha = horario.hasta;
@@ -557,6 +601,9 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     }
     
     return <Componente componentType="horario" esEfimero={horario}>
+        <div className="banda-horaria">
+            Banda horaria: {horario.bh_descripcion ?? 'no definida'}
+        </div>
         <div className="horario-vigente">
             Horario vigente desde {desdeFecha.toDmy()} hasta {hastaFecha.toDmy()}.
         </div>
@@ -576,15 +623,16 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
     </Componente>
 }
 
-function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, annio:number, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean, c_dds: boolean)=>void, ultimaNovedad?: ULTIMA_NOVEDAD}){
+function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, annio:number, paraCargar:boolean, onCodNov?:(codNov:string, conDetalles: boolean, c_dds: boolean)=>void, ultimaNovedad?: ULTIMA_NOVEDAD, infoUsuario:InfoUsuario}){
     // @ts-ignore
-    const {idper, cod_nov, annio, onCodNov, conn, ultimaNovedad} = props;
+    const {idper, cod_nov, annio, onCodNov, conn, ultimaNovedad, infoUsuario} = props;
     const [codNovedades, setCodNovedades] = useState<NovedadesDisponiblesResult[]>([]);
     const [codNovedadesFiltradas, setCodNovedadesFiltradas] = useState<NovedadesDisponiblesResult[]>([]);
     const [filtro, setFiltro] = useState("");
     const [todas, setTodas] = useState(false);
     const [ordenPorNovedad, setOrdenPorNovedad] = useState(false);
-
+    const puede_cargar_novedades = puedeCargarNovedades(infoUsuario);
+    
     useEffect(function(){
         setCodNovedades(setEfimero)
         if (idper != null) {
@@ -600,7 +648,7 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
     },[codNovedades, filtro, todas, ordenPorNovedad])
 
     return <Componente componentType="codigo-novedades" scrollable={true} esEfimero={codNovedades}>
-        <SearchBox onChange={setFiltro} todas={todas} onTodasChange={setTodas} ordenPorNovedad={ordenPorNovedad} onOrdenPorNovedadChange={setOrdenPorNovedad}/>
+        <SearchBox onChange={setFiltro} todas={todas} onTodasChange={setTodas} ordenPorNovedad={ordenPorNovedad} onOrdenPorNovedadChange={setOrdenPorNovedad} permisos={puede_cargar_novedades}/>
         <List>
             {codNovedadesFiltradas.map(c=>
                 <ListItemButton key = {c.cod_nov} 
@@ -625,14 +673,12 @@ function NovedadesPer(props:{conn: Connector, idper:string, cod_nov:string, anni
 type Hora = string;
 
 type HorarioSemanaVigenteDia = {hora_desde:Hora, hora_hasta:Hora, cod_nov:string, trabaja:boolean, dds:0 | 1 | 2 | 3 | 4 | 5 | 6}
-type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, dias:Record<string, HorarioSemanaVigenteDia>}
-type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean, dias_habiles: number}
+type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, bh_descripcion:string, dias:Record<string, HorarioSemanaVigenteDia>}
+type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean, dias_habiles: number, saldo: number}
 declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: () => Promise<DefinedType<typeof ctts.info_usuario.result>>;
-        calendario_persona: (params:{
-
-        }) => Promise<any>;
+        calendario_persona: (params:DefinedType<typeof ctts.calendario_persona.parameters>) => Promise<CalendarioResult[]>;
         novedades_disponibles: (params:{
 
         }) => Promise<NovedadesDisponiblesResult[]>;
@@ -652,6 +698,7 @@ declare module "frontend-plus" {
             primaryKeyValues: any[];    
         }) => Promise<void>;
         parametros: (params:{}) => Promise<ParametrosResult>;
+        registrar_novedad: (params:NovedadRegistrada) => Promise<NovedadRegistrada & { idr: number }>;
     }
     interface Connector {
         config: AppConfigClientSetup
@@ -699,6 +746,8 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
     const {idper, conn} = props;
     const [persona, setPersona] = useState<ProvisorioPersonaLegajo>({} as ProvisorioPersonaLegajo);
     const [domicilios, setDomicilios] = useState<ProvisorioPersonaDomicilio[]>([]);
+    const [telefonos, setTelefonos] = useState<ProvisorioPersonaTelefono[]>([]);
+    const [cargandoLegajo, setCargandoLegajo] = useState(true);
 
     useEffect(function() {
         setPersona(setEfimero)
@@ -709,6 +758,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 paramfun: {}
             }).then(personas => {
                 setPersona(personas[0]);
+                setCargandoLegajo(false);
                 console.log(personas[0])
             }).catch(logError);
             conn.ajax.table_data<ProvisorioPersonaDomicilio>({
@@ -716,9 +766,18 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 fixedFields: [{fieldName:'idper', value:idper}],
                 paramfun: {}
             }).then(function(domicilios){
-                domicilios.sort(compareForOrder([{column:'idper'},{column:'orden'},{column:'domicilio'}])),
+                domicilios.sort(compareForOrder([{column:'idper'},{column:'orden'},{column:'nro_item'}])),
                 setDomicilios(domicilios);
                 console.log(domicilios)
+            }).catch(logError);
+            conn.ajax.table_data<ProvisorioPersonaTelefono>({
+                table: 'per_telefonos',
+                fixedFields: [{ fieldName: 'idper', value: idper }],
+                paramfun: {}
+            }).then(function (telefonos) {
+                telefonos.sort(compareForOrder([{ column: 'idper' }, { column: 'orden' }, { column: 'nro_item' }]));
+                setTelefonos(telefonos);
+                console.log(telefonos)
             }).catch(logError);
         }
     }, [idper])
@@ -726,30 +785,30 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
     // @ts-expect-error
     var es:{registra:boolean} = conn.config?.config?.es||{}
 
-    return <Componente componentType="legajo-per" esEfimero={persona}>
+    return cargandoLegajo ? <CircularProgress /> : <Componente componentType="legajo-per" esEfimero={persona}>
         <div className="legajo-contenedor">
             <div className="legajo-seccion">
-                {!es.registra && <div className="legajo-grupo">
+                <div className="legajo-grupo">
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">Sector:</div>
                         <div className="legajo-valor">{persona.sectores__nombre_sector}</div>
                     </div>
-                </div>}
-                <div className="legajo-grupo">
+                </div>
+                {!es.registra && <div className="legajo-grupo">
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">Ficha:</div>
                         <div className="legajo-valor">{persona.ficha || '-'}</div>
                     </div>
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">CUIL:</div>
-                        <div className="legajo-valor" red-color={!persona?.cuil_valido ? "si" : ""}>{persona.cuil || '-'}</div>
+                        <div className="legajo-valor" red-color={!persona?.cuil_valido ? "si" : "no"}>{persona.cuil || 'sin CUIL'}</div>
                     </div>
+                </div>}
+                <div className="legajo-grupo">
                     <div className="legajo-campo">
-                        <div className="legajo-etiqueta">ID:</div>
+                        <div className="legajo-etiqueta">IDMeta4:</div>
                         <div className="legajo-valor">{persona.idmeta4 || '-'}</div>
                     </div>
-                </div>
-                <div className="legajo-grupo">
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">Nacionalidad:</div>
                         <div className="legajo-valor">{persona.nacionalidad || '-'}</div>
@@ -794,6 +853,10 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                         <div className="legajo-etiqueta">Grado:</div>
                         <div className="legajo-valor">{persona.grado || '-'}</div>
                     </div>
+                    <div className="legajo-campo">
+                        <div className="legajo-etiqueta">Perfil SGC:</div>
+                        <div className="legajo-valor">{persona.puesto || '-'} {persona.puestos__nombre}</div>
+                    </div>
                 </div>
             </div>
             <div className="legajo-seccion">
@@ -816,23 +879,43 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 </div>
             </div>
             <div className="legajo-seccion">
-                <div className="legajo-grupo">
+                <div className="legajo-grupo legajo-grupo-domicilios">
                     {domicilios.map(domicilio => (
-                        <div key={domicilio.domicilio} className="legajo-campo legajo-campo-largo">
+                        <div key={domicilio.nro_item} className="legajo-campo legajo-campo-largo">
                             <div className="legajo-valor">{'  '} - 
                                 {domicilio.calles__nombre_calle ? ` ${domicilio.calles__nombre_calle}` : ` ${domicilio.nombre_calle}`} 
                                 {domicilio.altura && ` ${domicilio.altura}`}
-                                {domicilio.piso && ` Piso ${domicilio.piso}`}
-                                {domicilio.depto && ` Depto ${domicilio.depto}`}
-                                {domicilio.codigo_postal && ` CP ${domicilio.codigo_postal}`}
-                                {domicilio.barrios__nombre_barrio && `, (${domicilio.barrios__nombre_barrio})`} 
-                                {domicilio.provincias__nombre_provincia && `, (${domicilio.provincias__nombre_provincia})`} 
-                                {domicilio.tipos_domicilio__domicilio && ` (${domicilio.tipos_domicilio__domicilio})`} 
+                                {domicilio.piso && ` piso ${domicilio.piso}`}
+                                {domicilio.depto && ` depto ${domicilio.depto}`}
+                                {domicilio.codigo_postal && ` (${domicilio.codigo_postal})`}
+                                {domicilio.barrios__nombre_barrio && `, ${domicilio.barrios__nombre_barrio}`} 
+                                {domicilio.provincias__nombre_provincia && ` \u2014 ${domicilio.provincias__nombre_provincia}`} 
+                                {domicilio.tipos_domicilio__descripcion && domicilio.tipos_domicilio__descripcion !== "PRINCIPAL" && ` (${domicilio.tipos_domicilio__descripcion})`}
                             </div>
                         </div>
                     ))}
                     {domicilios.length === 0 && 
                         <div className="legajo-campo legajo-campo-largo">Sin domicilios registrados</div>
+                    }
+                </div>
+            </div>
+            <div className="legajo-seccion">
+                <div className="legajo-grupo">
+                    <div className="legajo-campo legajo-campo-largo">
+                        <div className="legajo-etiqueta">Teléfonos:</div>
+                    </div>
+                </div>
+                <div className="legajo-grupo legajo-grupo-telefonos">
+                    {telefonos.map(telefono => (
+                        <div key={telefono.nro_item} className="legajo-campo legajo-campo-largo">
+                            <div className="legajo-valor">
+                                {'  '} - {telefono.tipos_telefono__descripcion || telefono.tipo_telefono}: {telefono.telefono}
+                                {telefono.observaciones && ` (${telefono.observaciones})`}
+                            </div>
+                        </div>
+                    ))}
+                    {telefonos.length === 0 &&
+                        <div className="legajo-campo legajo-campo-largo">Sin teléfonos registrados</div>
                     }
                 </div>
             </div>
@@ -868,7 +951,9 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     const [annio, setAnnio] = useState((defaults.fecha ?? date.today()).getFullYear());
     const [fechaActual, setFechaActual] =  useState<RealDate>(date.today()); // corresponde today, es un default provisorio
     const [detalleVacacionesPersona, setDetalleVacacionesPersona] = useState<ProvisorioDetalleNovPer|null>({} as ProvisorioDetalleNovPer)
-
+    const [mostrandoLegajo, setMostrandoLegajo] = useState(false);
+    const puede_cargar_novedades = puedeCargarNovedades(infoUsuario);
+   
     function resetDias() {
         setNovedadRegistrada((prev) => ({
           ...prev,
@@ -899,7 +984,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         setSiCargaraNovedad(null);
         setError(null);
         resetDias();
-    },[idper,cod_nov,fecha,hasta])
+    },[idper,cod_nov,fecha.getMilliseconds(),hasta.getMilliseconds()])
     useEffect(() => {
         if (idper) {
             setDetalleVacacionesPersona(setEfimero)
@@ -923,27 +1008,22 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     }, [idper, annio, ultimaNovedad]);
     function registrarNovedad(){
         setGuardandoRegistroNovedad(true);
-        conn.ajax.table_record_save({
-            table:'novedades_registradas',
-            primaryKeyValues:[],
-            newRow:{
-                idper, 
-                desde:fecha, 
-                hasta, 
-                cod_nov, 
-                detalles: detalles == "" ? null : detalles,
-                dds0:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds0,
-                dds1:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds1,
-                dds2:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds2,
-                dds3:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds3,
-                dds4:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds4,
-                dds5:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds5,
-                dds6:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds6
-            },
-            oldRow:{},
-            status:'new'
+        conn.ajax.registrar_novedad({
+            idper, 
+            desde:fecha, 
+            hasta, 
+            cod_nov, 
+            detalles: detalles == "" ? null : detalles,
+            dds0:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds0,
+            dds1:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds1,
+            dds2:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds2,
+            dds3:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds3,
+            dds4:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds4,
+            dds5:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds5,
+            dds6:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds6,
+            cancela: cod_nov == null
         }).then(function(result){
-            setUltimaNovedad(result.row.idr as number);
+            setUltimaNovedad(result.idr as number);
             // setFecha(fechaActual);
             // setHasta(fechaActual);
             // setCodNov("");
@@ -983,8 +1063,8 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             ? "debe marcar alguno de los días de la semana" : null;
 
     // @ts-expect-error
-    var es:{rrhh:boolean} = conn.config?.config?.es||{}
-
+    var es:{rrhh:boolean, registra:boolean} = conn.config?.config?.es||{}
+    var inconsistente = siCargaraNovedad?.saldo != null && siCargaraNovedad.saldo < 0;
     return infoUsuario.usuario == null ?  
             <CircularProgress />
         : infoUsuario.idper == null ?
@@ -994,7 +1074,9 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             <Componente componentType="del-medio" scrollable={true}>
                 <div className="container-del-medio">
                 <Box className="box-flex-gap">
-                    <Paper className="paper-flex">
+                    <Paper className="paper-flex" 
+                        onClick={() => setMostrandoLegajo(!mostrandoLegajo && es.registra)}
+                        sx={{ cursor: 'pointer' }}>
                         <div className="box-line">
                             <span className="box-id">
                                 {idper}
@@ -1002,13 +1084,16 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                             <span className="box-names">
                                 {persona.apellido}, {persona.nombres}
                             </span>
+                            {es.registra && <span className="box-info">
+                                {mostrandoLegajo ? <ICON.ExpandLess /> : <ICON.ExpandMore />}
+                            </span>}
                         </div>
                         <div className="box-line">
                             <span>
                                 CUIL:&nbsp;
                             </span>
-                            <span className="box-names" red-color={!persona?.cuil_valido ? "si" : ""}>
-                                {persona.cuil}
+                            <span className="box-names" red-color={!persona?.cuil_valido ? "si" : "no"}>
+                                {persona.cuil || 'sin CUIL'}
                             </span>
                         </div>
                         <div className="box-line">
@@ -1021,11 +1106,12 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                         <DetalleAniosNovPer detalleVacacionesPersona={detalleVacacionesPersona}/>
                     </Box>
                 </Box>
+                {mostrandoLegajo && (<LegajoPer conn={props.conn} idper={persona.idper}/>)}
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}
-                    fechaActual={fechaActual!} annio={annio} onAnnio={setAnnio}
+                    fechaActual={fechaActual!} annio={annio} onAnnio={setAnnio} infoUsuario={infoUsuario}
                 />
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
-                {cod_nov && idper && fecha && hasta && !guardandoRegistroNovedad && !registrandoNovedad && persona.cargable ? <Box key="setSiCargaraNovedad">
+                {cod_nov && idper && fecha && hasta && !guardandoRegistroNovedad && !registrandoNovedad && persona.cargable && puede_cargar_novedades && (fecha >= fechaActual || infoUsuario.puede_corregir_el_pasado) ? <Box key="setSiCargaraNovedad">
                     <Button key="button" variant="outlined" onClick={() => {
                         setRegistrandoNovedad(true);
                         conn.ajax.si_cargara_novedad({idper, cod_nov, desde:fecha, hasta}).then(setSiCargaraNovedad).catch(logError)
@@ -1060,7 +1146,8 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                         error={siCargaraNovedad.con_detalle && !detalles}
                         helperText={siCargaraNovedad.con_detalle && !detalles ? "El campo es obligatorio." : ""}
                     />
-                    <Button className="boton-confirmar-registro-novedades" key="button" variant="outlined" 
+                    <Button className="boton-confirmar-registro-novedades" key="button" variant={inconsistente ? "contained" : "outlined"}
+                        color={inconsistente ? "error" : "primary"}
                         disabled={!!noPuedeConfirmarPorque}
                         onClick={() => registrarNovedad()}
                     >
@@ -1070,11 +1157,11 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                 <Box>{guardandoRegistroNovedad || error ?
                     <Typography>{error?.message ?? (guardandoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
-                { es.rrhh && <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>}
+                { es.rrhh && <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} persona={persona} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>}
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
                 </div>
             </Componente>
-            <NovedadesPer conn={conn} idper={idper} annio={annio} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad}/>
+            <NovedadesPer conn={conn} idper={idper} annio={annio} paraCargar={false} cod_nov={cod_nov} onCodNov={(codNov) => handleCodNovChange(codNov)} ultimaNovedad={ultimaNovedad} infoUsuario={infoUsuario}/>
         </Paper>;
 }
 
@@ -1099,6 +1186,13 @@ function renderRol( infoUsuario: InfoUsuario ) {
 }
 
 function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, infoUsuario: InfoUsuario }) {
+    
+    const getManualHref = (rol: string) => {
+        const userRol = rol.trim();
+        if (userRol === "basico") return "./docs/manual-basico.pdf";
+        if (userRol === "registra") return "./docs/manual-registra.pdf";
+        return "./docs/manual-rrhh.pdf";
+    }
     useEffect(() => {
         document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
         if (props.infoUsuario.usuario) {
@@ -1115,11 +1209,11 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, i
                     location.hash="";
                 }}><ICON.Menu/></IconButton>
                 <Typography flexGrow={2}>
-                    SiPer - Principal - <small>(DEMO)</small>
+                    SiPer - Principal
                 </Typography>
                 <IconButton color="inherit">
                     <a
-                        href={props.infoUsuario.rol.trim() === "basico" ? "./docs/manual-basico.pdf" : "./docs/manual.pdf"}
+                        href={getManualHref(props.infoUsuario.rol)}
                         download="Manual para el usuario SIPER.pdf"
                         className="link-manual"
                     >

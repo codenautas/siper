@@ -11,7 +11,7 @@ export const grupo:FieldDefinition = {
 }
 
 export function grupos(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'grupos',
         elementName: 'grupo',

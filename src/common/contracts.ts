@@ -173,6 +173,7 @@ export const sectores = {
         nombre_sector: is.string,
         tipo_sec: is.nullable.string,
         pertenece_a: is.nullable.string,
+        nivel: is.number,
         activo: is.boolean
     })
 }
@@ -251,6 +252,7 @@ export const si_cargara_novedad = {
         dias_coincidentes: is.number,
         con_detalles: is.nullable.boolean,
         c_dds: is.nullable.boolean,
+        saldo: is.nullable.number,
     })
 }
 
@@ -298,7 +300,6 @@ export const personas_novedad_actual = {
 
 export type PersonasNovedadActualResult = DefinedType<typeof personas_novedad_actual.result>
 
-
 export const calendario_persona = {
     procedure: 'calendario_persona',
     parameters: is.object({
@@ -307,12 +308,14 @@ export const calendario_persona = {
         mes: is.number
     }),
     result: is.object({
+        fecha: is.Date,
         dia: is.number,
         dds: is.number,
         semana: is.number,
         cod_nov: is.string,
         tipo_dia: is.string,
         novedad: is.string,
+        mismo_mes: is.boolean,
     })
 }
 
@@ -352,10 +355,11 @@ export const historico_persona = {
 export type HistoricoResult = DefinedType<typeof historico_persona.result>
 
 export const info_usuario = {
-    procedure: 'info_usaurio',
+    procedure: 'info_usuario',
     result: is.object({
         fecha_actual: is.Date,
         sector: is.string, 
+        sector_nivel: is.number,
         idper: is.string, 
         apellido: is.string, 
         nombres: is.string, 
@@ -366,6 +370,9 @@ export const info_usuario = {
         usuario: is.string,
         rol: is.string,
         puede_cargar_todo: is.nullable.boolean,
+        puede_cargar_propio: is.nullable.boolean,
+        puede_cargar_dependientes: is.nullable.boolean,
+        puede_corregir_el_pasado: is.nullable.boolean,
     })
 }
 
@@ -379,6 +386,12 @@ export const parametros = {
 }
 
 export type ParametrosResult = DefinedType<typeof parametros.result>
+
+export const registrar_novedad = {
+    procedure: 'registrar_novedad',
+    parameters: novedades_registradas.description,
+    result: novedades_registradas.description
+}
 
 export const annio = {
     table: 'annio',
@@ -486,6 +499,57 @@ export const situacion_revista = {
 
 export type situacion_revista = DefinedType<typeof situacion_revista.description>
 
+export const expedientes = {
+    table : 'expedientes',
+    description : is.object({
+        expediente: is.string,
+        cod_2024: is.number
+    })
+}
+
+export type expedientes = DefinedType<typeof expedientes.description>
+
+export const funciones = {
+    table : 'funciones',
+    description : is.object({
+        funcion: is.string,
+        descripcion: is.string,
+        cod_2024: is.number
+    })
+}
+
+export type funciones = DefinedType<typeof funciones.description>
+
+export const nivel_grado = {
+    table : 'nivel_grado',
+    description : is.object({
+        nivel_grado: is.string,
+        cod_2024: is.number
+    })
+}
+
+export type nivel_grado = DefinedType<typeof nivel_grado.description>
+
+export const tareas = {
+    table : 'tareas',
+    description : is.object({
+        tarea: is.string,
+        horas_semanales: is.number,
+        horas_dia: is.number,
+        minimo_horas_por_dia: is.number,
+        maximo_horas_por_dia: is.number,
+        nocturno: is.boolean,
+        fin_semana: is.boolean,
+        guardia: is.boolean,
+        hora_entrada_desde: is.string,
+        hora_salida_hasta: is.string,
+        horario_flexible: is.boolean,
+        cod_2024: is.number
+    })
+}
+
+export type tareas = DefinedType<typeof tareas.description>
+
 export const motivos_egreso = {
     table : 'motivos_egreso',
     description : is.object({
@@ -559,18 +623,29 @@ export const tipos_domicilio = {
     table: 'tipos_domicilio',
     description: is.object({
         tipo_domicilio: is.string,
-        domicilio: is.string,
+        descripcion: is.string,
         orden: is.number
     })
 } satisfies CommonEntityDefinition
 
 export type Tipos_domicilio = DefinedType<typeof tipos_domicilio.description>
 
+export const tipos_telefono = {
+    table: 'tipos_telefono',
+    description: is.object({
+        tipo_telefono: is.string,
+        descripcion: is.string,
+        orden: is.number
+    })
+} satisfies CommonEntityDefinition
+
+export type Tipos_telefono = DefinedType<typeof tipos_telefono.description>
+
 export const per_domicilios = {
     table: 'per_domicilios',
     description: is.object({
         idper:           is.string,
-        domicilio:       is.bigint,
+        nro_item:        is.bigint,
         tipo_domicilio:  is.string,
         provincia:       is.string,
         localidad:       is.string,
@@ -590,6 +665,39 @@ export const per_domicilios = {
         observaciones:   is.string,
     })
 }
+export const puestos = {
+    table : 'puestos',
+    description : is.object({
+        puesto: is.number,
+        descripcion: is.string,
+        objetivo: is.string
+    })
+}
+
+export type puestos = DefinedType<typeof puestos.description>
+
+export const per_telefonos = {
+    table: 'per_telefonos',
+    description: is.object({
+        idper:           is.string,
+        nro_item:        is.bigint,
+        tipo_telefono:   is.string,
+        telefono:        is.string,
+        observaciones:   is.string,
+    })
+}
+
+export const bandas_horarias = {
+    table: 'bandas_horarias',
+    description: is.object({
+        banda_horaria: is.string,
+        descripcion: is.string,
+        hora_desde: is.string,
+        hora_hasta: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type bandas_horarias = DefinedType<typeof bandas_horarias.description>
 
 export const meses = [
     {  value:1, name:'enero' },
@@ -621,7 +729,13 @@ export const ERROR_COD_NOVEDAD_NO_INDICA_TOTAL     = 'P1005';
 export const ERROR_COD_NOVEDAD_NO_INDICA_PARCIAL   = 'P1006';
 export const ERROR_COD_NOVEDAD_NO_INDICA_CON_HORARIO= 'P1007';
 export const ERROR_COD_NOVEDAD_NO_INDICA_CON_NOVEDAD= 'P1008';
+export const ERROR_SECTORES_DESNIVELADOS            = 'P1009';
+export const ERROR_SECTOR_HUERFANO_NO_TOPE          = 'P1010';
 
-//////////// ERRORES POSTGRES:
+//////////// ERRORES PROPIOS DEL BACKEND:
+export const ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES   = 'B9001';
+
+//////////// ERRORES POSTGRES: https://www.postgresql.org/docs/current/errcodes-appendix.html
 export const insufficient_privilege = '42501';
-export const check_sin_superponer = '23P01';
+export const exclusion_violation = '23P01';
+export const unique_violation = '23505';

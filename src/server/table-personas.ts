@@ -3,6 +3,10 @@
 import {FieldDefinition, TableDefinition, TableContext, soloDigitosCons, soloDigitosPostConfig, soloCodigo, soloMayusculas} from "./types-principal";
 
 import { s_revista  } from "./table-situacion_revista";
+import { agrupamiento  } from "./table-agrupamientos";
+import { puesto  } from "./table-puestos";
+
+import { politicaNovedades } from "./table-novedades_registradas";
 
 export const idper: FieldDefinition = {
     name: 'idper', 
@@ -12,11 +16,11 @@ export const idper: FieldDefinition = {
 }
 
 export function personas(context: TableContext): TableDefinition {
-    var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
+    var {es} = context;
     return {
         name: 'personas',
         elementName: 'persona',
-        editable: admin,
+        editable: es.rrhh,
         fields:[
             {...idper, nullable:true, editable:false},
             {name: 'cuil'     , typeName: 'text', isName:false, postInput: soloDigitosPostConfig, clientSide: 'cuil_style', serverSide:true, inTable:true },
@@ -31,20 +35,22 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'categoria', typeName: 'text',               title:'categoría'                 },
             s_revista,
             {name: 'registra_novedades_desde', typeName: 'date'                                   },
-            {name: 'para_antiguedad_relativa', typeName: 'date'                                   },
+            {name: 'para_antiguedad_relativa', typeName: 'date', title: 'para antigüedad relativa'},
             {name: 'activo' , typeName: 'boolean', nullable:false , defaultValue:false            },
             {name: 'fecha_ingreso'           , typeName: 'date'                                   },
             {name: 'fecha_egreso'            , typeName: 'date'                                   },
+            {name: 'motivo_egreso'           , typeName: 'text', title: 'motivo de egreso'       },
             {name: 'nacionalidad'            , typeName: 'text', title: 'nacionalidad'            },
             {name: 'jerarquia'               , typeName: 'text', title: 'jerarquía'               },
             {name: 'cargo_atgc'              , typeName: 'text', title: 'cargo/ATGC'              },
-            {name: 'agrupamiento'            , typeName: 'text', title: 'agrupamiento'            },
+            agrupamiento,
             {name: 'tramo'                   , typeName: 'text', title: 'tramo'                   },
             {name: 'grado'                   , typeName: 'text', title: 'grado'                   },
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
             {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
-            {name: 'motivo_egreso'           , typeName: 'text', title: 'motivo de egreso'       },
             {name: 'cuil_valido'             , typeName: 'boolean', title: 'cuil válido', inTable:false, serverSide:true, editable:false},
+            puesto,
+            {name: 'banda_horaria'           , typeName: 'text', title: 'banda horaria'           },
         ],
         primaryKey: [idper.name],
         foreignKeys: [
@@ -55,9 +61,11 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'jerarquias'         , fields:['jerarquia']       },
             {references: 'motivos_egreso'     , fields:['motivo_egreso']   },
             {references: 'tipos_doc'          , fields:['tipo_doc']        },
-        ],
-        softForeignKeys: [
             {references: 'situacion_revista', fields:[s_revista.name] },
+            {references: 'agrupamientos'    , fields:[agrupamiento.name] },
+            {references: 'grados'           , fields:['tramo','grado']     },
+            {references: 'puestos'          , fields:[puesto.name] },
+            {references: 'bandas_horarias'  , fields:['banda_horaria']     },
         ],
         constraints: [
             soloCodigo(idper.name),
@@ -78,12 +86,15 @@ export function personas(context: TableContext): TableDefinition {
             {table:'historial_contrataciones', fields:[idper.name], abr:'hc'},
             {table:'inconsistencias'      , fields:[idper.name], abr:'⒤', refreshFromParent:true},
             {table:'per_capa'   , fields:[idper.name], abr:'C'},
-            {table:'per_domicilios', fields:[idper.name], abr:'D'}
+            {table:'per_domicilios', fields:[idper.name], abr:'D'},
+            {table:'per_telefonos' , fields:[idper.name], abr:'T'}
         ],
         sql: {
+            policies: politicaNovedades('personas', 'registra_novedades_desde'),
             fields: {
                 cuil_valido:{ expr:`validar_cuit(cuil)` },
-            }
+            },
+            // where: es.rrhh ? 'true' : es.registra ? `personas.activo AND sector_pertenece(personas.sector, ${quoteLiteral(user.sector)})` : `personas.idper = ${quoteLiteral(user.idper)}`
         },
         hiddenColumns: ['cuil_valido'],
         sortColumns: [{column: 'activo', order: -1}, {column: 'idper', order: 1}],

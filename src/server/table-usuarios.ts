@@ -1,14 +1,13 @@
 "use strict";
 
-import {TableDefinition, TableContext,sinEspaciosMail} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, sinEspaciosMail, } from "./types-principal";
 
 import {idper} from "./table-personas"
 import {rol} from "./table-roles"
 
 export function usuarios(context: TableContext): TableDefinition{
-    var admin = context.user.rol==='admin';
-    var rrhh = context.user.rol==='rrhh';
-    var rolConPermisos = admin || rrhh;
+    var rrhh = context.es.rrhh;
+    var rolConPermisos = rrhh || context.forDump;
     return {
         name: 'usuarios',
         title: 'usuarios de la aplicación',
@@ -16,7 +15,6 @@ export function usuarios(context: TableContext): TableDefinition{
         fields: [
             {name:'usuario'          , typeName:'text'    , nullable:false  },
             {name: rol.name          , typeName:'text'    },
-            {...idper, editable:rolConPermisos},
             {name:'md5clave'         , typeName:'text'    , allow:{select: context.forDump} },
             {name:'activo'           , typeName:'boolean' , nullable:false ,defaultValue:false},
             {name:'nombre'           , typeName:'text'                      },
@@ -25,19 +23,28 @@ export function usuarios(context: TableContext): TableDefinition{
             {name:'interno'          , typeName:'text'                      },
             {name:'mail'             , typeName:'text'                      },
             {name:'mail_alternativo' , typeName:'text'                      },
-            {name:'clave_nueva'      , typeName:'text', clientSide:'newPass', allow:{select:rolConPermisos, update:true, insert:false}},
+            ...(rolConPermisos? [
+                {name:'clave_nueva'      , typeName:'text', clientSide:'newPass', allow:{select:rolConPermisos, update:true, insert:false}} satisfies FieldDefinition,
+            ]: []),
+            {...idper, editable:rolConPermisos},
+            {name:'sector', typeName:'text', editable:false, serverSide:true, inTable:false},
+            {name:'nombre_sector', typeName:'text', editable:false, serverSide:true, inTable:false},
         ],
         primaryKey: ['usuario'],
         foreignKeys: [
             {references: 'personas', fields:[idper.name]},
-            {references: 'roles'   , fields:[rol.name ]},
+            {references: 'roles'   , fields:[rol.name  ], onUpdate: 'no action'},
         ],
         constraints: [
             sinEspaciosMail('mail'),sinEspaciosMail('mail_alternativo')
         ],
 
         sql: {
-            where:rolConPermisos || context.forDump?'true':"usuario = "+context.be.db.quoteNullable(context.user.usuario)
+            where:rolConPermisos || context.forDump?'true':"usuario = "+context.be.db.quoteNullable(context.user.usuario),
+            fields: {
+                sector: {expr: `(select p.sector from personas p where p.idper = usuarios.idper)`},
+                nombre_sector: {expr: `(select s.nombre_sector from sectores s where s.sector = (select p.sector from personas p where p.idper = usuarios.idper))`},
+            },
         }
     };
 }

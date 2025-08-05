@@ -11,11 +11,12 @@ db:
   user: siper_admin
 login:
   table: usuarios
+  from: usuarios left join personas p using (idper)
   userFieldName: usuario
   passFieldName: md5clave
   rolFieldName: rol
-  infoFieldList: [usuario, rol]
-  activeClausule: activo
+  infoFieldList: [usuario, rol, idper, sector]
+  activeClausule: usuarios.activo
   unloggedLandPage: false
   plus:
     successRedirect: /menu#i=principal
@@ -46,6 +47,7 @@ install:
       - ../install/personas_id_trg.sql
       - ../install/validar_digito.sql
       - ../install/per_domicilios_pk_trg.sql
+      - ../install/per_telefonos_pk_trg.sql
       post-adapt:
       - ../node_modules/pg-triggers/lib/recreate-his.sql
       - ../node_modules/pg-triggers/lib/table-changes.sql
@@ -58,7 +60,7 @@ install:
       - ../install/novedades_registradas_trg.sql
       - ../install/novedades_horarias_trg.sql
       - ../install/fechas_nov_trg.sql
-      - ../install/sectores_circulares_trg.sql
+      - ../install/sectores_desnivelados_trg.sql
       - ../install/novedades_registradas_detalles_trg.sql
       - ../install/novedades_horarias_parcial_trg.sql
       - ../install/novedades_registradas_total_trg.sql

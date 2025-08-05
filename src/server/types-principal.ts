@@ -9,7 +9,7 @@ export * from "pg-promise-strict";
 declare module "backend-plus"{
     interface Context {
         forDump?:boolean
-        es:{mantenimiento:boolean, admin:boolean, rrhh:boolean, registra:boolean}
+        es:{mantenimiento:boolean, admin:boolean, rrhh_admin:boolean, rrhh:boolean, registra:boolean}
     }
     interface ProcedureContext {
         be:AppSiper
@@ -22,7 +22,7 @@ declare module "backend-plus"{
         rol:string
     }
     interface AppConfigClientSetup {
-        es:{mantenimiento:boolean, admin:boolean, rrhh:boolean, registra:boolean}
+        es:{mantenimiento:boolean, admin:boolean, rrhh_admin:boolean, rrhh:boolean, registra:boolean}
     }
 }
 
@@ -33,7 +33,7 @@ export const sinMinusculas = 'sinMinusculas' as PostInputOptions
 export function soloDigitosCons(fieldName: string):Constraint{
     return {
         constraintType:'check', 
-        consName:`solo digitos sin ceros a la izqueirda en ${fieldName}`, 
+        consName:`solo digitos sin ceros a la izquierda en ${fieldName}`, 
         expr: `${fieldName} similar to '[1-9][0-9]*|0'`
     }
 }

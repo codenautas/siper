@@ -46,6 +46,8 @@ import { localidades             } from "./table-localidades";
 import { calles                  } from "./table-calles";
 import { tipos_domicilio         } from "./table-tipos_domicilio";
 import { per_domicilios          } from "./table-per_domicilios";
+import { tipos_telefono          } from "./table-tipos_telefono";
+import { per_telefonos           } from "./table-per_telefonos";
 import { sexos                   } from "./table-sexos";
 import { estados_civiles         } from "./table-estados_civiles";
 import { agrupamientos           } from "./table-agrupamientos";
@@ -54,6 +56,12 @@ import { grados                  } from "./table-grados";
 import { categorias              } from "./table-categorias";
 import { motivos_egreso          } from "./table-motivos_egreso";
 import { jerarquias              } from "./table-jerarquias";
+import { expedientes             } from "./table-expedientes";
+import { funciones               } from "./table-funciones";
+import { nivel_grado             } from "./table-nivel_grado";
+import { tareas                  } from "./table-tareas";
+import { puestos                 } from "./table-puestos";
+import { bandas_horarias         } from "./table-bandas_horarias";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -118,10 +126,10 @@ export class AppSiper extends AppBackend{
     completeContext(context:Context){
         var es = context.es ?? {} as Context["es"]
         es.mantenimiento = context.user && context.user.rol=="mantenimiento" 
-        es.admin = es.mantenimiento || context.user && context.user.rol=="admin" 
-        es.admin = context.user && context.user.rol=="admin" 
-        es.rrhh = es.admin || context.user && context.user.rol=="rrhh" 
-        es.registra = es.rrhh || context.user && context.user.rol=="registra" 
+        es.admin = es.mantenimiento || context.user && context.user.rol=="admin"
+        es.rrhh_admin = es.admin || context.user && (context.user.rol=="rrhh_admin" || context.user.rol=="superior")
+        es.rrhh = es.rrhh_admin || context.user && context.user.rol=="rrhh" 
+        es.registra = es.rrhh || context.user && context.user.rol=="registra"
         context.es = es;
     }
     override isAdmin(reqOrContext:Request|Context){
@@ -192,6 +200,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'localidades'      },
                             {menuType:'table', name:'calles'           },
                             {menuType:'table', name:'tipos_domicilio'  },
+                            {menuType:'table', name:'tipos_telefono'   },
                             {menuType:'table', name:'tipos_doc'        },
                             {menuType:'table', name:'tipos_sec'        },
                             {menuType:'table', name:'sexos'            },
@@ -202,6 +211,12 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'categorias'       },
                             {menuType:'table', name:'motivos_egreso'   },
                             {menuType:'table', name:'jerarquias'       },
+                            {menuType:'table', name:'expedientes'      },
+                            {menuType:'table', name:'funciones'        },
+                            {menuType:'table', name:'nivel_grado'      },
+                            {menuType:'table', name:'tareas'           },
+                            {menuType:'table', name:'puestos'          },
+                            {menuType:'table', name:'bandas_horarias'  },
                         ]},
                         {menuType:'table', name:'cod_novedades' },
                         {menuType:'table', name:'usuarios'      },
@@ -243,8 +258,10 @@ export class AppSiper extends AppBackend{
             { type: 'js', module: 'guarantee-type', file:'guarantee-type.js'},
             { type: 'js', module: 'frontend-plus', file:'frontend-plus.js'},
             { type: 'css', file: 'menu.css' },
+            { type: 'css', file: 'arbol.css' },
             { type: 'js', file: 'common/contracts.js' },
             { type: 'js', file: 'client/ws-componentes.js' },
+            { type: 'js', file: 'client/ws-arbol.js' },
             ... menuedResources
         ] satisfies ClientModuleDefinition[];
         return list;
@@ -279,8 +296,7 @@ export class AppSiper extends AppBackend{
             parametros           ,
             horarios             ,
             fichadas             ,
-            historial_contrataciones,
-            capa_modalidades       ,
+            capa_modalidades     ,
             capacitaciones       ,
             per_capa             ,
             parte_diario         ,
@@ -293,6 +309,8 @@ export class AppSiper extends AppBackend{
             calles               ,
             tipos_domicilio      ,
             per_domicilios       ,
+            tipos_telefono       ,
+            per_telefonos        ,
             sexos                ,
             estados_civiles      ,
             agrupamientos        ,
@@ -300,7 +318,14 @@ export class AppSiper extends AppBackend{
             grados               ,
             categorias           ,
             motivos_egreso       ,
-            jerarquias
+            jerarquias           ,
+            expedientes          ,
+            funciones            ,
+            nivel_grado          ,
+            tareas               ,
+            puestos              ,
+            historial_contrataciones,
+            bandas_horarias,
         }
     }       
 }

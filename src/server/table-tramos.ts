@@ -9,19 +9,21 @@ export const tramo:FieldDefinition = {
 }
 
 export function tramos(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'tramos',
         elementName: 'tramo',
         editable: admin,
         fields: [
             tramo,
-            {name: 'descripcion',typeName:'text' },
+            {name: 'descripcion',typeName:'text', isName: true},
         ],
         primaryKey: ['tramo'],
         constraints: [
         ],
         detailTables: [
+            {table:'personas'                       , fields:[tramo.name], abr:'P'},
+            {table:'historial_contrataciones'       , fields:[tramo.name], abr:'H'},
         ]
     }
 };

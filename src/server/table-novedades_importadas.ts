@@ -3,7 +3,7 @@
 import {TableDefinition, TableContext, idImportacion} from "./types-principal";
 
 export function novedades_importadas(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name:'novedades_importadas',
         editable:admin,

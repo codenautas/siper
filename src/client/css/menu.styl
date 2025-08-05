@@ -40,6 +40,18 @@ div.fp-fieldname-cod_novedades__novedad
 label.fp-fieldname-dds1
   margin-left 2em
 
+.modal-borrar-novedad
+  display flex
+  flex-direction column
+  align-items center
+  justify-content center
+  text-align center
+  padding 1em 2em 0em 2em
+  line-height 1.6
+
+.modal-borrar-novedad > div
+  margin-top 10px
+
 .MuiAutocomplete-root  
   display inline-flex
 
@@ -144,6 +156,9 @@ div.calendario-dia-seleccionado, div.seleccionado
 .tipo-dia-no-trabaja
   background-color #ed9
 
+[es-otro-mes="si"]
+  opacity 0.3
+
 .calendario-extendido-dia-numero, .calendario-extendido-dia-contenido
   font-size 70%
 
@@ -243,6 +258,10 @@ span.box-info
   gap 0.5em 1em
   margin-bottom 0.5em
 
+.legajo-grupo-domicilios,
+.legajo-grupo-telefonos
+  flex-direction column
+
 .legajo-campo
   display flex
   flex-direction row
@@ -263,7 +282,6 @@ span.box-info
   pointer-events none
 
 .horario-vigente
-  text-align center
   margin-bottom 1em
 
 .horario-contenedor
@@ -386,6 +404,9 @@ button.boton-confirmar-registro-novedades
 .siper-button[boton-negro = si]
   color #000
 
+.siper-button[es-visible = no]
+  visibility hidden
+
 div.novedades-renglon
   display flex
   flex-direction row
@@ -477,6 +498,9 @@ button[es-este-mes]
   [con-info-nov=pendientes]
     border 0.5px dashed #ccc
     min-width 1em
+  [con-info-nov=saldo] 
+    min-width 1em
+      
   
 .check-box[sin-padding=si]
   color #000
@@ -487,4 +511,8 @@ button[es-este-mes]
     display none
 
 [bold-name=si]
+  font-weight bold
+
+[tiene-problemas=si]
+  color #f00
   font-weight bold

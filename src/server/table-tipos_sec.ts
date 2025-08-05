@@ -9,7 +9,7 @@ export const tipo_sec:FieldDefinition = {
 }
 
 export function tipos_sec(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'tipos_sec',
         elementName: 'tipo de sector',

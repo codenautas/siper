@@ -1,4 +1,3 @@
-tipo_domicilio|domicilio|orden
-P|PRINCIPAL|3
-T|TELETRABAJO|1
+tipo_domicilio|descripcion|orden
+P|PRINCIPAL|1
 TA|TELETRABAJO ALTERNATIVO|2
