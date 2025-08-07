@@ -37,7 +37,7 @@ export function politicaNovedadesComun(alias:string, cargarOver:'cargar'|'ver'){
 
 export function politicaNovedades(alias:string, nombreFecha:string){
     var politicaModficacion = `(${politicaNovedadesComun(alias, 'cargar')})`
-    + (alias == 'personas' ? '' : ` AND (
+    + ((alias == 'personas' || alias == 'trayectoria_laboral') ? '' : ` AND (
             (${nombreFecha} 
                 >= (SELECT fecha_actual FROM parametros WHERE unico_registro)
             ) OR (
@@ -46,7 +46,7 @@ export function politicaNovedades(alias:string, nombreFecha:string){
         )
     `)
     var politicaVisibilidad = politicaNovedadesComun(alias, 'ver');
-    if (alias == 'personas') {
+    if (alias == 'personas' || alias == 'trayectoria_laboral') {
         politicaVisibilidad = `(case when get_app_user('mode') = 'login' then true else ${politicaVisibilidad} end)`;
     }
     return {

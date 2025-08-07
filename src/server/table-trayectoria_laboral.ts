@@ -5,7 +5,7 @@ import {FieldDefinition, TableDefinition, TableContext, soloMayusculas} from "./
 import { politicaNovedades } from "./table-novedades_registradas";
 
 import {idper} from "./table-personas"
-//import { s_revista } from "./table-situacion_revista";
+import { s_revista } from "./table-situacion_revista";
 import { expediente } from "./table-expedientes";
 import { funcion } from "./table-funciones";
 import { jerarquia } from "./table-jerarquias";
@@ -37,7 +37,7 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             {name:'propio'            , typeName:'boolean',                 },
             {name:'organismo'         , typeName:'text',                    },
             {name:'observaciones'     , typeName:'text',                    },
-            //s_revista,
+            s_revista,
             expediente,
             funcion,
             jerarquia,
@@ -59,7 +59,7 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
         primaryKey: [idper.name, idt.name],
         foreignKeys: [
             {references: 'personas', fields:[idper.name], onDelete:'cascade'},
-            //{references: 'situacion_revista', fields:[s_revista.name]},
+            {references: 'situacion_revista', fields:[s_revista.name]},
             {references: 'expedientes', fields:[expediente.name]},
             {references: 'funciones', fields:[funcion.name]},
             {references: 'jerarquias', fields:[jerarquia.name]},
@@ -77,7 +77,7 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
         constraints: [
             {constraintType:'exclude', consName:'sin superponer fechas contratación', using:'GIST', fields:[idper.name, {fieldName:'lapso_fechas', operator:'&&'}], where:'computa_antiguedad'},
             {constraintType:'check' , expr:'computa_antiguedad is not false', consName:'computa_antiguedad si o vacio'},
-            //soloMayusculas(s_revista.name),
+            soloMayusculas(s_revista.name),
             soloMayusculas(expediente.name),
             soloMayusculas(jerarquia.name),
             soloMayusculas(n_grado.name),

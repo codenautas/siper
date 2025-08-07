@@ -7,6 +7,7 @@ import {cod_nov} from "./table-cod_novedades";
 import {año} from "./table-annios"
 import {pauta} from "./table-pautas"
 import { sqlNovPer } from "./table-nov_per";
+import { sqlPersonas } from "./table-personas";
 
 export function inconsistencias(_context: TableContext): TableDefinition{
     return {
@@ -94,7 +95,7 @@ export function inconsistencias(_context: TableContext): TableDefinition{
                        WHERE activo AND sector IS NULL
                      UNION
                      SELECT idper, NULL::INTEGER as annio, 'ACTSINSIT' pauta, NULL::TEXT as cod_nov 
-                       FROM personas
+                       FROM (${sqlPersonas})
                        WHERE activo AND situacion_revista IS NULL
                      UNION
                      SELECT idper, annio, 'EXCEDIDO' as pauta, cod_nov

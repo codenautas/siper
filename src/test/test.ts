@@ -231,13 +231,22 @@ describe("connected", function(){
             registra_novedades_desde: opts.registra_novedades_desde ?? date.iso(`${DESDE_AÑO}-01-01`),
             para_antiguedad_relativa: opts.para_antiguedad_relativa ?? date.iso(`${DESDE_AÑO}-01-01`),
             sector: SECTOR,
-            situacion_revista: SITUACION_REVISTA,
         } satisfies Partial<ctts.Persona>;
         var personaGrabada = await rrhhSession.saveRecord(
             ctts.personas,
             persona as ctts.Persona,
             'new',
-        )
+        );
+        var personaSituacionRevista = {
+          idper: personaGrabada.idper,
+          desde: opts.registra_novedades_desde ?? date.iso(`${DESDE_AÑO}-01-01`), 
+          situacion_revista: SITUACION_REVISTA,
+        };
+        await rrhhSession.saveRecord(
+            ctts.trayectoria_laboral,
+            personaSituacionRevista as ctts.Trayectoria_laboral, 
+            'new',
+        );
         return personaGrabada;
     }
     var cacheSesionDeUsuario:Record<string, SesionEmuladaSiper>={}

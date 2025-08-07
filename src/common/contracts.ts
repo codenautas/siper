@@ -142,7 +142,6 @@ export const personas = {
         apellido:  is.string,
         nombres:   is.string,
         sector:    is.nullable.string,
-        //categoria: is.nullable.string,
         registra_novedades_desde: is.nullable.Date,
         para_antiguedad_relativa: is.nullable.Date,
         activo:    is.nullable.boolean,
@@ -231,7 +230,7 @@ export const trayectoria_laboral = {
         propio: is.nullable.boolean,
         organismo: is.nullable.string,
         observaciones: is.nullable.string,
-        //situacion_revista: is.nullable.string,
+        situacion_revista: is.nullable.string,
         expediente: is.nullable.string,
         funcion: is.nullable.string,
         jerarquia: is.nullable.string,
@@ -244,6 +243,7 @@ export const trayectoria_laboral = {
         categoria: is.nullable.string,
         fecha_nombramiento: is.nullable.Date,
         resolucion: is.nullable.string,
+        es_jefe: is.nullable.boolean,
     })
 } satisfies CommonEntityDefinition
 

@@ -16,10 +16,10 @@ export const idper: FieldDefinition = {
     postInput: 'upperWithoutDiacritics',
 }
 
-//export const s_revista_personas = {
-//  ...s_revista,
-//  inTable: false
-//};
+export const s_revista_personas = {
+  ...s_revista,
+  inTable: false
+};
 
 export const agrupamiento_personas = {
   ...agrupamiento,
@@ -38,7 +38,7 @@ export const bh_personas = {
 };
 
 export const sqlPersonas= `SELECT p.idper, p.cuil, p.tipo_doc, p.documento, p.ficha, p.idmeta4, p.apellido, p.nombres, p.sector, t.es_jefe, t.categoria,
-                           p.situacion_revista, p.registra_novedades_desde, p.para_antiguedad_relativa, p.activo, p.fecha_ingreso, p.fecha_egreso,
+                           t.situacion_revista, p.registra_novedades_desde, p.para_antiguedad_relativa, p.activo, p.fecha_ingreso, p.fecha_egreso,
                            t.motivo_egreso, p.nacionalidad, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado, p.fecha_nacimiento, p.sexo,
                            t.puesto, t.banda_horaria
                            FROM personas p 
@@ -67,7 +67,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'sector'   , typeName: 'text'                                                  },
             {name: 'es_jefe'  , typeName: 'boolean', inTable:false                                },
             {name: 'categoria', typeName: 'text', title:'categoría', inTable:false                },
-            s_revista,
+            s_revista_personas,
             {name: 'registra_novedades_desde', typeName: 'date'                                   },
             {name: 'para_antiguedad_relativa', typeName: 'date', title: 'para antigüedad relativa'},
             {name: 'activo' , typeName: 'boolean', nullable:false , defaultValue:false            },
@@ -92,7 +92,7 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'paises'           , fields:[{source:'nacionalidad',target:'pais'}]      },
             {references: 'sexos'              , fields:['sexo']            },
             {references: 'tipos_doc'          , fields:['tipo_doc']        },
-            {references: 'situacion_revista', fields:[s_revista.name] },
+            //{references: 'situacion_revista', fields:[s_revista.name] },
         ],
         softForeignKeys: [
             {references: 'jerarquias'      , fields:['jerarquia']     },
@@ -109,7 +109,6 @@ export function personas(context: TableContext): TableDefinition {
             soloDigitosCons('documento'),
             soloDigitosCons('ficha'  ),
             soloDigitosCons('idmeta4'),
-            soloMayusculas(s_revista.name),
             soloMayusculas('tipo_doc'),
             {constraintType:'unique', consName:'nombre y apellidos sin repetir', fields:['apellido', 'nombres']}
         ],
