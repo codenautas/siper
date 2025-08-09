@@ -7,7 +7,9 @@ import { AppSiper } from '../server/app-principal';
 
 import {promises as fs} from 'fs'
 
-import { startServer, EmulatedSession, expectError, loadLocalFile, saveLocalFile, benchmarksSave, someTestFails} from "serial-tester";
+import { Contexts, EmulatedSession, expectError, loadLocalFile, saveLocalFile, benchmarksSave,
+    startBackendAPIContext, someTestFails
+} from "serial-tester";
 
 import * as ctts from "../common/contracts"
 
@@ -26,9 +28,6 @@ const TIMEOUT_SPEED = 1000 * (process.env.BP_TIMEOUT_SPEED as unknown as number 
  * 
  * y antes de correr los tests hay que comentar con // la próxima línea (para qu se descomente el PORT = 3333)
  */
-const PORT:number|null = null; /*
-const PORT = 3333;
-// */
 
 function console_log<T>(x:T){
     console.log('____________',x)
@@ -86,17 +85,15 @@ var autoNumero = 1;
 type Credenciales = {username: string, password: string};
 type UsuarioConCredenciales = ctts.Usuario & {credenciales: Credenciales};
 
-class SesionEmuladaSiper extends EmulatedSession<AppSiper> {
-    constructor(server: AppSiper, port: number) {
-        super(server, port);
-    }
-    async registrarNovedad(params: Partial<ctts.NovedadRegistrada>): Promise<ctts.NovedadRegistrada> {        
-        return this.callProcedure(ctts.registrar_novedad, params)
-    }
+type SesionEmuladaSiper = EmulatedSession<AppSiper>;
+
+async function registrarNovedad(sesion: SesionEmuladaSiper, params: Partial<ctts.NovedadRegistrada>): Promise<ctts.NovedadRegistrada> {        
+    return sesion.callProcedure(ctts.registrar_novedad, params)
 }
 
 describe("connected", function(){
     var server: AppSiper;
+    var contexto: Contexts<AppSiper>;
     var rrhhSession: SesionEmuladaSiper;
     var rrhhAdminSession: SesionEmuladaSiper; // no cualquier rrhh
     var adminMetadatosSession: SesionEmuladaSiper; // admin de metadatos, por ahora un admin
@@ -104,18 +101,19 @@ describe("connected", function(){
     var fallaEnLaQueQuieroOmitirElBorrado: boolean = false;
     before(async function(){
         try{
-            server = await startServer(AppSiper);
-            adminMetadatosSession = new SesionEmuladaSiper(server, PORT || server.config.server.port);
+            contexto = await startBackendAPIContext(AppSiper);
+            server = contexto.backend;
+            adminMetadatosSession = contexto.createSession();
             await adminMetadatosSession.login({
                 username: 'perry',
                 password: 'white',
             });
-            rrhhAdminSession = new SesionEmuladaSiper(server, PORT || server.config.server.port);
+            rrhhAdminSession = contexto.createSession();
             await rrhhAdminSession.login({
                 username: 'lois',
                 password: 'lane',
             });
-            rrhhSession = new SesionEmuladaSiper(server, PORT || server.config.server.port);
+            rrhhSession = contexto.createSession();
             await rrhhSession.login({
                 username: 'jimmi',
                 password: 'olsen',
@@ -245,7 +243,7 @@ describe("connected", function(){
         if (usuario.usuario in cacheSesionDeUsuario) {
             return cacheSesionDeUsuario[usuario.usuario];
         }
-        const nuevaSession = new SesionEmuladaSiper(server, PORT || server.config.server.port);
+        const nuevaSession = contexto.createSession();
         await nuevaSession.login(usuario.credenciales);
         return nuevaSession
     }
@@ -314,10 +312,10 @@ describe("connected", function(){
                 'update'
             )
             haciendo = 'registrando los movimientos'
-            await rrhhAdminSession.registrarNovedad(
+            await registrarNovedad(rrhhAdminSession,
                 {desde:date.iso('2000-01-10'), hasta:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
             );
-            await rrhhAdminSession.registrarNovedad(
+            await registrarNovedad(rrhhAdminSession,
                 {desde:date.iso('2000-01-10'), hasta:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
             );
             haciendo = 'probando'
@@ -347,7 +345,7 @@ describe("connected", function(){
                 // TODO: volver a calcular el informe de coincidencias
                 // var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 // discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:5, dias_coincidentes:0})
-                await rrhhAdminSession.registrarNovedad(novedadRegistradaPorCargar);
+                await registrarNovedad(rrhhAdminSession, novedadRegistradaPorCargar);
                 await rrhhSession.tableDataTest('novedades_vigentes', [
                     {fecha:date.iso('2000-01-01'), cod_nov:null          , idper, trabajable: false},
                     {fecha:date.iso('2000-01-02'), cod_nov:null          , idper, trabajable: false},
@@ -373,7 +371,7 @@ describe("connected", function(){
                 discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:3, dias_coincidentes:0, con_detalles:null, c_dds:null,
                     mensaje: discrepances.test((x:string) => /confirma/.test(x)) as string, saldo: 12
                 })
-                await rrhhSession.registrarNovedad(novedadRegistradaPorCargar);
+                await registrarNovedad(rrhhSession, novedadRegistradaPorCargar);
                 await rrhhSession.tableDataTest('novedades_vigentes', [
                     {fecha:date.iso('2000-03-07'), cod_nov:null          , idper, trabajable:false},
                     {fecha:date.iso('2000-03-08'), cod_nov:COD_VACACIONES, idper, trabajable:true },
@@ -391,7 +389,7 @@ describe("connected", function(){
         it("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
             this.timeout(TIMEOUT_SPEED * 8);
             await enNuevaPersona(this.test?.title!, {vacaciones: 20, tramites: 4}, async ({idper}) => {
-                await rrhhSession.registrarNovedad(
+                await registrarNovedad(rrhhSession,
                     {desde:date.iso('2000-05-01'), hasta:date.iso('2000-05-12'), cod_nov:COD_VACACIONES, idper}
                 );
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-05-08'), hasta:date.iso('2000-05-12'), cancela:true, idper}
@@ -399,10 +397,10 @@ describe("connected", function(){
                 discrepances.showAndThrow(informe, {dias_corridos:5, dias_habiles:5, dias_coincidentes:5, con_detalles: null, c_dds: null,
                     mensaje: discrepances.test((x:string) => /confirma/.test(x)) as string, saldo: null
                 })
-                await rrhhSession.registrarNovedad(
+                await registrarNovedad(rrhhSession,
                     novedadRegistradaPorCargar
                 );
-                await rrhhSession.registrarNovedad(
+                await registrarNovedad(rrhhSession,
                     {desde:date.iso('2000-05-11'), hasta:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, idper}
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -430,7 +428,7 @@ describe("connected", function(){
         it("cargo un día de trámite", async function(){
             fallaEnLaQueQuieroOmitirElBorrado = true;
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
-                await rrhhAdminSession.registrarNovedad(
+                await registrarNovedad(rrhhAdminSession,
                     {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -444,7 +442,7 @@ describe("connected", function(){
         it("intento de cargar novedades sin permiso", async function(){
             await enNuevaPersona(this.test?.title!, {}, async (persona) => {
                 await expectError( async () => {
-                    await basicoSession.registrarNovedad(
+                    await registrarNovedad(basicoSession,
                         {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper: persona.idper}
                     );
                 }, ctts.insufficient_privilege);
@@ -453,7 +451,7 @@ describe("connected", function(){
         it("intento de cargar novedades en el pasado", async function(){
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
                 await expectError( async () => {
-                    await rrhhSession.registrarNovedad(
+                    await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper},
                     );
                 }, ctts.insufficient_privilege);
@@ -461,7 +459,7 @@ describe("connected", function(){
         })
         it("intento ver novedades de otra persona", async function(){
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
-                await rrhhAdminSession.registrarNovedad(
+                await registrarNovedad(rrhhAdminSession,
                     {desde:date.iso('2000-01-03'), hasta:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, idper}
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -515,7 +513,7 @@ describe("connected", function(){
         })
         it("un usuario común puede ver sus novedades pasadas (y rrhh las puede cargar)", async function(){
             await enNuevaPersona(this.test?.title!, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async ({idper}, {sesion}) => {
-                await rrhhAdminSession.registrarNovedad(
+                await registrarNovedad(rrhhAdminSession,
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper}
                 );
                 await sesion.tableDataTest('novedades_vigentes', [
@@ -528,7 +526,7 @@ describe("connected", function(){
         it("un usuario común no puede cargar novedades pasadas", async function(){
             await enNuevaPersona(this.test?.title!, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async (persona, {sesion}) => {
                 await expectError( async () => {
-                    await sesion.registrarNovedad(
+                    await registrarNovedad(sesion,
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper}
                     );
                 }, ctts.insufficient_privilege)
@@ -538,7 +536,7 @@ describe("connected", function(){
             this.timeout(TIMEOUT_SPEED * 10);
             // fallaEnLaQueQuieroOmitirElBorrado = true;
             await enNuevaPersona(this.test?.title!, {usuario:{sector:'P1'}}, async ({idper}) => {
-                await jefe11Session.registrarNovedad(
+                await registrarNovedad(jefe11Session,
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
                 );
                 await jefe11Session.tableDataTest('novedades_vigentes', [
@@ -551,7 +549,7 @@ describe("connected", function(){
         })
         it("un jefe puede cargar a alguien de un equipo perteneciente", async function(){
             await enNuevaPersona(this.test?.title!, {usuario:{sector:'P131'}}, async ({idper}) => {
-                await jefe11Session.registrarNovedad(
+                await registrarNovedad(jefe11Session,
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
                 );
                 await jefe11Session.tableDataTest('novedades_vigentes', [
@@ -564,7 +562,7 @@ describe("connected", function(){
         it("un jefe no puede cargar a alguien de un equipo no perteneciente", async function(){
             await enNuevaPersona(this.test?.title!, {usuario:{sector:'P2'}}, async (persona) => {
                 await expectError( async () => {
-                    await jefe11Session.registrarNovedad(
+                    await registrarNovedad(jefe11Session,
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper}
                     );
                 }, ctts.insufficient_privilege);
@@ -573,7 +571,7 @@ describe("connected", function(){
         it("no puede cargarse una novedad sin detalles cuando el codigo de novedad indica con detalles", async function(){
             await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
                 await expectError( async () => {
-                    await rrhhAdminSession.registrarNovedad(
+                    await registrarNovedad(rrhhAdminSession,
                         {desde:date.iso('2000-02-09'), hasta:date.iso('2000-02-09'), cod_nov:COD_ENF_FAMILIAR, idper: persona.idper}
                     );
                 }, ctts.ERROR_COD_NOVEDAD_INDICA_CON_DETALLES);
@@ -587,7 +585,7 @@ describe("connected", function(){
                         {cod_nov:COD_MUDANZA, con_detalles:false}, 
                         'update'
                     );
-                    await rrhhAdminSession.registrarNovedad(
+                    await registrarNovedad(rrhhAdminSession,
                         {desde:date.iso('2000-02-09'), hasta:date.iso('2000-02-09'), cod_nov:COD_MUDANZA, idper: persona.idper, detalles:TEXTO_PRUEBA}
                     );
                     await adminMetadatosSession.saveRecord(
@@ -601,7 +599,7 @@ describe("connected", function(){
         it("un detalle para una novedad se copia en novedades_vigentes", async function(){
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
                 await adminMetadatosSession.saveRecord(ctts.cod_nov, {cod_nov:COD_MUDANZA, con_detalles:null}, 'update');
-                await rrhhAdminSession.registrarNovedad(
+                await registrarNovedad(rrhhAdminSession,
                     {desde:date.iso('2000-02-10'), hasta:date.iso('2000-02-10'), cod_nov:COD_MUDANZA, idper, detalles:TEXTO_PRUEBA}
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -616,7 +614,7 @@ describe("connected", function(){
             ) => {
                 var otrapersona = await crearNuevaPersona("segunda persona en test "+this.test?.title!, {});
                 await rrhhSession.saveRecord(ctts.personas,{idper:otrapersona.idper,sector:'P1'}, 'update')
-                await rrhhAdminSession.registrarNovedad(
+                await registrarNovedad(rrhhAdminSession,
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: otrapersona.idper}
                 );
                 await sesion.tableDataTest('novedades_vigentes', [
@@ -627,7 +625,7 @@ describe("connected", function(){
         it("un usuario no puede cargarse novedades a sí mismo", async function(){
             await enNuevaPersona(this.test?.title!, {usuario:{sector:'P2', sesion:true}}, async ({idper}, {sesion}) => {
                 await expectError( async () => {
-                    await sesion.registrarNovedad(
+                    await registrarNovedad(sesion,
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper}
                     );
                 }, ctts.insufficient_privilege);
@@ -666,7 +664,7 @@ describe("connected", function(){
                 await expectError( async () => {
                     const cod_nov = '10003';
                     await adminMetadatosSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA intengo agregar no total', total: false}, 'new')
-                    await rrhhAdminSession.registrarNovedad( 
+                    await registrarNovedad(rrhhAdminSession, 
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov, idper: persona.idper}
                     );
                 }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_TOTAL);
@@ -679,7 +677,7 @@ describe("connected", function(){
                     var novedadRegistradaPorCargar = {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-14'), cod_nov, idper: persona.idper}
                     var result = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                     assert.equal(result.saldo, -5);
-                    await rrhhSession.registrarNovedad(novedadRegistradaPorCargar);
+                    await registrarNovedad(rrhhSession, novedadRegistradaPorCargar);
                 }, ctts.ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES);
             })
         })
@@ -693,7 +691,7 @@ describe("connected", function(){
         describe("días corridos", function(){
             it("se generan novedades en los fines de semana", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
-                    await rrhhSession.registrarNovedad(
+                    await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-07'), cod_nov: COD_ENFERMEDAD, idper}
                     );
                     await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -706,10 +704,10 @@ describe("connected", function(){
             })
             it.skip("se ve una inconsistencia si se cargan partidas", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
-                    await rrhhSession.registrarNovedad(
+                    await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-04'), cod_nov: COD_ENFERMEDAD, idper: persona.idper}
                     );
-                    await rrhhSession.registrarNovedad(
+                    await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-07'), hasta:date.iso('2000-02-07'), cod_nov: COD_ENFERMEDAD, idper: persona.idper}
                     );
                     await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -723,10 +721,10 @@ describe("connected", function(){
             })
             it.skip("se ve una inconsistencia si se cargan partidas (solo primero incompleto)", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
-                    await rrhhSession.registrarNovedad(
+                    await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-04'), cod_nov: COD_ENFERMEDAD, idper: persona.idper}
                     );
-                    await rrhhSession.registrarNovedad(
+                    await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-06'), hasta:date.iso('2000-02-07'), cod_nov: COD_ENFERMEDAD, idper: persona.idper}
                     );
                     await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -741,10 +739,10 @@ describe("connected", function(){
             })
             it.skip("se ve una inconsistencia si se cargan partidas (solo segundo incompleto)", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
-                    await rrhhSession.registrarNovedad(
+                    await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-05'), cod_nov: COD_ENFERMEDAD, idper: persona.idper}
                     );
-                    await rrhhSession.registrarNovedad(
+                    await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-07'), hasta:date.iso('2000-02-07'), cod_nov: COD_ENFERMEDAD, idper: persona.idper}
                     );
                     await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -760,7 +758,7 @@ describe("connected", function(){
             it("mezclo teletrabajo con presencial", async function(){
                 var cod_nov = COD_DIAGRAMADO;
                 await enNuevaPersona(this.test?.title!, {hoy: FECHA_ACTUAL}, async ({idper}) => {
-                    await rrhhAdminSession.registrarNovedad(
+                    await registrarNovedad(rrhhAdminSession,
                         {desde:date.iso('2000-01-17'), hasta:date.iso('2000-01-29'), idper, cod_nov,
                             dds1:true, dds3:true, dds4:true
                         }
@@ -790,10 +788,10 @@ describe("connected", function(){
             })
             it("superponer teletrabajo programado sobre vacaciones", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
-                    await rrhhAdminSession.registrarNovedad(
+                    await registrarNovedad(rrhhAdminSession,
                         {desde:date.iso('2000-01-19'), hasta:date.iso('2000-01-21'), idper, cod_nov: COD_VACACIONES}
                     );
-                    await rrhhAdminSession.registrarNovedad(
+                    await registrarNovedad(rrhhAdminSession,
                         {desde:date.iso('2000-01-17'), hasta:date.iso('2000-01-21'), idper, cod_nov: COD_DIAGRAMADO,
                             dds1:true, dds3:true, dds4:true
                         }
@@ -910,9 +908,9 @@ describe("connected", function(){
                 await rrhhAdminSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'1999', cod_nov: COD_VACACIONES, idper, cantidad: 1 }, 'new')
                 await rrhhAdminSession.saveRecord(ctts.per_nov_cant, {annio:2001, origen:'2000', cod_nov: COD_VACACIONES, idper, cantidad: 10 }, 'new')
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-03-01'), hasta:date.iso('2000-03-07'), cod_nov:COD_VACACIONES, idper};
-                await rrhhSession.registrarNovedad(novedadRegistradaPorCargar);
+                await registrarNovedad(rrhhSession, novedadRegistradaPorCargar);
                 var novedadRegistradaPorCargar2 = {desde:date.iso('2001-03-01'), hasta:date.iso('2001-03-07'), cod_nov:COD_VACACIONES, idper};
-                await rrhhSession.registrarNovedad(novedadRegistradaPorCargar2);
+                await registrarNovedad(rrhhSession, novedadRegistradaPorCargar2);
                 var expectedResult: ctts.NovedadesDisponiblesResult = {
                     cod_nov: COD_VACACIONES,
                     novedad: "Art. 18 Descanso anual remunerado",
