@@ -201,15 +201,23 @@ myOwn.clientSides.bajarAdjunto = {
     update: function (depot: myOwn.Depot, fieldName: string): void {
         const td = depot.rowControls[fieldName];
         td.innerHTML = '';
-        if (depot.row.archivo_nombre) {
+        const row = depot.row;
+        if (row.archivo_nombre) {
             const fileParts = depot.row.archivo_nombre.split('/');
-            const fileName = fileParts.pop();
+            const fileName = String(fileParts.pop());
             if (fileName) {
+                const baseUrl = (window as any).myOwn?.config?.config?.baseUrl || '';
+                const params = new URLSearchParams({
+                    idper: String(row.idper),
+                    tipo_adjunto_persona: String(row.tipo_adjunto_persona ?? ''),
+                    numero_adjunto: row.numero_adjunto == null ? '' : String(row.numero_adjunto),
+                });
+
                 td.appendChild(
                     html
                         .a({
                             class: 'link-descarga-archivo',
-                            href: `download/file?idper=${depot.row.idper}&tipo_adjunto_persona=${depot.row.tipo_adjunto_persona}&numero_adjunto=${depot.row.numero_adjunto}`,
+                            href: `${baseUrl}/download/file?${params.toString()}`,
                             download: fileName,
                         },
                             "Descargar archivo"

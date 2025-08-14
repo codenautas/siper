@@ -74,7 +74,6 @@ import {staticConfigYaml} from './def-config';
 import { Persona } from "../common/contracts"
 
 import { unexpected } from "cast-error";
-import * as backendPlus from "backend-plus";
 import { rm } from 'fs/promises';
 
 /* Dos líneas para incluir contracts: */
@@ -151,12 +150,15 @@ export class AppSiper extends AppBackend{
         await actionWithErrorLog();
         setInterval(actionWithErrorLog, 24*60*60*1000 / opts.vecesPorDia);
     }
-    override addSchrödingerServices(mainApp: backendPlus.Express, baseUrl: string) {
+    override addLoggedServices(): void {
+        super.addLoggedServices();
         const be = this;
-        super.addSchrödingerServices(mainApp, baseUrl);
+        const app = be.app;
+        // @ts-ignore
+        be.clientSetup.config.baseUrl = be.config?.server?.['base-url'] || '';
 
-        mainApp.get(baseUrl + '/download/file', async function (req, res) {
-
+        // @ts-ignore
+        app.get('/download/file', async (req, res) => {
             const { idper, tipo_adjunto_persona, numero_adjunto } = req.query;
 
             if (!idper || !tipo_adjunto_persona) {
@@ -169,17 +171,23 @@ export class AppSiper extends AppBackend{
                 const result = await client.query(
                     `SELECT archivo_nombre, archivo_nombre_fisico
                     FROM adjuntos_persona 
-                    WHERE idper = $1 AND tipo_adjunto_persona = $2 AND numero_adjunto = $3`,
+                    WHERE idper = $1 AND tipo_adjunto_persona = $2 AND (numero_adjunto=$3 or ($3 is null and numero_adjunto is null))`,
                     [idper, tipo_adjunto_persona, numero_adjunto]
                 ).fetchUniqueRow();
 
-                if (!result.row.archivo_nombre) {
+                if (!result.row?.archivo_nombre || !result.row?.archivo_nombre_fisico) {
                     res.status(404).send("Archivo no encontrado");
                     return;
                 }
+                const path = require('path');
+                const fs = require('fs');
+                const filePath = path.join(be.rootPath || process.cwd(), 'local-attachments', 'adjuntos_persona', String(result.row.archivo_nombre_fisico));
+                if (!fs.existsSync(filePath)) {
+                    res.status(404).send('Archivo no existe en disco');
+                    return;
+                }
 
-                const path = `local-attachments/adjuntos_persona/${result.row.archivo_nombre_fisico}`;
-                res.download(path, result.row.archivo_nombre); // Descarga con el nombre original
+                res.download(filePath, String(result.row.archivo_nombre));
             });
         });
     }
