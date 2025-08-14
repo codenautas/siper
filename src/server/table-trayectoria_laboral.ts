@@ -18,6 +18,8 @@ import { grado } from "./table-grados";
 import { categoria } from "./table-categorias";
 import { puesto } from "./table-puestos";
 import { banda_horaria } from "./table-bandas_horarias";
+import { sector } from "./table-sectores";
+
 export const idt: FieldDefinition = {name: 'idt', typeName: 'bigint', description: 'identificador de trayectoria laboral'}
 
 export function trayectoria_laboral(context: TableContext): TableDefinition{
@@ -54,7 +56,7 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             puesto,
             banda_horaria,
             {name: 'es_jefe'  , typeName: 'boolean'                         },
-            //{name: 'sector'   , typeName: 'text'                            },
+            sector,
         ],
         primaryKey: [idper.name, idt.name],
         foreignKeys: [
@@ -72,7 +74,7 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             {references: 'categorias', fields:[categoria.name]},
             {references: 'puestos', fields:[puesto.name]},
             {references: 'bandas_horarias', fields:[banda_horaria.name]},
-            //{references: 'sectores', fields:['sector']},
+            {references: 'sectores', fields:[sector.name]},
         ],
         constraints: [
             {constraintType:'exclude', consName:'sin superponer fechas contratación', using:'GIST', fields:[idper.name, {fieldName:'lapso_fechas', operator:'&&'}], where:'computa_antiguedad'},

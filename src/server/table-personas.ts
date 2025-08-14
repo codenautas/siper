@@ -6,6 +6,7 @@ import { s_revista  } from "./table-situacion_revista";
 import { agrupamiento  } from "./table-agrupamientos";
 import { puesto  } from "./table-puestos";
 import { banda_horaria  } from "./table-bandas_horarias";
+import {sector} from "./table-sectores";
 
 import { politicaNovedades } from "./table-novedades_registradas";
 
@@ -64,7 +65,8 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'idmeta4'  , typeName: 'text', isName:false, title:'id meta4'                  },
             {name: 'apellido' , typeName: 'text', isName:true , nullable:false                    },
             {name: 'nombres'  , typeName: 'text', isName:true , nullable:false                    },
-            {name: 'sector'   , typeName: 'text'                                                  },
+            sector,
+            //{name: 'sector'   , typeName: 'text'                                                  },
             {name: 'es_jefe'  , typeName: 'boolean', inTable:false                                },
             {name: 'categoria', typeName: 'text', title:'categoría', inTable:false                },
             s_revista_personas,
@@ -88,7 +90,7 @@ export function personas(context: TableContext): TableDefinition {
         ],
         primaryKey: [idper.name],
         foreignKeys: [
-            {references: 'sectores'         , fields:['sector']       },
+            {references: 'sectores'         , fields:[sector.name]         },
             {references: 'paises'           , fields:[{source:'nacionalidad',target:'pais'}]      },
             {references: 'sexos'              , fields:['sexo']            },
             {references: 'tipos_doc'          , fields:['tipo_doc']        },
@@ -118,7 +120,7 @@ export function personas(context: TableContext): TableDefinition {
             {table:'fichadas'             , fields:[idper.name], abr:'F'},
             {table:'nov_per'              , fields:[idper.name], abr:'#'},
             {table:'per_nov_cant'         , fields:[idper.name], abr:'##'},
-            {table:'trayectoria_laboral'  , fields:[idper.name], abr:'tl'},
+            {table:'trayectoria_laboral'  , fields:[idper.name], abr:'tl', refreshFromParent:true},
             {table:'inconsistencias'      , fields:[idper.name], abr:'⒤', refreshFromParent:true},
             {table:'per_capa'   , fields:[idper.name], abr:'C'},
             {table:'per_domicilios', fields:[idper.name], abr:'D'},
