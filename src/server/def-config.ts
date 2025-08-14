@@ -69,8 +69,6 @@ install:
       - ../install/avance_de_dia_proc.sql
       - ../install/parametros_trg.sql
       - ../install/poblar_pernovcant.sql
-      - ../install/actualizar_sector_idper.sql
-      - ../install/personas_actualizar_trayectoria_laboral_trg.sql
 logo: 
   path: client/img
 `;

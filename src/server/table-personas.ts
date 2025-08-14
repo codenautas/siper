@@ -66,7 +66,6 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'apellido' , typeName: 'text', isName:true , nullable:false                    },
             {name: 'nombres'  , typeName: 'text', isName:true , nullable:false                    },
             sector,
-            //{name: 'sector'   , typeName: 'text'                                                  },
             {name: 'es_jefe'  , typeName: 'boolean', inTable:false                                },
             {name: 'categoria', typeName: 'text', title:'categoría', inTable:false                },
             s_revista_personas,
@@ -94,7 +93,6 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'paises'           , fields:[{source:'nacionalidad',target:'pais'}]      },
             {references: 'sexos'              , fields:['sexo']            },
             {references: 'tipos_doc'          , fields:['tipo_doc']        },
-            //{references: 'situacion_revista', fields:[s_revista.name] },
         ],
         softForeignKeys: [
             {references: 'jerarquias'      , fields:['jerarquia']     },
