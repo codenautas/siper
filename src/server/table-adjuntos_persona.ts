@@ -37,6 +37,7 @@ export function adjuntos_persona(context:TableContext):TableDefinition{
         hiddenColumns: ['archivo_nombre_fisico'],
         detailTables: [
            {table:'adjuntos_persona_atributos', fields:[idper.name, numero_adjunto.name, 'tipo_adjunto_persona'], abr:'at', refreshFromParent:true, refreshParent:true },
-        ]
+        ],
+        sql: {orderBy: ['tipo_adjunto_persona', numero_adjunto.name],}
     }
 }

@@ -137,5 +137,8 @@ $SQL_ENANCE$;
 -- table data: ..\siper-data\demo\tipos_adjunto_person.tab
 insert into "tipos_adjunto_persona" ("tipo_adjunto_persona", "descripcion") values
 ('SEC', 'Secreto Estadístico'),
-('COM', 'Comodato')
+('COM', 'Comodato'),
+('DNI', 'Documento Nacional de Identidad'),
+('MNA', 'Máximo Nivel Académico Alcanzado'),
+('CV', 'Curriculum Vitae')
 
