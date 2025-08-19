@@ -25,7 +25,7 @@ export function jerarquias(context:TableContext):TableDefinition{
         ],
         detailTables: [
             {table:'personas'                       , fields:[jerarquia.name], abr:'P'},
-            {table:'historial_contrataciones'       , fields:[jerarquia.name], abr:'H'},
+            {table:'trayectoria_laboral'            , fields:[jerarquia.name], abr:'H'},
         ]
     }
 }

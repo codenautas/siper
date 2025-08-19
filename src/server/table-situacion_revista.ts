@@ -27,7 +27,7 @@ export function situacion_revista(context:TableContext):TableDefinition{
         ],
         detailTables:[
             {table:'personas'       , fields:[s_revista.name], abr:'P'},
-            {table:'historial_contrataciones' , fields:[s_revista.name], abr:'H'},
+            {table:'trayectoria_laboral' , fields:[s_revista.name], abr:'H'},
         ]
     };
 }

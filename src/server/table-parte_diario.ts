@@ -7,6 +7,7 @@ import {cod_nov} from "./table-cod_novedades";
 import {sector} from "./table-sectores";
 
 import { sqlNovedadesVigentesConDesdeHastaHabiles } from "./table-novedades_vigentes";
+import { sqlPersonas } from "./table-personas";
 
 export const sqlParteDiario= `
 select 
@@ -35,7 +36,7 @@ select
         p.banda_horaria,
         bh.descripcion as bh_descripcion
     from
-        personas p
+        (${sqlPersonas}) p
         inner join fechas f on f.fecha between p.registra_novedades_desde and coalesce(p.fecha_egreso, '3000-01-01'::date)
         left join annios using (annio)
         left join sectores s on p.sector = s.sector
