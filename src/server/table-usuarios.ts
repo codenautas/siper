@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, sinEspaciosMail } from "./types-principal";
 
 import {idper} from "./table-personas"
 import {rol} from "./table-roles"
@@ -35,6 +35,10 @@ export function usuarios(context: TableContext): TableDefinition{
             {references: 'personas', fields:[idper.name]},
             {references: 'roles'   , fields:[rol.name  ], onUpdate: 'no action'},
         ],
+        constraints: [
+            sinEspaciosMail('mail'),sinEspaciosMail('mail_alternativo')
+        ],
+
         sql: {
             where:rolConPermisos || context.forDump?'true':"usuario = "+context.be.db.quoteNullable(context.user.usuario),
             fields: {
@@ -44,3 +48,4 @@ export function usuarios(context: TableContext): TableDefinition{
         }
     };
 }
+
