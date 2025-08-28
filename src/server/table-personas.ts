@@ -4,7 +4,7 @@ import {FieldDefinition, TableDefinition, TableContext, soloDigitosCons, soloDig
 
 import { s_revista  } from "./table-situacion_revista";
 import { agrupamiento  } from "./table-agrupamientos";
-import { puesto  } from "./table-puestos";
+import { perfil  } from "./table-perfiles";
 
 import { politicaNovedades } from "./table-novedades_registradas";
 
@@ -49,7 +49,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
             {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
             {name: 'cuil_valido'             , typeName: 'boolean', title: 'cuil válido', inTable:false, serverSide:true, editable:false},
-            puesto,
+            perfil,
             {name: 'banda_horaria'           , typeName: 'text', title: 'banda horaria'           },
         ],
         primaryKey: [idper.name],
@@ -64,7 +64,7 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'situacion_revista', fields:[s_revista.name] },
             {references: 'agrupamientos'    , fields:[agrupamiento.name] },
             {references: 'grados'           , fields:['tramo','grado']     },
-            {references: 'puestos'          , fields:[puesto.name] },
+            {references: 'perfiles'          , fields:[perfil.name] },
             {references: 'bandas_horarias'  , fields:['banda_horaria']     },
         ],
         constraints: [
