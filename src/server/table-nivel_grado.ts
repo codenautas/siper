@@ -24,7 +24,7 @@ export function nivel_grado(context:TableContext):TableDefinition{
             soloCodigo(nivel_grado.name),
         ],
         detailTables:[
-            {table:'historial_contrataciones'       , fields:[nivel_grado.name], abr:'H'},
+            {table:'trayectoria_laboral'      , fields:[nivel_grado.name], abr:'H'},
         ]
     };
 }

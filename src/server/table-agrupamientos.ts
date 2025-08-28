@@ -23,7 +23,7 @@ export function agrupamientos(context:TableContext):TableDefinition{
         ],
         detailTables: [
             {table:'personas'                       , fields:[agrupamiento.name], abr:'P'},
-            {table:'historial_contrataciones'       , fields:[agrupamiento.name], abr:'H'},
+            {table:'trayectoria_laboral'            , fields:[agrupamiento.name], abr:'H'},
         ]
     }
 };
