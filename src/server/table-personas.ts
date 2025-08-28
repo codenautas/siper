@@ -19,23 +19,27 @@ export const idper: FieldDefinition = {
 
 export const s_revista_personas = {
   ...s_revista,
-  inTable: false
+  inTable: false,
+  editable:false,
 };
 
 export const agrupamiento_personas = {
   ...agrupamiento,
-  inTable: false
+  inTable: false,
+  editable:false,
 };
 
 export const puesto_personas = {
   ...puesto,
-  inTable: false
+  inTable: false,
+  editable:false,
 };
 
 export const bh_personas = {
   ...banda_horaria,
   inTable: false,
-  title: 'banda horaria'
+  title: 'banda horaria',
+  editable:false,
 };
 
 export const sqlPersonas= `SELECT p.idper, p.cuil, p.tipo_doc, p.documento, p.ficha, p.idmeta4, p.apellido, p.nombres, p.sector, t.es_jefe, t.categoria,
@@ -66,21 +70,21 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'apellido' , typeName: 'text', isName:true , nullable:false                    },
             {name: 'nombres'  , typeName: 'text', isName:true , nullable:false                    },
             sector,
-            {name: 'es_jefe'  , typeName: 'boolean', inTable:false                                },
-            {name: 'categoria', typeName: 'text', title:'categoría', inTable:false                },
+            {name: 'es_jefe'  , typeName: 'boolean', inTable:false, editable:false                },
+            {name: 'categoria', typeName: 'text', title:'categoría', inTable:false, editable:false},
             s_revista_personas,
             {name: 'registra_novedades_desde', typeName: 'date'                                   },
             {name: 'para_antiguedad_relativa', typeName: 'date', title: 'para antigüedad relativa'},
             {name: 'activo' , typeName: 'boolean', nullable:false , defaultValue:false            },
             {name: 'fecha_ingreso'           , typeName: 'date'                                   },
             {name: 'fecha_egreso'            , typeName: 'date'                                   },
-            {name: 'motivo_egreso'           , typeName: 'text', title: 'motivo de egreso', inTable:false},
+            {name: 'motivo_egreso'           , typeName: 'text', title: 'motivo de egreso', inTable:false, editable:false},
             {name: 'nacionalidad'            , typeName: 'text', title: 'nacionalidad'            },
-            {name: 'jerarquia'               , typeName: 'text', title: 'jerarquía', inTable:false},
-            {name: 'cargo_atgc'              , typeName: 'text', title: 'cargo/ATGC', inTable:false},
+            {name: 'jerarquia'               , typeName: 'text', title: 'jerarquía', inTable:false, editable:false},
+            {name: 'cargo_atgc'              , typeName: 'text', title: 'cargo/ATGC', inTable:false, editable:false},
             agrupamiento_personas,
-            {name: 'tramo'                   , typeName: 'text', title: 'tramo', inTable:false    },
-            {name: 'grado'                   , typeName: 'text', title: 'grado', inTable:false    },
+            {name: 'tramo'                   , typeName: 'text', title: 'tramo', inTable:false, editable:false    },
+            {name: 'grado'                   , typeName: 'text', title: 'grado', inTable:false, editable:false    },
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
             {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
             {name: 'cuil_valido'             , typeName: 'boolean', title: 'cuil válido', inTable:false, serverSide:true, editable:false},
@@ -118,7 +122,7 @@ export function personas(context: TableContext): TableDefinition {
             {table:'fichadas'             , fields:[idper.name], abr:'F'},
             {table:'nov_per'              , fields:[idper.name], abr:'#'},
             {table:'per_nov_cant'         , fields:[idper.name], abr:'##'},
-            {table:'trayectoria_laboral'  , fields:[idper.name], abr:'tl', refreshFromParent:true},
+            {table:'trayectoria_laboral'  , fields:[idper.name], abr:'tl', refreshFromParent:true, refreshParent:true},
             {table:'inconsistencias'      , fields:[idper.name], abr:'⒤', refreshFromParent:true},
             {table:'per_capa'   , fields:[idper.name], abr:'C'},
             {table:'per_domicilios', fields:[idper.name], abr:'D'},
