@@ -2,29 +2,29 @@
 
 import {FieldDefinition, TableDefinition, TableContext} from "./types-principal";
 
-export const puesto: FieldDefinition = {
-    name: 'puesto', 
+export const perfil: FieldDefinition = {
+    name: 'perfil',
     typeName: 'integer',
     title: 'Perfil SGC'
 };
 
-export function puestos(context:TableContext):TableDefinition{
+export function perfiles(context:TableContext):TableDefinition{
     var admin = context.es.admin;
     return {
-        name:'puestos',
-        elementName: 'puesto',
+        name:'perfiles',
+        elementName: 'perfil',
         title:'Perfil SGC',
         editable:admin,
         fields:[
-            puesto,
+            perfil,
             {name: 'nombre'      , typeName: 'text', isName: true  },
             {name: 'objetivo'    , typeName: 'text'},
         ],
-        primaryKey:[puesto.name],
+        primaryKey:[perfil.name],
         constraints:[
         ],
         detailTables:[
-            {table:'personas'       , fields:[puesto.name], abr:'P'},
+            {table:'personas'       , fields:[perfil.name], abr:'P'},
         ]
     };
 }
