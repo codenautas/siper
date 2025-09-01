@@ -42,7 +42,7 @@ export const bh_personas = {
   editable:false,
 };
 
-export const sqlPersonas= `SELECT p.idper, p.cuil, p.tipo_doc, p.documento, p.ficha, p.idmeta4, p.apellido, p.nombres, p.sector, t.es_jefe, t.categoria,
+export const sqlPersonas= `SELECT p.idper, p.cuil, p.tipo_doc, p.documento, p.ficha, p.idmeta4, p.apellido, p.nombres, p.sector, p.es_jefe, t.categoria,
                            t.situacion_revista, p.registra_novedades_desde, p.para_antiguedad_relativa, p.activo, p.fecha_ingreso, p.fecha_egreso,
                            t.motivo_egreso, p.nacionalidad, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado, p.fecha_nacimiento, p.sexo,
                            t.puesto, t.banda_horaria
@@ -70,7 +70,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'apellido' , typeName: 'text', isName:true , nullable:false                    },
             {name: 'nombres'  , typeName: 'text', isName:true , nullable:false                    },
             sector,
-            {name: 'es_jefe'  , typeName: 'boolean', inTable:false, editable:false                },
+            {name: 'es_jefe'  , typeName: 'boolean'                                               },
             {name: 'categoria', typeName: 'text', title:'categoría', inTable:false, editable:false},
             s_revista_personas,
             {name: 'registra_novedades_desde', typeName: 'date'                                   },

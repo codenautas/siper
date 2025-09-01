@@ -147,7 +147,6 @@ export const personas = {
         activo:    is.nullable.boolean,
         fecha_ingreso: is.nullable.Date,
         fecha_egreso : is.nullable.Date,
-        situacion_revista: is.nullable.string,
         es_jefe:    is.nullable.boolean,
     })
 } satisfies CommonEntityDefinition
@@ -243,7 +242,6 @@ export const trayectoria_laboral = {
         categoria: is.nullable.string,
         fecha_nombramiento: is.nullable.Date,
         resolucion: is.nullable.string,
-        es_jefe: is.nullable.boolean,
     })
 } satisfies CommonEntityDefinition
 

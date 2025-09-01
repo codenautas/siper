@@ -54,7 +54,6 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             {name: 'cargo_atgc'       , typeName: 'text', title: 'cargo/ATGC'},
             puesto,
             banda_horaria,
-            {name: 'es_jefe'  , typeName: 'boolean'                         },
         ],
         primaryKey: [idper.name, idt.name],
         foreignKeys: [
