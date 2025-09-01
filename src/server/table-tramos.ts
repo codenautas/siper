@@ -23,7 +23,7 @@ export function tramos(context:TableContext):TableDefinition{
         ],
         detailTables: [
             {table:'personas'                       , fields:[tramo.name], abr:'P'},
-            {table:'historial_contrataciones'       , fields:[tramo.name], abr:'H'},
+            {table:'trayectoria_laboral'            , fields:[tramo.name], abr:'H'},
         ]
     }
 };

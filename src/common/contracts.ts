@@ -144,13 +144,11 @@ export const personas = {
         apellido:  is.string,
         nombres:   is.string,
         sector:    is.nullable.string,
-        categoria: is.nullable.string,
         registra_novedades_desde: is.nullable.Date,
         para_antiguedad_relativa: is.nullable.Date,
         activo:    is.nullable.boolean,
         fecha_ingreso: is.nullable.Date,
         fecha_egreso : is.nullable.Date,
-        situacion_revista: is.nullable.string,
         es_jefe:    is.nullable.boolean,
     })
 } satisfies CommonEntityDefinition
@@ -222,19 +220,34 @@ export const per_capa = {
     })
 }
 
-export const historial_contrataciones = {
-    table: 'historial_contrataciones',
+export const trayectoria_laboral = {
+    table: 'trayectoria_laboral',
     description: is.object({
         idper: is.string,
         desde: is.Date,
+        idt: is.number,
         hasta: is.nullable.Date,
         computa_antiguedad: is.nullable.boolean,
+        propio: is.nullable.boolean,
         organismo: is.nullable.string,
         observaciones: is.nullable.string,
+        situacion_revista: is.nullable.string,
+        expediente: is.nullable.string,
+        funcion: is.nullable.string,
+        jerarquia: is.nullable.string,
+        nivel_grado: is.nullable.string,
+        tarea: is.nullable.string,
+        agrupamiento: is.nullable.string,
+        motivo_egreso: is.nullable.string,
+        tramo: is.nullable.string,
+        grado: is.nullable.string,
+        categoria: is.nullable.string,
+        fecha_nombramiento: is.nullable.Date,
+        resolucion: is.nullable.string,
     })
 } satisfies CommonEntityDefinition
 
-export type Historial_contratacion = DefinedType<typeof historial_contrataciones.description>
+export type Trayectoria_laboral = DefinedType<typeof trayectoria_laboral.description>
 
 ////////////// PROCEDIMEINTOS
 
