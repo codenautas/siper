@@ -73,7 +73,7 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             {references: 'bandas_horarias', fields:[banda_horaria.name]},
         ],
         constraints: [
-            {constraintType:'exclude', consName:'sin superponer fechas contratación', using:'GIST', fields:[idper.name, {fieldName:'lapso_fechas', operator:'&&'}], where:'computa_antiguedad'},
+            {constraintType:'exclude', consName:'sin superponer fechas contratación', using:'GIST', fields:[idper.name, {fieldName:'lapso_fechas', operator:'&&'}], where:'computa_antiguedad and propio'},
             {constraintType:'check' , expr:'computa_antiguedad is not false', consName:'computa_antiguedad si o vacio'},
             soloMayusculas(s_revista.name),
             soloMayusculas(expediente.name),
