@@ -247,7 +247,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 `select pe.idper, pe.cuil, pe.ficha, pe.idmeta4, pe.apellido, pe.nombres, pe.sector, cod_nov, novedad, nombre_sector, pe.es_jefe, validar_cuit(pe.cuil) AS cuil_valido,
                         pe.fecha_ingreso, pe.fecha_egreso,
                         ((puede_cargar_propio or pe.idper is distinct from u.idper) and (pe.activo is true)) as cargable
-                    from personas pe
+                    from (${sqlPersonas}) pe
                         inner join situacion_revista sr using (situacion_revista)
                         inner join usuarios u on u.usuario = $2
                         inner join roles using (rol)
