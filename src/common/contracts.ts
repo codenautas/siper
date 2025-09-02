@@ -735,6 +735,15 @@ export const info_nov_numeros = [
     { name: 'saldo'     , abr: 'saldo' , minAbr: 's', title: 'saldo'           },
 ] satisfies {name:'cantidad'|'usados'|'pendientes'|'saldo', abr:string, minAbr:string, title:string}[]
 
+export const info_inconsistencias = [
+    { name: 'annio'               , abr: 'año',     title: 'año'        },
+    { name: 'pauta'               , abr: 'pauta',   title: 'pauta'      },
+    { name: 'pautas__descripcion' , abr: 'descr',   title: 'descripcion'},
+    { name: 'cod_nov'             , abr: 'cod',     title: 'codigo'     },
+    { name: 'cod_nov__novedad'    , abr: 'novedad', title: 'novedad'    },
+] satisfies {name:'annio'|'pauta'|'pautas__descripcion'|'cod_nov'|'cod_nov__novedad', abr:string, title:string}[]
+
+
 //////////// ERRORES POSTGRES PROPIOS:
 export const ERROR_REFERENCIA_CIRCULAR_EN_SECTORES = 'P1001';
 export const ERROR_NO_SE_PUEDE_CARGAR_EN_EL_PASADO = 'P1002';
