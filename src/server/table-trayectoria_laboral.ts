@@ -30,9 +30,9 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
         editable: admin,
         fields: [
             {...idper, editable:admin},
+            {...idt, sequence:{madMax:['idper']}                            },
             {name:'desde'             , typeName:'date',                    },
             {name:'hasta'             , typeName:'date',                    },
-            {...idt, sequence:{madMax:['idper']}                            },
             {name:'lapso_fechas'      , typeName:'daterange', visible:false, generatedAs:'daterange(desde, hasta)'},
             {name:'computa_antiguedad', typeName:'boolean',                 },
             {name:'propio'            , typeName:'boolean',                 },
