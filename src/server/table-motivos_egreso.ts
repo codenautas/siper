@@ -9,14 +9,14 @@ export const motivo_egreso:FieldDefinition = {
 }
 
 export function motivos_egreso(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name : 'motivos_egreso',
         elementName : 'motivo_egreso',
         editable : admin,
         fields: [
             motivo_egreso,
-            {name: 'descripcion', typeName:'text'    },
+            {name: 'descripcion', typeName:'text' , isName: true   },
             {name: 'cod_2024'   , typeName:'integer' },
         ],
         primaryKey: ['motivo_egreso'],
@@ -24,6 +24,8 @@ export function motivos_egreso(context:TableContext):TableDefinition{
             soloCodigo(motivo_egreso.name),
         ],
         detailTables: [
+            {table:'personas'                       , fields:[motivo_egreso.name], abr:'P'},
+            {table:'trayectoria_laboral'            , fields:[motivo_egreso.name], abr:'H'},
         ]
     }
 };

@@ -8,7 +8,7 @@ export const sexo:FieldDefinition = {
 }
 
 export function sexos(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'sexos',
         elementName: 'sexo',

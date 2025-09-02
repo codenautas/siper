@@ -9,7 +9,7 @@ export const categoria:FieldDefinition = {
 }
 
 export function categorias(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'categorias',
         elementName: 'categoria',
@@ -22,6 +22,8 @@ export function categorias(context:TableContext):TableDefinition{
         constraints: [
         ],
         detailTables: [
+            {table:'personas'                       , fields:[categoria.name], abr:'P'},
+            {table:'trayectoria_laboral'            , fields:[categoria.name], abr:'H'},
         ]
     }
 };

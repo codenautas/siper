@@ -6,6 +6,8 @@ import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {año} from "./table-annios"
 import {pauta} from "./table-pautas"
+import { sqlNovPer } from "./table-nov_per";
+import { sqlPersonas } from "./table-personas";
 
 export function inconsistencias(_context: TableContext): TableDefinition{
     return {
@@ -43,6 +45,14 @@ export function inconsistencias(_context: TableContext): TableDefinition{
                        FROM personas
                        WHERE activo AND para_antiguedad_relativa IS NULL
                      UNION
+                     SELECT idper, NULL::INTEGER as annio, 'CUILINV' pauta, NULL::TEXT as cod_nov 
+                       FROM personas
+                       WHERE validar_cuit(cuil) = false -- Aquí usamos la expresión para calcular cuil_valido
+                     UNION
+                     SELECT idper, NULL::INTEGER as annio, 'CUILINV' pauta, NULL::TEXT as cod_nov 
+                       FROM personas
+                       WHERE cuil IS NULL OR cuil = '' 
+                     UNION
                      SELECT idper, NULL::INTEGER as annio, 'INASINULT' pauta, NULL::TEXT as cod_nov 
                        FROM personas
                        WHERE NOT activo AND fecha_egreso IS NULL
@@ -60,7 +70,7 @@ export function inconsistencias(_context: TableContext): TableDefinition{
                        FROM personas pe 
                        JOIN (SELECT idper, fecha_actual, SUM(coalesce(hasta,fecha_actual)-desde) antiguedad
                              /*case when hasta is NULL then current_date else hasta end*/
-                             FROM historial_contrataciones h
+                             FROM trayectoria_laboral h
                              JOIN parametros p ON unico_registro
                              GROUP BY idper, fecha_actual
                             ) q1
@@ -85,8 +95,12 @@ export function inconsistencias(_context: TableContext): TableDefinition{
                        WHERE activo AND sector IS NULL
                      UNION
                      SELECT idper, NULL::INTEGER as annio, 'ACTSINSIT' pauta, NULL::TEXT as cod_nov 
-                       FROM personas
+                       FROM (${sqlPersonas})
                        WHERE activo AND situacion_revista IS NULL
+                     UNION
+                     SELECT idper, annio, 'EXCEDIDO' as pauta, cod_nov
+                       FROM (${sqlNovPer({})}) q3
+                       WHERE q3.error_saldo_negativo
                      ) q
             )`
         }

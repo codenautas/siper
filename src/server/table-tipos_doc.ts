@@ -9,7 +9,7 @@ export const tipo_doc:FieldDefinition = {
 }
 
 export function tipos_doc(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'tipos_doc',
         elementName: 'tipo_doc',

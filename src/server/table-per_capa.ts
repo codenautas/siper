@@ -10,7 +10,7 @@ import {fecha_inicio} from "./table-capacitaciones";
 
 
 export function per_capa(context: TableContext): TableDefinition{
-    var admin = context.user.rol==='admin' || context.user.rol==='rrhh';
+    var admin = context.es.rrhh;
     return {
         name: 'per_capa',
         title: 'Capacitaciones por persona',

@@ -10,7 +10,7 @@ export const s_revista: FieldDefinition = {
 };
 
 export function situacion_revista(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name:'situacion_revista',
         elementName: 'situación de revista',
@@ -27,6 +27,7 @@ export function situacion_revista(context:TableContext):TableDefinition{
         ],
         detailTables:[
             {table:'personas'       , fields:[s_revista.name], abr:'P'},
+            {table:'trayectoria_laboral' , fields:[s_revista.name], abr:'H'},
         ]
     };
 }

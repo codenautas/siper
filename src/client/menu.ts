@@ -35,4 +35,32 @@ myOwn.clientSides.detalle_dias = {
         // @ts-ignore
         myOwn.agregar_json(depot.rowControls[fieldName], obtenerDetalleVacaciones(depot.row));
     }
-}
+};
+
+myOwn.clientSides.cuil_style = {
+    prepare: function (depot, fieldName) {
+        const cuilValido = depot.row.cuil_valido;
+        const fieldControl = depot.rowControls[fieldName];
+        if (cuilValido === false) {
+            fieldControl.setAttribute('red-color', 'si');
+        }
+    },
+    update: function (depot, fieldName) {
+        const cuilValido = depot.row.cuil_valido;
+        const fieldControl = depot.rowControls[fieldName];
+
+        if (fieldControl) {
+            // Muestra el valor de cuil
+            fieldControl.textContent = depot.row.cuil;
+
+            // Aplica el atributo condicional
+            if (cuilValido === false) {
+                fieldControl.setAttribute('red-color', 'si');
+            } else {
+                fieldControl.removeAttribute('red-color');
+            }
+        } else {
+            console.warn(`No se encontró el control para el campo: ${fieldName}`);
+        }
+    },
+};

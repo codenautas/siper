@@ -9,14 +9,14 @@ export const jerarquia:FieldDefinition = {
 }
 
 export function jerarquias(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name : 'jerarquias',
         elementName : 'jerarquia',
         editable : admin,
         fields: [
             jerarquia,
-            {name: 'descripcion', typeName:'text'},
+            {name: 'descripcion', typeName:'text', isName:true},
             {name: 'cod_2024'   , typeName:'text'},
         ],
         primaryKey: ['jerarquia'],
@@ -24,6 +24,8 @@ export function jerarquias(context:TableContext):TableDefinition{
             soloCodigo(jerarquia.name),
         ],
         detailTables: [
+            {table:'personas'                       , fields:[jerarquia.name], abr:'P'},
+            {table:'trayectoria_laboral'            , fields:[jerarquia.name], abr:'H'},
         ]
     }
 }

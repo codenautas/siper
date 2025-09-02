@@ -13,7 +13,7 @@ export const cod_nov: FieldDefinition = {
 };
 
 export function cod_novedades(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name:'cod_novedades',
         elementName: 'código de novedad',
@@ -30,6 +30,7 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {name: 'corridos'    , typeName: 'boolean', description:'días corridos (incluye feriados y fines de semana)'},
             {name: 'registra'    , typeName: 'boolean', description:'novedades que pueden ser registradas por los registras'},
             {name: 'prioritario' , typeName: 'boolean', description:'aparecen en la lista reducida'},
+            {name: 'comun'       , typeName: 'boolean', description:'aparecen en la lista del usuario básico'},
         ],
         primaryKey:[cod_nov.name],
         constraints:[

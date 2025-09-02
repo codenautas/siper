@@ -9,19 +9,21 @@ export const agrupamiento:FieldDefinition = {
 }
 
 export function agrupamientos(context:TableContext):TableDefinition{
-    var admin = context.user.rol==='admin';
+    var admin = context.es.admin;
     return {
         name: 'agrupamientos',
         elementName: 'agrupamiento',
         editable: admin,
         fields: [
             agrupamiento,
-            {name: 'descripcion',typeName:'text' },
+            {name: 'descripcion',typeName:'text', isName: true},
         ],
         primaryKey: ['agrupamiento'],
         constraints: [
         ],
         detailTables: [
+            {table:'personas'                       , fields:[agrupamiento.name], abr:'P'},
+            {table:'trayectoria_laboral'            , fields:[agrupamiento.name], abr:'H'},
         ]
     }
 };

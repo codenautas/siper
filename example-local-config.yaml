@@ -14,7 +14,7 @@ install:
     drop-his: false # poner en true en desarrollo
     db:
       owner: siper_owner
-tests:
+test:
   only-in-db: siper_local_test_db
 client-setup: 
   lang: es
@@ -25,3 +25,7 @@ devel: # no incluir en producción. En desarrollo quitar la x-
 log:
   db:
     on-demand: true
+mixin-patch:
+  copy:
+  - from: ../siper-data/grafica
+    to: ./dist    

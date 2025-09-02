@@ -7,7 +7,7 @@ import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades"
 import {sector} from "./table-sectores"
 
-export const sqlNovPer= (params:{idper?:string, annio?:number})=> `
+export const sqlNovPer = (params:{idper?:string, annio?:number})=> `
     select a.annio, 
             cn.cod_nov, 
             p.idper, 
@@ -18,11 +18,13 @@ export const sqlNovPer= (params:{idper?:string, annio?:number})=> `
             nv.saldo,
             pnc.esquema,
             (pnc.cantidad > 0 or nv.usados > 0 or nv.pendientes > 0) as con_dato,
+            cn.comun,
             cn.novedad,
             cn.c_dds,
             cn.con_detalles,
             cn.registra,
-            cn.prioritario
+            cn.prioritario,
+            nv.saldo < 0 as error_saldo_negativo
     from cod_novedades cn,
         parametros par,
         annios a,

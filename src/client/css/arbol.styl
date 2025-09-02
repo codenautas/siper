@@ -1,0 +1,101 @@
+div.marco-arbol
+  width 100vw
+  height 100vh
+  overflow scroll
+  user-select none
+  table
+    border-collapse collapse
+    border-spacing 0
+
+.arbol-barra-titulo
+  display flex
+  justify-content space-between
+
+.arbol-nodo
+  display block
+  color black
+  text-decoration none
+  cursor inherit
+
+td.arbol-contenido-nodo
+  min-width 11em
+  max-width 12em
+  > .arbol-nodo
+    border 2px solid black
+    padding 2px
+    padding-left 0.5em
+    min-height 6em
+    text-align left
+    overflow hidden
+
+.arbol-nodo-encabezado
+  display flex
+  justify-content space-between
+
+@media print
+  .arbol-hijos
+    display none
+
+.arbol-hijos
+  font-color #666
+  font-size 85%
+  padding-right 2px
+
+.arbol-hijos::before
+  content '+'
+
+td.arbol-contenido-nodo-abierto
+  @media screen
+    position sticky
+  left -5px
+  right -5px
+  border 0
+  > .arbol-nodo
+    border 2px solid black
+
+[arbol-jefe=apellido]
+  margin-top 3px
+
+[arbol-nodo-estado=abierto]
+  cursor zoom-out
+  .arbol-hijos
+    visibility hidden
+
+[arbol-nodo-estado=final]
+  cursor not-allowed
+
+[arbol-nodo-estado=abrible]
+  cursor zoom-in
+
+.arbol-conector-superior
+  border-left 2px solid black
+
+.arbol-techo
+  border-top 2px solid black
+
+.arbol-margen-horizontal 
+  & > td
+    height 1em
+
+.arbol-linea-subnodos
+  vertical-align top
+  text-align center
+
+.arbol-subnodo
+  display inline-block
+  vertical-align top
+
+td.arbol-td-subnodo  
+  white-space nowrap
+
+td
+  white-space normal
+  padding 0
+
+.arbol-margen-lateral
+  min-width 1em
+  width 50%
+
+.arbol-sector
+  font-size 85%
+  margin-bottom 2px

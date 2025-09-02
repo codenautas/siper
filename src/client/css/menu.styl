@@ -16,6 +16,13 @@
 .accordion-bg
   background-size auto 100%
 
+.link-manual
+  color inherit
+  text-decoration none
+  flex-direction row
+  display flex
+  gap 5px
+
 .accordion-summary
   flex-direction row-reverse
   & .MuiAccordionSummary-content
@@ -32,6 +39,18 @@ div.fp-fieldname-cod_novedades__novedad
 
 label.fp-fieldname-dds1
   margin-left 2em
+
+.modal-borrar-novedad
+  display flex
+  flex-direction column
+  align-items center
+  justify-content center
+  text-align center
+  padding 1em 2em 0em 2em
+  line-height 1.6
+
+.modal-borrar-novedad > div
+  margin-top 10px
 
 .MuiAutocomplete-root  
   display inline-flex
@@ -80,6 +99,8 @@ div.calendario-dia-seleccionado, div.seleccionado
     background-color #eee488
   background-color #fff4aa
   font-weight bold
+  &.tipo-dia-no-laborable
+    background-color #ccc488
 
 .calendario-extendido-mes
   margin 2em
@@ -135,6 +156,9 @@ div.calendario-dia-seleccionado, div.seleccionado
 .tipo-dia-no-trabaja
   background-color #ed9
 
+[es-otro-mes="si"]
+  opacity 0.3
+
 .calendario-extendido-dia-numero, .calendario-extendido-dia-contenido
   font-size 70%
 
@@ -159,6 +183,12 @@ span.box-id
 
 span.box-names
   flex-grow 2
+
+span.box-names[red-color=si], 
+td[red-color=si],
+.legajo-valor[red-color=si]
+  color #FF0000
+  font-weight bold
 
 span.box-info
   font-size 90%
@@ -202,12 +232,56 @@ span.box-info
   min-width 24em
   bottom 0px
 
+.componente-legajo-per
+  min-width 28em
+  margin-bottom 1em
+
+.legajo-contenedor
+  display flex
+  flex-direction column
+  gap 0.8em
+  padding 0.5em
+
+.legajo-seccion
+  border-left 3px solid #e0e0e0
+  padding-left 0.6em
+
+.legajo-seccion-titulo
+  font-weight bold
+  color #444
+  margin-bottom 0.3em
+
+.legajo-grupo
+  display flex
+  flex-direction row
+  flex-wrap wrap
+  gap 0.5em 1em
+  margin-bottom 0.5em
+
+.legajo-grupo-domicilios,
+.legajo-grupo-telefonos
+  flex-direction column
+
+.legajo-campo
+  display flex
+  flex-direction row
+  align-items center
+  min-width 12em
+
+.legajo-campo-largo
+  flex-basis 100%
+
+.legajo-etiqueta
+  font-weight bold
+  color #666
+  margin-right 0.5em
+  min-width 5em
+
 .deshabilitado
   opacity 0.5
   pointer-events none
 
 .horario-vigente
-  text-align center
   margin-bottom 1em
 
 .horario-contenedor
@@ -381,6 +455,9 @@ button.boton-confirmar-registro-novedades
 .siper-button[boton-negro = si]
   color #000
 
+.siper-button[es-visible = no]
+  visibility hidden
+
 div.novedades-renglon
   display flex
   flex-direction row
@@ -457,11 +534,13 @@ button[es-este-mes]
 
 .box-info
   text-align center
+  &[con-info-nov=si]
+    display flex
   [con-info-nov]
     display inline-block
     font-weight normal
     font-size 90%
-    border 0.5px transparent transparent
+    border 0.5px dashed transparent
     padding-left 2px
     padding-right 2px
   [con-info-nov=usados]
@@ -470,6 +549,9 @@ button[es-este-mes]
   [con-info-nov=pendientes]
     border 0.5px dashed #ccc
     min-width 1em
+  [con-info-nov=saldo] 
+    min-width 1em
+      
   
 .check-box[sin-padding=si]
   color #000
@@ -478,3 +560,10 @@ button[es-este-mes]
 @media print 
   .menu-item
     display none
+
+[bold-name=si]
+  font-weight bold
+
+[tiene-problemas=si]
+  color #f00
+  font-weight bold
