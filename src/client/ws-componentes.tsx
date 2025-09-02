@@ -937,6 +937,58 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
     </Componente>
 }
 
+function InconsistenciasPersona(props:{conn: Connector, idper:string, annio:number}){
+    const {conn, idper, annio} = props;
+    const [inconsistencias, setInconsistencias] = useState<ProvisorioInconsistencia[]>([]);
+    useEffect(function(){
+        setInconsistencias(setEfimero)
+        conn.ajax.table_data<any>({
+            table: 'inconsistencias',
+            fixedFields: [{fieldName:'idper', value:idper}],
+            paramfun: {}
+        }).then(function(inconsistencias: ProvisorioInconsistencia[]){
+            setInconsistencias(inconsistencias);
+            console.log(inconsistencias)
+        }).catch(logError)
+    }, [idper])
+    
+    return <Componente componentType="inconsistencias-persona" esEfimero={inconsistencias}>
+        {inconsistencias.length > 0 && 
+            <div className="inconsistencias-descripcion">
+                Esta persona posee {inconsistencias.length} {inconsistencias.length === 1 ? 'inconsistencia' : 'inconsistencias'} que requiere atención
+            </div>
+        }
+        {inconsistencias.length > 0 ? (
+            <List>
+                {inconsistencias.filter(inc => inc.annio == annio.toString() || inc.annio == null).map((inconsistencia) => (
+                    <div key={inconsistencia.pauta} className="inconsistencia-item">
+                        <div className="inconsistencia-row">
+                            <div className="inconsistencia-left">
+                                <strong>{inconsistencia.pauta}</strong>
+                            </div>
+                            {inconsistencia.cod_nov && (
+                                <div className="inconsistencia-right">
+                                    {inconsistencia.cod_nov}
+                                </div>
+                            )}
+                        </div>
+                        <div className="inconsistencia-description">
+                            {inconsistencia.pautas__descripcion}
+                            {inconsistencia.cod_nov__novedad && (
+                                <div className="inconsistencia-detail">{inconsistencia.cod_nov__novedad}</div>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </List>
+        ) : (
+            <div className="inconsistencias-vacio">
+                No se encontraron inconsistencias
+            </div>
+        )}
+    </Componente>   
+}
+
 function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     var ffObject: Record<string, any> = {
     };
@@ -1174,6 +1226,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                     <Typography>{error?.message ?? (guardandoRegistroNovedad && "registrando..." || "error")}</Typography>
                 : null}</Box>
                 { es.rrhh && <NovedadesRegistradas conn={conn} idper={idper} annio={annio} ultimaNovedad={ultimaNovedad} persona={persona} fechaActual={fechaActual} onBorrado={()=>setUltimaNovedad(ultimaNovedad-1)}/>}
+                { es.rrhh && <InconsistenciasPersona conn={conn} idper={idper} annio={annio}/>}
                 <Horario conn={conn} idper={idper} fecha={fecha}/>
                 </div>
             </Componente>
