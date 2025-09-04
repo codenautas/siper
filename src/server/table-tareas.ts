@@ -34,7 +34,7 @@ export function tareas(context:TableContext):TableDefinition{
         constraints:[
         ],
         detailTables:[
-            {table:'historial_contrataciones'       , fields:[tarea.name], abr:'H'},
+            {table:'trayectoria_laboral'       , fields:[tarea.name], abr:'H'},
         ]
     };
 }
