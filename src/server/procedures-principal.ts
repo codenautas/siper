@@ -22,6 +22,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             var defs = {
                 personas      : {key:'idper'   , sql:'select * from personas'},
                 cod_novedades : {key:'cod_nov', sql:'select * from cod_novedades'},
+                sectores      : {key:'sector' , sql:'select * from sectores'}
             };
             var data = await likeAr(defs)
                 .map(def => client.query(`${def.sql} order by ${def.key}`).fetchAll())
@@ -31,6 +32,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 relations: {
                     idper    : data.personas.map(row => row.idper),
                     cod_nov : data.cod_novedades.map(row => row.cod_nov),
+                    sector : data.sectores.map(row => row.sector),
                 },
                 tables: likeAr(data).map((rows, table) => createIndex(rows, defs[table].key)).plain()
             };

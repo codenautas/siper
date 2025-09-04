@@ -22,9 +22,12 @@ import { strict as likear, createIndex } from "like-ar";
 var my=myOwn;
 
 function PersonaDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
-    const {fieldsProps} = props;
+    const {fieldsProps, optionsInfo} = props;
     const f = createIndex(fieldsProps, f => f.fd.name)
+    const rowsSectores = optionsInfo.tables!.sectores;
     if (f.idper == null) return <Card> <Typography>Cargando...</Typography> </Card>
+
+    console.log(rowsSectores);
 
     return <Card style={{ width: 'auto' }}>
     <Box
@@ -39,12 +42,16 @@ function PersonaDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo
         <Box>
             <GenericField {...f.idper} />
         </Box>
-        <Box>
+        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
             <GenericField {...f.apellido} />
             <GenericField {...f.nombres} />
             <GenericField {...f.ficha} />
             <GenericField {...f.idmeta4} />
             <GenericField {...f.cuil} />
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+            <GenericField {...f.sector} />
+            <GenericField {...f.sectores__nombre_sector} />
         </Box>
       </Box>
     </Box>
@@ -58,6 +65,6 @@ myOwn.wScreens.registroPersona = function registroPersona(addrParams:any){
         myOwn as never as Connector,
         { ...addrParams, table: 'personas' },
         document.getElementById('total-layout')!,
-        ({table, fixedFields, conn}) => CardEditorConnected({table, fixedFields, conn, CardDisplay: PersonaDisplay})
+        ({table, fixedFields, conn}) => CardEditorConnected({table, fixedFields, conn, withMenu: true, CardDisplay: PersonaDisplay})
     )
 }
