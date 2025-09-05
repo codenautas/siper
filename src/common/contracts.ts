@@ -99,7 +99,9 @@ export const novedades_registradas = {
         dds4: is.nullable.boolean,
         dds5: is.nullable.boolean,
         dds6: is.nullable.boolean,
-        detalles: is.nullable.string
+        detalles: is.nullable.string,
+        fecha: is.nullable.Date,
+        usuario: is.nullable.string
     })
 } satisfies CommonEntityDefinition
 
@@ -144,13 +146,11 @@ export const personas = {
         apellido:  is.string,
         nombres:   is.string,
         sector:    is.nullable.string,
-        categoria: is.nullable.string,
         registra_novedades_desde: is.nullable.Date,
         para_antiguedad_relativa: is.nullable.Date,
         activo:    is.nullable.boolean,
         fecha_ingreso: is.nullable.Date,
         fecha_egreso : is.nullable.Date,
-        situacion_revista: is.nullable.string,
         es_jefe:    is.nullable.boolean,
     })
 } satisfies CommonEntityDefinition
@@ -222,19 +222,34 @@ export const per_capa = {
     })
 }
 
-export const historial_contrataciones = {
-    table: 'historial_contrataciones',
+export const trayectoria_laboral = {
+    table: 'trayectoria_laboral',
     description: is.object({
         idper: is.string,
         desde: is.Date,
+        idt: is.number,
         hasta: is.nullable.Date,
         computa_antiguedad: is.nullable.boolean,
+        propio: is.nullable.boolean,
         organismo: is.nullable.string,
         observaciones: is.nullable.string,
+        situacion_revista: is.nullable.string,
+        expediente: is.nullable.string,
+        funcion: is.nullable.string,
+        jerarquia: is.nullable.string,
+        nivel_grado: is.nullable.string,
+        tarea: is.nullable.string,
+        agrupamiento: is.nullable.string,
+        motivo_egreso: is.nullable.string,
+        tramo: is.nullable.string,
+        grado: is.nullable.string,
+        categoria: is.nullable.string,
+        fecha_nombramiento: is.nullable.Date,
+        resolucion: is.nullable.string,
     })
 } satisfies CommonEntityDefinition
 
-export type Historial_contratacion = DefinedType<typeof historial_contrataciones.description>
+export type Trayectoria_laboral = DefinedType<typeof trayectoria_laboral.description>
 
 ////////////// PROCEDIMEINTOS
 
@@ -254,6 +269,7 @@ export const si_cargara_novedad = {
         dias_coincidentes: is.number,
         con_detalles: is.nullable.boolean,
         c_dds: is.nullable.boolean,
+        saldo: is.nullable.number,
     })
 }
 
@@ -387,6 +403,12 @@ export const parametros = {
 }
 
 export type ParametrosResult = DefinedType<typeof parametros.result>
+
+export const registrar_novedad = {
+    procedure: 'registrar_novedad',
+    parameters: novedades_registradas.description,
+    result: novedades_registradas.description
+}
 
 export const annio = {
     table: 'annio',
@@ -726,6 +748,9 @@ export const ERROR_COD_NOVEDAD_NO_INDICA_CON_HORARIO= 'P1007';
 export const ERROR_COD_NOVEDAD_NO_INDICA_CON_NOVEDAD= 'P1008';
 export const ERROR_SECTORES_DESNIVELADOS            = 'P1009';
 export const ERROR_SECTOR_HUERFANO_NO_TOPE          = 'P1010';
+
+//////////// ERRORES PROPIOS DEL BACKEND:
+export const ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES   = 'B9001';
 
 //////////// ERRORES POSTGRES: https://www.postgresql.org/docs/current/errcodes-appendix.html
 export const insufficient_privilege = '42501';

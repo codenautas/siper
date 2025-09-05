@@ -37,7 +37,7 @@ export function politicaNovedadesComun(alias:string, cargarOver:'cargar'|'ver'){
 
 export function politicaNovedades(alias:string, nombreFecha:string){
     var politicaModficacion = `(${politicaNovedadesComun(alias, 'cargar')})`
-    + (alias == 'personas' ? '' : ` AND (
+    + ((alias == 'personas' || alias == 'trayectoria_laboral') ? '' : ` AND (
             (${nombreFecha} 
                 >= (SELECT fecha_actual FROM parametros WHERE unico_registro)
             ) OR (
@@ -46,7 +46,7 @@ export function politicaNovedades(alias:string, nombreFecha:string){
         )
     `)
     var politicaVisibilidad = politicaNovedadesComun(alias, 'ver');
-    if (alias == 'personas') {
+    if (alias == 'personas' || alias == 'trayectoria_laboral') {
         politicaVisibilidad = `(case when get_app_user('mode') = 'login' then true else ${politicaVisibilidad} end)`;
     }
     return {
@@ -87,6 +87,8 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {name: 'cancela'  , typeName: 'boolean', description:'cancelación de novedades'},
             {name: 'detalles' , typeName: 'text'   ,                                    },
             {name: 'dias_hoc' , typeName: 'text', inTable:false, serverSide:true, editable:false },
+            {name: 'fecha'    , typeName: 'date'   ,                                    },
+            {name: 'usuario' , typeName: 'text'   ,                                    },
         ],         
         primaryKey: [idper.name, 'desde', idr.name],
         foreignKeys: [
@@ -97,7 +99,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {references: 'fechas', fields: [{source:'hasta', target:'fecha'}], alias:'hasta'},
         ],
         constraints: [
-            {constraintType:'check', consName:'desde y hasta deben ser del mismo annio', expr:`extract(year from desde) is not distinct from extract(year from desde)`},
+            {constraintType:'check', consName:'desde y hasta deben ser del mismo annio', expr:`extract(year from desde) is not distinct from extract(year from hasta)`},
             {constraintType:'check', consName:'cod_nov obligatorio si no cancela', expr:'(cod_nov is null) = (cancela is true)'},
         ],
         hiddenColumns: [idr.name],

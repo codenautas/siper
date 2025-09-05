@@ -24,7 +24,7 @@ export function expedientes(context:TableContext):TableDefinition{
             soloMayusculas(expediente.name),
         ],
         detailTables:[
-            {table:'historial_contrataciones'       , fields:[expediente.name], abr:'H'},
+            {table:'trayectoria_laboral'       , fields:[expediente.name], abr:'H'},
         ]
     };
 }

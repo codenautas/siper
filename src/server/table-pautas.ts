@@ -18,6 +18,7 @@ export function pautas(context:TableContext):TableDefinition{
         editable:admin,
         fields:[
             pauta,
+            {name: 'gravedad'    , typeName: 'text'   ,                                             },
             {name: 'descripcion' , typeName: 'text'   , isName: true, title: ' descripción'         },
         ],
         primaryKey:[pauta.name],
