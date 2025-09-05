@@ -17,7 +17,6 @@ import { tramo } from "./table-tramos";
 import { grado } from "./table-grados";
 import { categoria } from "./table-categorias";
 import { puesto } from "./table-puestos";
-import { banda_horaria } from "./table-bandas_horarias";
 
 export const idt: FieldDefinition = {name: 'idt', typeName: 'bigint', description: 'identificador de trayectoria laboral'}
 
@@ -53,7 +52,6 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             {name:'resolucion'        , typeName:'text',                    },
             {name: 'cargo_atgc'       , typeName: 'text', title: 'cargo/ATGC'},
             puesto,
-            banda_horaria,
         ],
         primaryKey: [idper.name, idt.name],
         foreignKeys: [
@@ -70,7 +68,6 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             {references: 'grados', fields:[tramo.name, grado.name]},
             {references: 'categorias', fields:[categoria.name]},
             {references: 'puestos', fields:[puesto.name]},
-            {references: 'bandas_horarias', fields:[banda_horaria.name]},
         ],
         constraints: [
             {constraintType:'exclude', consName:'sin superponer fechas contratación', using:'GIST', fields:[idper.name, {fieldName:'lapso_fechas', operator:'&&'}], where:'computa_antiguedad and propio'},
