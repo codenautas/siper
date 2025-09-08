@@ -4,7 +4,7 @@ import {FieldDefinition, TableDefinition, TableContext, soloDigitosCons, soloDig
 
 import { s_revista  } from "./table-situacion_revista";
 import { agrupamiento  } from "./table-agrupamientos";
-import { puesto  } from "./table-puestos";
+import { perfil  } from "./table-perfiles";
 import { banda_horaria  } from "./table-bandas_horarias";
 import {sector} from "./table-sectores";
 
@@ -29,23 +29,21 @@ export const agrupamiento_personas = {
   editable:false,
 };
 
-export const puesto_personas = {
-  ...puesto,
+export const perfil_personas = {
+  ...perfil,
   inTable: false,
   editable:false,
 };
 
 export const bh_personas = {
   ...banda_horaria,
-  inTable: false,
   title: 'banda horaria',
-  editable:false,
 };
 
 export const sqlPersonas= `SELECT p.idper, p.cuil, p.tipo_doc, p.documento, p.ficha, p.idmeta4, p.apellido, p.nombres, p.sector, p.es_jefe, t.categoria,
                            t.situacion_revista, p.registra_novedades_desde, p.para_antiguedad_relativa, p.activo, p.fecha_ingreso, p.fecha_egreso,
                            t.motivo_egreso, p.nacionalidad, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado, p.fecha_nacimiento, p.sexo,
-                           t.puesto, t.banda_horaria
+                           t.perfil, p.banda_horaria
                            FROM personas p 
                            LEFT JOIN (SELECT * 
                                        FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY idper ORDER BY desde DESC, idt DESC) AS rn
@@ -88,7 +86,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
             {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
             {name: 'cuil_valido'             , typeName: 'boolean', title: 'cuil válido', inTable:false, serverSide:true, editable:false},
-            puesto_personas,
+            perfil_personas,
             bh_personas,
         ],
         primaryKey: [idper.name],
@@ -97,11 +95,11 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'paises'           , fields:[{source:'nacionalidad',target:'pais'}]      },
             {references: 'sexos'              , fields:['sexo']            },
             {references: 'tipos_doc'          , fields:['tipo_doc']        },
+            {references: 'bandas_horarias'    , fields:[bh_personas.name]  },
         ],
         softForeignKeys: [
             {references: 'jerarquias'      , fields:['jerarquia']     },
-            {references: 'puestos'         , fields:[puesto.name]     },
-            {references: 'bandas_horarias' , fields:[bh_personas.name]},
+            {references: 'perfiles'         , fields:[perfil.name]     },
             {references: 'motivos_egreso'  , fields:['motivo_egreso'] },
             {references: 'categorias'      , fields:['categoria']     },
             {references: 'agrupamientos'   , fields:[agrupamiento_personas.name]},
