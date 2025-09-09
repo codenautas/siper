@@ -1,6 +1,6 @@
 set search_path=siper;
---SET ROLE siper_muleto_owner;
-SET ROLE siper_owner;
+SET ROLE siper_muleto_owner;
+--SET ROLE siper_owner;
 
 --select * from siper.pautas
 -- agregar gravedad
@@ -8,8 +8,18 @@ SET ROLE siper_owner;
 -- agregar si faltan pautas
 
 -- agregar gravedad
-ALTER TABLE pautas ADD COLUMN gravedad TEXT IF NOT EXISTS;
-
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_name='pautas' and column_name='gravedad'
+  )
+  THEN
+    ALTER TABLE pautas ADD COLUMN gravedad TEXT;
+  END IF;
+END
+$$;
 -- actualizar gravedad
 with pautasok as (
 select * from (
