@@ -41,7 +41,7 @@ select * from (
 update siper.pautas as p 
 set gravedad = np.gravedad 
 from pautasok as np
-where p.pauta = np.pauta
+where p.pauta = np.pauta;
 
 -- agregar si faltan pautas
 with pautasok as (
@@ -64,4 +64,4 @@ select * from (
 insert into siper.pautas
 select po.pauta, po.gravedad, po.descripcion from pautasok as po
 left join siper.pautas as p on po.pauta = p.pauta
-where p.pauta is null
+where p.pauta is null;
