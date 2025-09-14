@@ -1,6 +1,5 @@
-import { Constraint, PostInputOptions } from "backend-plus";
+import { Constraint, FieldDefinition, PostInputOptions } from "backend-plus";
 import { AppSiper } from "./app-principal";
-import { FieldDefinition } from "backend-plus";
 
 // exposes APIs from this package
 export * from "backend-plus";
@@ -23,6 +22,10 @@ declare module "backend-plus"{
     }
     interface AppConfigClientSetup {
         es:{admin:boolean, superior:boolean, rrhh:boolean, registra:boolean}
+    }
+
+    interface FieldDefinition {
+        grupo?:string
     }
 }
 

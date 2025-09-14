@@ -9,6 +9,13 @@ import {
     renderConnectedApp, 
 } from "frontend-plus";
 
+declare module "frontend-plus" {
+  interface FieldDefinition{
+    grupo?:string
+    ancho?:number
+  }
+}
+
 import {
     Box,
     Card, 
@@ -21,6 +28,15 @@ import { strict as likear, createIndex } from "like-ar";
 // @ts-ignore 
 var my=myOwn;
 
+function GrupoPeronas(props:{idGrupo:string, nombreGrupo:string, fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
+  return <Box>
+    <div className="personal-title-seccion">{props.nombreGrupo}</div>
+    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+      {props.fieldsProps.filter(f => f.fd.grupo == props.idGrupo).map(f => <GenericField {...f} />)}
+    </Box>
+  </Box>
+}
+
 function PersonaDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
     const {fieldsProps, optionsInfo} = props;
     const f = createIndex(fieldsProps, f => f.fd.name)
@@ -29,7 +45,7 @@ function PersonaDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo
 
     console.log(rowsSectores);
 
-    return <Card style={{ width: 'auto' }}>
+    return <Card style={{ width: 'auto' }} className="ficha-personas">
     <Box
       sx={{
         display: 'flex',
@@ -39,20 +55,9 @@ function PersonaDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo
     >
       <Box>
         datos personales
-        <Box>
-            <GenericField {...f.idper} />
-        </Box>
-        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
-            <GenericField {...f.apellido} />
-            <GenericField {...f.nombres} />
-            <GenericField {...f.ficha} />
-            <GenericField {...f.idmeta4} />
-            <GenericField {...f.cuil} />
-        </Box>
-        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
-            <GenericField {...f.sector} />
-            <GenericField {...f.sectores__nombre_sector} />
-        </Box>
+        <GrupoPeronas idGrupo='identif' fieldsProps={fieldsProps} optionsInfo={optionsInfo} nombreGrupo=""/>
+        <GrupoPeronas idGrupo='funcion' fieldsProps={fieldsProps} optionsInfo={optionsInfo} nombreGrupo="funcional"/>
+        <GrupoPeronas idGrupo='persona' fieldsProps={fieldsProps} optionsInfo={optionsInfo} nombreGrupo="datos personales"/>
       </Box>
     </Box>
   </Card>
