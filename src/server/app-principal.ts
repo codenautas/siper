@@ -172,9 +172,8 @@ export class AppSiper extends AppBackend{
         if(es.admin){
             menuContent.push(
                 {menuType:'menu', name:'en_desarrollo', menuContent:[
+                    {menuType:'registroPersona', name:'persona'},
                     {menuType:'menu', name:'novedades', menuContent:[
-                        {menuType:'registroNovedades', name:'registro'},
-                        {menuType:'statusPersona', name:'status'},
                         {menuType:'menu', name:'tablas', menuContent:[
                             {menuType:'table', name:'novedades_vigentes'   },
                             {menuType:'table', name:'novedades_registradas'},
@@ -261,6 +260,7 @@ export class AppSiper extends AppBackend{
             { type: 'js', file: 'common/contracts.js' },
             { type: 'js', file: 'client/ws-componentes.js' },
             { type: 'js', file: 'client/ws-arbol.js' },
+            { type: 'js', file: 'client/ws-persona.js' },
             ... menuedResources
         ] satisfies ClientModuleDefinition[];
         return list;
