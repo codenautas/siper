@@ -34,11 +34,11 @@ function PersonaDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100vh',
+        height: '80vh',
       }}
     >
       <Box>
-        detalle general persona
+        datos personales
         <Box>
             <GenericField {...f.idper} />
         </Box>
