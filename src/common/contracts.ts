@@ -183,11 +183,22 @@ export type Sectores = DefinedType<typeof sectores.description>
 export const usuarios = {
     table: 'usuarios',
     description: is.object({
-        usuario: is.string
+        usuario: is.string,
+        rol: is.string,
+        idper: is.string
     })
 }
 
 export type Usuario = DefinedType<typeof usuarios.description>
+
+export const roles = {
+    table: 'roles',
+    description: is.object({
+        rol: is.string,
+    })
+}
+
+export type Rol = DefinedType<typeof roles.description>
 
 export const capacitaciones = {
     table: 'capacitaciones',
@@ -754,3 +765,4 @@ export const ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES   = 'B9001';
 export const insufficient_privilege = '42501';
 export const exclusion_violation = '23P01';
 export const unique_violation = '23505';
+export const check_violation = '23514';

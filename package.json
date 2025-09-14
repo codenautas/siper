@@ -1,6 +1,6 @@
 {
   "name": "siper",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "license": "MIT",
   "description": "Sistema Integral de Gestión de Agentes, Recursos, Personal y Actividades",
@@ -11,7 +11,7 @@
     "install"
   ],
   "engines": {
-    "node": ">=20.15",
+    "node": ">=22",
     "npm": ">=10.7"
   },
   "dependencies": {

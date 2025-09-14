@@ -95,7 +95,7 @@ describe("connected", function(){
     var server: AppSiper;
     var contexto: Contexts<AppSiper>;
     var rrhhSession: SesionEmuladaSiper;
-    var rrhhAdminSession: SesionEmuladaSiper; // no cualquier rrhh
+    var superiorSession: SesionEmuladaSiper; // no cualquier rrhh
     var adminMetadatosSession: SesionEmuladaSiper; // admin de metadatos, por ahora un admin
     var borradoExitoso: boolean = false;
     var fallaEnLaQueQuieroOmitirElBorrado: boolean = false;
@@ -108,8 +108,8 @@ describe("connected", function(){
                 username: 'perry',
                 password: 'white',
             });
-            rrhhAdminSession = contexto.createSession();
-            await rrhhAdminSession.login({
+            superiorSession = contexto.createSession();
+            await superiorSession.login({
                 username: 'lois',
                 password: 'lane',
             });
@@ -216,7 +216,7 @@ describe("connected", function(){
             ], 'all')
         })
         it("verifica que un rrhh se considere registra también", async function(){
-            discrepances.showAndThrow(rrhhSession.config.config.es, {mantenimiento:false, admin:false, rrhh_admin:false, rrhh:true, registra:true});
+            discrepances.showAndThrow(rrhhSession.config.config.es, {admin:false, superior:false, rrhh:true, registra:true});
         })
     })
     async function crearNuevaPersona(nombre:string, opts:{registra_novedades_desde?:Date, para_antiguedad_relativa?:Date}): Promise<ctts.Persona>{
@@ -268,7 +268,7 @@ describe("connected", function(){
         try {
             var persona = await crearNuevaPersona(nombre, {registra_novedades_desde: opciones.registra_novedades_desde, para_antiguedad_relativa: opciones.para_antiguedad_relativa});
             var {vacaciones, tramites, hoy} = opciones;
-            // await rrhhAdminSession.saveRecord(ctts.per_gru, {idper: persona.idper, clase: 'U', grupo: 'T'}, 'new');
+            // await superiorSession.saveRecord(ctts.per_gru, {idper: persona.idper, clase: 'U', grupo: 'T'}, 'new');
             var usuario = null as unknown as UsuarioConCredenciales;
             var sesion = null as unknown as SesionEmuladaSiper;
             if (opciones.usuario) {
@@ -278,8 +278,8 @@ describe("connected", function(){
                 }
                 if (opciones.usuario.sector) await rrhhSession.saveRecord(ctts.personas,{idper:persona.idper,sector:opciones.usuario.sector}, 'update')
             }
-            if (vacaciones) await rrhhAdminSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_VACACIONES, idper: persona.idper, cantidad: vacaciones }, 'new')
-            if (tramites) await rrhhAdminSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_TRAMITE, idper:persona.idper, cantidad: 4 }, 'new')
+            if (vacaciones) await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_VACACIONES, idper: persona.idper, cantidad: vacaciones }, 'new')
+            if (tramites) await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_TRAMITE, idper:persona.idper, cantidad: 4 }, 'new')
             if (hoy) {
                 await server.inDbClient(ADMIN_REQ, async client => client.query("update parametros set fecha_actual = $1", [hoy]).execute())
             }
@@ -321,10 +321,10 @@ describe("connected", function(){
                 'update'
             )
             haciendo = 'registrando los movimientos'
-            await registrarNovedad(rrhhAdminSession,
+            await registrarNovedad(superiorSession,
                 {desde:date.iso('2000-01-10'), hasta:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
             );
-            await registrarNovedad(rrhhAdminSession,
+            await registrarNovedad(superiorSession,
                 {desde:date.iso('2000-01-10'), hasta:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
             );
             haciendo = 'probando'
@@ -354,7 +354,7 @@ describe("connected", function(){
                 // TODO: volver a calcular el informe de coincidencias
                 // var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 // discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:5, dias_coincidentes:0})
-                await registrarNovedad(rrhhAdminSession, novedadRegistradaPorCargar);
+                await registrarNovedad(superiorSession, novedadRegistradaPorCargar);
                 await rrhhSession.tableDataTest('novedades_vigentes', [
                     {fecha:date.iso('2000-01-01'), cod_nov:null          , idper, trabajable: false},
                     {fecha:date.iso('2000-01-02'), cod_nov:null          , idper, trabajable: false},
@@ -437,7 +437,7 @@ describe("connected", function(){
         it("cargo un día de trámite", async function(){
             fallaEnLaQueQuieroOmitirElBorrado = true;
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
-                await registrarNovedad(rrhhAdminSession,
+                await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -468,7 +468,7 @@ describe("connected", function(){
         })
         it("intento ver novedades de otra persona", async function(){
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
-                await registrarNovedad(rrhhAdminSession,
+                await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-01-03'), hasta:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, idper}
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -482,7 +482,7 @@ describe("connected", function(){
         it("quito un feriado y veo que hay más novedades", async function(){
             await enDosNuevasPersonasConFeriado10EneroFeriadoy11No(this.test?.title!, '10001', async (persona1, persona2, cod_nov) => {
                 /* Verifico que ese día tenga 2 novedades cargadas */
-                await rrhhAdminSession.tableDataTest('novedades_vigentes', [
+                await superiorSession.tableDataTest('novedades_vigentes', [
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
@@ -522,7 +522,7 @@ describe("connected", function(){
         })
         it("un usuario común puede ver sus novedades pasadas (y rrhh las puede cargar)", async function(){
             await enNuevaPersona(this.test?.title!, {usuario:{sesion:true}, hoy:date.iso('2000-02-02')}, async ({idper}, {sesion}) => {
-                await registrarNovedad(rrhhAdminSession,
+                await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper}
                 );
                 await sesion.tableDataTest('novedades_vigentes', [
@@ -580,7 +580,7 @@ describe("connected", function(){
         it("no puede cargarse una novedad sin detalles cuando el codigo de novedad indica con detalles", async function(){
             await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
                 await expectError( async () => {
-                    await registrarNovedad(rrhhAdminSession,
+                    await registrarNovedad(superiorSession,
                         {desde:date.iso('2000-02-09'), hasta:date.iso('2000-02-09'), cod_nov:COD_ENF_FAMILIAR, idper: persona.idper}
                     );
                 }, ctts.ERROR_COD_NOVEDAD_INDICA_CON_DETALLES);
@@ -594,7 +594,7 @@ describe("connected", function(){
                         {cod_nov:COD_MUDANZA, con_detalles:false}, 
                         'update'
                     );
-                    await registrarNovedad(rrhhAdminSession,
+                    await registrarNovedad(superiorSession,
                         {desde:date.iso('2000-02-09'), hasta:date.iso('2000-02-09'), cod_nov:COD_MUDANZA, idper: persona.idper, detalles:TEXTO_PRUEBA}
                     );
                     await adminMetadatosSession.saveRecord(
@@ -608,7 +608,7 @@ describe("connected", function(){
         it("un detalle para una novedad se copia en novedades_vigentes", async function(){
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
                 await adminMetadatosSession.saveRecord(ctts.cod_nov, {cod_nov:COD_MUDANZA, con_detalles:null}, 'update');
-                await registrarNovedad(rrhhAdminSession,
+                await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-02-10'), hasta:date.iso('2000-02-10'), cod_nov:COD_MUDANZA, idper, detalles:TEXTO_PRUEBA}
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -623,7 +623,7 @@ describe("connected", function(){
             ) => {
                 var otrapersona = await crearNuevaPersona("segunda persona en test "+this.test?.title!, {});
                 await rrhhSession.saveRecord(ctts.personas,{idper:otrapersona.idper,sector:'P1'}, 'update')
-                await registrarNovedad(rrhhAdminSession,
+                await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: otrapersona.idper}
                 );
                 await sesion.tableDataTest('novedades_vigentes', [
@@ -644,12 +644,12 @@ describe("connected", function(){
             await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
                 await expectError( async () => {
                     await adminMetadatosSession.saveRecord(ctts.cod_nov, {cod_nov:COD_COMISION, parcial:true}, 'update');
-                    await rrhhAdminSession.saveRecord(
+                    await superiorSession.saveRecord(
                         ctts.novedades_horarias, 
                         {idper:persona.idper, fecha:date.iso('2000-03-05'), hasta_hora:HASTA_HORA ,cod_nov:COD_COMISION}, 
                         'new'
                     );
-                    await rrhhAdminSession.saveRecord(
+                    await superiorSession.saveRecord(
                         ctts.novedades_horarias, 
                         {idper:persona.idper, fecha:date.iso('2000-03-05'), desde_hora:DESDE_HORA ,cod_nov:COD_COMISION}, 
                         'new'
@@ -660,7 +660,7 @@ describe("connected", function(){
         it("no puede cargarse una novedad horaria cuando el codigo de novedad NO indica PARCIAL", async function(){
             await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
                 await expectError( async () => {
-                    await rrhhAdminSession.saveRecord(
+                    await superiorSession.saveRecord(
                         ctts.novedades_horarias, 
                         {idper: persona.idper, fecha:date.iso('2000-02-09'),hasta_hora:HASTA_HORA, cod_nov:COD_MUDANZA},
                         'new'
@@ -673,7 +673,7 @@ describe("connected", function(){
                 await expectError( async () => {
                     const cod_nov = '10003';
                     await adminMetadatosSession.saveRecord(ctts.cod_nov, {cod_nov, novedad: 'PRUEBA AUTOMÁTICA intengo agregar no total', total: false}, 'new')
-                    await registrarNovedad(rrhhAdminSession, 
+                    await registrarNovedad(superiorSession, 
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov, idper: persona.idper}
                     );
                 }, ctts.ERROR_COD_NOVEDAD_NO_INDICA_TOTAL);
@@ -767,7 +767,7 @@ describe("connected", function(){
             it("mezclo teletrabajo con presencial", async function(){
                 var cod_nov = COD_DIAGRAMADO;
                 await enNuevaPersona(this.test?.title!, {hoy: FECHA_ACTUAL}, async ({idper}) => {
-                    await registrarNovedad(rrhhAdminSession,
+                    await registrarNovedad(superiorSession,
                         {desde:date.iso('2000-01-17'), hasta:date.iso('2000-01-29'), idper, cod_nov,
                             dds1:true, dds3:true, dds4:true
                         }
@@ -797,10 +797,10 @@ describe("connected", function(){
             })
             it("superponer teletrabajo programado sobre vacaciones", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
-                    await registrarNovedad(rrhhAdminSession,
+                    await registrarNovedad(superiorSession,
                         {desde:date.iso('2000-01-19'), hasta:date.iso('2000-01-21'), idper, cod_nov: COD_VACACIONES}
                     );
-                    await registrarNovedad(rrhhAdminSession,
+                    await registrarNovedad(superiorSession,
                         {desde:date.iso('2000-01-17'), hasta:date.iso('2000-01-21'), idper, cod_nov: COD_DIAGRAMADO,
                             dds1:true, dds3:true, dds4:true
                         }
@@ -895,7 +895,7 @@ describe("connected", function(){
             it("permite cambiar de quién depende", async function(){
                 var sectorCambiado = 'T1';
                 await adminMetadatosSession.saveRecord(ctts.sectores, {sector: 'P1', pertenece_a:'T'}, 'update');
-                await rrhhAdminSession.tableDataTest('sectores', [
+                await superiorSession.tableDataTest('sectores', [
                     {sector: sectorCambiado, pertenece_a: 'T'}
                 ], 'all', {fixedFields:[{fieldName:'sector', value: sectorCambiado}]})
                 await adminMetadatosSession.saveRecord(ctts.sectores, {sector: sectorCambiado, pertenece_a:'P'}, 'update');
@@ -911,11 +911,24 @@ describe("connected", function(){
             })
         })
     })
+    describe("mantemiento", function(){
+        it("los usuarios admin no pueden tener idper", async function(){
+            await enNuevaPersona(this.test?.title!, {usuario:{sesion:false}}, async ({idper}, {usuario}) => {            
+                await expectError(async ()=>{
+                    await adminMetadatosSession.saveRecord(ctts.usuarios, {usuario: usuario.usuario, rol:'admin', idper}, 'update');
+                }, ctts.check_violation /* 'los usuarios de mantenimiento no pueden tener persona asociada'*/)
+            });
+        })
+        it("los usuarios superior no pueden ver a los admin", async function(){
+            await superiorSession.tableDataTest(ctts.usuarios, [], "all", {fixedFields:{rol: 'admin'}});
+            await superiorSession.tableDataTest(ctts.roles, [], "all", {fixedFields:{rol: 'admin'}});
+        })
+    })
     describe("pantallas", function(){
         it("tiene que ver un solo renglón de vacaciones", async function(){
             await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
-                await rrhhAdminSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'1999', cod_nov: COD_VACACIONES, idper, cantidad: 1 }, 'new')
-                await rrhhAdminSession.saveRecord(ctts.per_nov_cant, {annio:2001, origen:'2000', cod_nov: COD_VACACIONES, idper, cantidad: 10 }, 'new')
+                await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'1999', cod_nov: COD_VACACIONES, idper, cantidad: 1 }, 'new')
+                await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2001, origen:'2000', cod_nov: COD_VACACIONES, idper, cantidad: 10 }, 'new')
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-03-01'), hasta:date.iso('2000-03-07'), cod_nov:COD_VACACIONES, idper};
                 await registrarNovedad(rrhhSession, novedadRegistradaPorCargar);
                 var novedadRegistradaPorCargar2 = {desde:date.iso('2001-03-01'), hasta:date.iso('2001-03-07'), cod_nov:COD_VACACIONES, idper};

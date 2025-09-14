@@ -6,8 +6,8 @@ import {idper} from "./table-personas"
 import {rol} from "./table-roles"
 
 export function usuarios(context: TableContext): TableDefinition{
-    var rrhh = context.es.rrhh;
-    var rolConPermisos = rrhh || context.forDump;
+    var es = context.es;
+    var rolConPermisos = es.rrhh || context.forDump;
     return {
         name: 'usuarios',
         title: 'usuarios de la aplicación',
@@ -36,11 +36,14 @@ export function usuarios(context: TableContext): TableDefinition{
             {references: 'roles'   , fields:[rol.name  ], onUpdate: 'no action'},
         ],
         constraints: [
-            sinEspaciosMail('mail'),sinEspaciosMail('mail_alternativo')
+            sinEspaciosMail('mail'),sinEspaciosMail('mail_alternativo'),
+            {constraintType: 'check', consName: 'los usuarios de mantenimiento no pueden tener persona asociada', expr:`idper is null OR rol is distinct from 'admin'`}
         ],
-
         sql: {
-            where:rolConPermisos || context.forDump?'true':"usuario = "+context.be.db.quoteNullable(context.user.usuario),
+            where: (
+                es.admin || context.forDump ? 'true' :
+                rolConPermisos ? `usuarios.rol is distinct from 'admin'` :
+                "usuario = "+context.be.db.quoteNullable(context.user.usuario)),
             fields: {
                 sector: {expr: `(select p.sector from personas p where p.idper = usuarios.idper)`},
                 nombre_sector: {expr: `(select s.nombre_sector from sectores s where s.sector = (select p.sector from personas p where p.idper = usuarios.idper))`},
