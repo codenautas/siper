@@ -32,7 +32,7 @@ import { usuarios                } from './table-usuarios';
 import { parametros              } from "./table-parametros";
 import { horarios                } from "./table-horarios";
 import { fichadas                } from "./table-fichadas";
-import { historial_contrataciones} from "./table-historial_contrataciones";
+import { trayectoria_laboral} from "./table-trayectoria_laboral";
 import { capa_modalidades        } from "./table-capa_modalidades";
 import { capacitaciones          } from "./table-capacitaciones";
 import { per_capa                } from "./table-per_capa";
@@ -65,7 +65,7 @@ import { expedientes             } from "./table-expedientes";
 import { funciones               } from "./table-funciones";
 import { nivel_grado             } from "./table-nivel_grado";
 import { tareas                  } from "./table-tareas";
-import { puestos                 } from "./table-puestos";
+import { perfiles                } from "./table-perfiles";
 import { bandas_horarias         } from "./table-bandas_horarias";
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -206,10 +206,9 @@ export class AppSiper extends AppBackend{
     }
     completeContext(context:Context){
         var es = context.es ?? {} as Context["es"]
-        es.mantenimiento = context.user && context.user.rol=="mantenimiento" 
-        es.admin = es.mantenimiento || context.user && context.user.rol=="admin"
-        es.rrhh_admin = es.admin || context.user && (context.user.rol=="rrhh_admin" || context.user.rol=="superior")
-        es.rrhh = es.rrhh_admin || context.user && context.user.rol=="rrhh" 
+        es.admin = context.user && context.user.rol=="admin"
+        es.superior = es.admin || context.user && (context.user.rol=="superior" || context.user.rol=="superior")
+        es.rrhh = es.superior || context.user && context.user.rol=="rrhh" 
         es.registra = es.rrhh || context.user && context.user.rol=="registra"
         context.es = es;
     }
@@ -254,9 +253,8 @@ export class AppSiper extends AppBackend{
         if(es.admin){
             menuContent.push(
                 {menuType:'menu', name:'en_desarrollo', menuContent:[
+                    {menuType:'registroPersona', name:'persona'},
                     {menuType:'menu', name:'novedades', menuContent:[
-                        {menuType:'registroNovedades', name:'registro'},
-                        {menuType:'statusPersona', name:'status'},
                         {menuType:'menu', name:'tablas', menuContent:[
                             {menuType:'table', name:'novedades_vigentes'   },
                             {menuType:'table', name:'novedades_registradas'},
@@ -297,7 +295,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'funciones'        },
                             {menuType:'table', name:'nivel_grado'      },
                             {menuType:'table', name:'tareas'           },
-                            {menuType:'table', name:'puestos'          },
+                            {menuType:'table', name:'perfiles'          },
                             {menuType:'table', name:'bandas_horarias'  },
                         ]},
                         {menuType:'table', name:'cod_novedades' },
@@ -344,6 +342,7 @@ export class AppSiper extends AppBackend{
             { type: 'js', file: 'common/contracts.js' },
             { type: 'js', file: 'client/ws-componentes.js' },
             { type: 'js', file: 'client/ws-arbol.js' },
+            { type: 'js', file: 'client/ws-persona.js' },
             ... menuedResources
         ] satisfies ClientModuleDefinition[];
         return list;
@@ -410,8 +409,8 @@ export class AppSiper extends AppBackend{
             funciones            ,
             nivel_grado          ,
             tareas               ,
-            puestos              ,
-            historial_contrataciones,
+            perfiles              ,
+            trayectoria_laboral  ,
             bandas_horarias,
         }
     }       

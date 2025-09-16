@@ -1,6 +1,5 @@
-import { Constraint, PostInputOptions } from "backend-plus";
+import { Constraint, FieldDefinition, PostInputOptions } from "backend-plus";
 import { AppSiper } from "./app-principal";
-import { FieldDefinition } from "backend-plus";
 
 // exposes APIs from this package
 export * from "backend-plus";
@@ -9,7 +8,7 @@ export * from "pg-promise-strict";
 declare module "backend-plus"{
     interface Context {
         forDump?:boolean
-        es:{mantenimiento:boolean, admin:boolean, rrhh_admin:boolean, rrhh:boolean, registra:boolean}
+        es:{admin:boolean, administrador:boolean, superior:boolean, rrhh:boolean, registra:boolean}
     }
     interface ProcedureContext {
         be:AppSiper
@@ -22,7 +21,11 @@ declare module "backend-plus"{
         rol:string
     }
     interface AppConfigClientSetup {
-        es:{mantenimiento:boolean, admin:boolean, rrhh_admin:boolean, rrhh:boolean, registra:boolean}
+        es:{admin:boolean, superior:boolean, rrhh:boolean, registra:boolean}
+    }
+
+    interface FieldDefinition {
+        grupo?:string
     }
 }
 
@@ -51,6 +54,14 @@ export function soloMayusculas(fieldName: string):Constraint{
         constraintType:'check', 
         consName:`Solo mayusculas en ${fieldName}`, 
         expr: `${fieldName} similar to '[A-Z][A-Z0-9 ]*'`
+    }
+}
+
+export function sinEspaciosMail(fieldName: string):Constraint{
+    return {
+        constraintType:'check', 
+        consName:`Sin espacios ni saltos en ${fieldName}`, 
+        expr: `${fieldName} similar to '[^[:space:]]+@[^[:space:]]+'`
     }
 }
 

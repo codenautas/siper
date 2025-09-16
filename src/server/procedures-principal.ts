@@ -9,6 +9,7 @@ import { date, datetime } from 'best-globals'
 import { DefinedType} from 'guarantee-type';
 import { FixedFields } from 'frontend-plus';
 import { expected } from 'cast-error';
+import { sqlPersonas } from "./table-personas";
 import * as fs from 'fs-extra';
 
 export const ProceduresPrincipal:ProcedureDef[] = [
@@ -17,12 +18,12 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         parameters: [
             {name:'table', typeName:'text'}
         ],
-        coreFunction: async function(context: ProcedureContext, params:{table:string}){
+        coreFunction: async function(context: ProcedureContext){
             const {client} = context;
-            if (params.table != 'novedades_registradas') throw new Error('tabla invalida');
             var defs = {
                 personas      : {key:'idper'   , sql:'select * from personas'},
                 cod_novedades : {key:'cod_nov', sql:'select * from cod_novedades'},
+                sectores      : {key:'sector' , sql:'select * from sectores'}
             };
             var data = await likeAr(defs)
                 .map(def => client.query(`${def.sql} order by ${def.key}`).fetchAll())
@@ -32,6 +33,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 relations: {
                     idper    : data.personas.map(row => row.idper),
                     cod_nov : data.cod_novedades.map(row => row.cod_nov),
+                    sector : data.sectores.map(row => row.sector),
                 },
                 tables: likeAr(data).map((rows, table) => createIndex(rows, defs[table].key)).plain()
             };
@@ -113,6 +115,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name: 'dds6'     , typeName: 'boolean', defaultValue:null, label:'sabado'     },
             {name: 'cancela'  , typeName: 'boolean', defaultValue:null, description:'cancelación de novedades'},
             {name: 'detalles' , typeName: 'text'   , defaultValue:null,                                       },
+            {name: 'fecha'    , typeName: 'date'  , defaultValue:null, },
+            {name: 'usuario' , typeName: 'text'   , defaultValue:null,                                       },
         ],
         coreFunction: async function(context: ProcedureContext, params:NovedadRegistrada){
             var result = await context.be.procedure.table_record_save.coreFunction(context, {
@@ -245,7 +249,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 `select pe.idper, pe.cuil, pe.ficha, pe.idmeta4, pe.apellido, pe.nombres, pe.sector, cod_nov, novedad, nombre_sector, pe.es_jefe, validar_cuit(pe.cuil) AS cuil_valido,
                         pe.fecha_ingreso, pe.fecha_egreso,
                         ((puede_cargar_propio or pe.idper is distinct from u.idper) and (pe.activo is true)) as cargable
-                    from personas pe
+                    from (${sqlPersonas}) pe
                         inner join situacion_revista sr using (situacion_revista)
                         inner join usuarios u on u.usuario = $2
                         inner join roles using (rol)
@@ -289,7 +293,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         coalesce(nv.cod_nov, case when d.dds BETWEEN 1 AND 5 then /* cod_nov_habitual */ null else null end) as cod_nov
                     FROM dias_semana d
                         INNER JOIN annios a USING (annio)
-                        INNER JOIN personas p ON p.idper = $1
+                        INNER JOIN (${sqlPersonas}) p ON p.idper = $1
                         LEFT JOIN bandas_horarias bh 
                             ON bh.banda_horaria = p.banda_horaria
                         LEFT JOIN horarios h 

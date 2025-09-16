@@ -32,6 +32,11 @@ export function roles(context:TableContext):TableDefinition{
         ],
         detailTables: [
             {table: 'personas', fields: [rol.name], abr:'p'},
-        ]
+        ],
+        sql:{
+            where: (
+                admin || context.forDump ? 'true' : `rol != 'admin'`
+            )
+        }
     };
 }
