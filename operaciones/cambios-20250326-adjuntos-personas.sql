@@ -109,6 +109,7 @@ alter table "archivos_borrar" add constraint "ruta_archivo<>''" check ("ruta_arc
 
 --FKs
 alter table "adjuntos_persona" add constraint "adjuntos_persona tipos_adjunto_persona REL" foreign key ("tipo_adjunto_persona") references "tipos_adjunto_persona" ("tipo_adjunto_persona")  on update cascade;
+alter table "adjuntos_persona" add constraint "adjuntos_persona personas REL" foreign key ("idper") references "personas" ("idper")  on update cascade;
 alter table "tipos_adjunto_persona_atributos" add constraint "tipos_adjunto_persona_atributos tipos_adjunto_persona REL" foreign key ("tipo_adjunto_persona") references "tipos_adjunto_persona" ("tipo_adjunto_persona")  on update cascade;
 alter table "adjuntos_persona_atributos" add constraint "adjuntos_persona_atributos tipos_adjunto_persona_atributos REL" foreign key ("tipo_adjunto_persona", "atributo") references "tipos_adjunto_persona_atributos" ("tipo_adjunto_persona", "atributo")  on update cascade;
 alter table "adjuntos_persona_atributos" add constraint "adjuntos_persona_atributos adjuntos_persona REL" foreign key ("idper", "numero_adjunto") references "adjuntos_persona" ("idper", "numero_adjunto")  on delete cascade on update cascade;
@@ -116,6 +117,7 @@ alter table "adjuntos_persona_atributos" add constraint "adjuntos_persona_atribu
 
 --INDEX
 create index "tipo_adjunto_persona 4 adjuntos_persona IDX" ON "adjuntos_persona" ("tipo_adjunto_persona");
+create index "idper 4 adjuntos_persona IDX" ON "adjuntos_persona" ("idper");
 create index "tipo_adjunto_persona 4 tipos_adjunto_persona_atributos IDX" ON "tipos_adjunto_persona_atributos" ("tipo_adjunto_persona");
 create index "adjuntos_persona_atributos tipos_adjunto_persona_atributos IDX" ON "adjuntos_persona_atributos" ("tipo_adjunto_persona", "atributo");
 create index "idper,numero_adjunto 4 adjuntos_persona_atributos IDX" ON "adjuntos_persona_atributos" ("idper", "numero_adjunto");
