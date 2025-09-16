@@ -920,8 +920,8 @@ describe("connected", function(){
             });
         })
         it("los usuarios superior no pueden ver a los admin", async function(){
-            await superiorSession.tableDataTest(ctts.usuarios, [], "all", {fixedFields:{rol: 'admin'}});
-            await superiorSession.tableDataTest(ctts.roles, [], "all", {fixedFields:{rol: 'admin'}});
+            await superiorSession.tableDataTest('usuarios', [], "all", {fixedFields:{rol: 'admin'}});
+            await superiorSession.tableDataTest('roles', [], "all", {fixedFields:{rol: 'admin'}});
         })
     })
     describe("pantallas", function(){
