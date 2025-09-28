@@ -142,7 +142,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
             
             setAnnios(annios);
         }).catch(logError);
-        if (idper != null) {
+        {
             setCalendario(setEfimero)
             conn.ajax.calendario_persona({idper, ...periodo}).then(dias => {
                 var primerSemana: number = Number.MAX_SAFE_INTEGER;
@@ -1081,12 +1081,11 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     var inconsistente = siCargaraNovedad?.saldo != null && siCargaraNovedad.saldo < 0;
     return infoUsuario.usuario == null ?  
             <CircularProgress />
-        : infoUsuario.idper == null ?
-            <Typography>El usuario <b>{infoUsuario.usuario}</b> no tiene una persona asociada</Typography>
         : <Paper className="componente-pantalla-1">
             <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)} infoUsuario={infoUsuario}/>
             <Componente componentType="del-medio" scrollable={true}>
                 <div className="container-del-medio">
+                {infoUsuario.idper == null ? null : 
                 <Box className="box-flex-gap">
                     <Paper className="paper-flex" 
                         onClick={() => setMostrandoLegajo(!mostrandoLegajo && es.registra)}
@@ -1119,7 +1118,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                     <Box className="box-flex">
                         <DetalleAniosNovPer detalleVacacionesPersona={detalleVacacionesPersona}/>
                     </Box>
-                </Box>
+                </Box> }
                 {mostrandoLegajo && (<LegajoPer conn={props.conn} idper={persona.idper}/>)}
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}
                     fechaActual={fechaActual!} annio={annio} onAnnio={setAnnio} infoUsuario={infoUsuario}
