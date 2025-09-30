@@ -3,8 +3,8 @@ set search_path = "siper";
 
 --TABLAS
 create table "adjuntos" (
-  "idper" text, 
   "numero_adjunto" bigint, 
+  "idper" text, 
   "tipo_adjunto" text, 
   "timestamp" timestamp default current_timestamp, 
   "archivo_nombre" text, 
@@ -111,7 +111,7 @@ alter table "adjuntos" add constraint "adjuntos tipos_adjunto REL" foreign key (
 alter table "adjuntos" add constraint "adjuntos personas REL" foreign key ("idper") references "personas" ("idper")  on update cascade;
 alter table "tipos_adjunto_atributos" add constraint "tipos_adjunto_atributos tipos_adjunto REL" foreign key ("tipo_adjunto") references "tipos_adjunto" ("tipo_adjunto")  on update cascade;
 alter table "adjuntos_atributos" add constraint "adjuntos_atributos tipos_adjunto_atributos REL" foreign key ("tipo_adjunto", "atributo") references "tipos_adjunto_atributos" ("tipo_adjunto", "atributo")  on update cascade;
-alter table "adjuntos_atributos" add constraint "adjuntos_atributos adjuntos REL" foreign key ("idper", "numero_adjunto") references "adjuntos" ("idper", "numero_adjunto")  on delete cascade on update cascade;
+alter table "adjuntos_atributos" add constraint "adjuntos_atributos adjuntos REL" foreign key ("numero_adjunto") references "adjuntos" ("numero_adjunto")  on delete cascade on update cascade;
 
 
 --INDEX
@@ -119,7 +119,7 @@ create index "tipo_adjunto 4 adjuntos IDX" ON "adjuntos" ("tipo_adjunto");
 create index "idper 4 adjuntos IDX" ON "adjuntos" ("idper");
 create index "tipo_adjunto 4 tipos_adjunto_atributos IDX" ON "tipos_adjunto_atributos" ("tipo_adjunto");
 create index "tipo_adjunto,atributo 4 adjuntos_atributos IDX" ON "adjuntos_atributos" ("tipo_adjunto", "atributo");
-create index "idper,numero_adjunto 4 adjuntos_atributos IDX" ON "adjuntos_atributos" ("idper", "numero_adjunto");
+create index "numero_adjunto 4 adjuntos_atributos IDX" ON "adjuntos_atributos" ("numero_adjunto");
 
 
 --ADAPT

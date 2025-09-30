@@ -22,7 +22,7 @@ export function adjuntos_atributos(context:TableContext):TableDefinition{
         primaryKey: ['numero_adjunto', 'atributo'],
         foreignKeys: [
             {references:'tipos_adjunto_atributos',  fields: ['tipo_adjunto', 'atributo']},
-            {references:'adjuntos', fields: [idper.name, numero_adjunto.name], onDelete:'cascade'},
+            {references:'adjuntos', fields: [numero_adjunto.name], onDelete:'cascade'},
         ],
         hiddenColumns: ['tipo_adjunto'],
     }
