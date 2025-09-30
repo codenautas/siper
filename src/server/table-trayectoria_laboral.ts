@@ -16,7 +16,6 @@ import { agrupamiento } from "./table-agrupamientos";
 import { tramo } from "./table-tramos";
 import { grado } from "./table-grados";
 import { categoria } from "./table-categorias";
-import { perfil } from "./table-perfiles";
 
 export const idt: FieldDefinition = {name: 'idt', typeName: 'bigint', description: 'identificador de trayectoria laboral'}
 
@@ -34,11 +33,7 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             {name:'hasta'             , typeName:'date',                    },
             {name:'lapso_fechas'      , typeName:'daterange', visible:false, generatedAs:'daterange(desde, hasta)'},
             {name:'computa_antiguedad', typeName:'boolean',                 },
-            {name:'propio'            , typeName:'boolean',                 },
-            {name:'organismo'         , typeName:'text',                    },
-            {name:'observaciones'     , typeName:'text',                    },
             s_revista,
-            expediente,
             funcion,
             jerarquia,
             n_grado,
@@ -51,7 +46,10 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             {name:'fecha_nombramiento', typeName:'date',                    },
             {name:'resolucion'        , typeName:'text',                    },
             {name: 'cargo_atgc'       , typeName: 'text', title: 'cargo/ATGC'},
-            perfil,
+            {name:'propio'            , typeName:'boolean',                 },
+            {name:'organismo'         , typeName:'text',                    },
+            {name:'observaciones'     , typeName:'text',                    },
+            expediente,
         ],
         primaryKey: [idper.name, idt.name],
         foreignKeys: [
@@ -67,7 +65,6 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             {references: 'tramos', fields:[tramo.name]},
             {references: 'grados', fields:[tramo.name, grado.name]},
             {references: 'categorias', fields:[categoria.name]},
-            {references: 'perfiles', fields:[perfil.name]},
         ],
         constraints: [
             {constraintType:'exclude', consName:'sin superponer fechas contratación', using:'GIST', fields:[idper.name, {fieldName:'lapso_fechas', operator:'&&'}], where:'computa_antiguedad and propio'},

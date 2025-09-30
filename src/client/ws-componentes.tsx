@@ -142,7 +142,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
             
             setAnnios(annios);
         }).catch(logError);
-        if (idper != null) {
+        {
             setCalendario(setEfimero)
             conn.ajax.calendario_persona({idper, ...periodo}).then(dias => {
                 var primerSemana: number = Number.MAX_SAFE_INTEGER;
@@ -275,7 +275,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 // @ts-ignore
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean, 
     fecha_ingreso?:RealDate, fecha_egreso?:RealDate /*, activo?:boolean, fecha_nacimiento?:RealDate, nombre_sector?:string, jerarquia?:string, jerarquias__descripcion?:string, cargo_atgc?:string, agrupamiento?:string, tramo?:string, grado?:string, domicilio?:string, nacionalidad?:string, sectores__nombre_sector?:string*/};
-type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string, perfil:number, perfiles__nombre:string, banda_horaria:string, bandas_horarias__descripcion:string, sexo:string, sexos__descripcion:string, motivo_egreso?:string, motivos_egreso__descripcion?:string, cuil_valido?:boolean};
+type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string, perfil_sgc:number, perfiles_sgc__nombre:string, banda_horaria:string, bandas_horarias__descripcion:string, sexo:string, sexos__descripcion:string, motivo_egreso?:string, motivos_egreso__descripcion?:string, cuil_valido?:boolean};
 type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__descripcion:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, nro_item:string, orden:number}
 type ProvisorioPersonaTelefono = {idper: string, tipo_telefono: string, tipos_telefono__descripcion?: string, telefono: string, observaciones?: string, nro_item?: number, orden?: number}
 type ProvisorioSectores = {pactivas: number, activo: boolean,sector:string, nombre_sector:string, pertenece_a:string, nivel:number};
@@ -867,7 +867,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                     </div>
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">Perfil SGC:</div>
-                        <div className="legajo-valor">{persona.perfil || '-'} {persona.perfiles__nombre}</div>
+                        <div className="legajo-valor">{persona.perfil_sgc || '-'} {persona.perfiles_sgc__nombre}</div>
                     </div>
                 </div>
             </div>
@@ -1081,12 +1081,11 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     var inconsistente = siCargaraNovedad?.saldo != null && siCargaraNovedad.saldo < 0;
     return infoUsuario.usuario == null ?  
             <CircularProgress />
-        : infoUsuario.idper == null ?
-            <Typography>El usuario <b>{infoUsuario.usuario}</b> no tiene una persona asociada</Typography>
         : <Paper className="componente-pantalla-1">
             <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)} infoUsuario={infoUsuario}/>
             <Componente componentType="del-medio" scrollable={true}>
                 <div className="container-del-medio">
+                {infoUsuario.idper == null ? null : 
                 <Box className="box-flex-gap">
                     <Paper className="paper-flex" 
                         onClick={() => setMostrandoLegajo(!mostrandoLegajo && es.registra)}
@@ -1119,7 +1118,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                     <Box className="box-flex">
                         <DetalleAniosNovPer detalleVacacionesPersona={detalleVacacionesPersona}/>
                     </Box>
-                </Box>
+                </Box> }
                 {mostrandoLegajo && (<LegajoPer conn={props.conn} idper={persona.idper}/>)}
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}
                     fechaActual={fechaActual!} annio={annio} onAnnio={setAnnio} infoUsuario={infoUsuario}

@@ -748,16 +748,16 @@ export const per_domicilios = {
         observaciones:   is.string,
     })
 }
-export const perfiles = {
-    table : 'perfiles',
+export const perfiles_sgc = {
+    table : 'perfiles_sgc',
     description : is.object({
-        perfil: is.number,
-        descripcion: is.string,
+        perfil_sgc: is.number,
+        nombre: is.string,
         objetivo: is.string
     })
 }
 
-export type perfiles = DefinedType<typeof perfiles.description>
+export type perfiles_sgc = DefinedType<typeof perfiles_sgc.description>
 
 export const per_telefonos = {
     table: 'per_telefonos',
