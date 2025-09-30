@@ -56,11 +56,11 @@ import { grados                  } from "./table-grados";
 import { categorias              } from "./table-categorias";
 import { motivos_egreso          } from "./table-motivos_egreso";
 import { jerarquias              } from "./table-jerarquias";
-import { adjuntos_persona        } from './table-adjuntos_persona';
-import { tipos_adjunto_persona   } from "./table-tipos_adjunto_persona";
+import { adjuntos                } from './table-adjuntos';
+import { tipos_adjunto           } from "./table-tipos_adjunto";
 import { archivos_borrar         } from "./table-archivos_borrar";
-import { tipos_adjunto_persona_atributos } from "./table-tipos_adjunto_persona_atributos";
-import { adjuntos_persona_atributos      } from "./table-adjuntos_persona_atributos";
+import { tipos_adjunto_atributos } from "./table-tipos_adjunto_atributos";
+import { adjuntos_atributos      } from "./table-adjuntos_atributos";
 import { expedientes             } from "./table-expedientes";
 import { funciones               } from "./table-funciones";
 import { nivel_grado             } from "./table-nivel_grado";
@@ -91,7 +91,7 @@ const cronMantenimiento = (be:AppBackend) => {
                     if(rows.length>0){
                         for (const { ruta_archivo } of rows) {
                             await client.query(`delete from archivos_borrar where ruta_archivo = $1`, [ruta_archivo,]).execute();
-                            await rm(`local-attachments/adjuntos_persona/${ruta_archivo}`, {
+                            await rm(`local-attachments/adjuntos/${ruta_archivo}`, {
                                 force: true,
                             });
                         }
@@ -159,10 +159,10 @@ export class AppSiper extends AppBackend{
 
         // @ts-ignore
         app.get('/download/file', async (req, res) => {
-            const { idper, tipo_adjunto_persona, numero_adjunto } = req.query;
+            const { idper, tipo_adjunto, numero_adjunto } = req.query;
 
-            if (!idper || !tipo_adjunto_persona) {
-                 res.status(400).send("Faltan parámetros necesarios: idper o tipo_adjunto_persona");
+            if (!idper || !tipo_adjunto) {
+                 res.status(400).send("Faltan parámetros necesarios: idper o tipo_adjunto");
                 return;
             }
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -170,9 +170,9 @@ export class AppSiper extends AppBackend{
             await be.inDbClient(req, async (client) => {
                 const result = await client.query(
                     `SELECT archivo_nombre, archivo_nombre_fisico
-                    FROM adjuntos_persona 
-                    WHERE idper = $1 AND tipo_adjunto_persona = $2 AND (numero_adjunto=$3 or ($3 is null and numero_adjunto is null))`,
-                    [idper, tipo_adjunto_persona, numero_adjunto]
+                    FROM adjuntos 
+                    WHERE idper = $1 AND tipo_adjunto = $2 AND (numero_adjunto=$3 or ($3 is null and numero_adjunto is null))`,
+                    [idper, tipo_adjunto, numero_adjunto]
                 ).fetchUniqueRow();
 
                 if (!result.row?.archivo_nombre || !result.row?.archivo_nombre_fisico) {
@@ -181,7 +181,7 @@ export class AppSiper extends AppBackend{
                 }
                 const path = require('path');
                 const fs = require('fs');
-                const filePath = path.join(be.rootPath || process.cwd(), 'local-attachments', 'adjuntos_persona', String(result.row.archivo_nombre_fisico));
+                const filePath = path.join(be.rootPath || process.cwd(), 'local-attachments', 'adjuntos', String(result.row.archivo_nombre_fisico));
                 if (!fs.existsSync(filePath)) {
                     res.status(404).send('Archivo no existe en disco');
                     return;
@@ -290,7 +290,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'categorias'       },
                             {menuType:'table', name:'motivos_egreso'   },
                             {menuType:'table', name:'jerarquias'       },
-                            {menuType:'table', name:'tipos_adjunto_persona'},
+                            {menuType:'table', name:'tipos_adjunto'    },
                             {menuType:'table', name:'expedientes'      },
                             {menuType:'table', name:'funciones'        },
                             {menuType:'table', name:'nivel_grado'      },
@@ -351,11 +351,11 @@ export class AppSiper extends AppBackend{
         super.prepareGetTables();
         this.getTableDefinition={
             ... this.getTableDefinition,
-            annios                         ,
-            adjuntos_persona               ,
-            tipos_adjunto_persona          ,
-            tipos_adjunto_persona_atributos,
-            adjuntos_persona_atributos     ,
+            annios                ,
+            adjuntos              ,
+            tipos_adjunto         ,
+            tipos_adjunto_atributos,
+            adjuntos_atributos   ,
             archivos_borrar      ,
             roles                ,
             cod_novedades        ,

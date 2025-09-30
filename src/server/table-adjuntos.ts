@@ -11,34 +11,34 @@ export const numero_adjunto: FieldDefinition = {
     editable:false,
 }
 
-export function adjuntos_persona(context:TableContext):TableDefinition{
+export function adjuntos(context:TableContext):TableDefinition{
     var admin = context.es.rrhh;
     return {
-        name: 'adjuntos_persona',
-        elementName: 'adjunto_persona',
+        name: 'adjuntos',
+        elementName: 'adjunto',
         title: 'adjuntos',
         editable: admin,
         fields: [
-            idper,
             {...numero_adjunto, sequence:{ firstValue:101, name:'numero_adjunto_seq' }},
-            {name:'tipo_adjunto_persona', title: 'tipo adjunto', typeName:'text'},
+            idper,
+            {name:'tipo_adjunto', title: 'tipo adjunto', typeName:'text'},
             {name:'timestamp', typeName:'timestamp', defaultDbValue:'current_timestamp', editable:false, inTable:true, clientSide:'timestamp', title:'📅'},
             {name:'subir', editable:false, clientSide:'subirAdjunto', typeName:'text'},
             {name:'archivo_nombre', title:'archivo', editable:false , typeName:'text'},
             {name:'archivo_nombre_fisico', editable:false , typeName:'text'},
             {name:'bajar', editable:false, clientSide:'bajarAdjunto', typeName:'text'},
         ],
-        primaryKey: [idper.name, 'numero_adjunto'],
+        primaryKey: ['numero_adjunto'],
         foreignKeys: [
-            {references:'tipos_adjunto_persona', fields:['tipo_adjunto_persona'], displayFields:['descripcion']},
+            {references:'tipos_adjunto', fields:['tipo_adjunto'], displayFields:['descripcion']},
             {references:'personas', fields: [idper.name]},
         ],
         constraints:[
         ],
         hiddenColumns: ['archivo_nombre_fisico'],
         detailTables: [
-           {table:'adjuntos_persona_atributos', fields:[idper.name, numero_adjunto.name, 'tipo_adjunto_persona'], abr:'at', refreshFromParent:true, refreshParent:true },
+           {table:'adjuntos_atributos', fields:[idper.name, numero_adjunto.name, 'tipo_adjunto'], abr:'at', refreshFromParent:true, refreshParent:true },
         ],
-        sql: {orderBy: ['tipo_adjunto_persona', numero_adjunto.name],}
+        sql: {orderBy: ['tipo_adjunto', numero_adjunto.name],}
     }
 }

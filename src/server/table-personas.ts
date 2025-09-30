@@ -119,7 +119,7 @@ export function personas(context: TableContext): TableDefinition {
             {table:'per_capa'   , fields:[idper.name], abr:'C'},
             {table:'per_domicilios', fields:[idper.name], abr:'D'},
             {table:'per_telefonos' , fields:[idper.name], abr:'T'},
-            {table:'adjuntos_persona'   , fields:[idper.name], abr:'A'},
+            {table:'adjuntos'   , fields:[idper.name], abr:'A'},
         ],
         sql: {
             isTable: true,

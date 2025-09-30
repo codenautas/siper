@@ -438,12 +438,12 @@ export const tipos_doc = {
 } satisfies CommonEntityDefinition
 
 export type Tipos_doc = DefinedType<typeof tipos_doc.description>
-export const adjuntos_persona = {
+export const adjuntos = {
     table: 'adjuntos',
     description: is.object({
         idper: is.string,
         numero_adjunto: is.nullable.number,
-        tipo_adjunto_persona: is.string,
+        tipo_adjunto: is.string,
         timestamp: is.Date,
         subir: is.nullable.string,
         archivo_nombre: is.nullable.string,
@@ -452,22 +452,22 @@ export const adjuntos_persona = {
     }),
 } satisfies CommonEntityDefinition;
 
-export type Adjuntos_persona = DefinedType<typeof adjuntos_persona.description>;
+export type Adjuntos = DefinedType<typeof adjuntos.description>;
 
-export const tipos_adjunto_persona = {
-    table: 'tipos_adjunto_persona',
+export const tipos_adjunto = {
+    table: 'tipos_adjunto',
     description: is.object({
-        tipo_adjunto_persona: is.string,
+        tipo_adjunto: is.string,
         descripcion: is.string
     })
 } satisfies CommonEntityDefinition
 
-export type Tipos_adjunto_persona = DefinedType<typeof tipos_adjunto_persona.description>
+export type Tipos_adjunto = DefinedType<typeof tipos_adjunto.description>
 
 export const tipos_adjunto_atributos = {
     table: 'tipos_adjunto_atributos',
     description: is.object({
-        tipo_adjunto_persona: is.string,
+        tipo_adjunto: is.string,
         atributo: is.string,
         orden: is.number,
         columna: is.number
@@ -485,16 +485,16 @@ export const archivos_borrar = {
 
 export type Archivos_borrar = DefinedType<typeof archivos_borrar.description>
 
-export const adjuntos_persona_atributos = {
-    table: 'adjuntos_persona_atributos',
+export const adjuntos_atributos = {
+    table: 'adjuntos_atributos',
     description: is.object({
         idper: is.string,
-        tipo_adjunto_persona: is.string,
+        tipo_adjunto: is.string,
         atributo: is.string,
     })
 } satisfies CommonEntityDefinition
 
-export type Adjuntos_persona_atributos = DefinedType<typeof adjuntos_persona_atributos.description>
+export type Adjuntos_atributos = DefinedType<typeof adjuntos_atributos.description>
 
 export const paises = {
     table : 'paises',

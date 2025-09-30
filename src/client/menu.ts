@@ -98,7 +98,7 @@ const getSubirArchivoPathAndParams = (depot: myOwn.Depot) => ({
     ajaxPath: 'archivo_subir',
     params: {
         idper: depot.row.idper, // ID de la persona
-        tipo_adjunto_persona: depot.row.tipo_adjunto_persona, // Tipo de adjunto
+        tipo_adjunto: depot.row.tipo_adjunto, // Tipo de adjunto
         numero_adjunto: depot.row.numero_adjunto?.toString(), // Número de adjunto    
     },
 });
@@ -115,10 +115,10 @@ myOwn.clientSides.subirAdjunto = {
                 const { ajaxPath, params } = getSubirArchivoPathAndParams(depot);
 
                 // Verifica que los parámetros necesarios estén definidos
-                if (!params.idper || !params.tipo_adjunto_persona || !params.numero_adjunto) {
+                if (!params.idper || !params.tipo_adjunto || !params.numero_adjunto) {
                     const missingParams = [];
                     if (!params.idper) missingParams.push("ID de la persona (idper)");
-                    if (!params.tipo_adjunto_persona) missingParams.push("Tipo de adjunto (tipo_adjunto_persona)");
+                    if (!params.tipo_adjunto) missingParams.push("Tipo de adjunto (tipo_adjunto)");
                     if (!params.numero_adjunto) missingParams.push("Número de adjunto (numero_adjunto)");
                 
                     alert(`Faltan los siguientes parámetros necesarios para subir el archivo:\n- ${missingParams.join("\n- ")}`);
@@ -209,7 +209,7 @@ myOwn.clientSides.bajarAdjunto = {
                 const baseUrl = (window as any).myOwn?.config?.config?.baseUrl || '';
                 const params = new URLSearchParams({
                     idper: String(row.idper),
-                    tipo_adjunto_persona: String(row.tipo_adjunto_persona ?? ''),
+                    tipo_adjunto: String(row.tipo_adjunto ?? ''),
                     numero_adjunto: row.numero_adjunto == null ? '' : String(row.numero_adjunto),
                 });
 

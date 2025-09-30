@@ -523,16 +523,16 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         progress: true,
         parameters: [
             { name: 'idper', typeName: 'text' },
-            { name: 'tipo_adjunto_persona', typeName: 'text' },
+            { name: 'tipo_adjunto', typeName: 'text' },
             { name: 'numero_adjunto', typeName: 'integer' },
         ],
         files: { count: 1 },
         coreFunction: async function (context, parameters, files) {
-            const { idper, tipo_adjunto_persona, numero_adjunto } = parameters;
+            const { idper, tipo_adjunto, numero_adjunto } = parameters;
             const client = context.client;
 
-            if (!idper || !tipo_adjunto_persona) {
-                throw new Error("Faltan parámetros necesarios: idper o tipo_adjunto_persona.");
+            if (!idper || !tipo_adjunto) {
+                throw new Error("Faltan parámetros necesarios: idper o tipo_adjunto.");
             }
 
             const file = files![0];
@@ -541,9 +541,9 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             }
 
             const originalFilename = file.originalFilename;
-            const extendedFilename = `${idper}-${tipo_adjunto_persona}-adjunto-${numero_adjunto}`;
+            const extendedFilename = `adjunto-siper-${numero_adjunto}-${originalFilename}`;
 
-            const newPath = `local-attachments/adjuntos_persona/${extendedFilename}`;
+            const newPath = `local-attachments/adjuntos/${extendedFilename}`;
 
             // Mueve el archivo al destino final
             const moveFile = async function (file: UploadedFileInfo, fileName: string) {
@@ -553,11 +553,11 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             await moveFile(file, newPath);
 
             const row = await client.query(
-                `UPDATE adjuntos_persona 
+                `UPDATE adjuntos 
                     SET archivo_nombre = $1, archivo_nombre_fisico = $2
-                    WHERE idper = $3 AND tipo_adjunto_persona = $4 AND numero_adjunto = $5
+                    WHERE idper = $3 AND tipo_adjunto = $4 AND numero_adjunto = $5
                     RETURNING *`,
-                [originalFilename, extendedFilename, idper, tipo_adjunto_persona, numero_adjunto]
+                [originalFilename, extendedFilename, idper, tipo_adjunto, numero_adjunto]
             ).fetchUniqueRow();
 
 

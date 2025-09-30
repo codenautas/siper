@@ -12,6 +12,6 @@ $BODY$;
 
 CREATE TRIGGER archivo_borrar_trg
   BEFORE DELETE 
-  ON adjuntos_persona
+  ON adjuntos
   FOR EACH ROW
   EXECUTE PROCEDURE archivo_borrar_trg();
