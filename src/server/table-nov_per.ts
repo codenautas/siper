@@ -7,8 +7,9 @@ import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades"
 import {sector} from "./table-sectores"
 
-export const sqlNovPer = (params:{idper?:string, annio?:number})=> `
+export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean})=> `
     select a.annio, 
+            ${params.abierto ? 'origen, abierto.cantidad as abierto_cantidad,' : ''}
             cn.cod_nov, 
             p.idper, 
             p.sector,
@@ -43,6 +44,7 @@ export const sqlNovPer = (params:{idper?:string, annio?:number})=> `
                 from novedades_vigentes nv
                 where nv.cod_nov = cn.cod_nov and nv.annio = a.annio and nv.idper = p.idper
         ) nv
+        ${params.abierto ? `, lateral (select origen, cantidad from per_nov_cant pnc where pnc.cod_nov = cn.cod_nov and pnc.annio = a.annio and pnc.idper = p.idper) abierto` : ``}
         where true 
             ${params.annio? ` and a.annio = ${sqlTools.quoteLiteral(params.annio)} `:''}
             ${params.idper? ` and p.idper = ${sqlTools.quoteLiteral(params.idper)} `:''}

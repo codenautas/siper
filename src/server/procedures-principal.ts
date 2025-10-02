@@ -448,7 +448,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             var grilla = {
                 tableName:'nov_per', 
                 fixedFields: [{fieldName:'cod_nov', value:1}] as FixedFields, 
-                tableDef:{title:'descanso anual remunerado', hiddenColumns:['esquema'] as string[]}
+                tableDef:{title:'descanso anual remunerado', hiddenColumns:['esquema'] as string[], firstDisplayCount:2000}
             }
             if (params.annio != null) {
                 grilla.fixedFields.push({fieldName:'annio', value:params.annio});
@@ -464,6 +464,70 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 grilla.fixedFields.push({fieldName:'sector', value:params.sector});
             }
             return grilla;
+        }
+    },
+    {
+        action: 'exportar_descanso_anual_remunerado',
+        parameters: [
+            {name:'annio'  , typeName:'integer', label: 'año', references: 'annios', defaultValue:date.today().getFullYear()},
+        ],
+        forExport:{
+            fileName:'descanso_anual_remunerado.xlsx',
+            generarInmediato: true
+        },
+        coreFunction: async function(context: ProcedureContext, params:any){
+            var paramsDb = await context.client.query('select fecha_actual from parametros').fetchAll()
+            var title = 'Descanso anual remunerado del ' + params.annio + ' al '+paramsDb.rows[0].fecha_actual.toDmy();
+            title = 'vacaciones ' + params.annio + ' al '+paramsDb.rows[0].fecha_actual.toDmy().replace(/\//g, '-');
+            var {rows} = await context.client.query(`
+                SELECT annio, origen, x.idper, apellido, nombres,
+                	x.sector,
+                    abierto_cantidad as cantidad,
+                    0 as usados,
+                    0 as pendientes,
+                    abierto_cantidad as saldo,
+                    cantidad as suma_cantidad,
+                    usados as suma_usados,
+                    pendientes as suma_pendientes,
+                    saldo as suma_saldo,
+                    novedad
+                    FROM (${sqlNovPer({annio: params.annio, abierto:true})}) x
+                        LEFT JOIN personas p ON p.idper = x.idper
+                    WHERE cod_nov = '1'
+                    ORDER BY 1,3,2,4`
+            ).fetchAll();
+            var i = 0;
+            var actual = null;
+            var usados = 0
+            var pendientes = 0
+            while (i < rows.length) {
+                var row = rows[i]
+                if (actual != row.idper) {
+                    actual = row.idper;
+                    usados = row.suma_usados;
+                    pendientes = row.suma_pendientes;    
+                }
+                if (usados <= row.saldo || rows[i+1]?.idper != actual) {
+                    row.saldo -= usados
+                    row.usados = usados
+                    usados = 0
+                } else {
+                    usados -= row.saldo
+                    row.usados = row.saldo
+                    row.saldo = 0
+                }
+                if (pendientes <= row.saldo || rows[i+1]?.idper != actual) {
+                    row.saldo -= pendientes
+                    row.pendientes = pendientes
+                    pendientes = 0
+                } else {
+                    pendientes -= row.saldo
+                    row.pendientes = row.saldo
+                    row.saldo = 0
+                }
+                i++;
+            }
+            return {title, rows};
         }
     },
     {
