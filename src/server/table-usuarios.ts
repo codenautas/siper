@@ -15,7 +15,7 @@ export function usuarios(context: TableContext): TableDefinition{
         fields: [
             {name:'usuario'          , typeName:'text'    , nullable:false  },
             {name: rol.name          , typeName:'text'    },
-            {name:'md5clave'         , typeName:'text'    , allow:{select: context.forDump} },
+            {name:'hashpass'         , typeName:'text'    , allow:{select: context.forDump} },
             {name:'activo'           , typeName:'boolean' , nullable:false ,defaultValue:false},
             {name:'nombre'           , typeName:'text'                      },
             {name:'apellido'         , typeName:'text'                      },
