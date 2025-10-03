@@ -15,5 +15,6 @@ export function obtenerDetalleVacaciones(row:any){
     if(usados > 0 || pendientes > 0){
         esquema.inconsistencia = {cantidad:'', usados:'', pendientes:'', saldo: usados + pendientes}
     }
+    row.esquema = JSON.stringify(esquema);
     return esquema;
 }
