@@ -13,7 +13,7 @@ login:
   table: usuarios
   from: usuarios left join personas p using (idper)
   userFieldName: usuario
-  passFieldName: md5clave
+  passFieldName: hashpass
   rolFieldName: rol
   infoFieldList: [usuario, rol, idper, sector]
   activeClausule: usuarios.activo

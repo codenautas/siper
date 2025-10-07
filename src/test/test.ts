@@ -203,7 +203,7 @@ describe("connected", function(){
         var password = 'clave_prueba_' + Math.random();
         await server.inDbClient(ADMIN_REQ, async client => {
             return await client.query(
-                `INSERT INTO usuarios (usuario, md5clave, rol, idper, activo) values ($1, md5($2), $3, $4, true) returning *`,
+                `INSERT INTO usuarios (usuario, hashpass, rol, idper, activo) values ($1, md5($2), $3, $4, true) returning *`,
                 [usuario, password+usuario, rol, idper]
             ).fetchUniqueRow();
         })
