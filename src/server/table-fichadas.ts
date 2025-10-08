@@ -12,9 +12,14 @@ export function fichadas(_context: TableContext): TableDefinition{
         editable: false,
         fields:[
             idper,
+            {name: 'tipo_fichada', typeName: 'text', nullable: true                           },
             fecha,
             {name: 'hora'   , typeName: 'time'                                                },
-            {name: 'origen' , typeName: 'text'                                                },
+            //{name: 'origen' , typeName: 'text'                                                },
+            {name: 'observaciones', typeName: 'text', nullable: true                          },
+            {name: 'punto', typeName: 'text', nullable: true                                  },
+            {name: 'tipo_dispositivo', typeName: 'text', nullable: true                       },
+            {name: 'id_original', typeName: 'text', nullable: true                            },
         ],         
         primaryKey: [idper.name, 'fecha', 'hora'],
         foreignKeys: [

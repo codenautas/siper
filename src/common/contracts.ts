@@ -17,6 +17,14 @@ export const cod_nov = {
         total: is.nullable.boolean,
         parcial: is.nullable.boolean,
         comun: is.nullable.boolean,
+        pierde_presentismo: is.nullable.boolean,
+        cuenta_horas: is.nullable.boolean,
+        requiere_fichadas: is.nullable.boolean,
+        requiere_entrada: is.nullable.boolean,
+        umbral_posterior_entrada: is.nullable.number,
+        umbral_anterior_salida: is.nullable.number,
+        necesita_verificacion_manual: is.nullable.boolean,
+        eximido_fichar: is.nullable.boolean,
     })
 }
 export type CodNovedades = DefinedType<typeof cod_nov.description>
@@ -720,10 +728,29 @@ export const bandas_horarias = {
         descripcion: is.string,
         hora_desde: is.string,
         hora_hasta: is.string,
+        umbral_aviso_falta_entrada: is.nullable.number,
+        umbral_aviso_falta_salida: is.nullable.number,
     })
 } satisfies CommonEntityDefinition
 
 export type bandas_horarias = DefinedType<typeof bandas_horarias.description>
+
+export const fichadas = {
+    table: 'fichadas',
+    description: is.object({
+        idper: is.string,
+        tipo_fichada: is.nullable.string,
+        fecha: is.Date,
+        hora: is.nullable.string,
+        //origen: is.nullable.string,
+        observaciones: is.nullable.string,
+        punto: is.nullable.string,
+        tipo_dispositivo: is.nullable.string,
+        id_original: is.nullable.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type fichadas = DefinedType<typeof fichadas.description>
 
 export const meses = [
     {  value:1, name:'enero' },
