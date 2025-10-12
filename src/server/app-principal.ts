@@ -32,6 +32,7 @@ import { usuarios                } from './table-usuarios';
 import { parametros              } from "./table-parametros";
 import { horarios                } from "./table-horarios";
 import { horarios_per            } from "./table-horarios_per";
+import { horarios_dds            } from "./table-horarios_dds";
 import { fichadas                } from "./table-fichadas";
 import { trayectoria_laboral} from "./table-trayectoria_laboral";
 import { capa_modalidades        } from "./table-capa_modalidades";
@@ -222,6 +223,7 @@ export class AppSiper extends AppBackend{
                         {menuType:'table', name:'usuarios'      },
                         {menuType:'table', name:'horarios'      },
                         {menuType:'table', name:'horarios_per'  },
+                        {menuType:'table', name:'horarios_dds'  },
                     ]}
                 ]}
             );
@@ -298,6 +300,7 @@ export class AppSiper extends AppBackend{
             parametros           ,
             horarios             ,
             horarios_per         ,
+            horarios_dds         ,
             fichadas             ,
             capa_modalidades     ,
             capacitaciones       ,

@@ -32,6 +32,7 @@ export function horarios_per(context: TableContext): TableDefinition{
             {references: 'annios'  , fields: [año.name], onUpdate: 'no action'},
             {references: 'fechas'  , fields:[{source:'desde', target:'fecha'}], alias:'desde', onDelete:'cascade'},
             {references: 'fechas'  , fields:[{source:'hasta', target:'fecha'}], alias:'hasta', onDelete:'cascade'},
+            //va fk contra la nueva referencial de horarios
         ],
         constraints: [
             //{constraintType: 'check', consName:'dia de la semana entre 0 y 6', expr: 'dds between 0 and 6'},

@@ -147,6 +147,19 @@ export const horarios_per = {
 
 export type HorariosPer = DefinedType<typeof horarios_per.description>
 
+export const horarios_dds = {
+    table: 'horarios_dds',
+    description: is.object({
+        horario: is.string,
+        dds: is.number,
+        hora_desde: is.string,
+        hora_hasta: is.string,
+        trabaja: is.boolean,
+    })
+} satisfies CommonEntityDefinition
+
+export type HorariosDds = DefinedType<typeof horarios_dds.description>
+
 export const personas = {
     table: 'personas',
     description: is.object({
