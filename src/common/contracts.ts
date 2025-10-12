@@ -23,6 +23,7 @@ export const cod_nov = {
         requiere_entrada: is.nullable.boolean,
         umbral_posterior_entrada: is.nullable.number,
         umbral_anterior_salida: is.nullable.number,
+        requiere_ninguna_fichada: is.nullable.boolean,
         necesita_verificacion_manual: is.nullable.boolean,
         eximido_fichar: is.nullable.boolean,
     })
@@ -739,6 +740,8 @@ export const fichadas = {
     table: 'fichadas',
     description: is.object({
         idper: is.string,
+        annio: is.number,
+        id_fichada: is.bigint,
         tipo_fichada: is.nullable.string,
         fecha: is.Date,
         hora: is.nullable.string,

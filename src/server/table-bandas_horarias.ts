@@ -19,8 +19,8 @@ export function bandas_horarias(context:TableContext):TableDefinition{
             {name: 'descripcion', typeName:'text', isName:true },
             {name: 'hora_desde' , typeName:'time', nullable:false  },
             {name: 'hora_hasta' , typeName:'time', nullable:false  },
-            {name: 'umbral_aviso_falta_entrada' , typeName:'integer', nullable:true },
-            {name: 'umbral_aviso_falta_salida'  , typeName:'integer', nullable:true },
+            {name: 'umbral_aviso_falta_entrada' , typeName:'integer' },
+            {name: 'umbral_aviso_falta_salida'  , typeName:'integer' },
         ],
         primaryKey: ['banda_horaria'],
         constraints: [
