@@ -33,7 +33,7 @@ export function horarios(context: TableContext): TableDefinition{
         constraints: [
             {constraintType: 'check', consName:'dia de la semana entre 0 y 6', expr: 'dds between 0 and 6'},
             {constraintType: 'check', consName:'si trabaja tiene horario', expr: '(trabaja is true) = (hora_desde is not null and hora_hasta is not null)'},
-            {constraintType:'exclude', consName:'sin superponer fechas', using:'GIST', fields:[idper.name, 'dds', {fieldName:'lapso_fechas', operator:'&&'}]}
+            {constraintType:'exclude', consName:'sin superponer fechas en horarios', using:'GIST', fields:[idper.name, 'dds', {fieldName:'lapso_fechas', operator:'&&'}]}
         ]
     };
 }

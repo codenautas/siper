@@ -31,6 +31,7 @@ import { inconsistencias         } from './table-inconsistencias';
 import { usuarios                } from './table-usuarios';
 import { parametros              } from "./table-parametros";
 import { horarios                } from "./table-horarios";
+import { horarios_per            } from "./table-horarios_per";
 import { fichadas                } from "./table-fichadas";
 import { trayectoria_laboral} from "./table-trayectoria_laboral";
 import { capa_modalidades        } from "./table-capa_modalidades";
@@ -220,6 +221,7 @@ export class AppSiper extends AppBackend{
                         {menuType:'table', name:'cod_novedades' },
                         {menuType:'table', name:'usuarios'      },
                         {menuType:'table', name:'horarios'      },
+                        {menuType:'table', name:'horarios_per'  },
                     ]}
                 ]}
             );
@@ -295,6 +297,7 @@ export class AppSiper extends AppBackend{
             usuarios             ,
             parametros           ,
             horarios             ,
+            horarios_per         ,
             fichadas             ,
             capa_modalidades     ,
             capacitaciones       ,
