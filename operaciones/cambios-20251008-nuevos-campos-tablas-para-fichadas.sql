@@ -34,7 +34,7 @@ ALTER TABLE fichadas ALTER COLUMN id_fichada SET NOT NULL;
 
 -- ===== agregar id_fichada a pk =====
 ALTER TABLE fichadas DROP CONSTRAINT fichadas_pkey;
-ALTER TABLE fichadas ADD CONSTRAINt fichadas_pkey PRIMARY KEY (idper, fecha, hora, id_fichada );
+ALTER TABLE fichadas ADD CONSTRAINT fichadas_pkey PRIMARY KEY (idper, fecha, hora, id_fichada );
 
 -- ===== CONS =====
 alter table "fichadas" add constraint "tipo_fichada<>''" check ("tipo_fichada"<>'');
