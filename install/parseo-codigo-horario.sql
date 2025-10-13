@@ -98,15 +98,20 @@ AS
 $BODY$
 DECLARE
   v_existe boolean;
+  v_horario text;
 BEGIN
   if new.horario is not null then
+    v_horario := horario_estandarizado(new.horario);
+    if v_horario is distinct from new.horario then
+      new.horario := v_horario;
+    end if;
     select true into v_existe
-      from horarios where horario = new.horario;
+      from horarios where horario = v_horario;
     if v_existe is not true then
-      insert into horarios (horario) values (new.horario);
+      insert into horarios (horario) values (v_horario);
       insert into horarios_dds (horario, dds, hora_desde, hora_hasta, trabaja)
-        select new.horario, dds, hora_desde, hora_hasta, true as trabaja
-          from parseo_horario_tabla(parsear_horario(new.horario)) h_dds;
+        select v_horario, dds, hora_desde, hora_hasta, true as trabaja
+          from parseo_horario_tabla(parsear_horario(v_horario)) h_dds;
     end if;
   end if;
   RETURN NEW;

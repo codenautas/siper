@@ -927,9 +927,10 @@ describe("connected", function(){
     })
     describe("horarios", function(){
         it("al ingresar un horario se genera horarios y horarios_dds", async function(){
-            var horario = 'LMV8:13XJ9'
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
-                await rrhhSession.saveRecord(ctts.personas, {idper, horario}, 'update')
+                var persona = await rrhhSession.saveRecord(ctts.personas, {idper, horario: 'LMV 8:13 XJ 9-16'}, 'update')
+                var horario = 'LMV8:13a15:13 XJ9a16'
+                discrepances.showAndThrow(persona.horario, horario)
                 await rrhhSession.tableDataTest('horarios_dds', [
                     {dds: 1, hora_desde: '8:13', hora_hasta: '15:13', trabaja: true},
                     {dds: 2, hora_desde: '8:13', hora_hasta: '15:13', trabaja: true},
