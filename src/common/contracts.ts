@@ -149,7 +149,8 @@ export const personas = {
         activo:    is.nullable.boolean,
         fecha_ingreso: is.nullable.Date,
         fecha_egreso : is.nullable.Date,
-        es_jefe:    is.nullable.boolean,
+        es_jefe      : is.nullable.boolean,
+        horario      : is.nullable.string
     })
 } satisfies CommonEntityDefinition
 

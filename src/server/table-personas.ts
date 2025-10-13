@@ -7,6 +7,7 @@ import { agrupamiento  } from "./table-agrupamientos";
 import { perfil_sgc  } from "./table-perfiles_sgc";
 import { banda_horaria  } from "./table-bandas_horarias";
 import {sector} from "./table-sectores";
+import {horario} from "./table-horarios"
 
 import { politicaNovedades } from "./table-novedades_registradas";
 
@@ -37,7 +38,7 @@ export const bh_personas = {
 export const sqlPersonas= `SELECT p.idper, p.cuil, p.tipo_doc, p.documento, p.ficha, p.idmeta4, p.apellido, p.nombres, p.sector, p.es_jefe, t.categoria,
                            t.situacion_revista, p.registra_novedades_desde, p.para_antiguedad_relativa, p.activo, p.fecha_ingreso, p.fecha_egreso,
                            t.motivo_egreso, p.nacionalidad, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado, p.fecha_nacimiento, p.sexo,
-                           p.perfil_sgc, p.banda_horaria
+                           p.perfil_sgc, p.banda_horaria, p.horario
                            FROM personas p 
                            LEFT JOIN (SELECT * 
                                        FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY idper ORDER BY desde DESC, idt DESC) AS rn
@@ -81,6 +82,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
             {name: 'cuil_valido'             , typeName: 'boolean', title: 'cuil válido', inTable:false, serverSide:true, editable:false},
             perfil_sgc,
+            horario,
             bh_personas,
         ],
         primaryKey: [idper.name],
@@ -98,6 +100,7 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'categorias'      , fields:['categoria']     },
             {references: 'agrupamientos'   , fields:[agrupamiento_personas.name]},
             {references: 'grados'          , fields:['tramo','grado'] },
+            {references: 'horarios'        , fields:[horario.name] },
         ],
         constraints: [
             soloCodigo(idper.name),
