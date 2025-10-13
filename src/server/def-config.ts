@@ -48,6 +48,7 @@ install:
       - ../install/validar_digito.sql
       - ../install/per_domicilios_pk_trg.sql
       - ../install/per_telefonos_pk_trg.sql
+      - ../install/procedure_registrar_fichadas.sql
       post-adapt:
       - ../node_modules/pg-triggers/lib/recreate-his.sql
       - ../node_modules/pg-triggers/lib/table-changes.sql
