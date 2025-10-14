@@ -745,7 +745,6 @@ export const fichadas = {
         tipo_fichada: is.nullable.string,
         fecha: is.Date,
         hora: is.nullable.string,
-        //origen: is.nullable.string,
         observaciones: is.nullable.string,
         punto: is.nullable.string,
         tipo_dispositivo: is.nullable.string,
