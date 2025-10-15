@@ -10,6 +10,7 @@ SET ROLE siper_owner;
 CREATE OR REPLACE VIEW usuarios_habilitados_fichadas
 AS
 SELECT
+    u.usuario
     u.idper,
     u.nombre,
     u.apellido,
@@ -20,5 +21,5 @@ FROM
 WHERE 
     u.hashpass LIKE 'SCRAM-SHA-256$%' and u.activo
 ORDER BY
-    u.idper;
+    u.usuario;
 
