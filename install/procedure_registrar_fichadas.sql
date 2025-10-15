@@ -26,6 +26,9 @@ DECLARE
     v_fichadas_array jsonb := p_data_json->'fichadas';
     v_is_structurally_valid BOOLEAN := TRUE; 
     
+    -- Variable para determinar si la carga de fichadas está activa.
+    v_is_enabled BOOLEAN; 
+    
     -- Loop variables
     v_fichada JSONB; 
     v_idx INTEGER := 0;
@@ -44,6 +47,17 @@ BEGIN
         'siper.procesar_fichadas', p_data_json::TEXT, v_username, v_machine_id, v_navigator, v_start_time, 'INICIADO'
     ) RETURNING id INTO v_bitacora_id;
     
+    -- -------------------------------------------------------------------
+    -- PASO 1.5: OBTENER ESTADO DE HABILITACIÓN DESDE LA TABLA PARAMETROS
+    -- (Se asume que el registro con unico_registro=TRUE siempre existe)
+    -- -------------------------------------------------------------------
+    
+    -- Consulta: SELECT permite_cargar_fichadas FROM parametros WHERE unico_registro = TRUE
+    SELECT permite_cargar_fichadas
+    INTO v_is_enabled
+    FROM parametros
+    WHERE unico_registro = TRUE;
+
     
     -- -------------------------------------------------------------------
     -- CHEQUEO DE VALIDACIÓN ESTRUCTURAL (Error 400)
@@ -61,11 +75,23 @@ BEGIN
         SELECT jsonb_array_length(v_fichadas_array) INTO v_cant_procesadas;
     END IF;
     
+    -- -------------------------------------------------------------------
+    -- CHEQUEO DE HABILITACIÓN FUNCIONAL (Error 403)
+    -- Solo se chequea si la estructura es válida.
+    -- -------------------------------------------------------------------
+    IF v_is_structurally_valid AND COALESCE(v_is_enabled, FALSE) IS FALSE THEN
+        v_has_error := TRUE;
+        v_status_code := 403;
+        v_end_status := '403 FORBIDDEN: Funcionalidad de procesamiento de fichadas deshabilitada por configuración.';
+        v_error_message := 'La funcionalidad de procesamiento de fichadas se encuentra deshabilitada.';
+    END IF;
+    
     
     -- -------------------------------------------------------------------
     -- PASO 2: LÓGICA DE INSERCIÓN Y CAPTURA DE FALLOS (Best-Effort Loop)
+    -- Solo ejecuta si es estructuralmente válido y el estado inicial es 200 (no 400 o 403)
     -- -------------------------------------------------------------------
-    IF v_is_structurally_valid AND v_cant_procesadas > 0 THEN 
+    IF v_is_structurally_valid AND v_status_code = 200 AND v_cant_procesadas > 0 THEN 
         
         -- PROCESAMIENTO POR LOTE (Best-Effort)
         FOR v_fichada IN SELECT * FROM jsonb_array_elements(v_fichadas_array) LOOP
@@ -110,25 +136,31 @@ BEGIN
             
         END LOOP; -- Fin del LOOP de fichadas
 
-        -- Ajuste de estado después del bucle
-        IF v_cant_fallidas > 0 THEN
+        -- AJUSTE CLAVE PARA EL 207/500:
+        -- Solo establecemos 207 si hubo fallos Y al menos una inserción fue exitosa.
+        -- Si v_cant_insertadas es 0, el estado se mantiene en 200 para que el bloque 500 lo detecte.
+        IF v_cant_fallidas > 0 AND v_cant_insertadas > 0 THEN
             v_status_code := 207; -- Éxito parcial
             v_end_status := '207 PARTIAL FAILURE: ' || v_cant_fallidas || ' fallaron (' || v_cant_insertadas || ' OK).';
             v_error_message := 'Lote procesado con fallos. Revise "fallidas" y end_status de bitácora.';
         END IF;
 
-    END IF;
-
+    END IF; -- Fin del PASO 2
+    
     -- -------------------------------------------------------------------
-    -- AJUSTE DE ESTADO FINAL (500/200)
+    -- AJUSTE DE ESTADO FINAL (500/200/207)
     -- -------------------------------------------------------------------
-    -- Si no se insertó ninguna fila y no fue un error estructural 400, es un error 500.
-    IF v_cant_procesadas > 0 AND v_cant_insertadas = 0 AND v_status_code < 400 THEN
+    
+    -- CASO 500: Lote Válido y procesado, pero todas las inserciones fallaron (v_cant_insertadas = 0)
+    -- Se activa si el estado NO ha sido cambiado a 207 (es decir, sigue en 200).
+    IF v_status_code = 200 AND v_cant_procesadas > 0 AND v_cant_insertadas = 0 THEN
         v_has_error := TRUE;
         v_status_code := 500;
         v_end_status := '500 ALL FAILED: Ninguna fichada pudo ser insertada.';
         v_error_message := 'Error fatal de procesamiento: Todas las fichadas del lote fallaron.';
-    ELSIF v_status_code < 400 THEN
+    
+    -- CASO 200: Éxito total. Solo si el estado sigue siendo 200.
+    ELSIF v_status_code = 200 THEN
         v_end_status := format('200 OK: %s fichadas insertadas.', v_cant_insertadas);
         v_error_message := COALESCE(v_error_message, 'Lote procesado con éxito.');
     END IF;
@@ -139,7 +171,6 @@ BEGIN
     IF v_cant_fallidas > 0 THEN
         
         -- 1. Serializar el JSONB de fallas (v_fallidas) a texto y eliminar todos los saltos de línea (chr(10)) 
-        --    para asegurar que el campo end_status sea una sola línea de log.
         v_fallas_condensed := TRANSLATE(v_fallidas::TEXT, chr(10), ' ');
         
         -- 2. Concatenar el estado principal con el JSON completo de fallas serializado.
@@ -152,7 +183,7 @@ BEGIN
     SET 
         end_date = now(),
         has_error = v_has_error,
-        -- **CAMBIO:** Al ser TEXT, quitamos la truncación LEFT() para almacenar el JSON completo.
+        -- Al ser TEXT, se almacena el JSON completo.
         end_status = v_end_status 
     WHERE id = v_bitacora_id;
     
@@ -163,6 +194,7 @@ BEGIN
     p_resultado := jsonb_build_object(
         'status', CASE 
             WHEN v_status_code = 500 THEN 'ERROR'
+            WHEN v_status_code = 403 THEN 'ERROR' 
             WHEN v_status_code = 400 THEN 'ERROR'
             WHEN v_status_code = 207 THEN 'SUCCESS_PARTIAL'
             ELSE 'OK' 
