@@ -378,7 +378,7 @@ describe("connected", function(){
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-03-06'), hasta:date.iso('2000-03-12'), cod_nov:COD_VACACIONES, idper: persona.idper}
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:3, dias_coincidentes:0, con_detalles:null, c_dds:null,
-                    mensaje: discrepances.test((x:string) => /confirma/.test(x)) as string, saldo: 12
+                    mensaje: discrepances.test((x:string) => /confirma/.test(x)) as string, saldo: 12, falta_entrada: null
                 })
                 await registrarNovedad(rrhhSession, novedadRegistradaPorCargar);
                 await rrhhSession.tableDataTest('novedades_vigentes', [
@@ -404,7 +404,7 @@ describe("connected", function(){
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-05-08'), hasta:date.iso('2000-05-12'), cancela:true, idper}
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 discrepances.showAndThrow(informe, {dias_corridos:5, dias_habiles:5, dias_coincidentes:5, con_detalles: null, c_dds: null,
-                    mensaje: discrepances.test((x:string) => /confirma/.test(x)) as string, saldo: null
+                    mensaje: discrepances.test((x:string) => /confirma/.test(x)) as string, saldo: null, falta_entrada: null
                 })
                 await registrarNovedad(rrhhSession,
                     novedadRegistradaPorCargar

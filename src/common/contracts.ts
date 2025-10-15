@@ -288,6 +288,7 @@ export const si_cargara_novedad = {
         con_detalles: is.nullable.boolean,
         c_dds: is.nullable.boolean,
         saldo: is.nullable.number,
+        falta_entrada: is.nullable.boolean,
     })
 }
 

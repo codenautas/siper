@@ -686,7 +686,7 @@ type Hora = string;
 
 type HorarioSemanaVigenteDia = {hora_desde:Hora, hora_hasta:Hora, cod_nov:string, trabaja:boolean, dds:0 | 1 | 2 | 3 | 4 | 5 | 6}
 type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, bh_descripcion:string, dias:Record<string, HorarioSemanaVigenteDia>}
-type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean, dias_habiles: number, saldo: number}
+type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean, dias_habiles: number, saldo: number, falta_entrada: boolean}
 declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: () => Promise<DefinedType<typeof ctts.info_usuario.result>>;
@@ -1078,7 +1078,8 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
 
     // @ts-expect-error
     var es:{rrhh:boolean, registra:boolean} = conn.config?.config?.es||{}
-    var inconsistente = siCargaraNovedad?.saldo != null && siCargaraNovedad.saldo < 0;
+    var inconsistente = (siCargaraNovedad?.saldo != null && siCargaraNovedad.saldo < 0) ||
+                        (siCargaraNovedad?.falta_entrada != null && siCargaraNovedad.falta_entrada == true);
     return infoUsuario.usuario == null ?  
             <CircularProgress />
         : <Paper className="componente-pantalla-1">

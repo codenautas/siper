@@ -63,15 +63,19 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             ')?' || case 
                                 when (case when corridos then cantidad - total_corridos else cantidad - total_habiles end) < 0
                                     then ' ¡ATENCIÓN: NO LE QUEDAN DÍAS SUFICIENTES!'
+                                    else '' end,
+                                    case when ( cn.requiere_entrada and fich.fecha is null) then ' ¡ATENCIÓN: NO FICHO!'
                                     else '' end
                         ) as mensaje,
                         dias_corridos, dias_habiles, dias_coincidentes,
                         con_detalles,
                         cn.c_dds,
-                        case when corridos then cantidad - total_corridos else cantidad - total_habiles end as saldo
+                        case when corridos then cantidad - total_corridos else cantidad - total_habiles end as saldo,
+                        cn.requiere_entrada and fich.fecha is null as falta_entrada
                     from personas p 
                         inner join (select $1::date as desde, $2::date as hasta) params on true
-                        left join cod_novedades cn on cn.cod_nov = $3,
+                        left join cod_novedades cn on cn.cod_nov = $3
+                        left join fichadas fich on fich.idper = p.idper and fich.fecha = $1,
                         lateral (select sum(cantidad) as cantidad from per_nov_cant pnc where pnc.idper = p.idper and pnc.cod_nov = cn.cod_nov) s,
                         lateral (
                             select count(*) filter (where f.fecha between params.desde and params.hasta) as dias_corridos,
