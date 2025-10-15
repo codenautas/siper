@@ -17,6 +17,7 @@ ALTER TABLE cod_novedades ADD COLUMN requiere_fichadas boolean;
 ALTER TABLE cod_novedades ADD COLUMN requiere_entrada boolean;
 ALTER TABLE cod_novedades ADD COLUMN umbral_posterior_entrada integer;
 ALTER TABLE cod_novedades ADD COLUMN umbral_anterior_salida integer;
+ALTER TABLE cod_novedades ADD COLUMN requiere_ninguna_fichada boolean;
 ALTER TABLE cod_novedades ADD COLUMN necesita_verificacion_manual boolean;
 ALTER TABLE cod_novedades ADD COLUMN eximido_fichar boolean;
 
