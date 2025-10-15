@@ -754,6 +754,38 @@ export const fichadas = {
 
 export type fichadas = DefinedType<typeof fichadas.description>
 
+export const reglas = {
+    table: 'reglas',
+    description: is.object({
+        annio: is.number,
+        codnov_unica_fichada: is.nullable.string,         
+        codnov_sin_fichadas: is.nullable.string,         
+        umbral_horas_mensuales: is.nullable.number,       
+        umbral_horas_diarias: is.nullable.number,       
+        umbral_horas_semanales: is.nullable.number,
+        umbral_horas_personales: is.nullable.number,     
+        horario_consolidado: is.nullable.string,           
+        minimas_horas_diarias_declaradas: is.nullable.number,
+        maximas_horas_diarias_declaradas: is.nullable.number,
+    })
+} satisfies CommonEntityDefinition
+
+export type reglas = DefinedType<typeof reglas.description>
+
+export const avisos_falta_fichada = {
+    table: 'avisos_falta_fichada',
+    description: is.object({
+        idper: is.string,
+        fecha: is.Date,
+        tipo_fichada: is.nullable.string,
+        avisado_wp: is.nullable.string,   
+        avisado_mail: is.nullable.string,
+        llegada_novedad: is.nullable.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type avisos_falta_fichada = DefinedType<typeof avisos_falta_fichada.description>
+
 export const meses = [
     {  value:1, name:'enero' },
     {  value:2, name:'febrero' },

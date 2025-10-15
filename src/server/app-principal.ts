@@ -32,7 +32,7 @@ import { usuarios                } from './table-usuarios';
 import { parametros              } from "./table-parametros";
 import { horarios                } from "./table-horarios";
 import { fichadas                } from "./table-fichadas";
-import { trayectoria_laboral} from "./table-trayectoria_laboral";
+import { trayectoria_laboral     } from "./table-trayectoria_laboral";
 import { capa_modalidades        } from "./table-capa_modalidades";
 import { capacitaciones          } from "./table-capacitaciones";
 import { per_capa                } from "./table-per_capa";
@@ -62,6 +62,8 @@ import { nivel_grado             } from "./table-nivel_grado";
 import { tareas                  } from "./table-tareas";
 import { perfiles_sgc            } from "./table-perfiles_sgc";
 import { bandas_horarias         } from "./table-bandas_horarias";
+import { reglas                  } from "./table-reglas";
+import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -325,7 +327,9 @@ export class AppSiper extends AppBackend{
             tareas               ,
             perfiles_sgc         ,
             trayectoria_laboral  ,
-            bandas_horarias,
+            bandas_horarias      ,
+            reglas               ,
+            avisos_falta_fichada ,  
         }
     }       
 }
