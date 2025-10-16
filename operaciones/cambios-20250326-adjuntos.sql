@@ -1,6 +1,6 @@
 set search_path = "siper";
 -- AJUSTAR ADMIN Y OWNER SEGUN ENTORNO
-
+SET ROLE siper_muleto_owner;
 --TABLAS
 create table "adjuntos" (
   "numero_adjunto" bigint, 
@@ -11,21 +11,21 @@ create table "adjuntos" (
   "archivo_nombre_fisico" text
 , primary key ("numero_adjunto")
 );
-grant select, insert, update, delete on "adjuntos" to siper_admin;
-grant all on "adjuntos" to siper_owner;
+grant select, insert, update, delete on "adjuntos" to siper_muleto_admin;
+grant all on "adjuntos" to siper_muleto_owner;
 
 
 CREATE SEQUENCE "numero_adjunto_seq" START 101;
 ALTER TABLE "adjuntos" ALTER COLUMN "numero_adjunto" SET DEFAULT nextval('numero_adjunto_seq'::regclass);
-GRANT USAGE, SELECT ON SEQUENCE "numero_adjunto_seq" TO siper_admin;
+GRANT USAGE, SELECT ON SEQUENCE "numero_adjunto_seq" TO siper_muleto_admin;
 
 create table "tipos_adjunto" (
   "tipo_adjunto" text, 
   "descripcion" text
 , primary key ("tipo_adjunto")
 );
-grant select, insert, update, delete on "tipos_adjunto" to siper_admin;
-grant all on "tipos_adjunto" to siper_owner;
+grant select, insert, update, delete on "tipos_adjunto" to siper_muleto_admin;
+grant all on "tipos_adjunto" to siper_muleto_owner;
 
 
 
@@ -36,8 +36,8 @@ create table "tipos_adjunto_atributos" (
   "columna" integer
 , primary key ("tipo_adjunto", "atributo")
 );
-grant select, insert, update, delete on "tipos_adjunto_atributos" to siper_admin;
-grant all on "tipos_adjunto_atributos" to siper_owner;
+grant select, insert, update, delete on "tipos_adjunto_atributos" to siper_muleto_admin;
+grant all on "tipos_adjunto_atributos" to siper_muleto_owner;
 
 
 
@@ -49,8 +49,8 @@ create table "adjuntos_atributos" (
   "valor" text
 , primary key ("numero_adjunto", "atributo")
 );
-grant select, insert, update, delete on "adjuntos_atributos" to siper_admin;
-grant all on "adjuntos_atributos" to siper_owner;
+grant select, insert, update, delete on "adjuntos_atributos" to siper_muleto_admin;
+grant all on "adjuntos_atributos" to siper_muleto_owner;
 
 
 
@@ -58,8 +58,8 @@ create table "archivos_borrar" (
   "ruta_archivo" text
 , primary key ("ruta_archivo")
 );
-grant select, insert, update, delete on "archivos_borrar" to siper_admin;
-grant all on "archivos_borrar" to siper_owner;
+grant select, insert, update, delete on "archivos_borrar" to siper_muleto_admin;
+grant all on "archivos_borrar" to siper_muleto_owner;
 
 
 
@@ -138,5 +138,5 @@ $SQL_ENANCE$;
 -- table data: install\tipos_adjunto.tab
 insert into "tipos_adjunto" ("tipo_adjunto", "descripcion") values
 ('DNI', 'Documento Nacional de Identidad'),
-('TIT', 'Título'),
+('TIT', 'Título');
 
