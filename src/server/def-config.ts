@@ -70,6 +70,7 @@ install:
       - ../install/parametros_trg.sql
       - ../install/poblar_pernovcant.sql
       - ../install/usuarios_limpiar_mail_trg.sql
+      - ../install/archivo_borrar_trg.sql
 logo: 
   path: client/img
 `;

@@ -56,13 +56,17 @@ import { grados                  } from "./table-grados";
 import { categorias              } from "./table-categorias";
 import { motivos_egreso          } from "./table-motivos_egreso";
 import { jerarquias              } from "./table-jerarquias";
+import { adjuntos                } from './table-adjuntos';
+import { tipos_adjunto           } from "./table-tipos_adjunto";
+import { archivos_borrar         } from "./table-archivos_borrar";
+import { tipos_adjunto_atributos } from "./table-tipos_adjunto_atributos";
+import { adjuntos_atributos      } from "./table-adjuntos_atributos";
 import { expedientes             } from "./table-expedientes";
 import { funciones               } from "./table-funciones";
 import { nivel_grado             } from "./table-nivel_grado";
 import { tareas                  } from "./table-tareas";
 import { perfiles_sgc            } from "./table-perfiles_sgc";
 import { bandas_horarias         } from "./table-bandas_horarias";
-
 import { ProceduresPrincipal } from './procedures-principal'
 
 import {staticConfigYaml} from './def-config';
@@ -70,12 +74,47 @@ import {staticConfigYaml} from './def-config';
 import { Persona } from "../common/contracts"
 
 import { unexpected } from "cast-error";
+import { rm } from 'fs/promises';
 
 /* Dos líneas para incluir contracts: */
 var persona: Persona | null = null;
 console.log(persona)
 
+const cronMantenimiento = (be:AppBackend) => {
+    const interval = setInterval(async ()=>{
+        try{
+            const d = new Date();
+            const date = `${d.getDate()}/${d.getMonth()}/${d.getFullYear()}, ${d.getHours()}:${d.getMinutes()}`;
+            if(d.getHours() == 23 && d.getMinutes() == 58){
+                const result = await be.inTransaction(null, async (client)=>{
+                    const {rows} = await client.query("select ruta_archivo from archivos_borrar").fetchAll();
+                    if(rows.length>0){
+                        for (const { ruta_archivo } of rows) {
+                            await client.query(`delete from archivos_borrar where ruta_archivo = $1`, [ruta_archivo,]).execute();
+                            await rm(`local-attachments/adjuntos/${ruta_archivo}`, {
+                                force: true,
+                            });
+                        }
+                        return `Se borraron archivos adjuntos en la fecha y hora: ${date}`;
+                    }else{
+                        return `No hay archivos adjuntos para borrar en la fecha y hora: ${date}`;
+                    }
+                })
+                console.info("Resultado de cron: ", result);
+            }
+        }catch(err){
+            console.error(`Error en cron. ${err}`);
+        }
+    },60000);
+    be.shutdownCallbackListAdd({
+        message:'cron Mantenimiento',
+        fun:async function(){
+            clearInterval(interval);
+            return Promise.resolve();
+        }
+    });
 
+}
 export class AppSiper extends AppBackend{
     constructor(){
         super();
@@ -111,9 +150,51 @@ export class AppSiper extends AppBackend{
         await actionWithErrorLog();
         setInterval(actionWithErrorLog, 24*60*60*1000 / opts.vecesPorDia);
     }
+    override addLoggedServices(): void {
+        super.addLoggedServices();
+        const be = this;
+        const app = be.app;
+        // @ts-ignore
+        be.clientSetup.config.baseUrl = be.config?.server?.['base-url'] || '';
+
+        // @ts-ignore
+        app.get('/download/file', async (req, res) => {
+            const { idper, tipo_adjunto, numero_adjunto } = req.query;
+
+            if (!idper || !tipo_adjunto) {
+                 res.status(400).send("Faltan parámetros necesarios: idper o tipo_adjunto");
+                return;
+            }
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            await be.inDbClient(req, async (client) => {
+                const result = await client.query(
+                    `SELECT archivo_nombre, archivo_nombre_fisico
+                    FROM adjuntos 
+                    WHERE idper = $1 AND tipo_adjunto = $2 AND (numero_adjunto=$3 or ($3 is null and numero_adjunto is null))`,
+                    [idper, tipo_adjunto, numero_adjunto]
+                ).fetchUniqueRow();
+
+                if (!result.row?.archivo_nombre || !result.row?.archivo_nombre_fisico) {
+                    res.status(404).send("Archivo no encontrado");
+                    return;
+                }
+                const path = require('path');
+                const fs = require('fs');
+                const filePath = path.join(be.rootPath || process.cwd(), 'local-attachments', 'adjuntos', String(result.row.archivo_nombre_fisico));
+                if (!fs.existsSync(filePath)) {
+                    res.status(404).send('Archivo no existe en disco');
+                    return;
+                }
+
+                res.download(filePath, String(result.row.archivo_nombre));
+            });
+        });
+    }
     override async postConfig(){
         const be = this;
         super.postConfig();
+        cronMantenimiento(be);
         be.inCron('avance_de_dia_proc', {vecesPorDia:24*6})
     }
     override async getProcedures(){
@@ -210,6 +291,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'categorias'       },
                             {menuType:'table', name:'motivos_egreso'   },
                             {menuType:'table', name:'jerarquias'       },
+                            {menuType:'table', name:'tipos_adjunto'    },
                             {menuType:'table', name:'expedientes'      },
                             {menuType:'table', name:'funciones'        },
                             {menuType:'table', name:'nivel_grado'      },
@@ -270,7 +352,12 @@ export class AppSiper extends AppBackend{
         super.prepareGetTables();
         this.getTableDefinition={
             ... this.getTableDefinition,
-            annios               ,
+            annios                ,
+            adjuntos              ,
+            tipos_adjunto         ,
+            tipos_adjunto_atributos,
+            adjuntos_atributos   ,
+            archivos_borrar      ,
             roles                ,
             cod_novedades        ,
             fechas               ,
