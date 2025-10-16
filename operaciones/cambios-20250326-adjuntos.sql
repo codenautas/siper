@@ -137,18 +137,6 @@ $SQL_ENANCE$;
 
 -- table data: install\tipos_adjunto.tab
 insert into "tipos_adjunto" ("tipo_adjunto", "descripcion") values
-('SEC', 'Secreto Estadistico'),
-('COM', 'Comodato'),
 ('DNI', 'Documento Nacional de Identidad'),
-('MNA', 'Máximo Nivel Académico Alcanzado'),
-('CV', 'Curriculum Vitae');
+('TIT', 'Título'),
 
--- table data: install\tipos_adjunto_atributos.tab
-insert into "tipos_adjunto_atributos" ("tipo_adjunto", "atributo", "orden", "columna") values
-('SEC', 'fecha_firma', '1', '1'),
-('COM', 'ficha_estante', '1', '1'),
-('COM', 'responsable', '2', '2'),
-('COM', 'bien', '3', '3'),
-('COM', 'marca', '4', '4'),
-('COM', 'serie', '5', '5'),
-('COM', 'destinatario', '6', '6');
