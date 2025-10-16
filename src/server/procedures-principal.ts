@@ -592,7 +592,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     reglas AS (
                         SELECT 
                             codnov_unica_fichada,
-                            codnov_sin_fichadas
+                            codnov_sin_fichadas,
+                            umbral_horas_diarias
                         FROM siper.reglas
                         WHERE unico_registro = TRUE
                         LIMIT 1
@@ -625,11 +626,9 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                                 THEN TRUE
                                 ELSE FALSE
                             END AS coincide_horario
-                        FROM 
-                            siper.fichadas f
-                        JOIN 
-                            siper.horarios h
-                            ON f.idper = h.idper
+                        FROM siper.fichadas f
+                        JOIN siper.horarios h
+                        ON f.idper = h.idper
                         AND f.fecha BETWEEN h.desde AND h.hasta
                         AND EXTRACT(DOW FROM f.fecha) = h.dds
                     ),
@@ -645,7 +644,12 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                                 ELSE 'ok' END AS estado_fichadas,
                             BOOL_OR(coincide_horario) AS alguna_en_horario,
                             BOOL_AND(coincide_horario) AS todas_en_horario,
-                            ARRAY_AGG(hora ORDER BY hora) AS horas_fichadas
+                            ARRAY_AGG(hora ORDER BY hora) AS horas_fichadas,
+                            CASE 
+                                WHEN COUNT(*) >= 2 THEN 
+                                    EXTRACT(EPOCH FROM (MAX(hora) - MIN(hora))) / 3600.0
+                                ELSE 0
+                            END AS horas_trabajadas
                         FROM fichadas_con_horario
                         GROUP BY idper, fecha
                     ),
@@ -661,9 +665,15 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             COALESCE(a.alguna_en_horario, FALSE) AS alguna_en_horario,
                             COALESCE(a.todas_en_horario, FALSE) AS todas_en_horario,
                             COALESCE(a.horas_fichadas, ARRAY[]::time[]) AS horas_fichadas,
+                            COALESCE(a.horas_trabajadas, 0) AS horas_trabajadas,
+                            nv.cod_nov AS cod_nov_existente,
+                            (nv.cod_nov IS NOT NULL) AS ya_tiene_novedad,
                             CASE 
+                                WHEN nv.cod_nov IS NOT NULL THEN NULL
                                 WHEN a.idper IS NULL OR a.cantidad_fichadas = 0 THEN r.codnov_sin_fichadas
                                 WHEN a.cantidad_fichadas = 1 THEN r.codnov_unica_fichada
+                                WHEN a.cantidad_fichadas = 2 
+                                    AND a.horas_trabajadas < r.umbral_horas_diarias THEN r.codnov_sin_fichadas
                                 WHEN a.cantidad_fichadas = 2 THEN (SELECT cod_nov FROM cod_nov_dos_fichadas)
                                 ELSE NULL
                             END AS cod_nov
@@ -673,15 +683,17 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             agrupadas a ON p.idper = a.idper AND a.fecha = $1
                         CROSS JOIN 
                             reglas r
+                        LEFT JOIN 
+                            siper.novedades_vigentes nv ON nv.idper = p.idper AND nv.fecha = $1
                     )
 
-                    SELECT *
-                    FROM resultado_final
-                    ORDER BY apellido, nombres;
+                SELECT *
+                FROM resultado_final
+                WHERE cod_nov is not null
+                ORDER BY apellido, nombres;
                 `,
                 [fecha_actual]
             ).fetchAll();
-
             await Promise.all(result.rows.map(async r => {
                 await context.be.procedure.registrar_novedad.coreFunction(context, 
                     {idper:r.idper, desde:fecha_actual, hasta:fecha_actual, cod_nov:r.cod_nov, cancela: r.cod_nov == null}
