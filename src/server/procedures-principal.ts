@@ -581,4 +581,113 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             return info.row
         }
     },
+    {
+        action: 'consolidar_fichadas',
+        parameters:[],
+        coreFunction:async function(context:ProcedureContext){
+            // const fecha_actual = date.today();
+            const fecha_actual = date.ymd(2024,1,2);
+            var result = await context.client.query(
+                `WITH 
+                    reglas AS (
+                        SELECT 
+                            codnov_unica_fichada,
+                            codnov_sin_fichadas
+                        FROM siper.reglas
+                        WHERE unico_registro = TRUE
+                        LIMIT 1
+                    ),
+
+                    cod_nov_dos_fichadas AS (
+                        SELECT cod_nov
+                        FROM siper.cod_novedades
+                        WHERE requiere_fichadas = TRUE
+                        AND requiere_entrada = TRUE
+                        AND cuenta_horas = TRUE
+                        LIMIT 1
+                    ),
+
+                    fichadas_con_horario AS (
+                        SELECT 
+                            f.idper,
+                            f.fecha,
+                            f.hora,
+                            h.desde,
+                            h.hasta,
+                            h.dds,
+                            h.hora_desde,
+                            h.hora_hasta,
+                            EXTRACT(DOW FROM f.fecha) AS dow_fichada,
+                            CASE 
+                                WHEN f.fecha BETWEEN h.desde AND h.hasta
+                                AND EXTRACT(DOW FROM f.fecha) = h.dds
+                                AND f.hora BETWEEN h.hora_desde AND h.hora_hasta
+                                THEN TRUE
+                                ELSE FALSE
+                            END AS coincide_horario
+                        FROM 
+                            siper.fichadas f
+                        JOIN 
+                            siper.horarios h
+                            ON f.idper = h.idper
+                        AND f.fecha BETWEEN h.desde AND h.hasta
+                        AND EXTRACT(DOW FROM f.fecha) = h.dds
+                    ),
+
+                    agrupadas AS (
+                        SELECT
+                            idper,
+                            fecha,
+                            COUNT(*) AS cantidad_fichadas,
+                            CASE WHEN COUNT(*) = 1 THEN 'solo una fichada' 
+                                WHEN COUNT(*) = 2 THEN 'dos fichadas'
+                                WHEN COUNT(*) = 0 THEN 'sin fichadas'
+                                ELSE 'ok' END AS estado_fichadas,
+                            BOOL_OR(coincide_horario) AS alguna_en_horario,
+                            BOOL_AND(coincide_horario) AS todas_en_horario,
+                            ARRAY_AGG(hora ORDER BY hora) AS horas_fichadas
+                        FROM fichadas_con_horario
+                        GROUP BY idper, fecha
+                    ),
+
+                    resultado_final AS (
+                        SELECT
+                            p.idper,
+                            p.apellido,
+                            p.nombres,
+                            COALESCE(a.fecha, $1) AS fecha,
+                            COALESCE(a.cantidad_fichadas, 0) AS cantidad_fichadas,
+                            COALESCE(a.estado_fichadas, 'sin fichada') AS estado_fichadas,
+                            COALESCE(a.alguna_en_horario, FALSE) AS alguna_en_horario,
+                            COALESCE(a.todas_en_horario, FALSE) AS todas_en_horario,
+                            COALESCE(a.horas_fichadas, ARRAY[]::time[]) AS horas_fichadas,
+                            CASE 
+                                WHEN a.idper IS NULL OR a.cantidad_fichadas = 0 THEN r.codnov_sin_fichadas
+                                WHEN a.cantidad_fichadas = 1 THEN r.codnov_unica_fichada
+                                WHEN a.cantidad_fichadas = 2 THEN (SELECT cod_nov FROM cod_nov_dos_fichadas)
+                                ELSE NULL
+                            END AS cod_nov
+                        FROM 
+                            (SELECT * FROM siper.personas WHERE activo = TRUE) p
+                        LEFT JOIN 
+                            agrupadas a ON p.idper = a.idper AND a.fecha = $1
+                        CROSS JOIN 
+                            reglas r
+                    )
+
+                    SELECT *
+                    FROM resultado_final
+                    ORDER BY apellido, nombres;
+                `,
+                [fecha_actual]
+            ).fetchAll();
+
+            await Promise.all(result.rows.map(async r => {
+                await context.be.procedure.registrar_novedad.coreFunction(context, 
+                    {idper:r.idper, desde:fecha_actual, hasta:fecha_actual, cod_nov:r.cod_nov, cancela: r.cod_nov == null}
+                );  
+            }))
+            return 'ok';
+        }
+    },
 ];

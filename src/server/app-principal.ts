@@ -62,6 +62,7 @@ import { nivel_grado             } from "./table-nivel_grado";
 import { tareas                  } from "./table-tareas";
 import { perfiles_sgc            } from "./table-perfiles_sgc";
 import { bandas_horarias         } from "./table-bandas_horarias";
+import { reglas                  } from "./table-reglas";
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -220,6 +221,8 @@ export class AppSiper extends AppBackend{
                         {menuType:'table', name:'cod_novedades' },
                         {menuType:'table', name:'usuarios'      },
                         {menuType:'table', name:'horarios'      },
+                        {menuType:'table', name:'reglas'        },
+                        {menuType:'proc', name:'consolidar_fichadas'},
                     ]}
                 ]}
             );
@@ -326,6 +329,7 @@ export class AppSiper extends AppBackend{
             perfiles_sgc         ,
             trayectoria_laboral  ,
             bandas_horarias,
+            reglas               ,
         }
     }       
 }
