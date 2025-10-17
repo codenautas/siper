@@ -911,6 +911,23 @@ describe("connected", function(){
             })
         })
     })
+    describe("parte diario", function(){
+        it("toma en cuenta las vacaciones partidas", async function(){
+            await enNuevaPersona(this.test?.title!, {usuario:{sesion:false}}, async ({idper}) => {
+                await registrarNovedad(superiorSession,
+                    {desde:date.iso('2000-01-15'), hasta:date.iso('2000-02-04'), cod_nov: COD_VACACIONES, idper}
+                );
+                // Saltearse este registrar para ver que anda bien con días corridos
+                await registrarNovedad(rrhhSession,
+                    {desde:date.iso('2000-09-06'), hasta:date.iso('2000-09-17'), cod_nov: COD_VACACIONES, idper}
+                );
+                // hasta acá */
+                await rrhhSession.tableDataTest('parte_diario', [
+                    {idper, cod_nov: COD_VACACIONES, desde:date.iso('2000-01-17'), hasta:date.iso('2000-02-04'), habiles:15, corridos:19},
+                ], 'all', {fixedFields:[{fieldName:'idper', value: idper}, {fieldName:'fecha', value: '2000-01-28'}]})
+            })
+        });
+    });
     describe("mantemiento", function(){
         it("los usuarios admin no pueden tener idper", async function(){
             await enNuevaPersona(this.test?.title!, {usuario:{sesion:false}}, async ({idper}, {usuario}) => {            
