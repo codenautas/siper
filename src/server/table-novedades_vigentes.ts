@@ -19,16 +19,11 @@ with novedades_fecha AS(
       WHEN cod_nov is null then '¡FECHA FUTURA SIN NOVEDAD!' --'999'
       ELSE cod_nov
     END AS cod_nov
-  FROM (select * from fechas 
-        where fecha between 
-		    (select make_date(min(annio),1,1) from annios where abierto)
-          AND
-        (select make_date(min(annio),12,31) from annios where abierto)
-		) f
-  CROSS JOIN (SELECT DISTINCT idper FROM novedades_vigentes) p
-  LEFT JOIN novedades_vigentes nv ON f.fecha = nv.fecha AND p.idper = nv.idper
-  ),
-  novedades_vigentes_con_marca_de_cambio_de_cod_nov AS(
+  FROM annios INNER JOIN fechas f on f.annio = annios.annio
+    INNER JOIN (SELECT DISTINCT idper, annio FROM novedades_vigentes) p on p.annio = annios.annio
+    LEFT JOIN novedades_vigentes nv ON f.fecha = nv.fecha AND p.idper = nv.idper
+),
+novedades_vigentes_con_marca_de_cambio_de_cod_nov AS(
   select *,
       CASE 
         WHEN nv.cod_nov = LAG(nv.cod_nov) OVER (PARTITION BY nv.idper ORDER BY nv.fecha) THEN 0
