@@ -10,7 +10,7 @@ import { DefinedType} from 'guarantee-type';
 import { FixedFields } from 'frontend-plus';
 import { expected } from 'cast-error';
 import { sqlPersonas } from "./table-personas";
-import * as fs from 'fs-extra';
+import * as fs from 'fs/promises';
 
 export const ProceduresPrincipal:ProcedureDef[] = [
     {
@@ -611,7 +611,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
 
             // Mueve el archivo al destino final
             const moveFile = async function (file: UploadedFileInfo, fileName: string) {
-                await fs.move(file.path, fileName, { overwrite: true });
+                await fs.rename(file.path, fileName);
             };
     
             await moveFile(file, newPath);
