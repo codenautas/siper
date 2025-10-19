@@ -236,9 +236,10 @@ describe("connected", function(){
             'new',
         );
         var personaSituacionRevista = {
-          idper: personaGrabada.idper,
-          desde: opts.registra_novedades_desde ?? date.iso(`${DESDE_AÑO}-01-01`), 
-          situacion_revista: SITUACION_REVISTA,
+            idper: personaGrabada.idper,
+            propio: true,
+            desde: opts.registra_novedades_desde ?? date.iso(`${DESDE_AÑO}-01-01`), 
+            situacion_revista: SITUACION_REVISTA,
         };
         await rrhhSession.saveRecord(
             ctts.trayectoria_laboral,
@@ -709,26 +710,64 @@ describe("connected", function(){
                         {fecha:date.iso('2000-02-06'), cod_nov:COD_ENFERMEDAD, idper},
                         {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper},
                     ], 'all', {fixedFields:{idper, fecha:['2000-02-04', '2000-02-07']}})
+                    await rrhhSession.tableDataTest('inconsistencias', [
+                    ], 'all', {fixedFields:{idper, pauta:PAUTA_CORRIDOS}})
                 })
             })
-            it.skip("se ve una inconsistencia si se cargan partidas", async function(){
-                await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
+            it("se pueden cargar partidas pero debe incluir el fin de semana del medio", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     await registrarNovedad(rrhhSession,
-                        {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-04'), cod_nov: COD_ENFERMEDAD, idper: persona.idper}
+                        {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-04'), cod_nov: COD_ENFERMEDAD, idper}
                     );
                     await registrarNovedad(rrhhSession,
-                        {desde:date.iso('2000-02-07'), hasta:date.iso('2000-02-07'), cod_nov: COD_ENFERMEDAD, idper: persona.idper}
+                        {desde:date.iso('2000-02-05'), hasta:date.iso('2000-02-07'), cod_nov: COD_ENFERMEDAD, idper}
                     );
                     await rrhhSession.tableDataTest('novedades_vigentes', [
-                        {fecha:date.iso('2000-02-04'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
-                        {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                        {fecha:date.iso('2000-02-04'), cod_nov:COD_ENFERMEDAD, idper},
+                        {fecha:date.iso('2000-02-05'), cod_nov:COD_ENFERMEDAD, idper},
+                        {fecha:date.iso('2000-02-06'), cod_nov:COD_ENFERMEDAD, idper},
+                        {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper},
+                    ], 'all', {fixedFields:{idper, fecha:['2000-02-04', '2000-02-07']}})
                     await rrhhSession.tableDataTest('inconsistencias', [
-                        {idper: persona.idper, cod_nov:COD_ENFERMEDAD, pauta:PAUTA_CORRIDOS},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    ], 'all', {fixedFields:{idper, pauta:PAUTA_CORRIDOS}})
                 })
             })
-            it.skip("se ve una inconsistencia si se cargan partidas (solo primero incompleto)", async function(){
+            it("se ve una inconsistencia si se cargan partidas", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    var cod_nov = COD_ENFERMEDAD;
+                    await registrarNovedad(rrhhSession,
+                        {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-04'), cod_nov, idper}
+                    );
+                    await registrarNovedad(rrhhSession,
+                        {desde:date.iso('2000-02-07'), hasta:date.iso('2000-02-07'), cod_nov, idper}
+                    );
+                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                        {fecha:date.iso('2000-02-04'), cod_nov, idper},
+                        {fecha:date.iso('2000-02-07'), cod_nov, idper},
+                    ], 'all', {fixedFields:{idper, cod_nov}})
+                    await rrhhSession.tableDataTest('inconsistencias', [
+                        {idper, cod_nov, pauta:PAUTA_CORRIDOS},
+                    ], 'all', {fixedFields:{idper, pauta:PAUTA_CORRIDOS}})
+                })
+            })
+            it.skip("no se ve una inconsistencia si hay días hábiles en el medio", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    var cod_nov = COD_ENFERMEDAD;
+                    await registrarNovedad(rrhhSession,
+                        {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-04'), cod_nov, idper}
+                    );
+                    await registrarNovedad(rrhhSession,
+                        {desde:date.iso('2000-02-08'), hasta:date.iso('2000-02-08'), cod_nov, idper}
+                    );
+                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                        {fecha:date.iso('2000-02-04'), cod_nov, idper},
+                        {fecha:date.iso('2000-02-08'), cod_nov, idper},
+                    ], 'all', {fixedFields:{idper, cod_nov}})
+                    await rrhhSession.tableDataTest('inconsistencias', [
+                    ], 'all', {fixedFields:{idper, pauta:PAUTA_CORRIDOS}})
+                })
+            })
+            it("se ve una inconsistencia si se cargan partidas (solo primero incompleto)", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
                     await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-04'), cod_nov: COD_ENFERMEDAD, idper: persona.idper}
@@ -740,13 +779,13 @@ describe("connected", function(){
                         {fecha:date.iso('2000-02-04'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
                         {fecha:date.iso('2000-02-06'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
                         {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    ], 'all', {fixedFields:{idper: persona.idper, cod_nov:COD_ENFERMEDAD}})
                     await rrhhSession.tableDataTest('inconsistencias', [
                         {idper: persona.idper, cod_nov:COD_ENFERMEDAD, pauta:PAUTA_CORRIDOS},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    ], 'all', {fixedFields:{idper: persona.idper, pauta:PAUTA_CORRIDOS}})
                 })
             })
-            it.skip("se ve una inconsistencia si se cargan partidas (solo segundo incompleto)", async function(){
+            it("se ve una inconsistencia si se cargan partidas (solo segundo incompleto)", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
                     await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-05'), cod_nov: COD_ENFERMEDAD, idper: persona.idper}
@@ -757,11 +796,12 @@ describe("connected", function(){
                     await rrhhSession.tableDataTest('novedades_vigentes', [
                         {fecha:date.iso('2000-02-04'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
                         {fecha:date.iso('2000-02-05'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
+                        {fecha:date.iso('2000-02-06'), cod_nov:null          , idper: persona.idper},
                         {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    ], 'all', {fixedFields:{idper: persona.idper, fecha: ['2000-02-04','2000-02-07']}})
                     await rrhhSession.tableDataTest('inconsistencias', [
                         {idper: persona.idper, cod_nov:COD_ENFERMEDAD, pauta:PAUTA_CORRIDOS},
-                    ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
+                    ], 'all', {fixedFields:{idper: persona.idper, pauta:PAUTA_CORRIDOS}})
                 })
             })
             it("mezclo teletrabajo con presencial", async function(){
@@ -917,11 +957,9 @@ describe("connected", function(){
                 await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-01-15'), hasta:date.iso('2000-02-04'), cod_nov: COD_VACACIONES, idper}
                 );
-                // Saltearse este registrar para ver que anda bien con días corridos
                 await registrarNovedad(rrhhSession,
                     {desde:date.iso('2000-09-06'), hasta:date.iso('2000-09-17'), cod_nov: COD_VACACIONES, idper}
                 );
-                // hasta acá */
                 await rrhhSession.tableDataTest('parte_diario', [
                     {idper, cod_nov: COD_VACACIONES, desde:date.iso('2000-01-17'), hasta:date.iso('2000-02-04'), habiles:15, corridos:19},
                 ], 'all', {fixedFields:[{fieldName:'idper', value: idper}, {fieldName:'fecha', value: '2000-01-28'}]})
