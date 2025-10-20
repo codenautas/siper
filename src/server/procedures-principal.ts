@@ -609,7 +609,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const size = (file as any).size ?? (await fs.stat(tmpPath)).size;
             if (size > MAX_SIZE) {
                 try { await fs.rm(tmpPath, { force: true }); } catch { }
-                throw new Error("El archivo supera el tamaño máximo permitido de 2 MB.");
+                throw new Error("El archivo supera el tamaño máximo permitido de 1 MB.");
             }
 
             const originalFilename = file.originalFilename;
@@ -649,3 +649,4 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         },
     }
 ];
+
