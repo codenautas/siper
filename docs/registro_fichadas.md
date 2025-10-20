@@ -68,7 +68,7 @@ Este es el esquema que debe seguir el objeto **IN** `p_data_json`. Debe contener
 | Clave | Tipo Esperado | Obligatorio | Descripción |
 | --- | --- | --- | --- |
 | `"idper"` | `TEXT` | Sí | **Identificador único de la persona** asociada al registro. |
-| `"tipo fichada"` | `TEXT` | Sí | Clasificación del evento de fichada (ej: "ENTRADA", "SALIDA"). |
+| `"tipo_fichada"` | `TEXT` | Sí | Clasificación del evento de fichada (ej: "ENTRADA", "SALIDA"). |
 | `"fecha"` | `DATE` (string) | Sí | Fecha del evento de fichada. **Formato obligatorio: "YYYY-MM-DD"**. |
 | `"hora"` | `TIME WITH TZ` (string) | Sí | Hora del evento, incluyendo la zona horaria. **Formato obligatorio: "HH:MM:SS-03"**. |
 | `"id_original"` | `TEXT` | Sí | **Identificador único** del registro en el sistema fuente para evitar duplicidad. |
@@ -121,14 +121,14 @@ Aclaración: N es la cantidad de fichadas enviadas
   "fichadas": [
     {
       "idper": "EMP9001",
-      "tipo fichada": "ENTRADA",
+      "tipo_fichada": "ENTRADA",
       "fecha": "2025-10-14",
       "hora": "09:00:00-03",
       "id_original": "WEB1001",
       "punto": "Oficina Central"
     },
     {
-      "tipo fichada": "SALIDA",
+      "tipo_fichada": "SALIDA",
       "fecha": "2025-10-14",
       "hora": "17:00:00-03",
       "id_original": "WEB1002",
@@ -149,14 +149,14 @@ DECLARE
         "fichadas": [
             {
                 "idper": "EMP9001",
-                "tipo fichada": "ENTRADA",
+                "tipo_fichada": "ENTRADA",
                 "fecha": "2025-10-14",
                 "hora": "09:00:00-03",
                 "id_original": "WEB1001",
                 "punto": "Oficina Central"
             },
             {
-                "tipo fichada": "SALIDA",
+                "tipo_fichada": "SALIDA",
                 "fecha": "2025-10-14",
                 "hora": "17:00:00-03",
                 "id_original": "WEB1002"
@@ -205,7 +205,7 @@ END $$;
       "error_code": "23502",
       "error_message": "ERROR: valor nulo en columna «idper» de la relación «fichadas» viola la restricción no nula",
       "fichada_data": {
-        "tipo fichada": "SALIDA",
+        "tipo_fichada": "SALIDA",
         "fecha": "2025-10-14",
         "hora": "17:00:00-03",
         "id_original": "WEB1002"

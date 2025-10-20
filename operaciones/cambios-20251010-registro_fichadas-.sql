@@ -107,7 +107,7 @@ BEGIN
                 ) 
                 VALUES (
                     v_fichada->>'idper', 
-                    v_fichada->>'tipo fichada', 
+                    v_fichada->>'tipo_fichada', 
                     (v_fichada->>'fecha')::DATE,
                     (v_fichada->>'hora')::TIME WITH TIME ZONE,
                     v_fichada->>'observaciones',
