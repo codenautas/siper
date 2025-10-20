@@ -29,7 +29,7 @@ export function niveles_educativos(context:TableContext):TableDefinition{
         constraints:[
         ],
         detailTables:[
-            {table:'personas'       , fields:['max_nivel_ed'], abr:'P'},
+            {table:'personas'       , fields:[{source:nivel_educativo.name, target:max_nivel_ed.name}], abr:'P'},
         ]
     };
 }
