@@ -413,6 +413,16 @@ export const info_usuario = {
 
 export type InfoUsuario = DefinedType<typeof info_usuario.result>
 
+export const consolidar_fichadas = {
+    procedure: 'consolidar_fichadas',
+    parameters:is.object({
+        fecha: is.Date
+    }),
+    result: is.object({
+
+    })
+}
+
 export const parametros = {
     procedure : 'parametros',
     result: is.object({

@@ -583,10 +583,12 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     },
     {
         action: 'consolidar_fichadas',
-        parameters:[],
-        coreFunction:async function(context:ProcedureContext){
+        parameters:[
+            {name:'fecha',  typeName:'date'}
+        ],
+        coreFunction:async function(context:ProcedureContext, params:any){
             // const fecha_actual = date.today();
-            const fecha_actual = date.ymd(2024,1,2);
+            // const fecha_actual = date.ymd(2024,1,2);
             var result = await context.client.query(
                 `WITH 
                     reglas AS (
@@ -633,25 +635,46 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         AND EXTRACT(DOW FROM f.fecha) = h.dds
                     ),
 
-                    agrupadas AS (
+                    fichadas_numeradas AS (
                         SELECT
                             idper,
                             fecha,
-                            COUNT(*) AS cantidad_fichadas,
-                            CASE WHEN COUNT(*) = 1 THEN 'solo una fichada' 
-                                WHEN COUNT(*) = 2 THEN 'dos fichadas'
-                                WHEN COUNT(*) = 0 THEN 'sin fichadas'
-                                ELSE 'ok' END AS estado_fichadas,
-                            BOOL_OR(coincide_horario) AS alguna_en_horario,
-                            BOOL_AND(coincide_horario) AS todas_en_horario,
-                            ARRAY_AGG(hora ORDER BY hora) AS horas_fichadas,
-                            CASE 
-                                WHEN COUNT(*) >= 2 THEN 
-                                    EXTRACT(EPOCH FROM (MAX(hora) - MIN(hora))) / 3600.0
-                                ELSE 0
-                            END AS horas_trabajadas
+                            hora,
+                            LAG(hora) OVER (PARTITION BY idper, fecha ORDER BY hora) AS hora_anterior,
+                            ROW_NUMBER() OVER (PARTITION BY idper, fecha ORDER BY hora) AS rn
                         FROM fichadas_con_horario
+                    ),
+
+                    pares_calculados AS (
+                        SELECT
+                            idper,
+                            fecha,
+                            SUM(EXTRACT(EPOCH FROM (hora - hora_anterior)) / 3600.0) AS horas_trabajadas
+                        FROM fichadas_numeradas
+                        WHERE MOD(rn, 2) = 0  -- solo pares
                         GROUP BY idper, fecha
+                    ),
+
+                    agrupadas AS (
+                        SELECT
+                            f.idper,
+                            f.fecha,
+                            COUNT(f.hora) AS cantidad_fichadas,
+                            MOD(COUNT(f.hora), 2) = 1 AS es_impar,
+                            CASE 
+                                WHEN COUNT(f.hora) = 0 THEN 'sin fichadas'
+                                WHEN MOD(COUNT(f.hora), 2) = 1 THEN 'fichadas impares (sin salida)'
+                                WHEN COUNT(f.hora) = 1 THEN 'solo una fichada'
+                                ELSE 'ok'
+                            END AS estado_fichadas,
+                            BOOL_OR(f.coincide_horario) AS alguna_en_horario,
+                            BOOL_AND(f.coincide_horario) AS todas_en_horario,
+                            ARRAY_AGG(f.hora ORDER BY f.hora) AS horas_fichadas,
+                            COALESCE(p.horas_trabajadas, 0) AS horas_trabajadas
+                        FROM fichadas_con_horario f
+                        LEFT JOIN pares_calculados p 
+                        ON f.idper = p.idper AND f.fecha = p.fecha
+                        GROUP BY f.idper, f.fecha, p.horas_trabajadas
                     ),
 
                     resultado_final AS (
@@ -666,16 +689,15 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             COALESCE(a.todas_en_horario, FALSE) AS todas_en_horario,
                             COALESCE(a.horas_fichadas, ARRAY[]::time[]) AS horas_fichadas,
                             COALESCE(a.horas_trabajadas, 0) AS horas_trabajadas,
+                            a.es_impar,
                             nv.cod_nov AS cod_nov_existente,
                             (nv.cod_nov IS NOT NULL) AS ya_tiene_novedad,
                             CASE 
                                 WHEN nv.cod_nov IS NOT NULL THEN NULL
                                 WHEN a.idper IS NULL OR a.cantidad_fichadas = 0 THEN r.codnov_sin_fichadas
-                                WHEN a.cantidad_fichadas = 1 THEN r.codnov_unica_fichada
-                                WHEN a.cantidad_fichadas = 2 
-                                    AND a.horas_trabajadas < r.umbral_horas_diarias THEN r.codnov_sin_fichadas
-                                WHEN a.cantidad_fichadas = 2 THEN (SELECT cod_nov FROM cod_nov_dos_fichadas)
-                                ELSE NULL
+                                WHEN a.cantidad_fichadas = 1 OR a.es_impar THEN r.codnov_unica_fichada
+                                WHEN a.horas_trabajadas < r.umbral_horas_diarias THEN r.codnov_sin_fichadas
+                                ELSE (SELECT cod_nov FROM cod_nov_dos_fichadas)
                             END AS cod_nov
                         FROM 
                             (SELECT * FROM siper.personas WHERE activo = TRUE) p
@@ -687,16 +709,16 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             siper.novedades_vigentes nv ON nv.idper = p.idper AND nv.fecha = $1
                     )
 
-                SELECT *
-                FROM resultado_final
-                WHERE cod_nov is not null
-                ORDER BY apellido, nombres;
+                    SELECT *
+                    FROM resultado_final
+                    WHERE cod_nov IS NOT NULL
+                    ORDER BY apellido, nombres;
                 `,
-                [fecha_actual]
+                [params.fecha]
             ).fetchAll();
             await Promise.all(result.rows.map(async r => {
                 await context.be.procedure.registrar_novedad.coreFunction(context, 
-                    {idper:r.idper, desde:fecha_actual, hasta:fecha_actual, cod_nov:r.cod_nov, cancela: r.cod_nov == null}
+                    {idper:r.idper, desde:params.fecha, hasta:params.fecha, cod_nov:r.cod_nov, cancela: r.cod_nov == null}
                 );  
             }))
             return 'ok';
