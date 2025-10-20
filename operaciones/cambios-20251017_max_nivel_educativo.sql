@@ -28,4 +28,11 @@ alter table "personas" add constraint "personas niveles_educativos REL" foreign 
 
 create index "max_nivel_ed 4 personas IDX" ON "personas" ("max_nivel_ed");
 
-PERFORM enance_table('niveles_educativos','nivel_educativo');
+do $SQL_ENANCE$
+ begin
+ PERFORM enance_table('niveles_educativos','nivel_educativo');
+ end
+$SQL_ENANCE$;
+
+
+
