@@ -759,6 +759,16 @@ export const perfiles_sgc = {
 
 export type perfiles_sgc = DefinedType<typeof perfiles_sgc.description>
 
+export const niveles_educativos = {
+    table : 'niveles_educativos',
+    description : is.object({
+        nivel_educativo: is.number,
+        nombre: is.string
+    })
+}
+
+export type niveles_educativos = DefinedType<typeof niveles_educativos.description>
+
 export const per_telefonos = {
     table: 'per_telefonos',
     description: is.object({
