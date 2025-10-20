@@ -604,10 +604,26 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 throw new Error("No se recibió ningún archivo para subir.");
             }
 
+            const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+            const tmpPath = (file as any).path as string;
+            const size = (file as any).size ?? (await fs.stat(tmpPath)).size;
+            if (size > MAX_SIZE) {
+                try { await fs.rm(tmpPath, { force: true }); } catch { }
+                throw new Error("El archivo supera el tamaño máximo permitido de 1 MB.");
+            }
+
             const originalFilename = file.originalFilename;
             const extendedFilename = `adjunto-siper-${numero_adjunto}-${originalFilename}`;
 
             const newPath = `local-attachments/adjuntos/${extendedFilename}`;
+
+            const exists = async (p: string) => { try { await fs.access(p); return true; } catch { return false; } };
+
+            // NO sobrescribir si ya existe
+            if (await exists(newPath)) {
+                try { await fs.rm(tmpPath, { force: true }); } catch { }
+                throw new Error(`Ya existe un archivo con el nombre ${extendedFilename}.`);
+            }
 
             // Mueve el archivo al destino final
             const moveFile = async function (file: UploadedFileInfo, fileName: string) {
@@ -633,3 +649,4 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         },
     }
 ];
+
