@@ -22,6 +22,9 @@ export function reglas(_context: TableContext): TableDefinition{
             {name: 'maximas_horas_diarias_declaradas',  typeName: 'integer' },
         ],         
         primaryKey: [año.name],
-        foreignKeys: [],
+        foreignKeys: [
+            {references: 'cod_novedades', fields:[{source:'codnov_unica_fichada', target:'cod_nov'}], alias:'codnov_unica_fichada'},
+            {references: 'cod_novedades'  , fields:[{source:'codnov_sin_fichadas', target:'cod_nov'}], alias:'codnov_sin_fichadas'},
+        ],
     };
 }
