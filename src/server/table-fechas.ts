@@ -2,12 +2,12 @@
 
 import {FieldDefinition, TableDefinition, TableContext} from "./types-principal";
 
-import {año} from "./table-annios"
+import {annio} from "./table-annios"
 import {cod_nov} from "./table-cod_novedades";
 
 
 export const fecha: FieldDefinition = {name: 'fecha', typeName: 'date'};
-export const añoEnBaseAFecha = {...año, editable:false, generatedAs:`extract(year from ${fecha.name})`}
+export const añoEnBaseAFecha = {...annio, editable:false, generatedAs:`extract(year from ${fecha.name})`}
 
 export function fechas(context:TableContext):TableDefinition{
     var admin = context.es.admin;
@@ -29,7 +29,7 @@ export function fechas(context:TableContext):TableDefinition{
         ],
         primaryKey: [fecha.name],
         foreignKeys: [
-            {references: 'annios'  , fields: [año.name], onUpdate: 'no action'},
+            {references: 'annios'  , fields: [annio.name], onUpdate: 'no action'},
             {references: 'cod_novedades', fields: [{source: 'cod_nov_pred_fecha', target:cod_nov.name}]}
         ],
         constraints: [

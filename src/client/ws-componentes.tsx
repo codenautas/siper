@@ -1178,7 +1178,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         </Paper>;
 }
 
-function renderRol( infoUsuario: InfoUsuario ) {
+export function renderRol( infoUsuario: InfoUsuario ) {
     const observer = new MutationObserver(() => {
         const activeUserElement = document.getElementById('active-user');
         if (activeUserElement) {

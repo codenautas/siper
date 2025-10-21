@@ -1,7 +1,7 @@
 "use strict";
 
 import {TableDefinition, TableContext, idImportacion} from "./types-principal";
-import {año} from "./table-annios";
+import {annio} from "./table-annios";
 import {categoria} from "./table-categorias";
 import {cod_nov} from "./table-cod_novedades";
 
@@ -14,7 +14,7 @@ export function nov_per_importado(context:TableContext):TableDefinition{
         fields:[
             idImportacion,
             /* Estos campos no deben cambiarse aunque cambien los originales */
-            año,
+            annio,
             {name: 'ficha'    , typeName: 'text', nullable:false, allowEmptyText:true, title:'Ficha'                     },
             {name: 'cuil'     , typeName: 'text', nullable:false, allowEmptyText:true, title:'Cuil'                      },
             {name: 'idmeta4'  , typeName: 'text', nullable:false, allowEmptyText:true, title:'id meta4'                  },
@@ -27,7 +27,7 @@ export function nov_per_importado(context:TableContext):TableDefinition{
         ],
         primaryKey: [idImportacion.name],
         foreignKeys: [
-            {references: 'annios', fields:[año.name]},
+            {references: 'annios', fields:[annio.name]},
             {references: 'categorias', fields:[categoria.name]},
             {references: 'cod_novedades', fields: [{source: 'novedad', target:cod_nov.name}]}
         ],

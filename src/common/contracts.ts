@@ -448,6 +448,16 @@ export const tipos_doc = {
 
 export type Tipos_doc = DefinedType<typeof tipos_doc.description>
 
+export const tipos_fichada = {
+    table: 'tipos_fichada',
+    description: is.object({
+        tipo_fichada: is.string,
+        nombre: is.string
+    })
+} satisfies CommonEntityDefinition
+
+export type Tipos_fichada = DefinedType<typeof tipos_fichada.description>
+
 export const paises = {
     table : 'paises',
     description: is.object({

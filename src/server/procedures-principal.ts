@@ -581,4 +581,16 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             return info.row
         }
     },
+    {
+        action: 'fichada_registrar',
+        parameters: [],
+        policy:'fichadas',
+        coreFunction: async function (context: ProcedureContext) {
+            return 'ok'
+            const info = await context.client.query(
+                `SELECT fecha_actual FROM parametros;`
+            ).fetchUniqueRow();
+            return info.row
+        }
+    },
 ];
