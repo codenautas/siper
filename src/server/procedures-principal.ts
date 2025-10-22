@@ -585,7 +585,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     {
         action: 'fichadas_registrar',
         parameters: [
-            {name:'fichadas', typeName:'jsonb'}:
+            {name:'fichadas', typeName:'jsonb'}
         ],
         policy:'fichadas',
         coreFunction: async function (context: ProcedureContext, params:{fichadas:Partial<FichadaData>[]}) {
