@@ -31,9 +31,10 @@ $BODY$
             SELECT nr.cod_nov, cn.corridos, nr.detalles, 
                 dds0, dds1, dds2, dds3, dds4, dds5, dds6, cn.c_dds
               FROM novedades_registradas nr LEFT JOIN cod_novedades cn ON nr.cod_nov = cn.cod_nov
+              LEFT JOIN tipos_novedad tn USING (tipo_novedad)
               WHERE f.fecha BETWEEN nr.desde AND nr.hasta
                 AND p.idper = nr.idper                
-              ORDER BY nr.idr DESC LIMIT 1
+              ORDER BY tn.orden, nr.idr DESC LIMIT 1
           ) nr ON true
         WHERE f.fecha BETWEEN p_desde AND p_hasta
           AND f.fecha <= COALESCE(p.fecha_egreso, '2999-12-31'::date)

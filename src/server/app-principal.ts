@@ -69,6 +69,7 @@ import { perfiles_sgc            } from "./table-perfiles_sgc";
 import { bandas_horarias         } from "./table-bandas_horarias";
 import { ProceduresPrincipal } from './procedures-principal';
 import { niveles_educativos      } from "./table-niveles_educativos";
+import { tipos_novedad           } from "./table-tipos_novedad";
 
 import {staticConfigYaml} from './def-config';
 
@@ -364,6 +365,7 @@ export class AppSiper extends AppBackend{
             cod_novedades        ,
             fechas               ,
             tipos_sec            ,
+            tipos_novedad        ,
             sectores, sectores_edit,
             clases               ,
             grupos               ,
