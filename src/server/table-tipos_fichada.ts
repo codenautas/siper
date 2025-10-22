@@ -16,8 +16,13 @@ export function tipos_fichada(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             tipo_fichada,
-            {name: 'nombre',typeName:'text', isName:true, nullable: false, postInput: sinMinusculas},
+            {name: 'nombre',typeName:'text' , isName:true, nullable: false, postInput: sinMinusculas},
+            {name: 'orden' ,typeName:'integer', nullable: false},
         ],
-        primaryKey: [tipo_fichada.name]
+        primaryKey: [tipo_fichada.name],
+        //sortColumns:[{column:'orden'}]
+        sql:{
+            orderBy: ['orden']
+        }
     }
 };

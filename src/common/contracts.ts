@@ -452,7 +452,8 @@ export const tipos_fichada = {
     table: 'tipos_fichada',
     description: is.object({
         tipo_fichada: is.string,
-        nombre: is.string
+        nombre: is.string,
+        orden: is.number
     })
 } satisfies CommonEntityDefinition
 
@@ -746,7 +747,7 @@ export const bandas_horarias = {
 
 export type bandas_horarias = DefinedType<typeof bandas_horarias.description>
 
-export const fichadas = {
+export const Fichada = {
     table: 'fichadas',
     description: is.object({
         idper: is.string,
@@ -763,7 +764,41 @@ export const fichadas = {
     })
 } satisfies CommonEntityDefinition
 
-export type fichadas = DefinedType<typeof fichadas.description>
+export type Fichada = DefinedType<typeof Fichada.description>
+
+
+//para app de fichadas
+export interface FichadaData { 
+    idper: string;
+    nombres: string;
+    apellido: string;
+    tipo_fichada: 'E' | 'S' | 'O' | null;
+    fecha: string; // YYYY-MM-DD
+    hora: string;  // HH:MM:SS
+    observaciones: string | null;
+    punto: string | null;
+    tipo_dispositivo: string | null;
+    id_original: string | null;
+}
+
+interface FichadaFallida {
+  index: number;
+  error_code: string;
+  error_message: string;
+  fichada_data: FichadaData
+}
+
+export interface RegistroFichadasResponse {
+  status: 'OK' | 'ERROR' | 'SUCCESS_PARTIAL';
+  code: 200 | 207 | 400 | 403 | 500;
+  message: string;
+  cant_procesadas: number;
+  cant_insertadas: number;
+  cant_fallidas: number;
+  fallidas: FichadaFallida[];
+}
+
+//fin para app de fichadas
 
 export const meses = [
     {  value:1, name:'enero' },

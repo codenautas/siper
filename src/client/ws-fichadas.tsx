@@ -4,10 +4,10 @@ import * as ReactDOM from "react-dom";
 import {
     FormEvent,
     useCallback,
-    useEffect, useState, 
+    useEffect, useState,
 } from "react";
 
-import { 
+import {
     Connector,
     FixedFields,
     ICON,
@@ -16,106 +16,100 @@ import {
 
 import {
     AppBar,
-    Box, Button, 
+    Box, Button,
     CircularProgress,
     IconButton,
-    MenuItem, 
+    MenuItem,
     Paper,
-    Select,
     Toolbar, Typography, TextField,
-    FormControl,
-    InputLabel,
-    Alert
+    Alert,
 } from "@mui/material";
 
-// Importaciones de íconos de MUI estándar para usar si ICON.Save/Check falla
-//import SaveIcon from '@mui/icons-material/Save'; 
-//import GpsFixedIcon from '@mui/icons-material/GpsFixed'; 
-
-// Ajusta estas importaciones según la ubicación real en tu proyecto
 import { logError, renderRol } from "./ws-componentes";
-import { InfoUsuario, Tipos_fichada } from "../common/contracts";
-import { tipos_fichada } from "../server/table-tipos_fichada";
+import { FichadaData, InfoUsuario, Tipos_fichada } from "../common/contracts";
 
-// Declaración asumida para 'myOwn' si no está globalmente definido en este archivo
 declare const myOwn: any;
 
 const GPS_ERROR = 'GPS_ERROR';
-
-// -------------------------------------------------------------------
-// 1. INTERFACES DE TYPESCRIPT
-// -------------------------------------------------------------------
-
-interface FichadaData {
-    idper: string;
-    nombres: string;
-    apellido: string;
-    tipo_fichada: 'ENTRADA' | 'SALIDA' | 'OTROS' | null;
-    fecha: string;
-    hora: string;
-    observaciones: string;
-    punto: string;
-    tipo_dispositivo: string;
-    id_original: string;
-}
-
-interface FichadaPayload {
-    fichadas: FichadaData[];
-    machine_id: string;
-    navigator: string;
-}
-
-// -------------------------------------------------------------------
-// 2. COMPONENTE FICHADA FORM
-// -------------------------------------------------------------------
+const GPS_NO_SUPPORT = 'GPS_NO_SUPPORT';
 
 function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFichada:Tipos_fichada[] }) {
     const {infoUsuario, conn, tiposFichada} = props;
-    // Estado inicial de la FichadaData
+    const formatDateTime = () => {
+        const now = new Date();
+        const fechaFormateada = now.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const horaFormateada = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+        const fechaISO = now.toISOString().split('T')[0];
+        return {
+            fechaFormateada: fechaFormateada,
+            horaFormateada: horaFormateada,
+            fechaISO: fechaISO,
+            horaISO: horaFormateada,
+        };
+    };
+    const [currentDateTime, setCurrentDateTime] = useState(formatDateTime());
+    useEffect(() => {
+        const timerId = setInterval(() => {
+            setCurrentDateTime(formatDateTime());
+        }, 1000);
+
+        return () => clearInterval(timerId);
+    }, []);
+
     const initialFormData: FichadaData = {
         idper: infoUsuario.idper,
         nombres: infoUsuario.nombres,
         apellido: infoUsuario.apellido,
         tipo_fichada: null,
-        fecha: new Date().toISOString().split('T')[0],
-        hora: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }),
-        observaciones: '',
-        punto: '',
+        fecha: currentDateTime.fechaISO,
+        hora: currentDateTime.horaISO,
+        observaciones: null,
+        punto: null,
         tipo_dispositivo: 'WEB',
-        id_original: '',
+        id_original: null,
     };
-    
-    // 1. Estado para los campos del formulario
+
     const [formData, setFormData] = useState<FichadaData>(initialFormData);
-    
-    // 2. Estado para la geolocalización y carga
+
+    const [validationErrors, setValidationErrors] = useState<{ tipo_fichada?: string }>({});
+    const [isWaitingForBackendResponse, setIsWaitingForBackendResponse] = useState<boolean>(false);
+
+    useEffect(() => {
+        setFormData(prevData => ({
+            ...prevData,
+            fecha: currentDateTime.fechaISO,
+            hora: currentDateTime.horaISO,
+        }));
+    }, [currentDateTime]);
+
     const [geolocationStatus, setGeolocationStatus] = useState<string>('GPS no capturado.');
     const [isGpsLoading, setIsGpsLoading] = useState<boolean>(false);
-    
-    // Variable de control para deshabilitar el botón de envío
-    //const isSubmitDisabled: boolean = !formData.idper || !formData.tipo_fichada;
 
-    // 3. Función para obtener la geoposición
+    const errorEnPuntoGps = ()=> [GPS_ERROR, GPS_NO_SUPPORT].includes(formData.punto || '')
+
     const getGeolocation = useCallback(() => {
         if (!navigator.geolocation) {
             setGeolocationStatus("Geolocalización no soportada por este navegador.");
-            setFormData(prevData => ({ ...prevData, punto: 'NO_SUPPORT' }));
+            setFormData(prevData => ({ ...prevData, punto: GPS_NO_SUPPORT }));
             return;
         }
 
         setIsGpsLoading(true);
         setGeolocationStatus('Buscando ubicación...');
-        
-        const successCallback = (position: GeolocationPosition) => {
-            const { latitude, longitude } = position.coords;
-            const gpsPoint = `${latitude},${longitude}`;
-            
-            setFormData(prevData => ({
-                ...prevData,
-                punto: gpsPoint
-            }));
-            setGeolocationStatus(`Ubicación capturada!`);
-            setIsGpsLoading(false);
+
+        const successCallback = (position: GeolocationPosition) => {+
+            setTimeout(()=>{
+                const { latitude, longitude } = position.coords;
+                const gpsPoint = `${latitude},${longitude}`;
+
+                setFormData(prevData => ({
+                    ...prevData,
+                    punto: gpsPoint
+                }));
+                setGeolocationStatus(`Ubicación capturada!`);
+                setIsGpsLoading(false);
+            },1000)
+
         };
 
         const errorCallback = (error: GeolocationPositionError) => {
@@ -145,12 +139,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
     }, []);
-    
-    useEffect(() => {
-        getGeolocation();
-    }, [getGeolocation]);
 
-    // 4. Manejo de cambios genérico
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | { name?: string; value: unknown }>) => {
         const name = e.target.name as keyof FichadaData;
         let value = e.target.value || null;
@@ -158,58 +147,84 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
             ...prevData,
             [name]: value
         }));
+
+        if (name === 'tipo_fichada' && value) {
+            setValidationErrors(prevErrors => {
+                const newErrors = { ...prevErrors };
+                delete newErrors.tipo_fichada;
+                return newErrors;
+            });
+        }
     };
 
-    // 5. Manejo del envío del formulario (CORREGIDO con llamado a fetch)
+    const validateForm = (): boolean => {
+        const errors: { tipo_fichada?: string } = {};
+        let isValid = true;
+
+        if (!formData.tipo_fichada) {
+            errors.tipo_fichada = "Debe seleccionar un Tipo de Fichada.";
+            isValid = false;
+        }
+
+        setValidationErrors(errors);
+        return isValid;
+    };
+
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        if (!validateForm()) {
+            return;
+        }
 
-        const payload: FichadaPayload = {
-            fichadas: [formData], 
-            machine_id: "CLIENT_MACHINE_INFO", 
-            navigator: navigator.userAgent
-        };
-        
         try {
-            const result = await conn.ajax.fichada_registrar({
-                fichada: formData
+            setIsWaitingForBackendResponse(true);
+            const result = await conn.ajax.fichadas_registrar({
+                fichadas: [formData]
             })
-            
-            alert(result)
 
-            if (!result.ok || result.code >= 400) {
+            if (result.code != 200) {
                 const errorMessage = result.message || `Error ${result.code}: Fallo en el servidor o SP.`;
                 alert(`Fallo en el registro. Estado: ${result.status} (Código: ${result.code}). Mensaje: ${errorMessage}`);
                 if (logError) logError(new Error(errorMessage));
                 return;
             }
-            setFormData(initialFormData); 
-            //getGeolocation(); 
+
+            setFormData(prevData => ({
+                ...initialFormData,
+                fecha: prevData.fecha,
+                hora: prevData.hora,
+            }));
+
+            getGeolocation();
+            setValidationErrors({});
+            alert("Fichada registrada exitosamente!");
 
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Error desconocido al comunicarse con el servidor.";
             console.error('Error al enviar la fichada:', error);
             alert('Error de conexión al servidor: ' + errorMessage);
             if (logError) logError(error as Error);
+        } finally {
+            setTimeout(()=>setIsWaitingForBackendResponse(false),1000)
         }
     };
+
     if(!infoUsuario.idper){
         return (
-            <Alert 
-                severity={"error"} 
+            <Alert
+                severity={"error"}
                 sx={{ mt: 1, mb: 1 }}
             >
                 EL USUARIO NO TIENE IDPER: CONTACTESÉ CON PERSONAL
             </Alert>
         )
     }
+
     return (
         <Box
             sx={{
-                maxWidth: '600px', // Limitar el ancho del formulario
-                margin: '0 auto', // Centrar horizontalmente
-                
-                // Estilos de card
+                maxWidth: '600px',
+                margin: '0 auto',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -217,67 +232,53 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                 boxShadow: 3,
                 borderRadius: 2,
                 backgroundColor: 'white',
-                minHeight: '80vh', // Para que se vea mejor incluso con scroll
             }}
         >
             <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%'}}>
-                <TextField
-                    margin="dense"
-                    required
-                    fullWidth
-                    id="idper"
-                    label="ID Personal (idper)"
-                    name="idper"
-                    value={formData.idper}
-                    contentEditable={false}
-                    disabled={true}
-                    size="small"
-                />
-                <TextField
-                    margin="dense"
-                    required
-                    fullWidth
-                    id="nombres"
-                    label="nombres"
-                    name="nombres"
-                    value={formData.nombres}
-                    contentEditable={false}
-                    disabled={true}
-                    size="small"
-                />
-                <TextField
-                    margin="dense"
-                    required
-                    fullWidth
-                    id="apellido"
-                    label="apellido"
-                    name="apellido"
-                    value={formData.apellido}
-                    contentEditable={false}
-                    disabled={true}
-                    size="small"
-                />
+                <Box sx={{ display: 'flex', gap: 2, mt: 1, mb: 1 }}>
+                    <TextField id="idper" label="ID Persona" name="idper" value={formData.idper} disabled={true} size="small" sx={{ flex: '0 0 15%' }}/>
+                    <TextField id="apellido" label="apellido" name="apellido" value={formData.apellido} disabled={true} size="small" sx={{ flex: 1 }}/>
+                    <TextField id="nombres" label="nombres" name="nombres" value={formData.nombres} disabled={true} size="small" sx={{ flex: 1 }}/>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 2, mt: 1, mb: 1 }}>
+                    <TextField
+                        margin="none"
+                        id="fecha"
+                        label="Fecha"
+                        value={currentDateTime.fechaFormateada}
+                        disabled={true}
+                        size="small"
+                        sx={{ flex: 1 }}
+                    />
+                    <TextField
+                        margin="none"
+                        id="hora"
+                        label="Hora"
+                        value={currentDateTime.horaFormateada}
+                        disabled={true}
+                        size="small"
+                        sx={{ flex: 1 }}
+                    />
+                </Box>
 
-                {/* Tipo de Fichada */}
-                <FormControl fullWidth margin="dense" size="small" required>
-                    <InputLabel id="tipo-fichada-label">Tipo de Fichada</InputLabel>
-                    <Select
-                        labelId="tipo-fichada-label"
-                        id="tipo_fichada"
-                        name="tipo_fichada"
-                        value={formData.tipo_fichada}
-                        label="Tipo de Fichada"
-                        onChange={handleChange}
-                        autoFocus={true}
-                    >
-                        {tiposFichada.map(tf=>
-                            <MenuItem value={tf.tipo_fichada}>{tf.nombre}</MenuItem>
-                        )}
+                <TextField
+                    fullWidth
+                    margin="dense"
+                    size="small"
+                    id="tipo_fichada"
+                    label="Tipo de fichada"
+                    select
+                    name="tipo_fichada"
+                    helperText={validationErrors.tipo_fichada}
+                    onChange={handleChange}
+                    error={!!validationErrors.tipo_fichada}
+                    value={formData.tipo_fichada}
+                >
+                    {tiposFichada.map(tf=>
+                        <MenuItem key={tf.tipo_fichada} value={tf.tipo_fichada}>{tf.nombre}</MenuItem>
+                    )}
+                </TextField>
 
-                    </Select>
-                </FormControl>
-                
-                {/* Observaciones */}
                 <TextField
                     margin="dense"
                     fullWidth
@@ -291,7 +292,6 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                     size="small"
                 />
 
-                {/* Botón para Obtener el Punto GPS */}
                 <Box sx={{ display: 'flex', gap: 1, mt: 1, mb: 1 }}>
                     <Button
                         variant="contained"
@@ -304,42 +304,38 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                     </Button>
                 </Box>
 
-                {/* Campo Punto GPS (Lectura) */}
                 <TextField
                     margin="dense"
                     fullWidth
                     id="punto"
-                    label="Coordenadas GPS (Latitud, Longitud)"
+                    label={formData.punto ? "Coordenadas GPS (Latitud, Longitud)" : "Sin punto GPS"}
                     name="punto"
                     value={formData.punto}
-                    InputProps={{
-                        readOnly: true,
-                        sx: { backgroundColor: '#f5f5f5' }
-                    }}
-                    required
-                    color={formData.punto == GPS_ERROR?'warning':undefined}
-                    focused
-                    helperText={formData.punto == GPS_ERROR ? "El punto GPS no pudo ser capturado." : ""}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{ readOnly: true }}
+                    color={errorEnPuntoGps() ? 'warning' : undefined}
+                    focused={errorEnPuntoGps()}
                     size="small"
                 />
-                
-                {/* Estado GPS */}
-                <Alert 
-                    severity={formData.punto == GPS_ERROR ? "warning" : "success"} 
-                    sx={{ mt: 1, mb: 1 }}
-                >
-                    {geolocationStatus}
-                </Alert>
 
-                {/* Botón de Registrar Fichada */}
+                {errorEnPuntoGps() && (
+                    <Alert
+                        severity="warning"
+                        sx={{ mt: 1, mb: 1 }}
+                    >
+                        {geolocationStatus}
+                    </Alert>
+                )}
+
                 <Button
                     type="submit"
                     fullWidth
                     variant="contained"
                     color="primary"
                     sx={{ mt: 1, mb: 1 }}
-                    //disabled={isSubmitDisabled}
                     startIcon={<ICON.Save />}
+                    size="small"
+                    disabled={Object.keys(validationErrors).length !== 0 || isWaitingForBackendResponse}
                 >
                     Registrar Fichada
                 </Button>
@@ -347,10 +343,6 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
         </Box>
     );
 };
-
-// -------------------------------------------------------------------
-// 3. PANTALLA PRINCIPAL (Solución de SCROLL y Layout)
-// -------------------------------------------------------------------
 
 function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, infoUsuario: InfoUsuario, tiposFichada: Tipos_fichada[] }) {
     useEffect(() => {
@@ -361,13 +353,12 @@ function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, in
     }, []);
 
     return (
-        <Paper 
+        <Paper
             className="paper-principal"
-            // ESTILOS CLAVE PARA EL SCROLL: Ocupar 100% de la altura y usar flex
             sx={{
-                display: 'flex',              // Habilita Flexbox
-                flexDirection: 'column',      // Apila el AppBar y el contenido
-                height: '100vh',              // Ocupa toda la altura del viewport
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100vh',
                 maxHeight: '100vh',
                 boxSizing: 'border-box'
             }}
@@ -384,13 +375,12 @@ function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, in
                     </Typography>
                 </Toolbar>
             </AppBar>
-            
-            {/* Box que contiene el formulario. Ocupa el espacio restante y permite scroll. */}
-            <Box 
-                sx={{ 
-                    flexGrow: 1, 
-                    overflowY: 'auto', // Permite el scroll vertical si el contenido es muy grande
-                    padding: 2 
+
+            <Box
+                sx={{
+                    flexGrow: 1,
+                    overflowY: 'auto',
+                    padding: 2
                 }}
             >
                 <FichadaForm infoUsuario={props.infoUsuario} conn={props.conn} tiposFichada={props.tiposFichada}/>
@@ -398,14 +388,8 @@ function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, in
         </Paper>
 
     )
-
 }
 
-// -------------------------------------------------------------------
-// 4. PUNTO DE ENTRADA
-// -------------------------------------------------------------------
-
-// @ts-ignore
 myOwn.wScreens.fichar = async function principal(addrParams:any){
     try{
         const infoUsuario: InfoUsuario = await myOwn.ajax.info_usuario();
