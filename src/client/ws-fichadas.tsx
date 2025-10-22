@@ -236,9 +236,32 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
         >
             <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%'}}>
                 <Box sx={{ display: 'flex', gap: 2, mt: 1, mb: 1 }}>
-                    <TextField id="idper" label="ID Persona" name="idper" value={formData.idper} disabled={true} size="small" sx={{ flex: '0 0 15%' }}/>
-                    <TextField id="apellido" label="apellido" name="apellido" value={formData.apellido} disabled={true} size="small" sx={{ flex: 1 }}/>
-                    <TextField id="nombres" label="nombres" name="nombres" value={formData.nombres} disabled={true} size="small" sx={{ flex: 1 }}/>
+                    <TextField 
+                        id="idper" 
+                        label="ID Persona" 
+                        name="idper" 
+                        value={formData.idper} 
+                        disabled={true} 
+                        size="small" 
+                        sx={{ flex: '0 0 15%' }}
+                    />
+                    <TextField
+                        id="apellido"
+                        label="apellido"
+                        name="apellido"
+                        value={formData.apellido}
+                        disabled={true}
+                        size="small"
+                        sx={{ flex: 1 }}
+                    />
+                    <TextField id="nombres"
+                        label="nombres"
+                        name="nombres"
+                        value={formData.nombres}
+                        disabled={true}
+                        size="small"
+                        sx={{ flex: 1 }}
+                    />
                 </Box>
                 <Box sx={{ display: 'flex', gap: 2, mt: 1, mb: 1 }}>
                     <TextField
