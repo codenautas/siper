@@ -5,8 +5,7 @@ import {TableDefinition, TableContext, FieldDefinition, sinMinusculas, soloCodig
 export const tipo_novedad:FieldDefinition = {
     name: 'tipo_novedad', 
     typeName: 'text', 
-    postInput: sinMinusculas,
-    defaultValue:'V'
+    postInput: sinMinusculas
 }
 
 export function tipos_novedad(context:TableContext):TableDefinition{

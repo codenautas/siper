@@ -1,10 +1,10 @@
 set search_path = siper;
 set role siper_muleto_owner;
 
-alter table novedades_registradas add column "tipo_novedad" text default 'V'; 
+alter table novedades_registradas add column "tipo_novedad" text; 
 
 create table "tipos_novedad" (
-  "tipo_novedad" text default 'V', 
+  "tipo_novedad" text, 
   "descripcion" text, 
   "orden" integer
 , primary key ("tipo_novedad")
