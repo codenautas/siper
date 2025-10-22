@@ -7,6 +7,8 @@ import { agrupamiento  } from "./table-agrupamientos";
 import { perfil_sgc  } from "./table-perfiles_sgc";
 import { banda_horaria  } from "./table-bandas_horarias";
 import {sector} from "./table-sectores";
+import { max_nivel_ed  } from "./table-niveles_educativos";
+import { nivel_educativo  } from "./table-niveles_educativos";
 
 import { politicaNovedades } from "./table-novedades_registradas";
 
@@ -37,7 +39,7 @@ export const bh_personas = {
 export const sqlPersonas= `SELECT p.idper, p.cuil, p.tipo_doc, p.documento, p.ficha, p.idmeta4, p.apellido, p.nombres, p.sector, p.es_jefe, t.categoria,
                            t.situacion_revista, p.registra_novedades_desde, p.para_antiguedad_relativa, p.activo, p.fecha_ingreso, p.fecha_egreso,
                            t.motivo_egreso, p.nacionalidad, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado, p.fecha_nacimiento, p.sexo,
-                           p.perfil_sgc, p.banda_horaria
+                           p.perfil_sgc, p.banda_horaria, p.max_nivel_ed
                            FROM personas p 
                            LEFT JOIN (SELECT * 
                                        FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY idper ORDER BY desde DESC, idt DESC) AS rn
@@ -81,6 +83,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'sexo'                    , typeName: 'text', title: 'sexo'                    },
             {name: 'cuil_valido'             , typeName: 'boolean', title: 'cuil válido', inTable:false, serverSide:true, editable:false},
             perfil_sgc,
+            max_nivel_ed,
             bh_personas,
         ],
         primaryKey: [idper.name],
@@ -91,6 +94,7 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'tipos_doc'          , fields:['tipo_doc']        },
             {references: 'bandas_horarias'    , fields:[bh_personas.name]  },
             {references: 'perfiles_sgc'       , fields:[perfil_sgc.name]   },
+            {references: 'niveles_educativos' , fields:[{source:'max_nivel_ed',target:nivel_educativo.name}] },
         ],
         softForeignKeys: [
             {references: 'jerarquias'      , fields:['jerarquia']     },
@@ -118,7 +122,8 @@ export function personas(context: TableContext): TableDefinition {
             {table:'inconsistencias'      , fields:[idper.name], abr:'⒤', refreshFromParent:true},
             {table:'per_capa'   , fields:[idper.name], abr:'C'},
             {table:'per_domicilios', fields:[idper.name], abr:'D'},
-            {table:'per_telefonos' , fields:[idper.name], abr:'T'}
+            {table:'per_telefonos' , fields:[idper.name], abr:'T'},
+            {table:'adjuntos'   , fields:[idper.name], abr:'A'},
         ],
         sql: {
             isTable: true,

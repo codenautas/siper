@@ -1,15 +1,16 @@
 "use strict";
 
 import {strict as likeAr, createIndex} from 'like-ar';
-import { ProcedureDef, ProcedureContext } from './types-principal';
+import { ProcedureDef, ProcedureContext, UploadedFileInfo } from './types-principal';
 import { NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles } from '../common/contracts';
 import { sqlNovPer } from "./table-nov_per";
 
 import { date, datetime } from 'best-globals'
-import { DefinedType } from 'guarantee-type';
+import { DefinedType} from 'guarantee-type';
 import { FixedFields } from 'frontend-plus';
 import { expected } from 'cast-error';
 import { sqlPersonas } from "./table-personas";
+import * as fs from 'fs/promises';
 
 export const ProceduresPrincipal:ProcedureDef[] = [
     {
@@ -581,4 +582,71 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             return info.row
         }
     },
+    {
+        action: 'archivo_subir',
+        progress: true,
+        parameters: [
+            { name: 'idper', typeName: 'text' },
+            { name: 'tipo_adjunto', typeName: 'text' },
+            { name: 'numero_adjunto', typeName: 'integer' },
+        ],
+        files: { count: 1 },
+        coreFunction: async function (context, parameters, files) {
+            const { idper, tipo_adjunto, numero_adjunto } = parameters;
+            const client = context.client;
+
+            if (!idper || !tipo_adjunto) {
+                throw new Error("Faltan parámetros necesarios: idper o tipo_adjunto.");
+            }
+
+            const file = files![0];
+            if (!file) {
+                throw new Error("No se recibió ningún archivo para subir.");
+            }
+
+            const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+            const tmpPath = (file as any).path as string;
+            const size = (file as any).size ?? (await fs.stat(tmpPath)).size;
+            if (size > MAX_SIZE) {
+                try { await fs.rm(tmpPath, { force: true }); } catch { }
+                throw new Error("El archivo supera el tamaño máximo permitido de 1 MB.");
+            }
+
+            const originalFilename = file.originalFilename;
+            const extendedFilename = `adjunto-siper-${numero_adjunto}-${originalFilename}`;
+
+            const newPath = `local-attachments/adjuntos/${extendedFilename}`;
+
+            const exists = async (p: string) => { try { await fs.access(p); return true; } catch { return false; } };
+
+            // NO sobrescribir si ya existe
+            if (await exists(newPath)) {
+                try { await fs.rm(tmpPath, { force: true }); } catch { }
+                throw new Error(`Ya existe un archivo con el nombre ${extendedFilename}.`);
+            }
+
+            // Mueve el archivo al destino final
+            const moveFile = async function (file: UploadedFileInfo, fileName: string) {
+                await fs.rename(file.path, fileName);
+            };
+    
+            await moveFile(file, newPath);
+
+            const row = await client.query(
+                `UPDATE adjuntos 
+                    SET archivo_nombre = $1, archivo_nombre_fisico = $2
+                    WHERE idper = $3 AND tipo_adjunto = $4 AND numero_adjunto = $5
+                    RETURNING *`,
+                [originalFilename, extendedFilename, idper, tipo_adjunto, numero_adjunto]
+            ).fetchUniqueRow();
+
+
+            return {
+                message: `El archivo ${originalFilename} se subió correctamente.`,
+                nombre: originalFilename,
+                updatedRow: row.row,
+            };
+        },
+    }
 ];
+
