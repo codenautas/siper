@@ -283,7 +283,7 @@ type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<str
 // @ts-ignore
 type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
-type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, dds0: boolean, dds1: boolean, dds2: boolean, dds3: boolean, dds4: boolean, dds5: boolean, dds6: boolean, detalles:string, idr:number, dias_hoc:string, usuario:string, fecha:RealDate}
+type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, dds0: boolean, dds1: boolean, dds2: boolean, dds3: boolean, dds4: boolean, dds5: boolean, dds6: boolean, detalles:string, idr:number, dias_hoc:string, usuario:string, fecha:RealDate, tipo_novedad:string, tipos_novedad__orden:number}
 
 interface DetalleAnioNovPer {
     cantidad: number;
@@ -546,7 +546,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 <span className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' } 
                     {diasSeleccionados.length > 0 ? ' / ' + diasSeleccionados.join(', ') : ''}
                 </span>
-                <span className="borrar">{n.desde > fechaActual && es.rrhh ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</span>
+                <span className="borrar">{n.desde > fechaActual && es.rrhh && n.tipos_novedad__orden < 1? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</span>
             </Box>
             {verInfo &&
                 <Box>
