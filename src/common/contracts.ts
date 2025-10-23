@@ -447,6 +447,63 @@ export const tipos_doc = {
 } satisfies CommonEntityDefinition
 
 export type Tipos_doc = DefinedType<typeof tipos_doc.description>
+export const adjuntos = {
+    table: 'adjuntos',
+    description: is.object({
+        idper: is.string,
+        numero_adjunto: is.nullable.number,
+        tipo_adjunto: is.string,
+        timestamp: is.Date,
+        subir: is.nullable.string,
+        archivo_nombre: is.nullable.string,
+        archivo_nombre_fisico: is.nullable.string,
+        bajar: is.nullable.string,
+    }),
+} satisfies CommonEntityDefinition;
+
+export type Adjuntos = DefinedType<typeof adjuntos.description>;
+
+export const tipos_adjunto = {
+    table: 'tipos_adjunto',
+    description: is.object({
+        tipo_adjunto: is.string,
+        descripcion: is.string
+    })
+} satisfies CommonEntityDefinition
+
+export type Tipos_adjunto = DefinedType<typeof tipos_adjunto.description>
+
+export const tipos_adjunto_atributos = {
+    table: 'tipos_adjunto_atributos',
+    description: is.object({
+        tipo_adjunto: is.string,
+        atributo: is.string,
+        orden: is.number,
+        columna: is.number
+    })
+} satisfies CommonEntityDefinition
+
+export type tipos_adjunto_atributos = DefinedType<typeof tipos_adjunto_atributos.description>
+
+export const archivos_borrar = {
+    table: 'archivos_borrar',
+    description: is.object({
+        ruta_archivo: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type Archivos_borrar = DefinedType<typeof archivos_borrar.description>
+
+export const adjuntos_atributos = {
+    table: 'adjuntos_atributos',
+    description: is.object({
+        idper: is.string,
+        tipo_adjunto: is.string,
+        atributo: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type Adjuntos_atributos = DefinedType<typeof adjuntos_atributos.description>
 
 export const tipos_fichada = {
     table: 'tipos_fichada',
@@ -722,6 +779,16 @@ export const perfiles_sgc = {
 
 export type perfiles_sgc = DefinedType<typeof perfiles_sgc.description>
 
+export const niveles_educativos = {
+    table : 'niveles_educativos',
+    description : is.object({
+        nivel_educativo: is.number,
+        nombre: is.string
+    })
+}
+
+export type niveles_educativos = DefinedType<typeof niveles_educativos.description>
+
 export const per_telefonos = {
     table: 'per_telefonos',
     description: is.object({
@@ -756,7 +823,6 @@ export const Fichada = {
         tipo_fichada: is.nullable.string,
         fecha: is.Date,
         hora: is.nullable.string,
-        //origen: is.nullable.string,
         observaciones: is.nullable.string,
         punto: is.nullable.string,
         tipo_dispositivo: is.nullable.string,
@@ -799,6 +865,38 @@ export interface RegistroFichadasResponse {
 }
 
 //fin para app de fichadas
+
+export const reglas = {
+    table: 'reglas',
+    description: is.object({
+        annio: is.number,
+        codnov_unica_fichada: is.nullable.string,         
+        codnov_sin_fichadas: is.nullable.string,         
+        umbral_horas_mensuales: is.nullable.number,       
+        umbral_horas_diarias: is.nullable.number,       
+        umbral_horas_semanales: is.nullable.number,
+        umbral_horas_personales: is.nullable.number,     
+        horario_consolidado: is.nullable.string,           
+        minimas_horas_diarias_declaradas: is.nullable.number,
+        maximas_horas_diarias_declaradas: is.nullable.number,
+    })
+} satisfies CommonEntityDefinition
+
+export type reglas = DefinedType<typeof reglas.description>
+
+export const avisos_falta_fichada = {
+    table: 'avisos_falta_fichada',
+    description: is.object({
+        idper: is.string,
+        fecha: is.Date,
+        tipo_fichada: is.nullable.string,
+        avisado_wp: is.nullable.string,   
+        avisado_mail: is.nullable.string,
+        llegada_novedad: is.nullable.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type avisos_falta_fichada = DefinedType<typeof avisos_falta_fichada.description>
 
 export const meses = [
     {  value:1, name:'enero' },

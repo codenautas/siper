@@ -21,7 +21,7 @@ export function fichadas(_context: TableContext): TableDefinition{
         fields:[
             idper,
             fecha,
-            {name: 'hora'   , typeName: 'time'                                                },
+            {name: 'hora',             typeName: 'time'                                       },
             {...id_fichada, sequence:{ firstValue:101, name:'id_fichada_seq' }                },
             annio,
             {name: tipo_fichada.name, typeName: 'text', nullable: false                       },

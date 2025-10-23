@@ -30,7 +30,7 @@ export function inconsistencias(_context: TableContext): TableDefinition{
         ],
         sql:{
             isTable: false,
-            from:`(SELECT q.idper, NULL::INTEGER as annio, q.pauta, NULL::TEXT as cod_nov
+            from:`(SELECT q.idper, NULL::INTEGER as annio, q.pauta, cod_nov
                      FROM
                      (
                      SELECT idper, NULL::INTEGER as annio, 'ACTULTDIA' pauta, NULL::TEXT as cod_nov 
