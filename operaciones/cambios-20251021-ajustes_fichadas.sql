@@ -16,10 +16,10 @@ alter table "tipos_fichada" alter column "nombre" set not null;
 alter table "tipos_fichada" alter column "orden" set not null;
 
 
-insert into "tipos_fichada" ("tipo_fichada", "nombre") values
+insert into "tipos_fichada" ("tipo_fichada", "nombre", "orden") values
 ('E', 'ENTRADA', 10),
 ('S', 'SALIDA', 20),
-('O', 'OTROS' 30);
+('O', 'OTROS', 30);
 
 update fichadas set tipo_fichada = 'O';
 

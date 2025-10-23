@@ -1,10 +1,8 @@
 "use strict";
 
 import {strict as likeAr, createIndex} from 'like-ar';
-import { ProcedureDef, ProcedureContext } from './types-principal';
-import { FichadaData, NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles } from '../common/contracts';
 import { ProcedureDef, ProcedureContext, UploadedFileInfo } from './types-principal';
-import { NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles } from '../common/contracts';
+import { NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles, FichadaData } from '../common/contracts';
 import { sqlNovPer } from "./table-nov_per";
 
 import { date, datetime } from 'best-globals'
@@ -598,6 +596,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             return result.row.resultado;
         }
     },
+    {   
         action: 'archivo_subir',
         progress: true,
         parameters: [
