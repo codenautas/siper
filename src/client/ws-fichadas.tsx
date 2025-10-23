@@ -40,6 +40,14 @@ type ModalResponse = {
     data?: FichadaData;
 }
 
+const logout = () => {
+    var root = document.getElementById('total-layout');
+    if (root != null ) ReactDOM.unmountComponentAtNode(root)
+    const currentPath = location.pathname;
+    const newPath = currentPath.substring(0, currentPath.lastIndexOf('/')) + '/logout';
+    location.href = location.origin + newPath;
+}
+
 function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFichada:Tipos_fichada[] }) {
     const {infoUsuario, conn, tiposFichada} = props;
     const formatDateTime = () => {
@@ -531,13 +539,7 @@ function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, in
                     </Typography>
                     <Button 
                         color="inherit" 
-                        onClick={()=>{
-                            var root = document.getElementById('total-layout');
-                            if (root != null ) ReactDOM.unmountComponentAtNode(root)
-                            const currentPath = location.pathname;
-                            const newPath = currentPath.substring(0, currentPath.lastIndexOf('/')) + '/logout';
-                            location.href = location.origin + newPath;
-                        }}
+                        onClick={logout}
                         startIcon={<ICON.Logout />}
                         size="small"
                         sx={{ whiteSpace: 'nowrap' }}
@@ -583,13 +585,7 @@ function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, in
                             fullWidth
                             variant="contained"
                             color="info"
-                            onClick={()=>{
-                                var root = document.getElementById('total-layout');
-                                if (root != null ) ReactDOM.unmountComponentAtNode(root)
-                                const currentPath = location.pathname;
-                                const newPath = currentPath.substring(0, currentPath.lastIndexOf('/')) + '/logout';
-                                location.href = location.origin + newPath;
-                            }}
+                            onClick={logout}
                             startIcon={<ICON.Login />}
                             sx={{ mt: 3 }}
                         >
