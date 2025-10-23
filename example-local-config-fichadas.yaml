@@ -1,0 +1,28 @@
+#set BACKEND_PLUS_LOCAL_CONFIG=nombre_de_archivo
+server:
+  port: 3001
+  base-url: /fichadas
+  policy: fichadas
+db:
+  description: base de prueba
+  host: localhost
+  port: 5432
+  database: siper_db
+  schema: siper
+  user: siper_admin
+  password: cambiar_esta_clave
+test:
+  only-in-db: siper_local_test_db
+client-setup: 
+  lang: es
+devel: # no incluir en producción. En desarrollo quitar la x-
+  x-delay: 500
+  tests-can-delete-db: true
+  useFileDevelopment: true
+log:
+  db:
+    on-demand: true
+mixin-patch:
+  copy:
+  - from: ../siper-data/grafica
+    to: ./dist    

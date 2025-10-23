@@ -31,6 +31,7 @@ import { inconsistencias         } from './table-inconsistencias';
 import { usuarios                } from './table-usuarios';
 import { parametros              } from "./table-parametros";
 import { horarios                } from "./table-horarios";
+import { tipos_fichada           } from "./table-tipos_fichada";
 import { fichadas                } from "./table-fichadas";
 import { trayectoria_laboral     } from "./table-trayectoria_laboral";
 import { capa_modalidades        } from "./table-capa_modalidades";
@@ -230,48 +231,24 @@ export class AppSiper extends AppBackend{
         return context;
     }
     override getMenu(context:Context):MenuDefinition{
-        var {es} = context
+        var {es} = context;
         var menuContent:MenuInfoBase[]=[];
-        menuContent.push(
-            {menuType:'principal', name:'principal'     },
-            ...(es.registra ? [
-                {menuType:'menu', name:'listados', menuContent:[
-                    {menuType:'proc', name:'parte_diario'},
-                    {menuType:'proc', name:'informe_mensual'},
-                    {menuType:'proc', name:'descanso_anual_remunerado'},
-                    {menuType:'proc', name:'exportar_descanso_anual_remunerado'},
-                    // {menuType:'proc', name:'visor_de_fichadas'},
-                    {menuType:'table', name:'novedades_totales', table:'nov_per', ff:[{fieldName:'annio', value:date.today().getFullYear()}]},
-                ]}
-            ] : []),
-               ...es.rrhh ? [{menuType:'table', name:'personas'          },
-                {menuType:'menu', name:'config', label:'configurar', menuContent:[
-                {menuType:'table', name:'sectores', table:'sectores_edit' },
-                {menuType:'table', name:'usuarios'      },
-                ]}
-               ] : [],
-               ...es.admin ? [{menuType:'menu', name:'capacitaciones', menuContent:[
-                {menuType:'table', name:'capacitaciones'},
-                ...(es.registra ? [{menuType:'table', name:'modadidades', table:'capa_modalidades'}] : []),
-            ]}] : []
-        );
-        if(es.admin){
+        if(this.config.server.policy=='fichadas'){
+            menuContent.push({menuType:'fichar', name:'fichar'});
+        }else{
             menuContent.push(
-                {menuType:'menu', name:'en_desarrollo', menuContent:[
-                    {menuType:'registroPersona', name:'persona'},
-                    {menuType:'menu', name:'novedades', menuContent:[
-                        {menuType:'menu', name:'tablas', menuContent:[
-                            {menuType:'table', name:'novedades_vigentes'   },
-                            {menuType:'table', name:'novedades_registradas'},
-                        ]},
-                    ]},
-                    {menuType:'menu', name:'importaciones', menuContent:[
-                        {menuType:'table', name:'novedades_importadas'},
-                        {menuType:'table', name:'nov_per_importado'},
-                    ]},
-                    {menuType:'menu', name:'devel', menuContent:[
-                        {menuType:'componentesSiper', name:'componentes'},
-                    ]},
+                {menuType:'principal', name:'principal'     },
+                ...(es.registra ? [
+                    {menuType:'menu', name:'listados', menuContent:[
+                        {menuType:'proc', name:'parte_diario'},
+                        {menuType:'proc', name:'informe_mensual'},
+                        {menuType:'proc', name:'descanso_anual_remunerado'},
+                        {menuType:'proc', name:'exportar_descanso_anual_remunerado'},
+                        // {menuType:'proc', name:'visor_de_fichadas'},
+                        {menuType:'table', name:'novedades_totales', table:'nov_per', ff:[{fieldName:'annio', value:date.today().getFullYear()}]},
+                    ]}
+                ] : []),
+                ...es.rrhh ? [{menuType:'table', name:'personas'          },
                     {menuType:'menu', name:'config', label:'configurar', menuContent:[
                         {menuType:'table', name:'fechas'        },
                         {menuType:'menu', name:'ref personas'   , description:'tablas referenciales de personas', menuContent:[
@@ -308,8 +285,67 @@ export class AppSiper extends AppBackend{
                         {menuType:'table', name:'usuarios'      },
                         {menuType:'table', name:'horarios'      },
                     ]}
-                ]}
+                ] : [],
+                ...es.admin ? [{menuType:'menu', name:'capacitaciones', menuContent:[
+                    {menuType:'table', name:'capacitaciones'},
+                    ...(es.registra ? [{menuType:'table', name:'modadidades', table:'capa_modalidades'}] : []),
+                ]}] : []
             );
+            if(es.admin){
+                menuContent.push(
+                    {menuType:'menu', name:'en_desarrollo', menuContent:[
+                        {menuType:'registroPersona', name:'persona'},
+                        {menuType:'menu', name:'novedades', menuContent:[
+                            {menuType:'menu', name:'tablas', menuContent:[
+                                {menuType:'table', name:'novedades_vigentes'   },
+                                {menuType:'table', name:'novedades_registradas'},
+                            ]},
+                        ]},
+                        {menuType:'menu', name:'importaciones', menuContent:[
+                            {menuType:'table', name:'novedades_importadas'},
+                            {menuType:'table', name:'nov_per_importado'},
+                        ]},
+                        {menuType:'menu', name:'devel', menuContent:[
+                            {menuType:'componentesSiper', name:'componentes'},
+                        ]},
+                        {menuType:'menu', name:'config', label:'configurar', menuContent:[
+                            {menuType:'table', name:'fechas'        },
+                            {menuType:'menu', name:'ref personas'   , description:'tablas referenciales de personas', menuContent:[
+                                {menuType:'table', name:'sectores'         , table:'sectores_edit' },
+                                {menuType:'table', name:'situacion_revista', label: 'sit. revista' },
+                                {menuType:'table', name:'clases'           },
+                                {menuType:'table', name:'paises'           },
+                                {menuType:'table', name:'provincias'       },
+                                {menuType:'table', name:'barrios'          },
+                                {menuType:'table', name:'localidades'      },
+                                {menuType:'table', name:'calles'           },
+                                {menuType:'table', name:'tipos_domicilio'  },
+                                {menuType:'table', name:'tipos_telefono'   },
+                                {menuType:'table', name:'tipos_doc'        },
+                                {menuType:'table', name:'tipos_fichada'    },
+                                {menuType:'table', name:'tipos_sec'        },
+                                {menuType:'table', name:'sexos'            },
+                                {menuType:'table', name:'estados_civiles'  },
+                                {menuType:'table', name:'agrupamientos'    },
+                                {menuType:'table', name:'grados'           },
+                                {menuType:'table', name:'tramos'           },
+                                {menuType:'table', name:'categorias'       },
+                                {menuType:'table', name:'motivos_egreso'   },
+                                {menuType:'table', name:'jerarquias'       },
+                                {menuType:'table', name:'expedientes'      },
+                                {menuType:'table', name:'funciones'        },
+                                {menuType:'table', name:'nivel_grado'      },
+                                {menuType:'table', name:'tareas'           },
+                                {menuType:'table', name:'perfiles_sgc'     },
+                                {menuType:'table', name:'bandas_horarias'  },
+                            ]},
+                            {menuType:'table', name:'cod_novedades' },
+                            {menuType:'table', name:'usuarios'      },
+                            {menuType:'table', name:'horarios'      },
+                        ]}
+                    ]}
+                );
+            }
         }
         return {menu:menuContent};
     }
@@ -347,6 +383,7 @@ export class AppSiper extends AppBackend{
             { type: 'css', file: 'arbol.css' },
             { type: 'js', file: 'common/contracts.js' },
             { type: 'js', file: 'client/ws-componentes.js' },
+            { type: 'js', file: 'client/ws-fichadas.js' },
             { type: 'js', file: 'client/ws-arbol.js' },
             { type: 'js', file: 'client/ws-persona.js' },
             ... menuedResources
@@ -387,6 +424,7 @@ export class AppSiper extends AppBackend{
             usuarios             ,
             parametros           ,
             horarios             ,
+            tipos_fichada        ,
             fichadas             ,
             capa_modalidades     ,
             capacitaciones       ,

@@ -1,6 +1,8 @@
 "use strict";
 
 import {strict as likeAr, createIndex} from 'like-ar';
+import { ProcedureDef, ProcedureContext } from './types-principal';
+import { FichadaData, NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles } from '../common/contracts';
 import { ProcedureDef, ProcedureContext, UploadedFileInfo } from './types-principal';
 import { NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles } from '../common/contracts';
 import { sqlNovPer } from "./table-nov_per";
@@ -10,6 +12,7 @@ import { DefinedType} from 'guarantee-type';
 import { FixedFields } from 'frontend-plus';
 import { expected } from 'cast-error';
 import { sqlPersonas } from "./table-personas";
+import json4all = require('json4all');
 import * as fs from 'fs/promises';
 
 export const ProceduresPrincipal:ProcedureDef[] = [
@@ -583,6 +586,18 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         }
     },
     {
+        action: 'fichadas_registrar',
+        parameters: [
+            {name:'fichadas', typeName:'jsonb'}
+        ],
+        policy:'fichadas',
+        coreFunction: async function (context: ProcedureContext, params:{fichadas:Partial<FichadaData>[]}) {
+            const {fichadas} = params;
+            const fichadasString = json4all.stringify(fichadas);
+            const result = await context.client.query(`SELECT registrar_fichadas($1) AS resultado;`, [fichadasString]).fetchUniqueRow();
+            return result.row.resultado;
+        }
+    },
         action: 'archivo_subir',
         progress: true,
         parameters: [

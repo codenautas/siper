@@ -2,7 +2,7 @@
 import * as sqlTools from 'sql-tools';
 
 import {TableDefinition, TableContext} from "./types-principal";
-import {año} from "./table-annios"
+import {annio} from "./table-annios"
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades"
 import {sector} from "./table-sectores"
@@ -56,7 +56,7 @@ export function nov_per(_context: TableContext): TableDefinition {
         title: 'cantidad de novedades por persona',
         editable: false,
         fields:[
-            año,
+            annio,
             idper,
             cod_nov,
             {name: 'cantidad'    , typeName: 'integer'},
@@ -67,15 +67,15 @@ export function nov_per(_context: TableContext): TableDefinition {
             {name: 'detalle'     , typeName: 'text'   , clientSide: 'detalle_dias'},
             sector,
         ],
-        primaryKey: [año.name, cod_nov.name, idper.name],
+        primaryKey: [annio.name, cod_nov.name, idper.name],
         softForeignKeys: [
-            {references: 'annios'       , fields: [año.name]},
+            {references: 'annios'       , fields: [annio.name]},
             {references: 'personas'     , fields: [idper.name], displayFields:['apellido', 'nombres']},
             {references: 'sectores'     , fields: [sector.name]},
             {references: 'cod_novedades', fields: [cod_nov.name]},
         ],
         detailTables: [
-            {table:'novedades_vigentes', fields:[año.name, idper.name, cod_nov.name], abr:'D'}
+            {table:'novedades_vigentes', fields:[annio.name, idper.name, cod_nov.name], abr:'D'}
         ],
         sql: {
             isTable:false,
