@@ -1,3 +1,4 @@
+SET ROLE siper_owner;
 set search_path = siper;
 
 -- ===== tablas =====
