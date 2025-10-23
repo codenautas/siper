@@ -23,6 +23,7 @@ import {
     Paper,
     Toolbar, Typography, TextField,
     Alert,
+    Modal,
 } from "@mui/material";
 
 import { logError, renderRol } from "./ws-componentes";
@@ -32,6 +33,12 @@ declare const myOwn: any;
 
 const GPS_ERROR = 'GPS_ERROR';
 const GPS_NO_SUPPORT = 'GPS_NO_SUPPORT';
+
+type ModalResponse = {
+    severity: 'success' | 'error' | null;
+    message: string;
+    data?: FichadaData;
+}
 
 function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFichada:Tipos_fichada[] }) {
     const {infoUsuario, conn, tiposFichada} = props;
@@ -73,6 +80,8 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
 
     const [validationErrors, setValidationErrors] = useState<{ tipo_fichada?: string }>({});
     const [isWaitingForBackendResponse, setIsWaitingForBackendResponse] = useState<boolean>(false);
+    
+    const [modalResponse, setModalResponse] = useState<ModalResponse>({ severity: null, message: '' });
 
     useEffect(() => {
         setFormData(prevData => ({
@@ -84,8 +93,14 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
 
     const [geolocationStatus, setGeolocationStatus] = useState<string>('GPS no capturado.');
     const [isGpsLoading, setIsGpsLoading] = useState<boolean>(false);
+    const [openResponseModal, setOpenResponseModal] = useState<boolean>(false);
 
     const errorEnPuntoGps = ()=> [GPS_ERROR, GPS_NO_SUPPORT].includes(formData.punto || '')
+
+    const handleCloseModal = () => {
+        setOpenResponseModal(false);
+        setModalResponse({ severity: null, message: '' });
+    }
 
     const getGeolocation = useCallback(() => {
         if (!navigator.geolocation) {
@@ -97,7 +112,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
         setIsGpsLoading(true);
         setGeolocationStatus('Buscando ubicación...');
 
-        const successCallback = (position: GeolocationPosition) => {+
+        const successCallback = (position: GeolocationPosition) => {
             setTimeout(()=>{
                 const { latitude, longitude } = position.coords;
                 const gpsPoint = `${latitude},${longitude}`;
@@ -178,14 +193,19 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
 
         try {
             setIsWaitingForBackendResponse(true);
+            const formDataEnviada = {...formData}
             const result = await conn.ajax.fichadas_registrar({
-                fichadas: [formData]
+                fichadas: [formDataEnviada]
             })
 
             if (result.code != 200) {
                 const errorMessage = result.message || `Error ${result.code}: Fallo en el servidor o SP.`;
-                alert(`Fallo en el registro. Estado: ${result.status} (Código: ${result.code}). Mensaje: ${errorMessage}`);
+                setModalResponse({
+                    severity: 'error',
+                    message: `Fallo en el registro. Estado: ${result.status} (Código: ${result.code}). Mensaje: ${errorMessage}`
+                });
                 if (logError) logError(new Error(errorMessage));
+                setOpenResponseModal(true);
                 return;
             }
 
@@ -195,14 +215,24 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                 hora: prevData.hora,
             }));
 
-            getGeolocation();
+            getGeolocation(); // Volver a capturar GPS
             setValidationErrors({});
-            alert("Fichada registrada exitosamente!");
+            
+            setModalResponse({
+                severity: 'success',
+                message: `La fichada ha sido registrada.`,
+                data: formDataEnviada
+            });
+            setOpenResponseModal(true);
 
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Error desconocido al comunicarse con el servidor.";
             console.error('Error al enviar la fichada:', error);
-            alert('Error de conexión al servidor: ' + errorMessage);
+            setModalResponse({
+                severity: 'error',
+                message: 'Se produjo un error al intentar almacenar la fichada. Detalle del error: ' + errorMessage
+            });
+            setOpenResponseModal(true);
             if (logError) logError(error as Error);
         } finally {
             setTimeout(()=>setIsWaitingForBackendResponse(false),1000)
@@ -219,6 +249,22 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
             </Alert>
         )
     }
+
+    const getTipoFichadaNombre = (tipoFichadaId: string | number | null | undefined): string => {
+        if (!tipoFichadaId) return 'N/A';
+        return tiposFichada.find(tf => tf.tipo_fichada === tipoFichadaId)?.nombre || `ID: ${tipoFichadaId}`;
+    };
+
+    // Función auxiliar para formatear fecha de ISO (YYYY-MM-DD) a DD/MM/YYYY
+    const formatDateToDDMMYYYY = (isoDate: string): string => {
+        if (!isoDate) return 'N/A';
+        const parts = isoDate.split('-');
+        if (parts.length === 3) {
+            // Asume que parts es [YYYY, MM, DD]
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        return isoDate;
+    };
 
     return (
         <Box
@@ -360,8 +406,79 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                     size="small"
                     disabled={Object.keys(validationErrors).length !== 0 || isWaitingForBackendResponse}
                 >
-                    Registrar Fichada
+                    {isWaitingForBackendResponse ? <CircularProgress size={24} color="inherit" /> : 'Registrar Fichada'}
                 </Button>
+                
+                <Modal
+                    open={openResponseModal}
+                    onClose={(_event, reason) => {            
+                        // Solo permite cerrar con el botón interno
+                        if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
+                            handleCloseModal();
+                        }
+                    }}
+                    aria-labelledby="modal-modal-title"
+                    aria-describedby="modal-modal-description"
+                >
+                    <Box sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 400,
+                        bgcolor: 'background.paper',
+                        border: '2px solid #000',
+                        boxShadow: 24,
+                        p: 4,
+                    }}>
+                        {modalResponse.severity && (
+                            <Alert severity={modalResponse.severity} sx={{ mb: 2 }}>
+                                {modalResponse.message}
+                            </Alert>
+                        )}
+                        {modalResponse.severity === 'success' && modalResponse.data && (
+                            <Box sx={{ mt: 2, borderTop: '1px dashed #ccc', pt: 2 }}>
+                                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
+                                    Detalle de Fichada:
+                                </Typography>
+                                <Typography variant="body2">
+                                    <span style={{ fontWeight: 'bold' }}>ID Persona:</span> {modalResponse.data.idper}
+                                </Typography>
+                                <Typography variant="body2">
+                                    <span style={{ fontWeight: 'bold' }}>Apellido:</span> {modalResponse.data.apellido}
+                                </Typography>
+                                <Typography variant="body2">
+                                    <span style={{ fontWeight: 'bold' }}>Nombre:</span> {modalResponse.data.nombres}
+                                </Typography>
+                                <Typography variant="body2">
+                                    <span style={{ fontWeight: 'bold' }}>Fecha:</span> {formatDateToDDMMYYYY(modalResponse.data.fecha)}
+                                </Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                    <span style={{ fontWeight: 'bold' }}>Hora:</span> {modalResponse.data.hora}
+                                </Typography>
+                                <Typography variant="body2">
+                                    <span style={{ fontWeight: 'bold' }}>Tipo de Fichada:</span> {getTipoFichadaNombre(modalResponse.data.tipo_fichada)}
+                                </Typography>
+                                <Typography variant="body2">
+                                    <span style={{ fontWeight: 'bold' }}>Observaciones:</span> {modalResponse.data.observaciones || 'Sin observaciones'}
+                                </Typography>
+                                <Typography variant="body2">
+                                    <span style={{ fontWeight: 'bold' }}>Punto GPS:</span> {modalResponse.data.punto || 'No capturado / Error'}
+                                </Typography>
+                            </Box>
+                        )}
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            color={modalResponse.severity === 'success' ? 'success' : 'error'}
+                            onClick={handleCloseModal}
+                            startIcon={<ICON.Close />}
+                            sx={{ mt: 3 }}
+                        >
+                            Cerrar
+                        </Button>
+                    </Box>
+                </Modal>
             </Box>
         </Box>
     );
@@ -373,6 +490,27 @@ function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, in
         if (props.infoUsuario.usuario) {
             renderRol( props.infoUsuario );
         }
+    }, []);
+
+    type ServerStatus = 'conectado' | 'desconectado';
+    const [serverStatus, setServerStatus] = useState<ServerStatus>('conectado');
+    
+    useEffect(() => {
+        const intervalId = setInterval(()=> {
+            myOwn.ajaxPromise({
+                parameters:[],
+                method:'post',
+                action:'keep-alive.json',
+                encoding:'plain',
+                progress:false
+            },{},{visiblyLogErrors:false
+            }).then(()=>setServerStatus('conectado')).catch(()=>{
+                setServerStatus('desconectado')
+            })
+        },10000);
+        return () => {
+            clearInterval(intervalId);
+        };
     }, []);
 
     return (
@@ -388,14 +526,24 @@ function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, in
         >
             <AppBar position="static" className="app-bar-bg" sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}>
                 <Toolbar>
-                    <IconButton color="inherit" onClick={()=>{
-                        var root = document.getElementById('total-layout');
-                        if (root != null ) ReactDOM.unmountComponentAtNode(root)
-                        location.hash="";
-                    }}><ICON.Menu/></IconButton>
                     <Typography flexGrow={2}>
                         SiPer - Registro de fichada
                     </Typography>
+                    <Button 
+                        color="inherit" 
+                        onClick={()=>{
+                            var root = document.getElementById('total-layout');
+                            if (root != null ) ReactDOM.unmountComponentAtNode(root)
+                            const currentPath = location.pathname;
+                            const newPath = currentPath.substring(0, currentPath.lastIndexOf('/')) + '/logout';
+                            location.href = location.origin + newPath;
+                        }}
+                        startIcon={<ICON.Logout />}
+                        size="small"
+                        sx={{ whiteSpace: 'nowrap' }}
+                    >
+                        Logout
+                    </Button>
                 </Toolbar>
             </AppBar>
 
@@ -408,6 +556,47 @@ function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, in
             >
                 <FichadaForm infoUsuario={props.infoUsuario} conn={props.conn} tiposFichada={props.tiposFichada}/>
             </Box>
+            <Modal
+                    open={serverStatus=="desconectado"}
+                    onClose={(_event, _reason) => {            
+                        //no se cierra
+                    }}
+                    aria-labelledby="modal-modal-title"
+                    aria-describedby="modal-modal-description"
+                >
+                    <Box sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 400,
+                        bgcolor: 'background.paper',
+                        border: '2px solid #000',
+                        boxShadow: 24,
+                        p: 4,
+                    }}>
+                        
+                        <Alert severity="info" sx={{ mb: 2 }}>
+                            Sin Sesion Activa. Por favor vuelva a loguearse
+                        </Alert>
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            color="info"
+                            onClick={()=>{
+                                var root = document.getElementById('total-layout');
+                                if (root != null ) ReactDOM.unmountComponentAtNode(root)
+                                const currentPath = location.pathname;
+                                const newPath = currentPath.substring(0, currentPath.lastIndexOf('/')) + '/logout';
+                                location.href = location.origin + newPath;
+                            }}
+                            startIcon={<ICON.Login />}
+                            sx={{ mt: 3 }}
+                        >
+                            Ir a Login
+                        </Button>
+                    </Box>
+                </Modal>
         </Paper>
 
     )
