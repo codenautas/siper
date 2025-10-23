@@ -11,6 +11,9 @@ db:
   schema: siper
   user: siper_admin
   password: cambiar_esta_clave
+login:
+  plus:
+    successRedirect: /menu#i=fichar
 test:
   only-in-db: siper_local_test_db
 client-setup: 
