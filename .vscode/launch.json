@@ -26,6 +26,27 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Launch and Build Fichadas Program",
+            "env": {"BACKEND_PLUS_LOCAL_CONFIG":"local-config-fichadas.yaml"},
+            "preLaunchTask": "build-all",
+            "program": "${workspaceFolder}/dist/server/server/server-principal.js",
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Fast Launch Fichadas Program",
+            "env": {"BACKEND_PLUS_LOCAL_CONFIG":"local-config-fichadas.yaml"},
+            "program": "${workspaceFolder}/dist/server/server/server-principal.js",
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "dumpDb",
             "preLaunchTask": "build-all",
             "program": "${workspaceFolder}/dist/server/server/server-principal.js",
