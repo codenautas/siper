@@ -2,7 +2,7 @@
 
 import {TableDefinition, TableContext} from "./types-principal";
 
-import {horario} from "./table-horarios"
+import {horario} from "./table-horarios_cod"
 
 export function horarios_dds(context: TableContext): TableDefinition{
     return {
@@ -18,11 +18,14 @@ export function horarios_dds(context: TableContext): TableDefinition{
         ],
         primaryKey: [horario.name, 'dds'],
         foreignKeys: [
-            {references: 'horarios', fields:[horario.name], onDelete: 'cascade'},
+            {references: 'horarios_cod', fields:[horario.name], onDelete: 'cascade'},
         ],
         constraints: [
             {constraintType: 'check', consName: 'dia de la semana entre 0 y 6', expr: 'dds between 0 and 6'},
             {constraintType: 'check', consName: 'si trabaja tiene horario', expr: '(trabaja is true) = (hora_desde is not null and hora_hasta is not null)'},
-        ]
+        ],
+        sql:{
+            skipEnance: true
+        },
     };
 }

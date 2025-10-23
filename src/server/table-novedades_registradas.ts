@@ -5,6 +5,7 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {año} from "./table-annios"
+import { constraintsFechasDesdeHasta } from "./table-fechas";
 
 export const idr: FieldDefinition = {name: 'idr', typeName: 'bigint', description: 'identificador de la novedad registrada'}
 /*
@@ -99,7 +100,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {references: 'fechas', fields: [{source:'hasta', target:'fecha'}], alias:'hasta'},
         ],
         constraints: [
-            {constraintType:'check', consName:'desde y hasta deben ser del mismo annio', expr:`extract(year from desde) is not distinct from extract(year from hasta)`},
+            ...constraintsFechasDesdeHasta(),
             {constraintType:'check', consName:'cod_nov obligatorio si no cancela', expr:'(cod_nov is null) = (cancela is true)'},
         ],
         hiddenColumns: [idr.name],

@@ -1,3 +1,81 @@
+set search_path = siper;
+
+drop table horarios;
+
+create table "horarios_cod" (
+  "horario" text
+, primary key ("horario")
+);
+grant select, insert, update, delete on "horarios_cod" to siper_admin;
+grant all on "horarios_cod" to siper_owner;
+
+
+
+create table "horarios_dds" (
+  "horario" text, 
+  "dds" integer, 
+  "hora_desde" time, 
+  "hora_hasta" time, 
+  "trabaja" boolean
+, primary key ("horario", "dds")
+);
+grant select, insert, update, delete on "horarios_dds" to siper_admin;
+grant all on "horarios_dds" to siper_owner;
+
+
+
+create table "horarios_per" (
+  "idper" text, 
+  "horario" text, 
+  "annio" integer generated always as (extract(year from desde)) stored, 
+  "desde" date, 
+  "hasta" date, 
+  "lapso_fechas" "daterange" generated always as (daterange(desde, coalesce(hasta, make_date(extract(year from desde)::integer, 12, 31)))) stored
+, primary key ("idper", "annio", "desde")
+);
+grant select, insert, update, delete on "horarios_per" to siper_admin;
+grant all on "horarios_per" to siper_owner;
+
+
+
+create or replace view "horarios" (
+  "idper", "dds", "annio", "desde", "hasta", "trabaja", "hora_desde", "hora_hasta", "lapso_fechas"
+) as select hp.idper, hd.dds, hp.annio, hp.desde, hp.hasta, hd.dds between 1 and 5 as trabaja, hd.hora_desde, hd.hora_hasta, hp.lapso_fechas
+                from horarios_per hp 
+                    inner join horarios_dds hd using (horario)
+            ;
+grant select on "horarios" to siper_admin;
+
+alter table "horarios_cod" add constraint "horario<>''" check ("horario"<>'');
+alter table "horarios_dds" add constraint "horario<>''" check ("horario"<>'');
+alter table "horarios_dds" alter column "hora_desde" set not null;
+alter table "horarios_dds" alter column "hora_hasta" set not null;
+alter table "horarios_dds" alter column "trabaja" set not null;
+alter table "horarios_dds" add constraint "dia de la semana entre 0 y 6" check (dds between 0 and 6);
+alter table "horarios_dds" add constraint "si trabaja tiene horario" check ((trabaja is true) = (hora_desde is not null and hora_hasta is not null));
+alter table "horarios_per" add constraint "idper<>''" check ("idper"<>'');
+alter table "horarios_per" add constraint "horario<>''" check ("horario"<>'');
+alter table "horarios_per" alter column "desde" set not null;
+alter table "horarios_per" alter column "hasta" set not null;
+alter table "horarios_per" add constraint "desde y hasta deben ser del mismo annio" check (extract(year from desde) = extract(year from hasta));
+alter table "horarios_per" add constraint "desde tiene que ser anterior a hasta" check (desde <= hasta);
+alter table "horarios_per" add constraint "sin superponer fechas" exclude using GIST (idper WITH =, lapso_fechas WITH &&);
+
+
+alter table "horarios_dds" add constraint "horarios_dds horarios_cod REL" foreign key ("horario") references "horarios_cod" ("horario")  on delete cascade on update cascade;
+alter table "horarios_per" add constraint "horarios_per personas REL" foreign key ("idper") references "personas" ("idper")  on delete cascade on update cascade;
+alter table "horarios_per" add constraint "horarios_per annios REL" foreign key ("annio") references "annios" ("annio")  on update no action;
+alter table "horarios_per" add constraint "horarios_per desde REL" foreign key ("desde") references "fechas" ("fecha")  on delete cascade on update cascade;
+alter table "horarios_per" add constraint "horarios_per hasta REL" foreign key ("hasta") references "fechas" ("fecha")  on delete cascade on update cascade;
+
+
+create index "horario 4 horarios_dds IDX" ON "horarios_dds" ("horario");
+create index "idper 4 horarios_per IDX" ON "horarios_per" ("idper");
+create index "annio 4 horarios_per IDX" ON "horarios_per" ("annio");
+create index "desde 4 horarios_per IDX" ON "horarios_per" ("desde");
+create index "hasta 4 horarios_per IDX" ON "horarios_per" ("hasta");
+
+
 /* parseo e interpetación de clave horarios */
 
 /* para probar en forma independiente:
@@ -101,8 +179,10 @@ DECLARE
   v_horario text;
 BEGIN
   if new.horario is not null then
+    -- raice notice 'nuevo horario %', new.horario;
     v_horario := horario_estandarizado(new.horario);
     if v_horario is distinct from new.horario then
+      -- raice notice 'pero el estandarizado es distinto %', v_horario;
       new.horario := v_horario;
     end if;
     select true into v_existe
@@ -123,3 +203,5 @@ CREATE TRIGGER horarios_per_trg
   ON horarios_per
   FOR EACH ROW
   EXECUTE PROCEDURE horarios_per_trg();
+
+select enance_table('horarios_per','idper,annio,desde');
