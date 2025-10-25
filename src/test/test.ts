@@ -145,7 +145,8 @@ describe("connected", function(){
                         `delete from per_nov_cant where ${AÑOS_DE_PRUEBA}`,
                         `delete from nov_gru where ${AÑOS_DE_PRUEBA}`,
                         `delete from novedades_vigentes where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
-                        `delete from horarios where ${IDPER_DE_PRUEBA}`,
+                        `delete from horarios_per where ${IDPER_DE_PRUEBA}`,
+                        `delete from horarios_cod where horario like '%:13'`,
                         `delete from novedades_registradas where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
                         `delete from novedades_horarias where ${IDPER_DE_PRUEBA}`,
                         `delete from novedades_vigentes where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
@@ -998,6 +999,22 @@ describe("connected", function(){
             await superiorSession.tableDataTest('roles', [], "all", {fixedFields:{rol: 'admin'}});
         })
     })
+    describe("horarios", function(){
+        it("al ingresar un horario se genera horarios y horarios_dds", async function(){
+            await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                var horario_per = await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: 'LMV 8:13 XJ 9-16', desde:date.iso('2000-01-01'), hasta:date.iso('2000-12-31')}, 'new')
+                var horario = 'LMV8:13a15:13 XJ9a16'
+                discrepances.showAndThrow(horario_per.horario, horario)
+                await rrhhSession.tableDataTest('horarios_dds', [
+                    {dds: 1, hora_desde: '8:13', hora_hasta: '15:13', trabaja: true},
+                    {dds: 2, hora_desde: '8:13', hora_hasta: '15:13', trabaja: true},
+                    {dds: 3, hora_desde: '9:00', hora_hasta: '16:00', trabaja: true},
+                    {dds: 4, hora_desde: '9:00', hora_hasta: '16:00', trabaja: true},
+                    {dds: 5, hora_desde: '8:13', hora_hasta: '15:13', trabaja: true},
+                ], 'all', {fixedFields:{horario}})
+            })
+        });
+    });
     describe("pantallas", function(){
         it("tiene que ver un solo renglón de vacaciones", async function(){
             await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {

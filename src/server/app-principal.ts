@@ -30,6 +30,9 @@ import { pautas                  } from './table-pautas';
 import { inconsistencias         } from './table-inconsistencias';
 import { usuarios                } from './table-usuarios';
 import { parametros              } from "./table-parametros";
+import { horarios_cod            } from "./table-horarios_cod";
+import { horarios_dds            } from "./table-horarios_dds";
+import { horarios_per            } from "./table-horarios_per";
 import { horarios                } from "./table-horarios";
 import { fichadas                } from "./table-fichadas";
 import { trayectoria_laboral} from "./table-trayectoria_laboral";
@@ -385,6 +388,9 @@ export class AppSiper extends AppBackend{
             inconsistencias      ,  
             usuarios             ,
             parametros           ,
+            horarios_cod         ,
+            horarios_dds         ,
+            horarios_per         ,
             horarios             ,
             fichadas             ,
             capa_modalidades     ,
