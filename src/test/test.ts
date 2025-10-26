@@ -15,6 +15,8 @@ import * as ctts from "../common/contracts"
 
 import { date } from "best-globals";
 
+import { tipo_novedad, tipo_novedad_base, tipo_novedad_verificado } from "../server/table-tipos_novedad"
+
 import * as discrepances from 'discrepances';
 
 const TIMEOUT_SPEED = 1000 * (process.env.BP_TIMEOUT_SPEED as unknown as number ?? 1);
@@ -65,6 +67,7 @@ const COD_ENF_FAMILIAR = "12";
 const COD_ENFERMEDAD = "13";
 const COD_MUDANZA = "124";
 const COD_COMISION = "10";
+const COD_NO_FICHAR = "85";
 const COD_PRED_PAS: string|null = '999'; // es el código predeterminado para un día laborable en el pasado y presente
 const COD_PRED_FUT: string|null = null; // es el código predeterminado para un día laborable en el futuro, por ahora null
 
@@ -88,7 +91,7 @@ type UsuarioConCredenciales = ctts.Usuario & {credenciales: Credenciales};
 type SesionEmuladaSiper = EmulatedSession<AppSiper>;
 
 async function registrarNovedad(sesion: SesionEmuladaSiper, params: Partial<ctts.NovedadRegistrada>): Promise<ctts.NovedadRegistrada> {        
-    return sesion.callProcedure(ctts.registrar_novedad, params)
+    return sesion.callProcedure(ctts.registrar_novedad, {[tipo_novedad.name]: tipo_novedad_verificado, ...params})
 }
 
 describe("connected", function(){
@@ -352,7 +355,7 @@ describe("connected", function(){
         it("insertar una semana de vacaciones como primera novedad", async function(){
             this.timeout(TIMEOUT_SPEED * 7);
             await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
-                var novedadRegistradaPorCargar = {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper};
+                var novedadRegistradaPorCargar = {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper, [tipo_novedad.name]: tipo_novedad_verificado};
                 // TODO: volver a calcular el informe de coincidencias
                 // var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 // discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:5, dias_coincidentes:0})
@@ -900,6 +903,25 @@ describe("connected", function(){
                     ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
                 })
             })
+        })
+    })
+    describe("códigos de novedades básicos", function(){
+        it("cargo un día de trámite y cambio la novedad básica", async function(){
+            fallaEnLaQueQuieroOmitirElBorrado = true;
+            await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                await registrarNovedad(superiorSession,
+                    {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
+                );
+                await registrarNovedad(superiorSession,
+                    {desde:date.iso('2000-01-05'), hasta:date.iso('2000-01-07'), cod_nov:COD_NO_FICHAR, idper, [tipo_novedad.name]: tipo_novedad_base}
+                );
+                await rrhhSession.tableDataTest('novedades_vigentes', [
+                    {fecha:date.iso('2000-01-05'), cod_nov:COD_NO_FICHAR, idper, trabajable:true},
+                    {fecha:date.iso('2000-01-06'), cod_nov:COD_TRAMITE  , idper, trabajable:true},
+                    {fecha:date.iso('2000-01-07'), cod_nov:COD_NO_FICHAR, idper, trabajable:true},
+                ], 'all', {fixedFields:{idper, fecha:['2000-01-05','2000-01-07']}})
+            })
+            fallaEnLaQueQuieroOmitirElBorrado = false;
         })
     })
     describe("jerarquía de sectores", function(){

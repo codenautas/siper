@@ -10,9 +10,7 @@ CREATE OR REPLACE FUNCTION novedades_calculadas/*idper**_idper**idper*/(p_desde 
   LANGUAGE SQL STABLE
 AS
 $BODY$
-  SELECT 
--- ¡ATENCIÓN! NO MODIFICAR MANUALMENTE ESTA FUNCIÓN FUE GENERADA CON EL SCRIPT novedades_calculadas.sql
--- Otras funciones que comienzan con el nombre novedades_calculadas se generaron junto a esta!
+  SELECT
       idper, fecha, 
       CASE WHEN trabajable OR nr_corridos THEN coalesce(nr_cod_nov, cod_nov_pred_fecha) ELSE null END as cod_nov, 
       ficha, null as ent_fich, null as sal_fich, sector, annio,
@@ -45,6 +43,16 @@ $BODY$;
 
 $SQL_CON_TAG$;
 BEGIN
+  v_sql := replace(v_sql, 
+$$
+$BODY$
+  SELECT
+$$, $$
+$BODY$
+  SELECT
+-- ¡ATENCIÓN! NO MODIFICAR MANUALMENTE ESTA FUNCIÓN FUE GENERADA CON EL SCRIPT novedades_calculadas.sql
+-- Otras funciones que comienzan con el nombre novedades_calculadas se generaron junto a esta!
+$$);
   execute v_sql;
   execute replace(replace(v_sql,'/*idper**',''),'**idper*/','');
 END;

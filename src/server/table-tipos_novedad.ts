@@ -2,10 +2,14 @@
 
 import {TableDefinition, TableContext, FieldDefinition, sinMinusculas, soloCodigo} from "./types-principal";
 
+export const tipo_novedad_verificado = 'V';
+export const tipo_novedad_base = 'B';
+
 export const tipo_novedad:FieldDefinition = {
     name: 'tipo_novedad', 
     typeName: 'text', 
-    postInput: sinMinusculas
+    title: 'tipo',
+    postInput: sinMinusculas,
 }
 
 export function tipos_novedad(context:TableContext):TableDefinition{

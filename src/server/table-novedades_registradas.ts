@@ -5,7 +5,7 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {año} from "./table-annios"
-import {tipo_novedad} from "./table-tipos_novedad";
+import {tipo_novedad, tipo_novedad_base} from "./table-tipos_novedad";
 import { constraintsFechasDesdeHasta } from "./table-fechas";
 
 export const idr: FieldDefinition = {name: 'idr', typeName: 'bigint', description: 'identificador de la novedad registrada'}
@@ -91,7 +91,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {name: 'dias_hoc' , typeName: 'text', inTable:false, serverSide:true, editable:false },
             {name: 'fecha'    , typeName: 'date'   ,                                    },
             {name: 'usuario'  , typeName: 'text'   ,                                    },
-            tipo_novedad,
+            {...tipo_novedad  , nullable:false     , defaultValue:tipo_novedad_base     },
         ],         
         primaryKey: [idper.name, 'desde', idr.name],
         foreignKeys: [
