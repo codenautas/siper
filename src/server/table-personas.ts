@@ -38,10 +38,9 @@ export const bh_personas = {
 };
 
 export const sqlPersonas= `
-SELECT p.idper, p.cuil, p.tipo_doc, p.documento, p.ficha, p.idmeta4, p.apellido, p.nombres, p.sector, p.es_jefe, t.categoria,
-        t.situacion_revista, p.registra_novedades_desde, p.para_antiguedad_relativa, p.activo, p.fecha_ingreso, p.fecha_egreso,
-        t.motivo_egreso, p.nacionalidad, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado, p.fecha_nacimiento, p.sexo,
-        p.perfil_sgc, p.banda_horaria, h.horario
+SELECT p.*, t.categoria, t.situacion_revista, 
+        t.motivo_egreso, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado,
+        h.horario
     FROM personas p
         CROSS JOIN parametros par
         LEFT JOIN LATERAL (SELECT * 
