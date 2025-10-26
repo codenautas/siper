@@ -15,7 +15,7 @@ import * as ctts from "../common/contracts"
 
 import { date } from "best-globals";
 
-import { tipo_novedad, tipo_novedad_base, tipo_novedad_verificado } from "../server/table-tipos_novedad"
+import { tipo_novedad, tipo_novedad_inicial, tipo_novedad_verificado } from "../server/table-tipos_novedad"
 
 import * as discrepances from 'discrepances';
 
@@ -361,13 +361,13 @@ describe("connected", function(){
                 // discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:5, dias_coincidentes:0})
                 await registrarNovedad(superiorSession, novedadRegistradaPorCargar);
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-01'), cod_nov:null          , idper, trabajable: false},
-                    {fecha:date.iso('2000-01-02'), cod_nov:null          , idper, trabajable: false},
-                    {fecha:date.iso('2000-01-03'), cod_nov:COD_VACACIONES, idper, trabajable: true },
-                    {fecha:date.iso('2000-01-04'), cod_nov:COD_VACACIONES, idper, trabajable: true },
-                    {fecha:date.iso('2000-01-05'), cod_nov:COD_VACACIONES, idper, trabajable: true },
-                    {fecha:date.iso('2000-01-06'), cod_nov:COD_VACACIONES, idper, trabajable: true },
-                    {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper, trabajable: true },
+                    {fecha:date.iso('2000-01-01'), cod_nov:null          , idper, trabajable: false, cod_nov_ini:null},
+                    {fecha:date.iso('2000-01-02'), cod_nov:null          , idper, trabajable: false, cod_nov_ini:null},
+                    {fecha:date.iso('2000-01-03'), cod_nov:COD_VACACIONES, idper, trabajable: true , cod_nov_ini:null},
+                    {fecha:date.iso('2000-01-04'), cod_nov:COD_VACACIONES, idper, trabajable: true , cod_nov_ini:null},
+                    {fecha:date.iso('2000-01-05'), cod_nov:COD_VACACIONES, idper, trabajable: true , cod_nov_ini:null},
+                    {fecha:date.iso('2000-01-06'), cod_nov:COD_VACACIONES, idper, trabajable: true , cod_nov_ini:null},
+                    {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper, trabajable: true , cod_nov_ini:null},
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-01', '2000-01-07']}})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
@@ -906,19 +906,19 @@ describe("connected", function(){
         })
     })
     describe("códigos de novedades básicos", function(){
-        it("cargo un día de trámite y cambio la novedad básica", async function(){
+        it("cargo un día de trámite y cambio la novedad inicial", async function(){
             fallaEnLaQueQuieroOmitirElBorrado = true;
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
                 await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
                 );
                 await registrarNovedad(superiorSession,
-                    {desde:date.iso('2000-01-05'), hasta:date.iso('2000-01-07'), cod_nov:COD_NO_FICHAR, idper, [tipo_novedad.name]: tipo_novedad_base}
+                    {desde:date.iso('2000-01-05'), hasta:date.iso('2000-01-07'), cod_nov:COD_NO_FICHAR, idper, [tipo_novedad.name]: tipo_novedad_inicial}
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-05'), cod_nov:COD_NO_FICHAR, idper, trabajable:true},
-                    {fecha:date.iso('2000-01-06'), cod_nov:COD_TRAMITE  , idper, trabajable:true},
-                    {fecha:date.iso('2000-01-07'), cod_nov:COD_NO_FICHAR, idper, trabajable:true},
+                    {fecha:date.iso('2000-01-05'), cod_nov:COD_NO_FICHAR, idper, trabajable:true, cod_nov_ini:COD_NO_FICHAR},
+                    {fecha:date.iso('2000-01-06'), cod_nov:COD_TRAMITE  , idper, trabajable:true, cod_nov_ini:COD_NO_FICHAR},
+                    {fecha:date.iso('2000-01-07'), cod_nov:COD_NO_FICHAR, idper, trabajable:true, cod_nov_ini:COD_NO_FICHAR},
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-05','2000-01-07']}})
             })
             fallaEnLaQueQuieroOmitirElBorrado = false;

@@ -3,7 +3,7 @@
 import {TableDefinition, TableContext, FieldDefinition, sinMinusculas, soloCodigo} from "./types-principal";
 
 export const tipo_novedad_verificado = 'V';
-export const tipo_novedad_base = 'B';
+export const tipo_novedad_inicial = 'I';
 
 export const tipo_novedad:FieldDefinition = {
     name: 'tipo_novedad', 
@@ -13,12 +13,11 @@ export const tipo_novedad:FieldDefinition = {
 }
 
 export function tipos_novedad(context:TableContext):TableDefinition{
-    var admin = context.es.admin;
     return {
         name: 'tipos_novedad',
         elementName: 'tipo de novedad registrada',
         title:'tipos de novedades registradas',
-        editable: admin,
+        editable: context.forDump,
         fields: [
             tipo_novedad,
             {name: 'descripcion'   , typeName: 'text'   , title: 'descripción' },
