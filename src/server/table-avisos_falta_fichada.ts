@@ -18,7 +18,7 @@ export function avisos_falta_fichada(_context: TableContext): TableDefinition{
             {name: 'avisado_mail',     typeName: 'time' },
             {name: 'llegada_novedad',  typeName: 'time' },
         ],         
-        primaryKey: [idper.name],
+        primaryKey: [idper.name, fecha.name, 'tipo_fichada'],
         foreignKeys: [
             {references: 'personas', fields:[idper.name]}
         ],

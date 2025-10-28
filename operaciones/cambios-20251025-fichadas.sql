@@ -105,7 +105,7 @@ create table "avisos_falta_fichada" (
   "avisado_wp" time, 
   "avisado_mail" time, 
   "llegada_novedad" time
-, primary key ("idper")
+, primary key ("idper", "fecha", "tipo_fichada")
 );
 grant select on "avisos_falta_fichada" to siper_admin;
 grant all on "avisos_falta_fichada" to siper_owner;
@@ -126,7 +126,7 @@ create index "idper 4 avisos_falta_fichada IDX" ON "avisos_falta_fichada" ("idpe
 do $SQL_ENANCE$
  begin
 PERFORM enance_table('reglas','annio');
-PERFORM enance_table('avisos_falta_fichada','idper');
+PERFORM enance_table('avisos_falta_fichada','idper,fecha,tipo_fichada');
 end
 $SQL_ENANCE$;
 
