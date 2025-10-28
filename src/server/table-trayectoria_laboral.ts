@@ -16,7 +16,6 @@ import { agrupamiento } from "./table-agrupamientos";
 import { tramo } from "./table-tramos";
 import { grado } from "./table-grados";
 import { categoria } from "./table-categorias";
-import { constraintsFechasDesdeHasta } from "./table-fechas";
 
 export const idt: FieldDefinition = {name: 'idt', typeName: 'bigint', description: 'identificador de trayectoria laboral'}
 
@@ -68,7 +67,6 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             {references: 'categorias', fields:[categoria.name]},
         ],
         constraints: [
-            ...constraintsFechasDesdeHasta(),
             {constraintType:'exclude', consName:'sin superponer fechas contratación', using:'GIST', fields:[idper.name, {fieldName:'lapso_fechas', operator:'&&'}], where:'computa_antiguedad and propio'},
             {constraintType:'check' , expr:'computa_antiguedad is not false', consName:'computa_antiguedad si o vacio'},
             soloMayusculas(s_revista.name),
