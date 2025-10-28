@@ -22,8 +22,8 @@ select
         s.nombre_sector as sector_nombre,
         fi.entrada as fichada_entrada,
         fi.salida as fichada_salida,
-        coalesce(h.hora_desde, horario_habitual_desde) horario_entrada, 
-        coalesce(h.hora_hasta, horario_habitual_hasta) as horario_salida,
+        coalesce(hd.hora_desde, horario_habitual_desde) horario_entrada, 
+        coalesce(hd.hora_hasta, horario_habitual_hasta) as horario_salida,
         cn.novedad,
         nv.ficha,
         nv.annio,
@@ -43,7 +43,8 @@ select
         left join (${sqlNovedadesVigentesConDesdeHastaHabiles}) nv using(idper, fecha)
         left join cod_novedades cn on nv.cod_nov = cn.cod_nov
         left join lateral (select min(hora) as entrada, max(hora) as salida from fichadas where fecha = f.fecha and idper = p.idper) fi on true
-        left join horarios h on h.idper = p.idper and f.dds = h.dds and f.fecha between h.desde and h.hasta 
+        left join horarios_per h on h.idper = p.idper /*and f.dds = h.dds*/ and f.fecha between h.desde and h.hasta
+        left join horarios_dds hd on p.horario = hd.horario and f.dds = hd.dds 
         left join bandas_horarias bh on p.banda_horaria = bh.banda_horaria
 `;
 

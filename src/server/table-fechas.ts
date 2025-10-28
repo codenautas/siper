@@ -1,6 +1,6 @@
 "use strict";
 
-import {FieldDefinition, TableDefinition, TableContext} from "./types-principal";
+import {Constraint, FieldDefinition, TableDefinition, TableContext} from "./types-principal";
 
 import {annio} from "./table-annios"
 import {cod_nov} from "./table-cod_novedades";
@@ -8,6 +8,14 @@ import {cod_nov} from "./table-cod_novedades";
 
 export const fecha: FieldDefinition = {name: 'fecha', typeName: 'date'};
 export const añoEnBaseAFecha = {...annio, editable:false, generatedAs:`extract(year from ${fecha.name})`}
+
+export const constraintsFechasDesdeHasta = (opts:{desde?:'desde'|'fecha'}={}): Constraint[] => {
+    const desde = opts?.desde || 'desde';
+    return [
+        {constraintType:'check', consName:`${desde} y hasta deben ser del mismo annio`, expr:`extract(year from ${desde}) = extract(year from hasta)`},
+        {constraintType:'check', consName:`${desde} tiene que ser anterior a hasta`, expr:`${desde} <= hasta`},
+    ]
+}
 
 export function fechas(context:TableContext):TableDefinition{
     var admin = context.es.admin;

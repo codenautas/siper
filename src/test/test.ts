@@ -15,6 +15,8 @@ import * as ctts from "../common/contracts"
 
 import { date } from "best-globals";
 
+import { tipo_novedad, tipo_novedad_inicial, tipo_novedad_verificado } from "../server/table-tipos_novedad"
+
 import * as discrepances from 'discrepances';
 
 const TIMEOUT_SPEED = 1000 * (process.env.BP_TIMEOUT_SPEED as unknown as number ?? 1);
@@ -65,6 +67,7 @@ const COD_ENF_FAMILIAR = "12";
 const COD_ENFERMEDAD = "13";
 const COD_MUDANZA = "124";
 const COD_COMISION = "10";
+const COD_NO_FICHAR = "85";
 const COD_PRED_PAS: string|null = '999'; // es el código predeterminado para un día laborable en el pasado y presente
 const COD_PRED_FUT: string|null = null; // es el código predeterminado para un día laborable en el futuro, por ahora null
 
@@ -88,7 +91,7 @@ type UsuarioConCredenciales = ctts.Usuario & {credenciales: Credenciales};
 type SesionEmuladaSiper = EmulatedSession<AppSiper>;
 
 async function registrarNovedad(sesion: SesionEmuladaSiper, params: Partial<ctts.NovedadRegistrada>): Promise<ctts.NovedadRegistrada> {        
-    return sesion.callProcedure(ctts.registrar_novedad, params)
+    return sesion.callProcedure(ctts.registrar_novedad, {[tipo_novedad.name]: tipo_novedad_verificado, ...params})
 }
 
 describe("connected", function(){
@@ -145,7 +148,8 @@ describe("connected", function(){
                         `delete from per_nov_cant where ${AÑOS_DE_PRUEBA}`,
                         `delete from nov_gru where ${AÑOS_DE_PRUEBA}`,
                         `delete from novedades_vigentes where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
-                        `delete from horarios where ${IDPER_DE_PRUEBA}`,
+                        `delete from horarios_per where ${IDPER_DE_PRUEBA}`,
+                        `delete from horarios_cod where horario like '%:13'`,
                         `delete from novedades_registradas where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
                         `delete from novedades_horarias where ${IDPER_DE_PRUEBA}`,
                         `delete from novedades_vigentes where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
@@ -351,19 +355,19 @@ describe("connected", function(){
         it("insertar una semana de vacaciones como primera novedad", async function(){
             this.timeout(TIMEOUT_SPEED * 7);
             await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
-                var novedadRegistradaPorCargar = {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper};
+                var novedadRegistradaPorCargar = {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper, [tipo_novedad.name]: tipo_novedad_verificado};
                 // TODO: volver a calcular el informe de coincidencias
                 // var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 // discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:5, dias_coincidentes:0})
                 await registrarNovedad(superiorSession, novedadRegistradaPorCargar);
                 await rrhhSession.tableDataTest('novedades_vigentes', [
-                    {fecha:date.iso('2000-01-01'), cod_nov:null          , idper, trabajable: false},
-                    {fecha:date.iso('2000-01-02'), cod_nov:null          , idper, trabajable: false},
-                    {fecha:date.iso('2000-01-03'), cod_nov:COD_VACACIONES, idper, trabajable: true },
-                    {fecha:date.iso('2000-01-04'), cod_nov:COD_VACACIONES, idper, trabajable: true },
-                    {fecha:date.iso('2000-01-05'), cod_nov:COD_VACACIONES, idper, trabajable: true },
-                    {fecha:date.iso('2000-01-06'), cod_nov:COD_VACACIONES, idper, trabajable: true },
-                    {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper, trabajable: true },
+                    {fecha:date.iso('2000-01-01'), cod_nov:null          , idper, trabajable: false, cod_nov_ini:null},
+                    {fecha:date.iso('2000-01-02'), cod_nov:null          , idper, trabajable: false, cod_nov_ini:null},
+                    {fecha:date.iso('2000-01-03'), cod_nov:COD_VACACIONES, idper, trabajable: true , cod_nov_ini:null},
+                    {fecha:date.iso('2000-01-04'), cod_nov:COD_VACACIONES, idper, trabajable: true , cod_nov_ini:null},
+                    {fecha:date.iso('2000-01-05'), cod_nov:COD_VACACIONES, idper, trabajable: true , cod_nov_ini:null},
+                    {fecha:date.iso('2000-01-06'), cod_nov:COD_VACACIONES, idper, trabajable: true , cod_nov_ini:null},
+                    {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper, trabajable: true , cod_nov_ini:null},
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-01', '2000-01-07']}})
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
@@ -901,6 +905,25 @@ describe("connected", function(){
             })
         })
     })
+    describe("códigos de novedades básicos", function(){
+        it("cargo un día de trámite y cambio la novedad inicial", async function(){
+            fallaEnLaQueQuieroOmitirElBorrado = true;
+            await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                await registrarNovedad(superiorSession,
+                    {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
+                );
+                await registrarNovedad(superiorSession,
+                    {desde:date.iso('2000-01-05'), hasta:date.iso('2000-01-07'), cod_nov:COD_NO_FICHAR, idper, [tipo_novedad.name]: tipo_novedad_inicial}
+                );
+                await rrhhSession.tableDataTest('novedades_vigentes', [
+                    {fecha:date.iso('2000-01-05'), cod_nov:COD_NO_FICHAR, idper, trabajable:true, cod_nov_ini:COD_NO_FICHAR},
+                    {fecha:date.iso('2000-01-06'), cod_nov:COD_TRAMITE  , idper, trabajable:true, cod_nov_ini:COD_NO_FICHAR},
+                    {fecha:date.iso('2000-01-07'), cod_nov:COD_NO_FICHAR, idper, trabajable:true, cod_nov_ini:COD_NO_FICHAR},
+                ], 'all', {fixedFields:{idper, fecha:['2000-01-05','2000-01-07']}})
+            })
+            fallaEnLaQueQuieroOmitirElBorrado = false;
+        })
+    })
     describe("jerarquía de sectores", function(){
         async function pertenceceSector(sector:string, perteneceA:string){
             return (await server.inDbClient(ADMIN_REQ, async client => await client.query(
@@ -998,6 +1021,22 @@ describe("connected", function(){
             await superiorSession.tableDataTest('roles', [], "all", {fixedFields:{rol: 'admin'}});
         })
     })
+    describe("horarios", function(){
+        it("al ingresar un horario se genera horarios y horarios_dds", async function(){
+            await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                var horario_per = await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: 'LMV 8:13 XJ 9-16', desde:date.iso('2000-01-01'), hasta:date.iso('2000-12-31')}, 'new')
+                var horario = 'LMV8:13a15:13 XJ9a16'
+                discrepances.showAndThrow(horario_per.horario, horario)
+                await rrhhSession.tableDataTest('horarios_dds', [
+                    {dds: 1, hora_desde: '8:13', hora_hasta: '15:13', trabaja: true},
+                    {dds: 2, hora_desde: '8:13', hora_hasta: '15:13', trabaja: true},
+                    {dds: 3, hora_desde: '9:00', hora_hasta: '16:00', trabaja: true},
+                    {dds: 4, hora_desde: '9:00', hora_hasta: '16:00', trabaja: true},
+                    {dds: 5, hora_desde: '8:13', hora_hasta: '15:13', trabaja: true},
+                ], 'all', {fixedFields:{horario}})
+            })
+        });
+    });
     describe("pantallas", function(){
         it("tiene que ver un solo renglón de vacaciones", async function(){
             await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {

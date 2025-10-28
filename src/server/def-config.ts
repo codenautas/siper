@@ -72,6 +72,7 @@ install:
       - ../install/poblar_pernovcant.sql
       - ../install/usuarios_limpiar_mail_trg.sql
       - ../install/archivo_borrar_trg.sql
+      - ../install/parseo-codigo-horario.sql
 logo: 
   path: client/img
 `;

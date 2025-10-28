@@ -30,6 +30,9 @@ import { pautas                  } from './table-pautas';
 import { inconsistencias         } from './table-inconsistencias';
 import { usuarios                } from './table-usuarios';
 import { parametros              } from "./table-parametros";
+import { horarios_cod            } from "./table-horarios_cod";
+import { horarios_dds            } from "./table-horarios_dds";
+import { horarios_per            } from "./table-horarios_per";
 import { horarios                } from "./table-horarios";
 import { tipos_fichada           } from "./table-tipos_fichada";
 import { fichadas                } from "./table-fichadas";
@@ -69,6 +72,7 @@ import { tareas                  } from "./table-tareas";
 import { perfiles_sgc            } from "./table-perfiles_sgc";
 import { bandas_horarias         } from "./table-bandas_horarias";
 import { niveles_educativos      } from "./table-niveles_educativos";
+import { tipos_novedad           } from "./table-tipos_novedad";
 import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
 
@@ -404,6 +408,7 @@ export class AppSiper extends AppBackend{
             cod_novedades        ,
             fechas               ,
             tipos_sec            ,
+            tipos_novedad        ,
             sectores, sectores_edit,
             clases               ,
             grupos               ,
@@ -423,6 +428,9 @@ export class AppSiper extends AppBackend{
             inconsistencias      ,  
             usuarios             ,
             parametros           ,
+            horarios_cod         ,
+            horarios_dds         ,
+            horarios_per         ,
             horarios             ,
             tipos_fichada        ,
             fichadas             ,

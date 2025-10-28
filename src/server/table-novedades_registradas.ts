@@ -5,6 +5,8 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {annio} from "./table-annios"
+import {tipo_novedad, tipo_novedad_inicial} from "./table-tipos_novedad";
+import { constraintsFechasDesdeHasta } from "./table-fechas";
 
 export const idr: FieldDefinition = {name: 'idr', typeName: 'bigint', description: 'identificador de la novedad registrada'}
 /*
@@ -88,7 +90,8 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {name: 'detalles' , typeName: 'text'   ,                                    },
             {name: 'dias_hoc' , typeName: 'text', inTable:false, serverSide:true, editable:false },
             {name: 'fecha'    , typeName: 'date'   ,                                    },
-            {name: 'usuario' , typeName: 'text'   ,                                    },
+            {name: 'usuario'  , typeName: 'text'   ,                                    },
+            {...tipo_novedad  , nullable:false     , defaultValue:tipo_novedad_inicial     },
         ],         
         primaryKey: [idper.name, 'desde', idr.name],
         foreignKeys: [
@@ -97,10 +100,12 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {references: 'cod_novedades', fields: [cod_nov.name]},
             {references: 'fechas', fields: [{source:'desde', target:'fecha'}], alias:'desde'},
             {references: 'fechas', fields: [{source:'hasta', target:'fecha'}], alias:'hasta'},
+            {references: 'tipos_novedad', fields: [tipo_novedad.name], displayFields:['orden', 'descripcion']},
         ],
         constraints: [
-            {constraintType:'check', consName:'desde y hasta deben ser del mismo annio', expr:`extract(year from desde) is not distinct from extract(year from hasta)`},
+            ...constraintsFechasDesdeHasta(),
             {constraintType:'check', consName:'cod_nov obligatorio si no cancela', expr:'(cod_nov is null) = (cancela is true)'},
+            {constraintType:'check', consName:'tipo inicial no puede tener dias de semana', expr:`(tipo_novedad = 'V') or (dds0 is null and dds1 is null and dds2 is null and dds3 is null and dds4 is null and dds5 is null and dds6 is null)`},
         ],
         hiddenColumns: [idr.name],
         sql:{

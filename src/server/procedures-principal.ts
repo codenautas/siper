@@ -118,6 +118,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name: 'detalles' , typeName: 'text'   , defaultValue:null,                                       },
             {name: 'fecha'    , typeName: 'date'  , defaultValue:null, },
             {name: 'usuario' , typeName: 'text'   , defaultValue:null,                                       },
+            {name: 'tipo_novedad', typeName: 'text', defaultValue:'V', references:'tipos_novedad' },
         ],
         coreFunction: async function(context: ProcedureContext, params:NovedadRegistrada){
             var result = await context.be.procedure.table_record_save.coreFunction(context, {

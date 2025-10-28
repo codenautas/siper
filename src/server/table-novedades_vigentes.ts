@@ -70,6 +70,7 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
             añoEnBaseAFecha                                                              ,
             {name: 'trabajable' , typeName: 'boolean', description: 'si es un día que debe trabajar según su horario (normalmente día hábil, no feriado)' },
             {name: 'detalles'   , typeName: 'text'   ,                                    },
+            {name: 'cod_nov_ini',typeName: 'text'   , description: 'código de novedad inicial obtenida por disposición, resolución o en función de las características de la persona'},
         ],
         primaryKey: [idper.name, fecha.name],
         foreignKeys: [
@@ -77,6 +78,7 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
             {references:'fechas'       , fields: [fecha.name]},
             {references:'sectores'     , fields: [sector.name], onDelete:'set null'},
             {references:'cod_novedades', fields: [cod_nov.name]},
+            {references:'cod_novedades', fields: [{source:'cod_nov_ini', target:cod_nov.name}], alias:'cnb'},
         ],
         sql: {
             fields: {
