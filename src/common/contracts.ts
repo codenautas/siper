@@ -67,7 +67,7 @@ export type NovGru = DefinedType<typeof nov_gru.description>
 export const nov_per = {
     table: 'nov_per',
     description: is.object({
-        año: is.number,
+        annio: is.number,
         cod_nov: is.string,
         idper: is.string,
         cantidad: is.number,
