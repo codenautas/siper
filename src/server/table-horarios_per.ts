@@ -17,7 +17,7 @@ export function horarios_per(context: TableContext): TableDefinition{
         fields: [
             {...idper, editable:admin},
             horario,
-            {...annio, editable:false , generatedAs:`extract(year from desde)`},
+            {...annio, editable:false , generatedAs:`extract(year from desde)`, nullable: true},
             {name: 'desde'          , typeName: 'date'     , nullable:false },
             {name: 'hasta'          , typeName: 'date'     , nullable:false },
             {name: 'lapso_fechas'   , typeName: 'daterange', visible:false  , generatedAs:'daterange(desde, coalesce(hasta, make_date(extract(year from desde)::integer, 12, 31)))'},
