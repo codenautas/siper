@@ -1,3 +1,3 @@
-tipo_novedad|descripcion|orden
-V|Válida|1
-I|Inicial|2
+tipo_novedad|descripcion|orden|borrado_rapido
+V|Válida|1|true
+I|Inicial|2|false

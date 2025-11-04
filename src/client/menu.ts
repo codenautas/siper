@@ -229,4 +229,3 @@ myOwn.clientSides.bajarAdjunto = {
     prepare: function (_depot: myOwn.Depot, _fieldName: string): void {
     },
 };
-

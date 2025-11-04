@@ -5,7 +5,7 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {annio} from "./table-annios"
-import {tipo_novedad, tipo_novedad_inicial} from "./table-tipos_novedad";
+import {tipo_novedad, tipo_novedad_verificado } from "./table-tipos_novedad";
 import { constraintsFechasDesdeHasta } from "./table-fechas";
 
 export const idr: FieldDefinition = {name: 'idr', typeName: 'bigint', description: 'identificador de la novedad registrada'}
@@ -91,7 +91,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {name: 'dias_hoc' , typeName: 'text', inTable:false, serverSide:true, editable:false },
             {name: 'fecha'    , typeName: 'date'   ,                                    },
             {name: 'usuario'  , typeName: 'text'   ,                                    },
-            {...tipo_novedad  , nullable:false     , defaultValue:tipo_novedad_inicial     },
+            {...tipo_novedad  , nullable:false     ,defaultValue:tipo_novedad_verificado},
         ],         
         primaryKey: [idper.name, 'desde', idr.name],
         foreignKeys: [
@@ -100,7 +100,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {references: 'cod_novedades', fields: [cod_nov.name]},
             {references: 'fechas', fields: [{source:'desde', target:'fecha'}], alias:'desde'},
             {references: 'fechas', fields: [{source:'hasta', target:'fecha'}], alias:'hasta'},
-            {references: 'tipos_novedad', fields: [tipo_novedad.name], displayFields:['orden', 'descripcion']},
+            {references: 'tipos_novedad', fields: [tipo_novedad.name], displayFields:['orden', 'descripcion', 'borrado_rapido']},
         ],
         constraints: [
             ...constraintsFechasDesdeHasta(),

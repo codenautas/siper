@@ -22,6 +22,7 @@ export function tipos_novedad(context:TableContext):TableDefinition{
             tipo_novedad,
             {name: 'descripcion'   , typeName: 'text'   , title: 'descripción' },
             {name: 'orden'         , typeName: 'integer'},
+            {name: 'borrado_rapido', typeName: 'boolean', nullable: false}
         ],
         lookupFields: ['orden', 'descripcion'],
         primaryKey: [tipo_novedad.name],
