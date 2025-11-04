@@ -5,7 +5,8 @@ import {TableDefinition, TableContext, FieldDefinition, sinMinusculas} from "./t
 export const tipo_fichada:FieldDefinition = {
     name: 'tipo_fichada', 
     typeName: 'text',
-    postInput: sinMinusculas
+    postInput: sinMinusculas,
+    nullable: false,
 }
 
 export function tipos_fichada(context:TableContext):TableDefinition{

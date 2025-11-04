@@ -4,7 +4,7 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
-import {annio} from "./table-annios"
+import {annio} from "./table-annios";
 import {tipo_novedad, tipo_novedad_verificado } from "./table-tipos_novedad";
 import { constraintsFechasDesdeHasta } from "./table-fechas";
 
