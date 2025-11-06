@@ -15,6 +15,8 @@ login:
   userFieldName: usuario
   passFieldName: hashpass
   rolFieldName: rol
+  passUpdatedAtFieldName: ultima_actualizacion_password
+  passAlgorithmFieldName: algoritmo_pass
   infoFieldList: [usuario, rol, idper, sector]
   activeClausule: usuarios.activo
   unloggedLandPage: false
