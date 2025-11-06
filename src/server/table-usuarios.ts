@@ -19,7 +19,6 @@ export function usuarios(context: TableContext): TableDefinition{
             {name:'activo'                        , typeName:'boolean' , nullable:false ,defaultValue:false},
             {name:'nombre'                        , typeName:'text'                      },
             {name:'apellido'                      , typeName:'text'                      },
-            {name:'algoritmo_pass'                , typeName:'text'     , editable:false },
             {name:'ultima_actualizacion_password' , typeName:'timestamp', editable:false },
             {name:'telefono'                      , typeName:'text'    , title:'teléfono'},
             {name:'interno'                       , typeName:'text'                      },
@@ -31,13 +30,15 @@ export function usuarios(context: TableContext): TableDefinition{
             {...idper, editable:rolConPermisos},
             {name:'sector', typeName:'text', editable:false, serverSide:true, inTable:false},
             {name:'nombre_sector', typeName:'text', editable:false, serverSide:true, inTable:false},
-
+            {name:'algoritmo_pass'                , typeName:'text'     , editable:false },
+            
         ],
         primaryKey: ['usuario'],
         foreignKeys: [
             {references: 'personas', fields:[idper.name]},
             {references: 'roles'   , fields:[rol.name  ], onUpdate: 'no action'},
         ],
+        hiddenColumns:['algoritmo_pass'],
         constraints: [
             sinEspaciosMail('mail'),sinEspaciosMail('mail_alternativo'),
             {constraintType: 'check', consName: 'los usuarios de mantenimiento no pueden tener persona asociada', expr:`idper is null OR rol is distinct from 'admin'`}
