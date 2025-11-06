@@ -48,6 +48,7 @@ install:
       - ../install/validar_digito.sql
       - ../install/per_domicilios_pk_trg.sql
       - ../install/per_telefonos_pk_trg.sql
+      - ../install/function_registrar_fichadas.sql
       post-adapt:
       - ../node_modules/pg-triggers/lib/recreate-his.sql
       - ../node_modules/pg-triggers/lib/table-changes.sql
@@ -70,6 +71,8 @@ install:
       - ../install/parametros_trg.sql
       - ../install/poblar_pernovcant.sql
       - ../install/usuarios_limpiar_mail_trg.sql
+      - ../install/archivo_borrar_trg.sql
+      - ../install/parseo-codigo-horario.sql
 logo: 
   path: client/img
 `;

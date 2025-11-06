@@ -30,7 +30,11 @@ import { pautas                  } from './table-pautas';
 import { inconsistencias         } from './table-inconsistencias';
 import { usuarios                } from './table-usuarios';
 import { parametros              } from "./table-parametros";
+import { horarios_cod            } from "./table-horarios_cod";
+import { horarios_dds            } from "./table-horarios_dds";
+import { horarios_per            } from "./table-horarios_per";
 import { horarios                } from "./table-horarios";
+import { tipos_fichada           } from "./table-tipos_fichada";
 import { fichadas                } from "./table-fichadas";
 import { trayectoria_laboral     } from "./table-trayectoria_laboral";
 import { capa_modalidades        } from "./table-capa_modalidades";
@@ -56,12 +60,19 @@ import { grados                  } from "./table-grados";
 import { categorias              } from "./table-categorias";
 import { motivos_egreso          } from "./table-motivos_egreso";
 import { jerarquias              } from "./table-jerarquias";
+import { adjuntos                } from './table-adjuntos';
+import { tipos_adjunto           } from "./table-tipos_adjunto";
+import { archivos_borrar         } from "./table-archivos_borrar";
+import { tipos_adjunto_atributos } from "./table-tipos_adjunto_atributos";
+import { adjuntos_atributos      } from "./table-adjuntos_atributos";
 import { expedientes             } from "./table-expedientes";
 import { funciones               } from "./table-funciones";
 import { nivel_grado             } from "./table-nivel_grado";
 import { tareas                  } from "./table-tareas";
 import { perfiles_sgc            } from "./table-perfiles_sgc";
 import { bandas_horarias         } from "./table-bandas_horarias";
+import { niveles_educativos      } from "./table-niveles_educativos";
+import { tipos_novedad           } from "./table-tipos_novedad";
 import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
 
@@ -72,12 +83,47 @@ import {staticConfigYaml} from './def-config';
 import { Persona } from "../common/contracts"
 
 import { unexpected } from "cast-error";
+import { rm } from 'fs/promises';
 
 /* Dos líneas para incluir contracts: */
 var persona: Persona | null = null;
 console.log(persona)
 
+const cronMantenimiento = (be:AppBackend) => {
+    const interval = setInterval(async ()=>{
+        try{
+            const d = new Date();
+            const date = `${d.getDate()}/${d.getMonth()}/${d.getFullYear()}, ${d.getHours()}:${d.getMinutes()}`;
+            if(d.getHours() == 23 && d.getMinutes() == 58){
+                const result = await be.inTransaction(null, async (client)=>{
+                    const {rows} = await client.query("select ruta_archivo from archivos_borrar").fetchAll();
+                    if(rows.length>0){
+                        for (const { ruta_archivo } of rows) {
+                            await client.query(`delete from archivos_borrar where ruta_archivo = $1`, [ruta_archivo,]).execute();
+                            await rm(`local-attachments/adjuntos/${ruta_archivo}`, {
+                                force: true,
+                            });
+                        }
+                        return `Se borraron archivos adjuntos en la fecha y hora: ${date}`;
+                    }else{
+                        return `No hay archivos adjuntos para borrar en la fecha y hora: ${date}`;
+                    }
+                })
+                console.info("Resultado de cron: ", result);
+            }
+        }catch(err){
+            console.error(`Error en cron. ${err}`);
+        }
+    },60000);
+    be.shutdownCallbackListAdd({
+        message:'cron Mantenimiento',
+        fun:async function(){
+            clearInterval(interval);
+            return Promise.resolve();
+        }
+    });
 
+}
 export class AppSiper extends AppBackend{
     constructor(){
         super();
@@ -113,9 +159,51 @@ export class AppSiper extends AppBackend{
         await actionWithErrorLog();
         setInterval(actionWithErrorLog, 24*60*60*1000 / opts.vecesPorDia);
     }
+    override addLoggedServices(): void {
+        super.addLoggedServices();
+        const be = this;
+        const app = be.app;
+        // @ts-ignore
+        be.clientSetup.config.baseUrl = be.config?.server?.['base-url'] || '';
+
+        // @ts-ignore
+        app.get('/download/file', async (req, res) => {
+            const { idper, tipo_adjunto, numero_adjunto } = req.query;
+
+            if (!idper || !tipo_adjunto) {
+                 res.status(400).send("Faltan parámetros necesarios: idper o tipo_adjunto");
+                return;
+            }
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            await be.inDbClient(req, async (client) => {
+                const result = await client.query(
+                    `SELECT archivo_nombre, archivo_nombre_fisico
+                    FROM adjuntos 
+                    WHERE idper = $1 AND tipo_adjunto = $2 AND (numero_adjunto=$3 or ($3 is null and numero_adjunto is null))`,
+                    [idper, tipo_adjunto, numero_adjunto]
+                ).fetchUniqueRow();
+
+                if (!result.row?.archivo_nombre || !result.row?.archivo_nombre_fisico) {
+                    res.status(404).send("Archivo no encontrado");
+                    return;
+                }
+                const path = require('path');
+                const fs = require('fs');
+                const filePath = path.join(be.rootPath || process.cwd(), 'local-attachments', 'adjuntos', String(result.row.archivo_nombre_fisico));
+                if (!fs.existsSync(filePath)) {
+                    res.status(404).send('Archivo no existe en disco');
+                    return;
+                }
+
+                res.download(filePath, String(result.row.archivo_nombre));
+            });
+        });
+    }
     override async postConfig(){
         const be = this;
         super.postConfig();
+        cronMantenimiento(be);
         be.inCron('avance_de_dia_proc', {vecesPorDia:24*6})
     }
     override async getProcedures(){
@@ -147,48 +235,24 @@ export class AppSiper extends AppBackend{
         return context;
     }
     override getMenu(context:Context):MenuDefinition{
-        var {es} = context
+        var {es} = context;
         var menuContent:MenuInfoBase[]=[];
-        menuContent.push(
-            {menuType:'principal', name:'principal'     },
-            ...(es.registra ? [
-                {menuType:'menu', name:'listados', menuContent:[
-                    {menuType:'proc', name:'parte_diario'},
-                    {menuType:'proc', name:'informe_mensual'},
-                    {menuType:'proc', name:'descanso_anual_remunerado'},
-                    {menuType:'proc', name:'exportar_descanso_anual_remunerado'},
-                    // {menuType:'proc', name:'visor_de_fichadas'},
-                    {menuType:'table', name:'novedades_totales', table:'nov_per', ff:[{fieldName:'annio', value:date.today().getFullYear()}]},
-                ]}
-            ] : []),
-               ...es.rrhh ? [{menuType:'table', name:'personas'          },
-                {menuType:'menu', name:'config', label:'configurar', menuContent:[
-                {menuType:'table', name:'sectores', table:'sectores_edit' },
-                {menuType:'table', name:'usuarios'      },
-                ]}
-               ] : [],
-               ...es.admin ? [{menuType:'menu', name:'capacitaciones', menuContent:[
-                {menuType:'table', name:'capacitaciones'},
-                ...(es.registra ? [{menuType:'table', name:'modadidades', table:'capa_modalidades'}] : []),
-            ]}] : []
-        );
-        if(es.admin){
+        if(this.config.server.policy=='fichadas'){
+            menuContent.push({menuType:'fichar', name:'fichar'});
+        }else{
             menuContent.push(
-                {menuType:'menu', name:'en_desarrollo', menuContent:[
-                    {menuType:'registroPersona', name:'persona'},
-                    {menuType:'menu', name:'novedades', menuContent:[
-                        {menuType:'menu', name:'tablas', menuContent:[
-                            {menuType:'table', name:'novedades_vigentes'   },
-                            {menuType:'table', name:'novedades_registradas'},
-                        ]},
-                    ]},
-                    {menuType:'menu', name:'importaciones', menuContent:[
-                        {menuType:'table', name:'novedades_importadas'},
-                        {menuType:'table', name:'nov_per_importado'},
-                    ]},
-                    {menuType:'menu', name:'devel', menuContent:[
-                        {menuType:'componentesSiper', name:'componentes'},
-                    ]},
+                {menuType:'principal', name:'principal'     },
+                ...(es.registra ? [
+                    {menuType:'menu', name:'listados', menuContent:[
+                        {menuType:'proc', name:'parte_diario'},
+                        {menuType:'proc', name:'informe_mensual'},
+                        {menuType:'proc', name:'descanso_anual_remunerado'},
+                        {menuType:'proc', name:'exportar_descanso_anual_remunerado'},
+                        // {menuType:'proc', name:'visor_de_fichadas'},
+                        {menuType:'table', name:'novedades_totales', table:'nov_per', ff:[{fieldName:'annio', value:date.today().getFullYear()}]},
+                    ]}
+                ] : []),
+                ...es.rrhh ? [{menuType:'table', name:'personas'          },
                     {menuType:'menu', name:'config', label:'configurar', menuContent:[
                         {menuType:'table', name:'fechas'        },
                         {menuType:'menu', name:'ref personas'   , description:'tablas referenciales de personas', menuContent:[
@@ -212,12 +276,14 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'categorias'       },
                             {menuType:'table', name:'motivos_egreso'   },
                             {menuType:'table', name:'jerarquias'       },
+                            {menuType:'table', name:'tipos_adjunto'    },
                             {menuType:'table', name:'expedientes'      },
                             {menuType:'table', name:'funciones'        },
                             {menuType:'table', name:'nivel_grado'      },
                             {menuType:'table', name:'tareas'           },
                             {menuType:'table', name:'perfiles_sgc'     },
                             {menuType:'table', name:'bandas_horarias'  },
+                            {menuType:'table', name:'niveles_educativos'},
                         ]},
                         {menuType:'table', name:'cod_novedades' },
                         {menuType:'table', name:'usuarios'      },
@@ -225,8 +291,67 @@ export class AppSiper extends AppBackend{
                         {menuType:'table', name:'reglas'        },
                         {menuType:'proc', name:'consolidar_fichadas'},
                     ]}
-                ]}
+                ] : [],
+                ...es.admin ? [{menuType:'menu', name:'capacitaciones', menuContent:[
+                    {menuType:'table', name:'capacitaciones'},
+                    ...(es.registra ? [{menuType:'table', name:'modadidades', table:'capa_modalidades'}] : []),
+                ]}] : []
             );
+            if(es.admin){
+                menuContent.push(
+                    {menuType:'menu', name:'en_desarrollo', menuContent:[
+                        {menuType:'registroPersona', name:'persona'},
+                        {menuType:'menu', name:'novedades', menuContent:[
+                            {menuType:'menu', name:'tablas', menuContent:[
+                                {menuType:'table', name:'novedades_vigentes'   },
+                                {menuType:'table', name:'novedades_registradas'},
+                            ]},
+                        ]},
+                        {menuType:'menu', name:'importaciones', menuContent:[
+                            {menuType:'table', name:'novedades_importadas'},
+                            {menuType:'table', name:'nov_per_importado'},
+                        ]},
+                        {menuType:'menu', name:'devel', menuContent:[
+                            {menuType:'componentesSiper', name:'componentes'},
+                        ]},
+                        {menuType:'menu', name:'config', label:'configurar', menuContent:[
+                            {menuType:'table', name:'fechas'        },
+                            {menuType:'menu', name:'ref personas'   , description:'tablas referenciales de personas', menuContent:[
+                                {menuType:'table', name:'sectores'         , table:'sectores_edit' },
+                                {menuType:'table', name:'situacion_revista', label: 'sit. revista' },
+                                {menuType:'table', name:'clases'           },
+                                {menuType:'table', name:'paises'           },
+                                {menuType:'table', name:'provincias'       },
+                                {menuType:'table', name:'barrios'          },
+                                {menuType:'table', name:'localidades'      },
+                                {menuType:'table', name:'calles'           },
+                                {menuType:'table', name:'tipos_domicilio'  },
+                                {menuType:'table', name:'tipos_telefono'   },
+                                {menuType:'table', name:'tipos_doc'        },
+                                {menuType:'table', name:'tipos_fichada'    },
+                                {menuType:'table', name:'tipos_sec'        },
+                                {menuType:'table', name:'sexos'            },
+                                {menuType:'table', name:'estados_civiles'  },
+                                {menuType:'table', name:'agrupamientos'    },
+                                {menuType:'table', name:'grados'           },
+                                {menuType:'table', name:'tramos'           },
+                                {menuType:'table', name:'categorias'       },
+                                {menuType:'table', name:'motivos_egreso'   },
+                                {menuType:'table', name:'jerarquias'       },
+                                {menuType:'table', name:'expedientes'      },
+                                {menuType:'table', name:'funciones'        },
+                                {menuType:'table', name:'nivel_grado'      },
+                                {menuType:'table', name:'tareas'           },
+                                {menuType:'table', name:'perfiles_sgc'     },
+                                {menuType:'table', name:'bandas_horarias'  },
+                            ]},
+                            {menuType:'table', name:'cod_novedades' },
+                            {menuType:'table', name:'usuarios'      },
+                            {menuType:'table', name:'horarios'      },
+                        ]}
+                    ]}
+                );
+            }
         }
         return {menu:menuContent};
     }
@@ -264,6 +389,7 @@ export class AppSiper extends AppBackend{
             { type: 'css', file: 'arbol.css' },
             { type: 'js', file: 'common/contracts.js' },
             { type: 'js', file: 'client/ws-componentes.js' },
+            { type: 'js', file: 'client/ws-fichadas.js' },
             { type: 'js', file: 'client/ws-arbol.js' },
             { type: 'js', file: 'client/ws-persona.js' },
             ... menuedResources
@@ -274,11 +400,17 @@ export class AppSiper extends AppBackend{
         super.prepareGetTables();
         this.getTableDefinition={
             ... this.getTableDefinition,
-            annios               ,
+            annios                ,
+            adjuntos              ,
+            tipos_adjunto         ,
+            tipos_adjunto_atributos,
+            adjuntos_atributos   ,
+            archivos_borrar      ,
             roles                ,
             cod_novedades        ,
             fechas               ,
             tipos_sec            ,
+            tipos_novedad        ,
             sectores, sectores_edit,
             clases               ,
             grupos               ,
@@ -298,7 +430,11 @@ export class AppSiper extends AppBackend{
             inconsistencias      ,  
             usuarios             ,
             parametros           ,
+            horarios_cod         ,
+            horarios_dds         ,
+            horarios_per         ,
             horarios             ,
+            tipos_fichada        ,
             fichadas             ,
             capa_modalidades     ,
             capacitaciones       ,
@@ -329,6 +465,7 @@ export class AppSiper extends AppBackend{
             tareas               ,
             perfiles_sgc         ,
             trayectoria_laboral  ,
+            niveles_educativos   ,
             bandas_horarias      ,
             reglas               ,
             avisos_falta_fichada ,  

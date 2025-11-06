@@ -67,7 +67,7 @@ export type NovGru = DefinedType<typeof nov_gru.description>
 export const nov_per = {
     table: 'nov_per',
     description: is.object({
-        año: is.number,
+        annio: is.number,
         cod_nov: is.string,
         idper: is.string,
         cantidad: is.number,
@@ -143,6 +143,17 @@ export const horarios = {
 
 export type Horarios = DefinedType<typeof horarios.description>
 
+export const horarios_per = {
+    table: 'horarios_per',
+    description: is.object({
+        idper     : is.string,
+        horario   : is.string,
+        annio     : is.number,
+        desde     : is.Date,
+        hasta     : is.nullable.Date,
+    })
+} satisfies CommonEntityDefinition
+
 export const personas = {
     table: 'personas',
     description: is.object({
@@ -158,7 +169,8 @@ export const personas = {
         activo:    is.nullable.boolean,
         fecha_ingreso: is.nullable.Date,
         fecha_egreso : is.nullable.Date,
-        es_jefe:    is.nullable.boolean,
+        es_jefe      : is.nullable.boolean,
+        horario      : is.nullable.string
     })
 } satisfies CommonEntityDefinition
 
@@ -457,6 +469,74 @@ export const tipos_doc = {
 } satisfies CommonEntityDefinition
 
 export type Tipos_doc = DefinedType<typeof tipos_doc.description>
+export const adjuntos = {
+    table: 'adjuntos',
+    description: is.object({
+        idper: is.string,
+        numero_adjunto: is.nullable.number,
+        tipo_adjunto: is.string,
+        timestamp: is.Date,
+        subir: is.nullable.string,
+        archivo_nombre: is.nullable.string,
+        archivo_nombre_fisico: is.nullable.string,
+        bajar: is.nullable.string,
+    }),
+} satisfies CommonEntityDefinition;
+
+export type Adjuntos = DefinedType<typeof adjuntos.description>;
+
+export const tipos_adjunto = {
+    table: 'tipos_adjunto',
+    description: is.object({
+        tipo_adjunto: is.string,
+        descripcion: is.string
+    })
+} satisfies CommonEntityDefinition
+
+export type Tipos_adjunto = DefinedType<typeof tipos_adjunto.description>
+
+export const tipos_adjunto_atributos = {
+    table: 'tipos_adjunto_atributos',
+    description: is.object({
+        tipo_adjunto: is.string,
+        atributo: is.string,
+        orden: is.number,
+        columna: is.number
+    })
+} satisfies CommonEntityDefinition
+
+export type tipos_adjunto_atributos = DefinedType<typeof tipos_adjunto_atributos.description>
+
+export const archivos_borrar = {
+    table: 'archivos_borrar',
+    description: is.object({
+        ruta_archivo: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type Archivos_borrar = DefinedType<typeof archivos_borrar.description>
+
+export const adjuntos_atributos = {
+    table: 'adjuntos_atributos',
+    description: is.object({
+        idper: is.string,
+        tipo_adjunto: is.string,
+        atributo: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type Adjuntos_atributos = DefinedType<typeof adjuntos_atributos.description>
+
+export const tipos_fichada = {
+    table: 'tipos_fichada',
+    description: is.object({
+        tipo_fichada: is.string,
+        nombre: is.string,
+        orden: is.number
+    })
+} satisfies CommonEntityDefinition
+
+export type Tipos_fichada = DefinedType<typeof tipos_fichada.description>
 
 export const paises = {
     table : 'paises',
@@ -721,6 +801,16 @@ export const perfiles_sgc = {
 
 export type perfiles_sgc = DefinedType<typeof perfiles_sgc.description>
 
+export const niveles_educativos = {
+    table : 'niveles_educativos',
+    description : is.object({
+        nivel_educativo: is.number,
+        nombre: is.string
+    })
+}
+
+export type niveles_educativos = DefinedType<typeof niveles_educativos.description>
+
 export const per_telefonos = {
     table: 'per_telefonos',
     description: is.object({
@@ -746,7 +836,7 @@ export const bandas_horarias = {
 
 export type bandas_horarias = DefinedType<typeof bandas_horarias.description>
 
-export const fichadas = {
+export const Fichada = {
     table: 'fichadas',
     description: is.object({
         idper: is.string,
@@ -762,7 +852,41 @@ export const fichadas = {
     })
 } satisfies CommonEntityDefinition
 
-export type fichadas = DefinedType<typeof fichadas.description>
+export type Fichada = DefinedType<typeof Fichada.description>
+
+
+//para app de fichadas
+export interface FichadaData { 
+    idper: string;
+    nombres: string;
+    apellido: string;
+    tipo_fichada: 'E' | 'S' | 'O' | null;
+    fecha: string; // YYYY-MM-DD
+    hora: string;  // HH:MM:SS
+    observaciones: string | null;
+    punto: string | null;
+    tipo_dispositivo: string | null;
+    id_original: string | null;
+}
+
+interface FichadaFallida {
+  index: number;
+  error_code: string;
+  error_message: string;
+  fichada_data: FichadaData
+}
+
+export interface RegistroFichadasResponse {
+  status: 'OK' | 'ERROR' | 'SUCCESS_PARTIAL';
+  code: 200 | 207 | 400 | 403 | 500;
+  message: string;
+  cant_procesadas: number;
+  cant_insertadas: number;
+  cant_fallidas: number;
+  fallidas: FichadaFallida[];
+}
+
+//fin para app de fichadas
 
 export const reglas = {
     table: 'reglas',

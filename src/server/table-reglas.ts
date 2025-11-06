@@ -2,7 +2,7 @@
 
 import {TableDefinition, TableContext} from "./types-principal";
 
-import {año} from "./table-annios"
+import {annio} from "./table-annios"
 
 export function reglas(_context: TableContext): TableDefinition{
     return {
@@ -10,7 +10,7 @@ export function reglas(_context: TableContext): TableDefinition{
         elementName: 'regla',
         editable: false,
         fields:[
-            año,
+            annio,
             {name: 'codnov_unica_fichada',              typeName: 'text'    },
             {name: 'codnov_sin_fichadas',               typeName: 'text'    },
             {name: 'umbral_horas_mensuales',            typeName: 'integer' },
@@ -20,8 +20,8 @@ export function reglas(_context: TableContext): TableDefinition{
             {name: 'horario_consolidado',               typeName: 'time'    },
             {name: 'minimas_horas_diarias_declaradas',  typeName: 'integer' },
             {name: 'maximas_horas_diarias_declaradas',  typeName: 'integer' },
-        ],         
-        primaryKey: [año.name],
+        ],
+        primaryKey: [annio.name],
         foreignKeys: [
             {references: 'cod_novedades', fields:[{source:'codnov_unica_fichada', target:'cod_nov'}], alias:'codnov_unica_fichada'},
             {references: 'cod_novedades'  , fields:[{source:'codnov_sin_fichadas', target:'cod_nov'}], alias:'codnov_sin_fichadas'},

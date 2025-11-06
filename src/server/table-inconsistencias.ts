@@ -4,7 +4,7 @@ import {TableDefinition, TableContext} from "./types-principal";
 
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
-import {año} from "./table-annios"
+import {annio} from "./table-annios"
 import {pauta} from "./table-pautas"
 import { sqlNovPer } from "./table-nov_per";
 import { sqlPersonas } from "./table-personas";
@@ -15,13 +15,13 @@ export function inconsistencias(_context: TableContext): TableDefinition{
         elementName: 'inconsistencia',
         fields:[
             idper,
-            año,
+            annio,
             pauta,
             cod_nov,
         ],
-        primaryKey: [idper.name, año.name, pauta.name], // INCOMPLETO
+        primaryKey: [idper.name, annio.name, pauta.name], // INCOMPLETO
         softForeignKeys: [
-            {references: 'annios'  , fields: [año.name], onUpdate: 'no action'},
+            {references: 'annios'  , fields: [annio.name], onUpdate: 'no action'},
             {references: 'personas', fields: [idper.name], displayFields:['apellido', 'nombres', 'idmeta4', 'cuil', 'ficha']},
             {references: 'cod_novedades', fields: [cod_nov.name]},
             {references: 'pautas', fields:[pauta.name], displayFields:['descripcion']}
@@ -30,7 +30,7 @@ export function inconsistencias(_context: TableContext): TableDefinition{
         ],
         sql:{
             isTable: false,
-            from:`(SELECT q.idper, NULL::INTEGER as annio, q.pauta, NULL::TEXT as cod_nov
+            from:`(SELECT q.idper, NULL::INTEGER as annio, q.pauta, cod_nov
                      FROM
                      (
                      SELECT idper, NULL::INTEGER as annio, 'ACTULTDIA' pauta, NULL::TEXT as cod_nov 
