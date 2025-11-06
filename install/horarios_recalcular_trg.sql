@@ -19,9 +19,11 @@ BEGIN
 END;
 $BODY$;
 
+/*
 DROP TRIGGER IF EXISTS horarios_recalcular_trg on horarios;
 CREATE TRIGGER horarios_recalcular_trg
   AFTER DELETE OR INSERT OR UPDATE
   ON horarios
   FOR EACH ROW
   EXECUTE PROCEDURE horarios_recalcular_trg();
+*/

@@ -14,26 +14,28 @@ export function horarios(context: TableContext): TableDefinition{
         editable: admin,
         fields: [
             {...idper, editable:admin},
-            {name:'dds'              , typeName:'integer'                   },
-            {...año, editable:false, generatedAs:`extract(year from desde)` },
-            {name: 'desde'           , typeName: 'date'   , nullable:false  },
-            {name: 'hasta'           , typeName: 'date'   , nullable:false  },
-            {name:'trabaja'          , typeName:'boolean' , nullable:false ,defaultValue:false},
-            {name:'hora_desde'       , typeName:'time'    , nullable:false  },
-            {name:'hora_hasta'       , typeName:'time'    , nullable:false  },
-            {name:'lapso_fechas'     , typeName:'daterange', visible:false, generatedAs:'daterange(desde, coalesce(hasta, make_date(extract(year from desde)::integer, 12, 31)))'},
+            {name: 'dds'             , typeName: 'integer'                   },
+            {...año, editable:false, generatedAs:`extract(year from desde)`  },
+            {name: 'desde'           , typeName: 'date'    , nullable:false  },
+            {name: 'hasta'           , typeName: 'date'    , nullable:false  },
+            {name: 'trabaja'         , typeName: 'boolean' , nullable:false ,defaultValue:false},
+            {name: 'hora_desde'      , typeName: 'time'    , nullable:false  },
+            {name: 'hora_hasta'      , typeName: 'time'    , nullable:false  },
+            {name: 'lapso_fechas'    , typeName: 'daterange', visible:false, generatedAs:'daterange(desde, coalesce(hasta, make_date(extract(year from desde)::integer, 12, 31)))'},
         ],
-        primaryKey: [idper.name,'dds', año.name, 'desde'],
-        foreignKeys: [
+        primaryKey: [idper.name, 'dds', año.name, 'desde'],
+        softForeignKeys: [
             {references: 'personas', fields:[idper.name], onDelete:'cascade'},
-            {references: 'annios'  , fields: [año.name], onUpdate: 'no action'},
+            {references: 'annios'  , fields:[año.name], onUpdate: 'no action'},
             {references: 'fechas'  , fields:[{source:'desde', target:'fecha'}], alias:'desde', onDelete:'cascade'},
             {references: 'fechas'  , fields:[{source:'hasta', target:'fecha'}], alias:'hasta', onDelete:'cascade'},
         ],
-        constraints: [
-            {constraintType: 'check', consName:'dia de la semana entre 0 y 6', expr: 'dds between 0 and 6'},
-            {constraintType: 'check', consName:'si trabaja tiene horario', expr: '(trabaja is true) = (hora_desde is not null and hora_hasta is not null)'},
-            {constraintType:'exclude', consName:'sin superponer fechas', using:'GIST', fields:[idper.name, 'dds', {fieldName:'lapso_fechas', operator:'&&'}]}
-        ]
+        sql:{
+            isTable:false,
+            viewBody:`select hp.idper, hd.dds, hp.annio, hp.desde, hp.hasta, hd.dds between 1 and 5 as trabaja, hd.hora_desde, hd.hora_hasta, hp.lapso_fechas
+                from horarios_per hp 
+                    inner join horarios_dds hd using (horario)
+            `
+        }
     };
 }

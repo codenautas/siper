@@ -134,6 +134,17 @@ export const horarios = {
 
 export type Horarios = DefinedType<typeof horarios.description>
 
+export const horarios_per = {
+    table: 'horarios_per',
+    description: is.object({
+        idper     : is.string,
+        horario   : is.string,
+        annio     : is.number,
+        desde     : is.Date,
+        hasta     : is.nullable.Date,
+    })
+} satisfies CommonEntityDefinition
+
 export const personas = {
     table: 'personas',
     description: is.object({
@@ -149,7 +160,8 @@ export const personas = {
         activo:    is.nullable.boolean,
         fecha_ingreso: is.nullable.Date,
         fecha_egreso : is.nullable.Date,
-        es_jefe:    is.nullable.boolean,
+        es_jefe      : is.nullable.boolean,
+        horario      : is.nullable.string
     })
 } satisfies CommonEntityDefinition
 
@@ -438,6 +450,63 @@ export const tipos_doc = {
 } satisfies CommonEntityDefinition
 
 export type Tipos_doc = DefinedType<typeof tipos_doc.description>
+export const adjuntos = {
+    table: 'adjuntos',
+    description: is.object({
+        idper: is.string,
+        numero_adjunto: is.nullable.number,
+        tipo_adjunto: is.string,
+        timestamp: is.Date,
+        subir: is.nullable.string,
+        archivo_nombre: is.nullable.string,
+        archivo_nombre_fisico: is.nullable.string,
+        bajar: is.nullable.string,
+    }),
+} satisfies CommonEntityDefinition;
+
+export type Adjuntos = DefinedType<typeof adjuntos.description>;
+
+export const tipos_adjunto = {
+    table: 'tipos_adjunto',
+    description: is.object({
+        tipo_adjunto: is.string,
+        descripcion: is.string
+    })
+} satisfies CommonEntityDefinition
+
+export type Tipos_adjunto = DefinedType<typeof tipos_adjunto.description>
+
+export const tipos_adjunto_atributos = {
+    table: 'tipos_adjunto_atributos',
+    description: is.object({
+        tipo_adjunto: is.string,
+        atributo: is.string,
+        orden: is.number,
+        columna: is.number
+    })
+} satisfies CommonEntityDefinition
+
+export type tipos_adjunto_atributos = DefinedType<typeof tipos_adjunto_atributos.description>
+
+export const archivos_borrar = {
+    table: 'archivos_borrar',
+    description: is.object({
+        ruta_archivo: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type Archivos_borrar = DefinedType<typeof archivos_borrar.description>
+
+export const adjuntos_atributos = {
+    table: 'adjuntos_atributos',
+    description: is.object({
+        idper: is.string,
+        tipo_adjunto: is.string,
+        atributo: is.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type Adjuntos_atributos = DefinedType<typeof adjuntos_atributos.description>
 
 export const paises = {
     table : 'paises',
@@ -701,6 +770,16 @@ export const perfiles_sgc = {
 }
 
 export type perfiles_sgc = DefinedType<typeof perfiles_sgc.description>
+
+export const niveles_educativos = {
+    table : 'niveles_educativos',
+    description : is.object({
+        nivel_educativo: is.number,
+        nombre: is.string
+    })
+}
+
+export type niveles_educativos = DefinedType<typeof niveles_educativos.description>
 
 export const per_telefonos = {
     table: 'per_telefonos',
