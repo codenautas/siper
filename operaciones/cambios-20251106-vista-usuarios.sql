@@ -1,6 +1,6 @@
 set search_path=siper;
-SET ROLE siper_owner;
---SET ROLE siper_muleto_owner;
+--SET ROLE siper_owner;
+SET ROLE siper_muleto_owner;
 
 -- =================================================================================
 -- VISTA: siper.v_usuarios_scram
