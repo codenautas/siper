@@ -32,7 +32,9 @@ import {
 import { date, RealDate, compareForOrder, sameValue } from "best-globals";
 
 import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, NovedadRegistrada, ParametrosResult,
-    InfoUsuario
+    InfoUsuario,
+    FichadaData,
+    RegistroFichadasResponse
 } from "../common/contracts"
 import * as ctts from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
@@ -283,7 +285,7 @@ type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<str
 // @ts-ignore
 type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
-type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, dds0: boolean, dds1: boolean, dds2: boolean, dds3: boolean, dds4: boolean, dds5: boolean, dds6: boolean, detalles:string, idr:number, dias_hoc:string, usuario:string, fecha:RealDate}
+type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, dds0: boolean, dds1: boolean, dds2: boolean, dds3: boolean, dds4: boolean, dds5: boolean, dds6: boolean, detalles:string, idr:number, dias_hoc:string, usuario:string, fecha:RealDate, tipo_novedad:string, tipos_novedad__orden:number, tipos_novedad__borrado_rapido:boolean}
 
 interface DetalleAnioNovPer {
     cantidad: number;
@@ -546,7 +548,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 <span className="razones">{n.cod_novedades__novedad} {n.detalles ? ' / ' + n.detalles : '' } 
                     {diasSeleccionados.length > 0 ? ' / ' + diasSeleccionados.join(', ') : ''}
                 </span>
-                <span className="borrar">{n.desde > fechaActual && es.rrhh ? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</span>
+                <span className="borrar">{n.desde > fechaActual && es.rrhh && n.tipos_novedad__borrado_rapido? <Button color="error" onClick={()=>setQuiereBorrar(n)}><ICON.DeleteOutline/></Button> : null }</span>
             </Box>
             {verInfo &&
                 <Box>
@@ -711,6 +713,7 @@ declare module "frontend-plus" {
         }) => Promise<void>;
         parametros: (params:{}) => Promise<ParametrosResult>;
         registrar_novedad: (params:NovedadRegistrada) => Promise<NovedadRegistrada & { idr: number }>;
+        fichadas_registrar:(params:{fichadas:FichadaData[]}) => Promise<RegistroFichadasResponse>
     }
     interface Connector {
         config: AppConfigClientSetup
@@ -1179,7 +1182,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         </Paper>;
 }
 
-function renderRol( infoUsuario: InfoUsuario ) {
+export function renderRol( infoUsuario: InfoUsuario ) {
     const observer = new MutationObserver(() => {
         const activeUserElement = document.getElementById('active-user');
         if (activeUserElement) {
