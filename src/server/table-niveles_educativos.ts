@@ -4,13 +4,13 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 
 export const nivel_educativo: FieldDefinition = {
     name: 'nivel_educativo', 
-    typeName: 'integer',
+    typeName: 'text',
     title: 'Nivel Educativo'
 };
 
 export const max_nivel_ed: FieldDefinition = {
     name: 'max_nivel_ed', 
-    typeName: 'integer',
+    typeName: 'text',
     title: 'Max Nivel Educativo'
 };
 
