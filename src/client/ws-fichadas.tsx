@@ -375,7 +375,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                     helperText={validationErrors.tipo_fichada}
                     onChange={handleChange}
                     error={!!validationErrors.tipo_fichada}
-                    value={formData.tipo_fichada}
+                    value={formData.tipo_fichada || ''}
                 >
                     {tiposFichada.map(tf=>
                         <MenuItem key={tf.tipo_fichada} value={tf.tipo_fichada}>{tf.nombre}</MenuItem>
@@ -390,7 +390,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                     name="observaciones"
                     multiline
                     rows={2}
-                    value={formData.observaciones}
+                    value={formData.observaciones || ''}
                     onChange={handleChange}
                     size="small"
                 />
@@ -413,7 +413,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                     id="punto"
                     label={formData.punto ? "Coordenadas GPS (Latitud, Longitud)" : "Sin punto GPS"}
                     name="punto"
-                    value={formData.punto}
+                    value={formData.punto || ''}
                     InputLabelProps={{ shrink: true }}
                     inputProps={{ readOnly: true }}
                     color={errorEnPuntoGps() ? 'warning' : undefined}
