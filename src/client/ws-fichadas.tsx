@@ -39,6 +39,8 @@ type ModalResponse = {
     data?: FichadaData;
 }
 
+const ARGENTINA_TIMEZONE = 'America/Argentina/Buenos_Aires';
+
 const logout = () => {
     var root = document.getElementById('total-layout');
     if (root != null ) ReactDOM.unmountComponentAtNode(root)
@@ -49,18 +51,43 @@ const logout = () => {
 
 function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFichada:Tipos_fichada[] }) {
     const {infoUsuario, conn, tiposFichada} = props;
+    
     const formatDateTime = () => {
         const now = new Date();
-        const fechaFormateada = now.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        const horaFormateada = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-        const fechaISO = now.toISOString().split('T')[0];
+        
+        const formatter = new Intl.DateTimeFormat('es-AR', { 
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+            timeZone: ARGENTINA_TIMEZONE
+        });
+        
+        const parts = formatter.formatToParts(now);
+        
+        const getPart = (type: string) => parts.find(p => p.type === type)?.value || '';
+        const year = getPart('year');
+        const month = getPart('month');
+        const day = getPart('day');
+        const hour = getPart('hour');
+        const minute = getPart('minute');
+        const second = getPart('second');
+
+        const fechaFormateada = `${day}/${month}/${year}`;
+        const horaFormateada = `${hour}:${minute}:${second}`;
+        const fechaISO = `${year}-${month}-${day}`;
+
         return {
             fechaFormateada: fechaFormateada,
             horaFormateada: horaFormateada,
-            fechaISO: fechaISO,
-            horaISO: horaFormateada,
+            fechaISO: fechaISO, 
+            horaISO: horaFormateada, 
         };
     };
+    
     const [currentDateTime, setCurrentDateTime] = useState(formatDateTime());
     useEffect(() => {
         const timerId = setInterval(() => {
@@ -600,7 +627,7 @@ function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, in
 myOwn.wScreens.fichar = async function principal(addrParams:any){
     try{
         const infoUsuario: InfoUsuario = await myOwn.ajax.info_usuario();
-        const tiposFichadas:Tipos_fichada[]  = await myOwn.ajax.table_data({table:'tipos_fichada'});
+        const tiposFichadas:Tipos_fichada[] = await myOwn.ajax.table_data({table:'tipos_fichada'});
         renderConnectedApp(
             myOwn as never as Connector,
             { ...addrParams },
