@@ -25,8 +25,17 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
             cn.con_detalles,
             cn.registra,
             cn.prioritario,
-            nv.saldo < 0 as error_saldo_negativo
-    from cod_novedades cn,
+            nv.saldo < 0 as error_saldo_negativo,
+            fch.error_falta_entrada
+    from cod_novedades cn
+    left join lateral (
+        select p.idper, cd.cod_nov, true as error_falta_entrada from novedades_vigentes nv
+        left join personas p on nv.idper = p.idper
+        left join fichadas f on  f.idper = p.idper and f.fecha = nv.fecha
+        left join cod_novedades cd on nv.cod_nov = cd.cod_nov
+        where cd.requiere_entrada and f.hora is null
+        group by p.idper, cd.cod_nov
+    ) fch on cn.cod_nov = fch.cod_nov,
         parametros par,
         annios a,
         personas p,

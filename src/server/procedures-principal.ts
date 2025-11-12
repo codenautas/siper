@@ -134,14 +134,23 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             });
             const {idper, desde} = result.row as NovedadRegistrada;
             var inconsistencias = await context.client.query(`
-                SELECT cod_nov, saldo
+                SELECT cod_nov, saldo, error_saldo_negativo, error_falta_entrada
                     FROM (${sqlNovPer({idper, annio:desde.getFullYear()})}) x
-                    WHERE error_saldo_negativo
+                    WHERE error_saldo_negativo or error_falta_entrada
             `, []).fetchAll();
             if (inconsistencias.rows.length > 0) {
-                var error = expected(new Error(`La novedad registrada genera saldos negativos. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}, saldo: ${r.saldo}`).join('; ')}`));
-                error.code = 'B9001'; // ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES
-                throw error;
+                const erroresSaldoNegativo = inconsistencias.rows.filter(r => r.error_saldo_negativo);
+                const erroresFaltaEntrada = inconsistencias.rows.filter(r => r.error_falta_entrada);
+                if (erroresSaldoNegativo.length > 0){
+                    var error = expected(new Error(`La novedad registrada genera saldos negativos. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}, saldo: ${r.saldo}`).join('; ')}`));
+                    error.code = 'B9001'; // ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES
+                    throw error;
+                }
+                if (erroresFaltaEntrada.length > 0){
+                    var error = expected(new Error(`La novedad registrada requiere fichada de entrada. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}`).join('; ')}`));
+                    error.code = 'B9002'; // ERROR_FALTA_FICHADA
+                    throw error;
+                }
             }
             return result.row;
         }
