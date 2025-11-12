@@ -4,7 +4,7 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
-import {año} from "./table-annios"
+import {annio} from "./table-annios";
 import {tipo_novedad, tipo_novedad_verificado } from "./table-tipos_novedad";
 import { constraintsFechasDesdeHasta } from "./table-fechas";
 
@@ -85,7 +85,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
             {name: 'dds4'     , typeName: 'boolean', title:'jueves'                     },
             {name: 'dds5'     , typeName: 'boolean', title:'viernes'                    },
             {name: 'dds6'     , typeName: 'boolean', title:'sabado'                     },
-            {...año, editable:false, generatedAs:`extract(year from desde)`},
+            {...annio, editable:false, generatedAs:`extract(year from desde)`},
             {name: 'cancela'  , typeName: 'boolean', description:'cancelación de novedades'},
             {name: 'detalles' , typeName: 'text'   ,                                    },
             {name: 'dias_hoc' , typeName: 'text', inTable:false, serverSide:true, editable:false },
@@ -95,7 +95,7 @@ export function novedades_registradas(_context: TableContext): TableDefinition{
         ],         
         primaryKey: [idper.name, 'desde', idr.name],
         foreignKeys: [
-            {references: 'annios'  , fields: [año.name], onUpdate: 'no action'},
+            {references: 'annios'  , fields: [annio.name], onUpdate: 'no action'},
             {references: 'personas', fields: [idper.name], displayFields:['apellido', 'nombres', 'idmeta4', 'cuil', 'ficha']},
             {references: 'cod_novedades', fields: [cod_nov.name]},
             {references: 'fechas', fields: [{source:'desde', target:'fecha'}], alias:'desde'},

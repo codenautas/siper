@@ -17,6 +17,15 @@ export const cod_nov = {
         total: is.nullable.boolean,
         parcial: is.nullable.boolean,
         comun: is.nullable.boolean,
+        pierde_presentismo: is.nullable.boolean,
+        cuenta_horas: is.nullable.boolean,
+        requiere_fichadas: is.nullable.boolean,
+        requiere_entrada: is.nullable.boolean,
+        umbral_posterior_entrada: is.nullable.number,
+        umbral_anterior_salida: is.nullable.number,
+        requiere_ninguna_fichada: is.nullable.boolean,
+        necesita_verificacion_manual: is.nullable.boolean,
+        eximido_fichar: is.nullable.boolean,
     })
 }
 export type CodNovedades = DefinedType<typeof cod_nov.description>
@@ -58,7 +67,7 @@ export type NovGru = DefinedType<typeof nov_gru.description>
 export const nov_per = {
     table: 'nov_per',
     description: is.object({
-        año: is.number,
+        annio: is.number,
         cod_nov: is.string,
         idper: is.string,
         cantidad: is.number,
@@ -508,6 +517,17 @@ export const adjuntos_atributos = {
 
 export type Adjuntos_atributos = DefinedType<typeof adjuntos_atributos.description>
 
+export const tipos_fichada = {
+    table: 'tipos_fichada',
+    description: is.object({
+        tipo_fichada: is.string,
+        nombre: is.string,
+        orden: is.number
+    })
+} satisfies CommonEntityDefinition
+
+export type Tipos_fichada = DefinedType<typeof tipos_fichada.description>
+
 export const paises = {
     table : 'paises',
     description: is.object({
@@ -799,10 +819,96 @@ export const bandas_horarias = {
         descripcion: is.string,
         hora_desde: is.string,
         hora_hasta: is.string,
+        umbral_aviso_falta_entrada: is.nullable.number,
+        umbral_aviso_falta_salida: is.nullable.number,
     })
 } satisfies CommonEntityDefinition
 
 export type bandas_horarias = DefinedType<typeof bandas_horarias.description>
+
+export const Fichada = {
+    table: 'fichadas',
+    description: is.object({
+        idper: is.string,
+        annio: is.number,
+        id_fichada: is.bigint,
+        tipo_fichada: is.nullable.string,
+        fecha: is.Date,
+        hora: is.nullable.string,
+        observaciones: is.nullable.string,
+        punto: is.nullable.string,
+        tipo_dispositivo: is.nullable.string,
+        id_original: is.nullable.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type Fichada = DefinedType<typeof Fichada.description>
+
+
+//para app de fichadas
+export interface FichadaData { 
+    idper: string;
+    nombres: string;
+    apellido: string;
+    tipo_fichada: 'E' | 'S' | 'O' | null;
+    fecha: string; // YYYY-MM-DD
+    hora: string;  // HH:MM:SS
+    observaciones: string | null;
+    punto: string | null;
+    tipo_dispositivo: string | null;
+    id_original: string | null;
+}
+
+interface FichadaFallida {
+  index: number;
+  error_code: string;
+  error_message: string;
+  fichada_data: FichadaData
+}
+
+export interface RegistroFichadasResponse {
+  status: 'OK' | 'ERROR' | 'SUCCESS_PARTIAL';
+  code: 200 | 207 | 400 | 403 | 500;
+  message: string;
+  cant_procesadas: number;
+  cant_insertadas: number;
+  cant_fallidas: number;
+  fallidas: FichadaFallida[];
+}
+
+//fin para app de fichadas
+
+export const reglas = {
+    table: 'reglas',
+    description: is.object({
+        annio: is.number,
+        codnov_unica_fichada: is.nullable.string,         
+        codnov_sin_fichadas: is.nullable.string,         
+        umbral_horas_mensuales: is.nullable.number,       
+        umbral_horas_diarias: is.nullable.number,       
+        umbral_horas_semanales: is.nullable.number,
+        umbral_horas_personales: is.nullable.number,     
+        horario_consolidado: is.nullable.string,           
+        minimas_horas_diarias_declaradas: is.nullable.number,
+        maximas_horas_diarias_declaradas: is.nullable.number,
+    })
+} satisfies CommonEntityDefinition
+
+export type reglas = DefinedType<typeof reglas.description>
+
+export const avisos_falta_fichada = {
+    table: 'avisos_falta_fichada',
+    description: is.object({
+        idper: is.string,
+        fecha: is.Date,
+        tipo_fichada: is.nullable.string,
+        avisado_wp: is.nullable.string,   
+        avisado_mail: is.nullable.string,
+        llegada_novedad: is.nullable.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type avisos_falta_fichada = DefinedType<typeof avisos_falta_fichada.description>
 
 export const meses = [
     {  value:1, name:'enero' },

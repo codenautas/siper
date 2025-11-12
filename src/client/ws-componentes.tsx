@@ -32,7 +32,9 @@ import {
 import { date, RealDate, compareForOrder, sameValue } from "best-globals";
 
 import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, NovedadRegistrada, ParametrosResult,
-    InfoUsuario
+    InfoUsuario,
+    FichadaData,
+    RegistroFichadasResponse
 } from "../common/contracts"
 import * as ctts from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
@@ -711,6 +713,7 @@ declare module "frontend-plus" {
         }) => Promise<void>;
         parametros: (params:{}) => Promise<ParametrosResult>;
         registrar_novedad: (params:NovedadRegistrada) => Promise<NovedadRegistrada & { idr: number }>;
+        fichadas_registrar:(params:{fichadas:FichadaData[]}) => Promise<RegistroFichadasResponse>
     }
     interface Connector {
         config: AppConfigClientSetup
@@ -1178,7 +1181,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         </Paper>;
 }
 
-function renderRol( infoUsuario: InfoUsuario ) {
+export function renderRol( infoUsuario: InfoUsuario ) {
     const observer = new MutationObserver(() => {
         const activeUserElement = document.getElementById('active-user');
         if (activeUserElement) {

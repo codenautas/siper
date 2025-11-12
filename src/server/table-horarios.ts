@@ -3,7 +3,7 @@
 import {TableDefinition, TableContext} from "./types-principal";
 
 import {idper} from "./table-personas"
-import {año} from "./table-annios"
+import {annio} from "./table-annios"
 
 export function horarios(context: TableContext): TableDefinition{
     var admin = context.es.rrhh;
@@ -15,7 +15,7 @@ export function horarios(context: TableContext): TableDefinition{
         fields: [
             {...idper, editable:admin},
             {name: 'dds'             , typeName: 'integer'                   },
-            {...año, editable:false, generatedAs:`extract(year from desde)`  },
+            {...annio, editable:false, generatedAs:`extract(year from desde)`  },
             {name: 'desde'           , typeName: 'date'    , nullable:false  },
             {name: 'hasta'           , typeName: 'date'    , nullable:false  },
             {name: 'trabaja'         , typeName: 'boolean' , nullable:false ,defaultValue:false},
@@ -23,10 +23,10 @@ export function horarios(context: TableContext): TableDefinition{
             {name: 'hora_hasta'      , typeName: 'time'    , nullable:false  },
             {name: 'lapso_fechas'    , typeName: 'daterange', visible:false, generatedAs:'daterange(desde, coalesce(hasta, make_date(extract(year from desde)::integer, 12, 31)))'},
         ],
-        primaryKey: [idper.name, 'dds', año.name, 'desde'],
+        primaryKey: [idper.name, 'dds', annio.name, 'desde'],
         softForeignKeys: [
             {references: 'personas', fields:[idper.name], onDelete:'cascade'},
-            {references: 'annios'  , fields:[año.name], onUpdate: 'no action'},
+            {references: 'annios'  , fields: [annio.name], onUpdate: 'no action'},
             {references: 'fechas'  , fields:[{source:'desde', target:'fecha'}], alias:'desde', onDelete:'cascade'},
             {references: 'fechas'  , fields:[{source:'hasta', target:'fecha'}], alias:'hasta', onDelete:'cascade'},
         ],
