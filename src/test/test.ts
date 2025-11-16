@@ -14,6 +14,7 @@ import { Contexts, EmulatedSession, expectError, loadLocalFile, saveLocalFile, b
 import * as ctts from "../common/contracts"
 
 import { date } from "best-globals";
+import { guarantee } from "guarantee-type"
 
 import { tipo_novedad, tipo_novedad_inicial, tipo_novedad_verificado } from "../server/table-tipos_novedad"
 
@@ -68,6 +69,7 @@ const COD_ENFERMEDAD = "13";
 const COD_MUDANZA = "124";
 const COD_COMISION = "10";
 const COD_NO_FICHAR = "85";
+const COD_SALIDA_ANTI = "55";
 const COD_PRED_PAS: string|null = '999'; // es el código predeterminado para un día laborable en el pasado y presente
 const COD_PRED_FUT: string|null = null; // es el código predeterminado para un día laborable en el futuro, por ahora null
 
@@ -92,6 +94,17 @@ type SesionEmuladaSiper = EmulatedSession<AppSiper>;
 
 async function registrarNovedad(sesion: SesionEmuladaSiper, params: Partial<ctts.NovedadRegistrada>): Promise<ctts.NovedadRegistrada> {        
     return sesion.callProcedure(ctts.registrar_novedad, {[tipo_novedad.name]: tipo_novedad_verificado, ...params})
+}
+
+async function registrarFichada(server: AppSiper, params: Partial<ctts.Fichada>): Promise<ctts.Fichada> {
+    var result = await server.inTransaction(null, async client => {
+        var result = await client.query(
+            `insert into fichadas (${Object.keys(params)}) values (${Object.keys(params).map((_, i) =>"$" + (i+1))}) returning *`,
+            Object.keys(params).map(k => params[k as keyof ctts.Fichada])
+        ).fetchUniqueRow();
+        return guarantee(ctts.fichadas.description, result.row);
+    })
+    return result;
 }
 
 describe("connected", function(){
@@ -859,6 +872,29 @@ describe("connected", function(){
                 })
             })
         });
+        describe("fichadas", function(){
+            it("detecta error por falta de fichada", async function(){
+                await enNuevaPersona(this.test?.title!, {vacaciones: 5}, async (persona, {}) => {
+                    await expectError( async () => {
+                        const cod_nov = COD_SALIDA_ANTI;
+                        const fecha = date.iso('2000-02-01')
+                        var novedadRegistradaPorCargar = {desde:fecha, hasta:fecha, cod_nov, idper: persona.idper}
+                        await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
+                        await registrarNovedad(rrhhSession, novedadRegistradaPorCargar);
+                    }, ctts.ERROR_FALTA_FICHADA);
+                })
+            })
+            it("controla existencia de fichada", async function(){
+                await enNuevaPersona(this.test?.title!, {vacaciones: 5}, async ({idper}, {}) => {
+                    const cod_nov = COD_SALIDA_ANTI;
+                    const fecha = date.iso('2000-02-01')
+                    await registrarFichada(server, {idper, fecha, tipo_fichada:'E', hora:'09:00'})
+                    var novedadRegistradaPorCargar = {desde:fecha, hasta:fecha, cod_nov, idper}
+                    var novedad = await registrarNovedad(rrhhSession, novedadRegistradaPorCargar);
+                    assert.equal(novedad.cod_nov, cod_nov);
+                })
+            })
+        })
         describe("cod_nov_pred_fecha", function(){
             it("sin nada cargado está la novedad predeterminada pasada", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {

@@ -3,8 +3,7 @@
 import {TableDefinition, TableContext, FieldDefinition} from "./types-principal";
 
 import {idper} from "./table-personas"
-import {fecha} from "./table-fechas"
-import {annio} from "./table-annios"
+import {fecha, añoEnBaseAFecha} from "./table-fechas"
 import { tipo_fichada } from "./table-tipos_fichada";
 
 export const id_fichada: FieldDefinition = {
@@ -13,17 +12,17 @@ export const id_fichada: FieldDefinition = {
     editable:false,
 }
 
-export function fichadas(_context: TableContext): TableDefinition{
+export function fichadas(context: TableContext): TableDefinition{
     return {
         name: 'fichadas',
         elementName: 'fichada',
-        editable: false,
+        editable: context.forDump,
         fields:[
             idper,
             fecha,
             {name: 'hora',             typeName: 'time'                                       },
             {...id_fichada, sequence:{ firstValue:101, name:'id_fichada_seq' }                },
-            annio,
+            añoEnBaseAFecha,
             {name: tipo_fichada.name, typeName: 'text', nullable: false                       },
             //{name: 'origen' , typeName: 'text'                                                },
             {name: 'observaciones', typeName: 'text'                                          },
@@ -35,7 +34,7 @@ export function fichadas(_context: TableContext): TableDefinition{
         foreignKeys: [
             {references: 'personas'      , fields: [idper.name], displayFields:['apellido', 'nombres', 'cuil', 'ficha']},
             {references: 'fechas'        , fields: [fecha.name]},
-            {references: 'annios'        , fields: [annio.name], onUpdate: 'no action'},
+            {references: 'annios'        , fields: [añoEnBaseAFecha.name], onUpdate: 'no action'},
             {references: 'tipos_fichada'  , fields: [tipo_fichada.name]},
         ]
     };

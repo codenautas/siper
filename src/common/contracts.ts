@@ -827,12 +827,12 @@ export const bandas_horarias = {
 
 export type bandas_horarias = DefinedType<typeof bandas_horarias.description>
 
-export const Fichada = {
+export const fichadas = {
     table: 'fichadas',
     description: is.object({
         idper: is.string,
         annio: is.number,
-        id_fichada: is.bigint,
+        id_fichada: is.number,
         tipo_fichada: is.nullable.string,
         fecha: is.Date,
         hora: is.nullable.string,
@@ -843,7 +843,7 @@ export const Fichada = {
     })
 } satisfies CommonEntityDefinition
 
-export type Fichada = DefinedType<typeof Fichada.description>
+export type Fichada = DefinedType<typeof fichadas.description>
 
 
 //para app de fichadas
