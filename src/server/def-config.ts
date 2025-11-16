@@ -15,6 +15,8 @@ login:
   userFieldName: usuario
   passFieldName: hashpass
   rolFieldName: rol
+  passUpdatedAtFieldName: ultima_actualizacion_password
+  passAlgorithmFieldName: algoritmo_pass
   infoFieldList: [usuario, rol, idper, sector]
   activeClausule: usuarios.activo
   unloggedLandPage: false
@@ -71,6 +73,7 @@ install:
       - ../install/parametros_trg.sql
       - ../install/poblar_pernovcant.sql
       - ../install/usuarios_limpiar_mail_trg.sql
+      - ../install/vista-usuarios.sql
       - ../install/archivo_borrar_trg.sql
       - ../install/parseo-codigo-horario.sql
 logo: 
