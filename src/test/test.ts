@@ -13,7 +13,7 @@ import { Contexts, EmulatedSession, expectError, loadLocalFile, saveLocalFile, b
 
 import * as ctts from "../common/contracts"
 
-import { date } from "best-globals";
+import { date, datetime, timeInterval } from "best-globals";
 import { guarantee } from "guarantee-type"
 
 import { tipo_novedad, tipo_novedad_inicial, tipo_novedad_verificado } from "../server/table-tipos_novedad"
@@ -161,6 +161,7 @@ describe("connected", function(){
                         `delete from per_nov_cant where ${AÑOS_DE_PRUEBA}`,
                         `delete from nov_gru where ${AÑOS_DE_PRUEBA}`,
                         `delete from novedades_vigentes where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
+                        `delete from fichadas where ${IDPER_DE_PRUEBA}`,
                         `delete from horarios_per where ${IDPER_DE_PRUEBA}`,
                         `delete from horarios_cod where horario like '%:13'`,
                         `delete from novedades_registradas where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
@@ -715,6 +716,15 @@ describe("connected", function(){
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-01','2000-01-04']}})
             })
         })
+        it.skip("cargo una novedad y veo conozco el usuario y el momento de carga", async function(){
+            await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                var hoy = date.today();
+                var {fecha, usuario} = await registrarNovedad(superiorSession,
+                    {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
+                );
+                discrepances.showAndThrow({fecha, usuario}, {fecha:hoy, usuario:superiorSession.config.username})
+            })
+        })
         describe("días corridos", function(){
             it("se generan novedades en los fines de semana", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
@@ -1109,8 +1119,74 @@ describe("connected", function(){
             })
         })
     })
+    function randInt(int: number) {
+        return Math.floor(Math.random()*int);
+
+    }
+    function randPositivo(int: number) {
+        return randInt(int) + 1;
+
+    }
+    async function stressTest(){
+        var personas = await server.inDbClient(null, async client => {
+            var {rows} = await client.query(`select idper from personas where idper like 'XX%'`).fetchAll();
+            return rows;
+        })
+        var cod_novedades = await server.inDbClient(null, async client => {
+            var {rows} = await client.query(`select cod_nov, con_detalles from cod_novedades where total and requiere_entrada is not true`).fetchAll();
+            return rows;
+        })
+        async function novedadRandom(session: SesionEmuladaSiper, opciones: {pasado?:boolean}):Promise<null|true|Error>{
+            var año = parseInt(DESDE_AÑO)
+            var desde = date.ymd(año, randPositivo(12) as 12, randPositivo(28));
+            try {
+                if (desde.getDay() == 0 || desde.getDay() == 6) return null;
+                var dias = randPositivo(2**randPositivo(5))
+                var hasta = desde.add({days: dias});
+                if (hasta.getFullYear() > año) return null;
+                if (desde <= FECHA_ACTUAL && !opciones.pasado) return null;
+                var idper = personas[randInt(personas.length)].idper
+                var {cod_nov, con_detalles} = cod_novedades[randInt(cod_novedades.length)]
+                var novedad:Partial<ctts.NovedadRegistrada> = {idper, desde, hasta, cod_nov}
+                if (con_detalles) {
+                    novedad.detalles = 'detalles de '+cod_nov+': '+randPositivo(10000)
+                }
+                await registrarNovedad(session, novedad);
+            } catch (e) {
+                console.log(novedad, session.config.username)
+                console.log(e)
+                return e as Error;
+            }
+            return true;
+        }
+        var fin = datetime.now().add(timeInterval({minutes: server.config.destres?.minutos}))
+        console.log("INICIA TEST DE STRESS", timeInterval({minutes: server.config.destres?.minutos}).toString(),'=',{minutes: server.config.destres?.minutos})
+        var avanceCada = timeInterval({seconds: 5});
+        var mostrarAvance = datetime.now();
+        var ok = 0;
+        var err = 0;
+        while (datetime.now() < fin) {
+            if (datetime.now() > mostrarAvance) {
+                console.log(datetime.now().toHms(), {ok, err})
+                mostrarAvance = mostrarAvance.add(avanceCada);
+            }
+            var result = await Promise.allSettled([
+                novedadRandom(superiorSession, {pasado: true}),
+                novedadRandom(rrhhSession, {}),
+                novedadRandom(rrhhSession, {}),
+            ])
+            ok += result.filter(x => x.status == 'fulfilled' && x.value === true).length
+            err += result.filter(x => x.status == 'rejected' || x.value instanceof Error).length
+        }
+        console.log("FIN TEST DE STRESS")
+    }
     after(async function(){
         var error: Error|null = null;
+        if (server.config.destres){
+            this.timeout(TIMEOUT_SPEED * 40 + server.config.destres.minutos*60*1000);
+            await stressTest();
+            return;
+        }
         if (!borradoExitoso || fallaEnLaQueQuieroOmitirElBorrado || someTestFails(this)) {
             console.log('se saltea la comprobación final porque no se pudo borrar las pruebas de la corrida anterior')
             // console.log('test', this.test)
