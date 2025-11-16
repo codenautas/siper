@@ -12,7 +12,7 @@ import { DefinedType} from 'guarantee-type';
 import { FixedFields } from 'frontend-plus';
 import { expected } from 'cast-error';
 import { sqlPersonas } from "./table-personas";
-import json4all = require('json4all');
+import * as json4all from 'json4all';
 import * as fs from 'fs/promises';
 
 export const ProceduresPrincipal:ProcedureDef[] = [
@@ -144,12 +144,12 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 const erroresSaldoNegativo = inconsistencias.rows.filter(r => r.error_saldo_negativo);
                 const erroresFaltaEntrada = inconsistencias.rows.filter(r => r.error_falta_entrada);
                 if (erroresSaldoNegativo.length > 0){
-                    var error = expected(new Error(`La novedad registrada genera saldos negativos. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}, saldo: ${r.saldo}`).join('; ')}`));
+                    const error = expected(new Error(`La novedad registrada genera saldos negativos. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}, saldo: ${r.saldo}`).join('; ')}`));
                     error.code = ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES
                     throw error;
                 }
                 if (erroresFaltaEntrada.length > 0){
-                    var error = expected(new Error(`La novedad registrada requiere fichada de entrada. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}`).join('; ')}`));
+                    const error = expected(new Error(`La novedad registrada requiere fichada de entrada. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}`).join('; ')}`));
                     error.code = ERROR_FALTA_FICHADA
                     throw error;
                 }

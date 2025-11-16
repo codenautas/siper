@@ -496,7 +496,7 @@ export const tipos_adjunto_atributos = {
     })
 } satisfies CommonEntityDefinition
 
-export type tipos_adjunto_atributos = DefinedType<typeof tipos_adjunto_atributos.description>
+export type Tipos_adjunto_atributos = DefinedType<typeof tipos_adjunto_atributos.description>
 
 export const archivos_borrar = {
     table: 'archivos_borrar',
@@ -550,7 +550,7 @@ export const sexos = {
     })
 }
 
-export type sexos = DefinedType<typeof sexos.description>
+export type Sexos = DefinedType<typeof sexos.description>
 
 export const estados_civiles = {
     table : 'estado_civil',
@@ -561,7 +561,7 @@ export const estados_civiles = {
     })
 }
 
-export type estados_civiles = DefinedType<typeof estados_civiles.description>
+export type EstadosCiviles = DefinedType<typeof estados_civiles.description>
 
 export const agrupamientos = {
     table : 'agrupamientos',
@@ -571,7 +571,7 @@ export const agrupamientos = {
     })
 }
 
-export type agrupamientos = DefinedType<typeof agrupamientos.description>
+export type Agrupamientos = DefinedType<typeof agrupamientos.description>
 
 export const tramos = {
     table : 'tramos',
@@ -581,7 +581,7 @@ export const tramos = {
     })
 }
 
-export type tramos = DefinedType<typeof tramos.description>
+export type Tramos = DefinedType<typeof tramos.description>
 
 export const grados = {
     table : 'grados',
@@ -592,7 +592,7 @@ export const grados = {
     })
 }
 
-export type grados = DefinedType<typeof grados.description>
+export type Grados = DefinedType<typeof grados.description>
 
 export const categorias = {
     table : 'categorias',
@@ -602,7 +602,7 @@ export const categorias = {
     })
 }
 
-export type categorias = DefinedType<typeof categorias.description>
+export type Categorias = DefinedType<typeof categorias.description>
 
 export const situacion_revista = {
     table : 'situacion_revista',
@@ -613,7 +613,7 @@ export const situacion_revista = {
     })
 }
 
-export type situacion_revista = DefinedType<typeof situacion_revista.description>
+export type SituacionRevista = DefinedType<typeof situacion_revista.description>
 
 export const expedientes = {
     table : 'expedientes',
@@ -623,7 +623,7 @@ export const expedientes = {
     })
 }
 
-export type expedientes = DefinedType<typeof expedientes.description>
+export type Expedientes = DefinedType<typeof expedientes.description>
 
 export const funciones = {
     table : 'funciones',
@@ -634,7 +634,7 @@ export const funciones = {
     })
 }
 
-export type funciones = DefinedType<typeof funciones.description>
+export type Funciones = DefinedType<typeof funciones.description>
 
 export const nivel_grado = {
     table : 'nivel_grado',
@@ -644,7 +644,7 @@ export const nivel_grado = {
     })
 }
 
-export type nivel_grado = DefinedType<typeof nivel_grado.description>
+export type NivelGrado = DefinedType<typeof nivel_grado.description>
 
 export const tareas = {
     table : 'tareas',
@@ -664,7 +664,7 @@ export const tareas = {
     })
 }
 
-export type tareas = DefinedType<typeof tareas.description>
+export type Tareas = DefinedType<typeof tareas.description>
 
 export const motivos_egreso = {
     table : 'motivos_egreso',
@@ -675,7 +675,7 @@ export const motivos_egreso = {
     })
 }
 
-export type motivos_egreso = DefinedType<typeof motivos_egreso.description>
+export type MotivosEgreso = DefinedType<typeof motivos_egreso.description>
 
 export const jerarquias = {
     table : 'jerarquias',
@@ -686,7 +686,7 @@ export const jerarquias = {
     })
 }
 
-export type jerarquias = DefinedType<typeof jerarquias.description>
+export type Jerarquias = DefinedType<typeof jerarquias.description>
 
 export const provincias = {
     table : 'provincias',
@@ -790,7 +790,7 @@ export const perfiles_sgc = {
     })
 }
 
-export type perfiles_sgc = DefinedType<typeof perfiles_sgc.description>
+export type PerfilesSgc = DefinedType<typeof perfiles_sgc.description>
 
 export const niveles_educativos = {
     table : 'niveles_educativos',
@@ -800,7 +800,7 @@ export const niveles_educativos = {
     })
 }
 
-export type niveles_educativos = DefinedType<typeof niveles_educativos.description>
+export type NivelesEducativos = DefinedType<typeof niveles_educativos.description>
 
 export const per_telefonos = {
     table: 'per_telefonos',
@@ -825,7 +825,7 @@ export const bandas_horarias = {
     })
 } satisfies CommonEntityDefinition
 
-export type bandas_horarias = DefinedType<typeof bandas_horarias.description>
+export type BandasHorarias = DefinedType<typeof bandas_horarias.description>
 
 export const fichadas = {
     table: 'fichadas',
@@ -895,7 +895,7 @@ export const reglas = {
     })
 } satisfies CommonEntityDefinition
 
-export type reglas = DefinedType<typeof reglas.description>
+export type Reglas = DefinedType<typeof reglas.description>
 
 export const avisos_falta_fichada = {
     table: 'avisos_falta_fichada',
@@ -909,7 +909,7 @@ export const avisos_falta_fichada = {
     })
 } satisfies CommonEntityDefinition
 
-export type avisos_falta_fichada = DefinedType<typeof avisos_falta_fichada.description>
+export type AvisosFaltaFichada = DefinedType<typeof avisos_falta_fichada.description>
 
 export const meses = [
     {  value:1, name:'enero' },

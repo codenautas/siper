@@ -293,7 +293,7 @@ describe("connected", function(){
             if (opciones.usuario) {
                 usuario = await crearUsuario({rol:'basico', idper:persona.idper, ...opciones.usuario})
                 if (opciones.usuario.sesion) {
-                    var sesion = await sesionDeUsuario(usuario);
+                    sesion = await sesionDeUsuario(usuario);
                 }
                 if (opciones.usuario.sector) await rrhhSession.saveRecord(ctts.personas,{idper:persona.idper,sector:opciones.usuario.sector}, 'update')
             }
@@ -1239,24 +1239,24 @@ describe("connected", function(){
                     await client.query(sqlCalcularNovedades).execute();
                     console.log('calculando novedadesRecalculadasEncima')
                     const novedadesRecalculadasEncima = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
-                    avisarDiferencias({novedadesRecalculadasEncima, todasLasNovedadesGeneradas});
+                    await avisarDiferencias({novedadesRecalculadasEncima, todasLasNovedadesGeneradas});
                     console.log('calculando novedadesRecalculadasEnBlanco')
                     await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
                     await client.query(sqlCalcularNovedades).execute();
                     const novedadesRecalculadasEnBlanco = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
-                    avisarDiferencias({novedadesRecalculadasEnBlanco, todasLasNovedadesGeneradas})
+                    await avisarDiferencias({novedadesRecalculadasEnBlanco, todasLasNovedadesGeneradas})
                     console.log('calculando novedadesRecalculadasPorFecha')
                     var fechas = (await client.query(`select distinct fecha from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
                     await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
-                    for(var row of fechas) {
+                    for(const row of fechas) {
                         await client.query(`CALL actualizar_novedades_vigentes($1::date, $2::date)`, [row.fecha, row.fecha]).execute();
                     }
                     const novedadesRecalculadasPorFecha = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
-                    avisarDiferencias({novedadesRecalculadasPorFecha, todasLasNovedadesGeneradas});
+                    await avisarDiferencias({novedadesRecalculadasPorFecha, todasLasNovedadesGeneradas});
                     console.log('calculando novedadesRecalculadasPorCuit')
                     var cuits = (await client.query(`select distinct idper from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).fetchAll()).rows;
                     await client.query(`delete from novedades_vigentes where ${FECHAS_DE_PRUEBA}`).execute();
-                    for(var row of cuits) {
+                    for(const row of cuits) {
                         await client.query(`CALL actualizar_novedades_vigentes_idper('${DESDE_AÑO}-01-01'::date, '${DESDE_AÑO}-12-31'::date, $1)`, [row.idper]).execute();
                     }
                     const novedadesRecalculadasPorCuit = (await client.query(sqlTraerNovedades).fetchUniqueValue()).value;
@@ -1266,7 +1266,7 @@ describe("connected", function(){
                     benchmarkDelDia.tiempos.push(benchmark); 
                     await saveLocalFile(benchmarkDelDia);
                     await benchmarksSave(benchmarkDelDia);
-                    avisarDiferencias({novedadesRecalculadasPorCuit, todasLasNovedadesGeneradas})
+                    await avisarDiferencias({novedadesRecalculadasPorCuit, todasLasNovedadesGeneradas})
                 })
             } catch(err) {
                 console.log("****************** ERROR AL FINAL VERIFICANDO QUE SE PUEDA REGENERAR *******************")

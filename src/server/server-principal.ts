@@ -2,4 +2,6 @@
 
 import {AppSiper} from "./app-principal";
 
-new AppSiper().start();
+new AppSiper().start().catch(e=>{
+    console.log(e)
+})
