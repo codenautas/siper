@@ -22,8 +22,7 @@ import {
     Typography
 } from "@mui/material";
 
-// @ts-ignore
-import { strict as likear, createIndex } from "like-ar";
+import { createIndex } from "like-ar";
 
 // @ts-ignore 
 var my=myOwn;
@@ -32,7 +31,7 @@ function GrupoPeronas(props:{idGrupo:string, nombreGrupo:string, fieldsProps:Gen
   return <Box>
     <div className="personal-title-seccion">{props.nombreGrupo}</div>
     <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
-      {props.fieldsProps.filter(f => f.fd.grupo == props.idGrupo).map(f => <GenericField {...f} />)}
+      {props.fieldsProps.filter(f => f.fd.grupo == props.idGrupo).map(f => <GenericField key={f.fd.name} {...f} />)}
     </Box>
   </Box>
 }

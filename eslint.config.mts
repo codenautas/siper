@@ -44,6 +44,19 @@ export default defineConfig([
     },
     rules:{
       "@typescript-eslint/no-floating-promises": "error",
+      "react/no-unknown-property": [
+      "error", 
+        { 
+          "ignore": [ // alfabético, una inicial por renglón
+            "arbol-jefe", "arbol-nodo-estado",
+            "bold-name",
+            "con-info-nov",
+            "es-otro-mes",
+            "hoy-signo-de",
+            "red-color",
+          ]
+        }
+      ]
     }
   },
   {

@@ -43,7 +43,7 @@ import { AppConfigClientSetup } from "../server/types-principal";
 import { obtenerDetalleVacaciones } from "./shared-functions";
 
 const EFIMERO = Symbol("EFIMERO");
-function setEfimero<T extends {}|null>(tictac:T){
+function setEfimero<T extends object|null>(tictac:T){
     if (tictac != null) {
         // @ts-expect-error Situación especial para marcar objetos que ya no están disponibles porque se pidió un dato nuevo
         tictac[EFIMERO] = true;
@@ -172,9 +172,6 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
         }
     },[idper, periodo.mes, periodo.annio, ultimaNovedad])
 
-    // @ts-expect-error
-    var es:{rrhh:boolean} = conn.config?.config?.es||{}
-
     const isPastMonth = periodo.mes < fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio < fechaActual.getFullYear();
     const isFutureMonth = periodo.mes > fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio > fechaActual.getFullYear();
 
@@ -217,8 +214,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                     es-este-mes={isFutureMonth?"no-futuro":isPastMonth?"no-pasado":"si"}
                     onClick={()=>{ 
                         setPeriodo({mes: fechaActual.getMonth()+1, annio: fechaActual.getFullYear()});
-                        props.onFecha && props.onFecha(fechaActual);
-                        props.onFechaHasta && props.onFechaHasta(fechaActual);
+                        props.onFecha?.(fechaActual);
+                        props.onFechaHasta?.(fechaActual);
                     }}
                 >
                     <span hoy-signo-de="futuro">{"<"}</span>
@@ -282,8 +279,6 @@ type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,c
 type ProvisorioPersonaTelefono = {idper: string, tipo_telefono: string, tipos_telefono__descripcion?: string, telefono: string, observaciones?: string, nro_item?: number, orden?: number}
 type ProvisorioSectores = {pactivas: number, activo: boolean,sector:string, nombre_sector:string, pertenece_a:string, nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, hijos:ProvisorioSectoresAumentados[], profundidad:number}
-// @ts-ignore
-type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
 type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, dds0: boolean, dds1: boolean, dds2: boolean, dds3: boolean, dds4: boolean, dds5: boolean, dds6: boolean, detalles:string, idr:number, dias_hoc:string, usuario:string, fecha:RealDate, tipo_novedad:string, tipos_novedad__orden:number, tipos_novedad__borrado_rapido:boolean}
 
@@ -534,8 +529,8 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 persona.fecha_egreso && n.hasta > persona.fecha_egreso ? "Fecha hasta posterior a la fecha de egreso" : null,
             ].filter(Boolean);
             return (
-            <Box>
-            <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar && quiereBorrar.idr === n.idr?' por-borrar':''}`} 
+            <Box key={JSON.stringify(n)} >
+            <Box className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar && quiereBorrar.idr === n.idr?' por-borrar':''}`} 
                 tiene-problemas={problemas.length ? 'si' : 'no'} title={problemas.join('. ')}
             >
                 <span className="fechas">
@@ -564,7 +559,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                     <div>Eliminando</div>
                     <CircularProgress/>
                 </div> : <div className="modal-borrar-novedad">
-                    ¿Confirma el borrado de la novedad registrada <strong>"{quiereBorrar!.cod_novedades__novedad}"</strong>
+                    ¿Confirma el borrado de la novedad registrada <strong>{quiereBorrar!.cod_novedades__novedad}</strong>
                     {
                         sameValue(quiereBorrar!.desde, quiereBorrar!.hasta)
                             ? `en ${quiereBorrar!.desde.toDmy()}`
@@ -694,12 +689,15 @@ declare module "frontend-plus" {
         info_usuario: () => Promise<DefinedType<typeof ctts.info_usuario.result>>;
         calendario_persona: (params:DefinedType<typeof ctts.calendario_persona.parameters>) => Promise<CalendarioResult[]>;
         novedades_disponibles: (params:{
-
+            idper:string
+            annio:number
         }) => Promise<NovedadesDisponiblesResult[]>;
         personas_novedad_actual: (params:{
             fecha: Date
         }) => Promise<PersonasNovedadActualResult[]>;
         horario_semana_vigente: (params:{
+            idper:string
+            fecha:Date
         }) => Promise<HorarioSemanaVigenteResult>;
         si_cargara_novedad: (params:{
             idper:string,
@@ -711,7 +709,7 @@ declare module "frontend-plus" {
             table: string;
             primaryKeyValues: any[];    
         }) => Promise<void>;
-        parametros: (params:{}) => Promise<ParametrosResult>;
+        parametros: (params:object) => Promise<ParametrosResult>;
         registrar_novedad: (params:NovedadRegistrada) => Promise<NovedadRegistrada & { idr: number }>;
         fichadas_registrar:(params:{fichadas:FichadaData[]}) => Promise<RegistroFichadasResponse>
     }
@@ -781,7 +779,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 fixedFields: [{fieldName:'idper', value:idper}],
                 paramfun: {}
             }).then(function(domicilios){
-                domicilios.sort(compareForOrder([{column:'idper'},{column:'orden'},{column:'nro_item'}])),
+                domicilios.sort(compareForOrder([{column:'idper'},{column:'orden'},{column:'nro_item'}]));
                 setDomicilios(domicilios);
                 console.log(domicilios)
             }).catch(logError);
