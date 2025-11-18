@@ -229,3 +229,33 @@ myOwn.clientSides.bajarAdjunto = {
     prepare: function (_depot: myOwn.Depot, _fieldName: string): void {
     },
 };
+
+myOwn.autoSetupFunctions.push(function autoSetupMyTables(){
+    // @ts-ignore
+    TypedControls.Expanders.unshift(expanderDate);
+});
+
+var expanderDate={
+    whenType: function(typedControl:any){ 
+        var typer = typedControl.controledType;
+        return typer.typeInfo.typeName == 'date';
+    },
+    img:'lookdown-calendar.png',
+    dialogInput: function(typedControl:any){
+        var typer = typedControl.controledType;
+        var actualValue = typedControl.getTypedValue();
+        // @ts-ignore
+        return TypedControls.pickDate(actualValue, typer.typeInfo.label, {
+            underElement:typedControl,
+            withCloseButton:false,
+        }).then(function(value:any){
+            typedControl.setTypedValue(value);
+            typedControl.dispatchEvent(new CustomEvent('update'));
+        // @ts-ignore
+        }).catch(function(err:any){
+            if(!DialogPromise){
+                return alertPromise(err.message);
+            }
+        });
+    }
+}
