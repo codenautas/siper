@@ -139,7 +139,7 @@ export class AppSiper extends AppBackend{
         const action = typeof actionOrSqlProcedure == "string" ? 
             async ()=>{
                 await be.inDbClient(null, async client => {
-                    client.query(`call ${actionOrSqlProcedure}()`).execute()
+                    await client.query(`call ${actionOrSqlProcedure}()`).execute()
                 });
             }
             : actionOrSqlProcedure;
@@ -204,7 +204,8 @@ export class AppSiper extends AppBackend{
         const be = this;
         super.postConfig();
         cronMantenimiento(be);
-        be.inCron('avance_de_dia_proc', {vecesPorDia:24*6})
+        be.inCron('avance_de_dia_proc', {vecesPorDia:24*6});
+        be.inCron('falta_fichada_registrar', {vecesPorDia:24*60});
     }
     override async getProcedures(){
         var be = this;
