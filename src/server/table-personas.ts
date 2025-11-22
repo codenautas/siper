@@ -42,13 +42,12 @@ SELECT p.*, t.categoria, t.situacion_revista,
         t.motivo_egreso, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado,
         h.horario
     FROM personas p
-        CROSS JOIN parametros par
         LEFT JOIN LATERAL (SELECT * 
                     FROM trayectoria_laboral tl
                     WHERE propio AND tl.idper = p.idper
                     ORDER BY desde DESC, idt DESC
                     LIMIT 1) t ON TRUE
-        LEFT JOIN LATERAL (SELECT horario FROM horarios_per hp WHERE hp.idper = p.idper AND hp.lapso_fechas @> /*incluye*/ par.fecha_actual) h ON TRUE
+        LEFT JOIN LATERAL (SELECT horario FROM horarios_per hp WHERE hp.idper = p.idper AND hp.lapso_fechas @> /*incluye*/ fecha_actual()) h ON TRUE
 `;
 
 export function personas(context: TableContext): TableDefinition {

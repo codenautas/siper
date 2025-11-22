@@ -41,6 +41,7 @@ install:
     scripts:
       prepare:
       - ../node_modules/type-store/postgres/time_range.sql
+      - ../install/fecha_actual.sql
       pre-adapt:
       - ../node_modules/pg-triggers/lib/table-changes.sql
       - ../install/hora_texto.sql
@@ -69,13 +70,13 @@ install:
       - ../install/novedades_registradas_total_trg.sql
       - ../install/horarios_recalcular_trg.sql
       - ../install/personas_actualizar_novedades_trg.sql
-      - ../install/avance_de_dia_proc.sql
       - ../install/parametros_trg.sql
       - ../install/poblar_pernovcant.sql
       - ../install/usuarios_limpiar_mail_trg.sql
       - ../install/vista-usuarios.sql
       - ../install/archivo_borrar_trg.sql
       - ../install/parseo-codigo-horario.sql
+      - ../install/fecha_actual.sql
 logo: 
   path: client/img
 `;

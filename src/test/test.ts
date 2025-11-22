@@ -53,6 +53,7 @@ import * as FormData from "form-data";
 */
 
 const FECHA_ACTUAL = date.iso('2000-01-31');
+const ahora = '10:00';
 const DESDE_AÑO = `2000`;
 const HASTA_AÑO = `2001`;
 const AÑOS_DE_PRUEBA = `annio BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
@@ -190,7 +191,7 @@ describe("connected", function(){
                         `update fechas set cod_nov_pred_fecha = '${COD_PRED_PAS}' where extract(dow from fecha) between 1 and 5 and fecha <= '${FECHA_ACTUAL.toYmd()}'`,
                         `update annios set horario_habitual_desde = '10:00', horario_habitual_hasta = '17:00' where annio = '${DESDE_AÑO}'`,
                         `select annio_abrir('${DESDE_AÑO}')`,
-                        `update parametros set fecha_actual = '${FECHA_ACTUAL.toYmd()}', cod_nov_habitual = 999 where unico_registro`,
+                        `update parametros set fecha_hora_para_test = '${FECHA_ACTUAL.toYmd()} 10:00', cod_nov_habitual = 999 where unico_registro`,
                         `insert into sectores (subsector, nombre_sector, pertenece_a, nivel, tipo_sec) values
                             ('Z', 'PRUEBA AUTOMATICA Z'      , null , 0, 'DE'),
                             ('${SECTOR}', 'PRUEBA AUTOMATICA ${SECTOR}', 'Z' , 1, 'DG'),
@@ -230,7 +231,7 @@ describe("connected", function(){
     describe("configuraciones", function(){
         it("verifica que exista la tabla de parámetros", async function(){
             await rrhhSession.tableDataTest('parametros',[
-                {unico_registro:true, fecha_actual: FECHA_ACTUAL},
+                {unico_registro:true},
             ], 'all')
         })
         it("verifica que un rrhh se considere registra también", async function(){
@@ -300,7 +301,7 @@ describe("connected", function(){
             if (vacaciones) await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_VACACIONES, idper: persona.idper, cantidad: vacaciones }, 'new')
             if (tramites) await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_TRAMITE, idper:persona.idper, cantidad: 4 }, 'new')
             if (hoy) {
-                await server.inDbClient(ADMIN_REQ, async client => client.query("update parametros set fecha_actual = $1", [hoy]).execute())
+                await server.inDbClient(ADMIN_REQ, async client => client.query("update parametros set fecha_hora_para_test = $1::date + $2::time ", [hoy, ahora]).execute())
             }
             haciendo = 'probando'
             await probar(persona, {usuario, sesion});
@@ -317,7 +318,7 @@ describe("connected", function(){
                         "update fechas set cod_nov_pred_fecha = $1 where cod_nov_pred_fecha = $2 and fecha between $3 and $4", 
                         [COD_PRED_FUT, COD_PRED_PAS, FECHA_ACTUAL, hoy]
                     ).execute();
-                    await client.query("update parametros set fecha_actual = $1", [FECHA_ACTUAL]).execute();
+                    await client.query("update parametros set fecha_hora_para_test = $1::date + $2::time", [FECHA_ACTUAL, ahora]).execute();
                 })
             }
         }

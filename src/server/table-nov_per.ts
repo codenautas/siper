@@ -47,8 +47,8 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
         ) pnc,
         lateral (
             select 
-                    count(*) filter (where nv.fecha <= fecha_actual) as usados, 
-                    count(*) filter (where nv.fecha > fecha_actual) as pendientes, 
+                    count(*) filter (where nv.fecha <= fecha_actual()) as usados, 
+                    count(*) filter (where nv.fecha > fecha_actual()) as pendientes, 
                     pnc.cantidad - count(*) as saldo
                 from novedades_vigentes nv
                 where nv.cod_nov = cn.cod_nov and nv.annio = a.annio and nv.idper = p.idper

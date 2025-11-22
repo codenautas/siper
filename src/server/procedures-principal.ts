@@ -7,7 +7,7 @@ import { NovedadRegistrada, calendario_persona, historico_persona, novedades_dis
 } from '../common/contracts';
 import { sqlNovPer } from "./table-nov_per";
 
-import { date, datetime } from 'best-globals'
+import { date, datetime, RealDate } from 'best-globals'
 import { DefinedType} from 'guarantee-type';
 import { FixedFields } from 'frontend-plus';
 import { expected } from 'cast-error';
@@ -369,7 +369,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         puede_cargar_todo,
                         roles.*,
                         (puede_cargar_propio and u.activo is true) as cargable,
-                        fecha_actual,
+                        fecha_actual() as fecha_actual,
                         s.nivel as sector_nivel
                     from usuarios u 
                         inner join parametros on true
@@ -494,9 +494,9 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             generarInmediato: true
         },
         coreFunction: async function(context: ProcedureContext, params:any){
-            var paramsDb = await context.client.query('select fecha_actual from parametros').fetchAll()
-            var title = 'Descanso anual remunerado del ' + params.annio + ' al '+paramsDb.rows[0].fecha_actual.toDmy();
-            title = 'vacaciones ' + params.annio + ' al '+paramsDb.rows[0].fecha_actual.toDmy().replace(/\//g, '-');
+            var fecha_actual = (await context.client.query('select fecha_actual()').fetchUniqueValue()).value as RealDate
+            var title = 'Descanso anual remunerado del ' + params.annio + ' al '+ fecha_actual.toDmy();
+            title = 'vacaciones ' + params.annio + ' al '+ fecha_actual.toDmy().replace(/\//g, '-');
             var {rows} = await context.client.query(`
                 SELECT annio, origen, x.idper, apellido, nombres,
                 	x.sector,
@@ -594,7 +594,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         parameters: [],
         coreFunction: async function (context: ProcedureContext) {
             const info = await context.client.query(
-                `SELECT fecha_actual FROM parametros;`
+                `SELECT fecha_actual() as fecha_actual FROM parametros;`
             ).fetchUniqueRow();
             return info.row
         }

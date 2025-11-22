@@ -41,7 +41,7 @@ export function politicaNovedades(alias:string, nombreFecha:string){
     var politicaModficacion = `(${politicaNovedadesComun(alias, 'cargar')})`
     + ((alias == 'personas' || alias == 'trayectoria_laboral') ? '' : ` AND (
             (${nombreFecha} 
-                >= (SELECT fecha_actual FROM parametros WHERE unico_registro)
+                >= fecha_actual()
             ) OR (
                 SELECT puede_corregir_el_pasado FROM roles WHERE rol = get_app_user('rol')
             )

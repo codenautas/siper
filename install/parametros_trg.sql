@@ -11,7 +11,7 @@ BEGIN
     SET cod_nov_pred_fecha = cod_nov_habitual
     FROM parametros, annios a
     WHERE cod_nov_pred_fecha is null
-      AND fecha <= fecha_actual
+      AND fecha <= fecha_actual()
       AND f.annio = a.annio
       AND a.abierto;
   RETURN new;

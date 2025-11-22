@@ -1,16 +1,28 @@
 set search_path = siper;
 set role siper_owner;
 
-ALTER TABLE parametros ADD COLUMN fecha_hora_actual timestamp without time zone;
-ALTER TABLE parametros ADD COLUMN actualizar_hasta_hora TIME;
+ALTER TABLE parametros ADD COLUMN fecha_hora_para_test timestamp without time zone;
+ALTER TABLE parametros DROP COLUMN fecha_actual;
+ALTER TABLE parametros ADD COLUMN cod_nov_hasta_hora TIME;
+ALTER TABLE parametros DROP COLUMN avance_dia_automatico;
 
-update parametros set actualizar_hasta_hora = '12:00:00';
+drop function procedure if exists avance_de_dia_proc();
 
-CREATE OR REPLACE FUNCTION fecha_hora() returns date
+update parametros set cod_nov_hasta_hora = '12:00:00';
+
+CREATE OR REPLACE FUNCTION fecha_hora_actual() returns date
    language sql
    AS
-   $BODY$
-   SELECT coalesce(date_trunc('day', fecha_hora_actual), current_date)
+  $sql$
+   SELECT coalesce(fecha_hora_para_test, current_datetime)
      from parametros
      where unico_registro;
-   $BODY$;
+  $sql$;
+
+
+CREATE OR REPLACE FUNCTION fecha_actual() returns date
+   language sql
+   AS
+  $sql$
+   SELECT date_trunc('day', fecha_hora_actual());
+  $sql$;
