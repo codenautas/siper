@@ -360,7 +360,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         parameters: [],
         coreFunction: async function(context: ProcedureContext, _params:any){
             const info = await context.client.query(
-                `select idper, sector, current_date as fecha, usuario, 
+                `select idper, sector, fecha_actual() as fecha, usuario, 
                         coalesce(p.apellido, u.apellido) as apellido,
                         coalesce(p.nombres, u.nombre) as nombres,
                         p.cuil,

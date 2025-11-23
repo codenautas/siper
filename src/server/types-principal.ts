@@ -81,6 +81,8 @@ export function sinEspaciosMail(fieldName: string):Constraint{
     }
 }
 
+export type Time = `${number}:${number}` | `${number}:${number}:${number}` 
+
 export type Constructor<T> = new(...args: any[]) => T;
 
 export const idImportacion:FieldDefinition = {name: 'id_importacion', typeName: 'bigint', nullable:true, editable:false, // @ts-ignore */ 

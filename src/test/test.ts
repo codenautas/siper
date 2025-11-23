@@ -19,6 +19,7 @@ import { guarantee } from "guarantee-type"
 import { tipo_novedad, tipo_novedad_inicial, tipo_novedad_verificado } from "../server/table-tipos_novedad"
 
 import * as discrepances from 'discrepances';
+import { Time } from "../server/types-principal";
 
 const TIMEOUT_SPEED = 1000 * (process.env.BP_TIMEOUT_SPEED as unknown as number ?? 1);
 
@@ -53,7 +54,7 @@ import * as FormData from "form-data";
 */
 
 const FECHA_ACTUAL = date.iso('2000-01-31');
-const ahora = '10:00';
+const HORA_ACTUAL = '10:00';
 const DESDE_AÑO = `2000`;
 const HASTA_AÑO = `2001`;
 const AÑOS_DE_PRUEBA = `annio BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
@@ -279,7 +280,7 @@ describe("connected", function(){
     async function enNuevaPersona(
         nombre: string, 
         opciones: {
-            vacaciones?: number, tramites?: number, usuario?:{rol?:string, sector?:string, sesion?:boolean}, hoy?:Date, 
+            vacaciones?: number, tramites?: number, usuario?:{rol?:string, sector?:string, sesion?:boolean}, hoy?:Date, ahora?:Time,
             registra_novedades_desde?:Date, para_antiguedad_relativa?:Date
         },
         probar: (persona: ctts.Persona, mas:{usuario: UsuarioConCredenciales, sesion:SesionEmuladaSiper}) => Promise<void>
@@ -287,7 +288,7 @@ describe("connected", function(){
         var haciendo = 'inicializando';
         try {
             var persona = await crearNuevaPersona(nombre, {registra_novedades_desde: opciones.registra_novedades_desde, para_antiguedad_relativa: opciones.para_antiguedad_relativa});
-            var {vacaciones, tramites, hoy} = opciones;
+            var {vacaciones, tramites, hoy, ahora} = opciones;
             // await superiorSession.saveRecord(ctts.per_gru, {idper: persona.idper, clase: 'U', grupo: 'T'}, 'new');
             var usuario = null as unknown as UsuarioConCredenciales;
             var sesion = null as unknown as SesionEmuladaSiper;
@@ -300,8 +301,11 @@ describe("connected", function(){
             }
             if (vacaciones) await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_VACACIONES, idper: persona.idper, cantidad: vacaciones }, 'new')
             if (tramites) await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_TRAMITE, idper:persona.idper, cantidad: 4 }, 'new')
-            if (hoy) {
-                await server.inDbClient(ADMIN_REQ, async client => client.query("update parametros set fecha_hora_para_test = $1::date + $2::time ", [hoy, ahora]).execute())
+            if (hoy || ahora) {
+                await server.inDbClient(ADMIN_REQ, async client => client.query(
+                    "update parametros set fecha_hora_para_test = $1::date + $2::time ", 
+                    [hoy ?? FECHA_ACTUAL, ahora ?? HORA_ACTUAL]
+                ).execute())
             }
             haciendo = 'probando'
             await probar(persona, {usuario, sesion});
@@ -312,13 +316,13 @@ describe("connected", function(){
             console.log(err)
             throw err;
         } finally {
-            if (hoy) {
+            if (hoy || ahora) {
                 await server.inDbClient(ADMIN_REQ, async client =>{
                     await client.query(
                         "update fechas set cod_nov_pred_fecha = $1 where cod_nov_pred_fecha = $2 and fecha between $3 and $4", 
-                        [COD_PRED_FUT, COD_PRED_PAS, FECHA_ACTUAL, hoy]
+                        [COD_PRED_FUT, COD_PRED_PAS, FECHA_ACTUAL, hoy ?? FECHA_ACTUAL]
                     ).execute();
-                    await client.query("update parametros set fecha_hora_para_test = $1::date + $2::time", [FECHA_ACTUAL, ahora]).execute();
+                    await client.query("update parametros set fecha_hora_para_test = $1::date + $2::time", [FECHA_ACTUAL, HORA_ACTUAL]).execute();
                 })
             }
         }
@@ -455,7 +459,6 @@ describe("connected", function(){
             })
         })
         it("cargo un día de trámite", async function(){
-            fallaEnLaQueQuieroOmitirElBorrado = true;
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
                 await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
@@ -465,6 +468,19 @@ describe("connected", function(){
                     {fecha:date.iso('2000-01-06'), cod_nov:COD_TRAMITE , idper, trabajable:true},
                     {fecha:date.iso('2000-01-07'), cod_nov:COD_PRED_PAS, idper, trabajable:true},
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-05','2000-01-07']}})
+            })
+        })
+        it.skip("me impide cargar un día de trámite después de las 12", async function(){
+            fallaEnLaQueQuieroOmitirElBorrado = true;
+            await enNuevaPersona(this.test?.title!, {ahora:'12:10'}, async ({idper}) => {
+                await expectError(async ()=>{
+                    await registrarNovedad(rrhhSession,
+                        {desde:FECHA_ACTUAL, hasta:FECHA_ACTUAL, cod_nov:COD_TRAMITE, idper}
+                    );
+                }, ctts.ERROR_FUERA_DE_HORA);
+                await rrhhSession.tableDataTest('novedades_vigentes', [
+                    {fecha:FECHA_ACTUAL, cod_nov:COD_PRED_PAS, idper, trabajable:true},
+                ], 'all', {fixedFields:{idper, fecha:FECHA_ACTUAL}})
             })
             fallaEnLaQueQuieroOmitirElBorrado = false;
         })
@@ -563,7 +579,6 @@ describe("connected", function(){
         })
         it("un jefe puede cargar a alguien de su equipo", async function(){
             this.timeout(TIMEOUT_SPEED * 10);
-            // fallaEnLaQueQuieroOmitirElBorrado = true;
             await enNuevaPersona(this.test?.title!, {usuario:{sector:'P1'}}, async ({idper}) => {
                 await registrarNovedad(jefe11Session,
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
@@ -574,7 +589,6 @@ describe("connected", function(){
                     {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
                 ], 'all', {fixedFields:{idper, fecha:['2000-02-01','2000-02-03']}})
             })
-            fallaEnLaQueQuieroOmitirElBorrado = false;
         })
         it("un jefe puede cargar a alguien de un equipo perteneciente", async function(){
             await enNuevaPersona(this.test?.title!, {usuario:{sector:'P131'}}, async ({idper}) => {
@@ -954,7 +968,6 @@ describe("connected", function(){
     })
     describe("códigos de novedades básicos", function(){
         it("cargo un día de trámite y cambio la novedad inicial", async function(){
-            fallaEnLaQueQuieroOmitirElBorrado = true;
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
                 await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
@@ -968,7 +981,6 @@ describe("connected", function(){
                     {fecha:date.iso('2000-01-07'), cod_nov:COD_NO_FICHAR, idper, trabajable:true, cod_nov_ini:COD_NO_FICHAR},
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-05','2000-01-07']}})
             })
-            fallaEnLaQueQuieroOmitirElBorrado = false;
         })
     })
     describe("jerarquía de sectores", function(){
