@@ -470,14 +470,16 @@ describe("connected", function(){
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-05','2000-01-07']}})
             })
         })
-        it.skip("me impide cargar un día de trámite después de las 12", async function(){
+        it("me impide cargar un día de trámite después de las 12", async function(){
             fallaEnLaQueQuieroOmitirElBorrado = true;
             await enNuevaPersona(this.test?.title!, {ahora:'12:10'}, async ({idper}) => {
+                var novedadRegistradaPorCargar = {desde:FECHA_ACTUAL, hasta:FECHA_ACTUAL, cod_nov:COD_TRAMITE, idper}
                 await expectError(async ()=>{
-                    await registrarNovedad(rrhhSession,
-                        {desde:FECHA_ACTUAL, hasta:FECHA_ACTUAL, cod_nov:COD_TRAMITE, idper}
-                    );
-                }, ctts.ERROR_FUERA_DE_HORA);
+                    await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
+                }, ctts.ERROR_HORA_PASADA);
+                await expectError(async ()=>{
+                    await registrarNovedad(rrhhSession, novedadRegistradaPorCargar);
+                }, ctts.ERROR_HORA_PASADA);
                 await rrhhSession.tableDataTest('novedades_vigentes', [
                     {fecha:FECHA_ACTUAL, cod_nov:COD_PRED_PAS, idper, trabajable:true},
                 ], 'all', {fixedFields:{idper, fecha:FECHA_ACTUAL}})

@@ -1,7 +1,7 @@
 "use strict";
 
 import {strict as likeAr, createIndex} from 'like-ar';
-import { ProcedureDef, ProcedureContext, UploadedFileInfo } from './types-principal';
+import { ProcedureDef, ProcedureContext, UploadedFileInfo, BackendError } from './types-principal';
 import { NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles, FichadaData,
     ERROR_FALTA_FICHADA, ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES
 } from '../common/contracts';
@@ -14,6 +14,19 @@ import { expected } from 'cast-error';
 import { sqlPersonas } from "./table-personas";
 import * as json4all from 'json4all';
 import * as fs from 'fs/promises';
+import * as ctts from "../common/contracts.js"
+
+async function prevalidarCargaDeNovedades(context: ProcedureContext, params:Partial<NovedadRegistrada>){
+    var diaActualPeroTarde = (await context.client.query(
+        `select fecha_actual() = $1 and (fecha_hora_actual() - fecha_actual()) > carga_nov_hasta_hora
+            from parametros`,
+        [params.desde]
+    ).fetchUniqueValue()).value as RealDate
+    if (diaActualPeroTarde && !context.es.superior) {
+        throw new BackendError("no se pueden cargar novedades el mismo día a esta hora", ctts.ERROR_HORA_PASADA);
+    }
+}
+
 
 export const ProceduresPrincipal:ProcedureDef[] = [
     {
@@ -56,6 +69,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             if (cancela == null && cod_nov == null) {
                 throw Error("debe especificar cod_nov or cancela");
             }
+            await prevalidarCargaDeNovedades(context, params);
             const info = await context.client.query(
                 `select concat_ws(' ',
                             '¿confirmar el registro de',
@@ -127,6 +141,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name: 'tipo_novedad', typeName: 'text', defaultValue:'V', references:'tipos_novedad' },
         ],
         coreFunction: async function(context: ProcedureContext, params:NovedadRegistrada){
+            await prevalidarCargaDeNovedades(context, params);
             var result = await context.be.procedure.table_record_save.coreFunction(context, {
                 table: 'novedades_registradas',
                 primaryKeyValues: [],

@@ -11,7 +11,7 @@ DECLARE
   v_ya_existen_las_tablas boolean := (SELECT true FROM information_schema.tables WHERE table_name='parametros' AND table_schema='siper');
 BEGIN
   IF v_ya_existen_las_tablas THEN
-    CREATE OR REPLACE FUNCTION fecha_hora_actual() returns date
+    CREATE OR REPLACE FUNCTION fecha_hora_actual() returns timestamp
       language sql stable
     AS
     $sql$
@@ -20,7 +20,7 @@ BEGIN
         where unico_registro;
     $sql$;
   ELSE
-    CREATE OR REPLACE FUNCTION fecha_hora_actual() returns date
+    CREATE OR REPLACE FUNCTION fecha_hora_actual() returns timestamp
       language sql stable
     AS
     $sql$

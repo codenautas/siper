@@ -81,6 +81,13 @@ export function sinEspaciosMail(fieldName: string):Constraint{
     }
 }
 
+export class BackendError extends Error {
+    constructor(message:string, public code:string) {
+        super(message);
+        this.name = 'BackendError';
+    }
+}
+
 export type Time = `${number}:${number}` | `${number}:${number}:${number}` 
 
 export type Constructor<T> = new(...args: any[]) => T;

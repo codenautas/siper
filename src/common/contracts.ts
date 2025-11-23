@@ -943,7 +943,7 @@ export const ERROR_COD_NOVEDAD_NO_INDICA_CON_HORARIO= 'P1007';
 export const ERROR_COD_NOVEDAD_NO_INDICA_CON_NOVEDAD= 'P1008';
 export const ERROR_SECTORES_DESNIVELADOS            = 'P1009';
 export const ERROR_SECTOR_HUERFANO_NO_TOPE          = 'P1010';
-export const ERROR_FUERA_DE_HORA                    = 'P1011';
+export const ERROR_HORA_PASADA                      = 'P1011';
 
 //////////// ERRORES PROPIOS DEL BACKEND:
 export const ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES   = 'B9001';
