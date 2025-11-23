@@ -141,7 +141,6 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name: 'tipo_novedad', typeName: 'text', defaultValue:'V', references:'tipos_novedad' },
         ],
         coreFunction: async function(context: ProcedureContext, params:NovedadRegistrada){
-            await prevalidarCargaDeNovedades(context, params);
             var result = await context.be.procedure.table_record_save.coreFunction(context, {
                 table: 'novedades_registradas',
                 primaryKeyValues: [],
