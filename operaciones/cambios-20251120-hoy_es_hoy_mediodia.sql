@@ -9,20 +9,3 @@ ALTER TABLE parametros DROP COLUMN avance_dia_automatico;
 drop function procedure if exists avance_de_dia_proc();
 
 update parametros set cod_nov_hasta_hora = '12:00:00';
-
-CREATE OR REPLACE FUNCTION fecha_hora_actual() returns date
-   language sql
-   AS
-  $sql$
-   SELECT coalesce(fecha_hora_para_test, current_datetime)
-     from parametros
-     where unico_registro;
-  $sql$;
-
-
-CREATE OR REPLACE FUNCTION fecha_actual() returns date
-   language sql
-   AS
-  $sql$
-   SELECT date_trunc('day', fecha_hora_actual());
-  $sql$;

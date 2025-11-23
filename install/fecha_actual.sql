@@ -12,7 +12,7 @@ DECLARE
 BEGIN
   IF v_ya_existen_las_tablas THEN
     CREATE OR REPLACE FUNCTION fecha_hora_actual() returns date
-      language sql
+      language sql stable
     AS
     $sql$
       SELECT coalesce(fecha_hora_para_test, current_timestamp)
@@ -21,7 +21,7 @@ BEGIN
     $sql$;
   ELSE
     CREATE OR REPLACE FUNCTION fecha_hora_actual() returns date
-      language sql
+      language sql stable
     AS
     $sql$
       SELECT null::timestamp;
@@ -31,7 +31,7 @@ END;
 $cmd$;
 
 CREATE OR REPLACE FUNCTION fecha_actual() returns date
-    language sql
+    language sql stable
 AS
 $sql$
     SELECT date_trunc('day', fecha_hora_actual());
