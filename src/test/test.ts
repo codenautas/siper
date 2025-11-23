@@ -55,9 +55,10 @@ import * as FormData from "form-data";
 
 const FECHA_ACTUAL = date.iso('2000-01-31');
 const HORA_ACTUAL = '10:00';
+const PRE_AÑO = `1999`;
 const DESDE_AÑO = `2000`;
 const HASTA_AÑO = `2001`;
-const AÑOS_DE_PRUEBA = `annio BETWEEN ${DESDE_AÑO} AND ${HASTA_AÑO}`;
+const AÑOS_DE_PRUEBA = `annio BETWEEN ${PRE_AÑO} AND ${HASTA_AÑO}`;
 const FECHAS_DE_PRUEBA = `extract(year from fecha) BETWEEN ${DESDE_AÑO} AND ${DESDE_AÑO}`;
 const IDPER_DE_PRUEBA = `idper like 'XX%'`;
 const SECTOR = 'T';
@@ -177,7 +178,7 @@ describe("connected", function(){
                         `delete from annios where ${AÑOS_DE_PRUEBA}`,
                         `delete from cod_novedades where novedad like 'PRUEBA AUTOM_TICA%'`,
                         `delete from sectores where nombre_sector like 'PRUEBA AUTOM_TICA%'`,
-                        `select annio_preparar(d) from generate_series(${DESDE_AÑO}, ${HASTA_AÑO}) d`,
+                        `select annio_preparar(d) from generate_series(${PRE_AÑO}, ${HASTA_AÑO}) d`,
                         `update fechas set laborable = false, repite = false, inamovible = false, leyenda = 'feriado '||fecha where fecha in (
                             '2000-03-06', 
                             '2000-03-07',

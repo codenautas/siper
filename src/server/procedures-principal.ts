@@ -652,6 +652,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const tmpPath = (file as any).path as string;
             const size = (file as any).size ?? (await fs.stat(tmpPath)).size;
             if (size > MAX_SIZE) {
+                // eslint-disable-next-line no-empty
                 try { await fs.rm(tmpPath, { force: true }); } catch { }
                 throw new Error("El archivo supera el tamaño máximo permitido de 1 MB.");
             }
@@ -665,6 +666,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
 
             // NO sobrescribir si ya existe
             if (await exists(newPath)) {
+                // eslint-disable-next-line no-empty
                 try { await fs.rm(tmpPath, { force: true }); } catch { }
                 throw new Error(`Ya existe un archivo con el nombre ${extendedFilename}.`);
             }

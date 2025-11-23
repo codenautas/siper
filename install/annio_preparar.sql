@@ -10,7 +10,7 @@ CREATE OR REPLACE FUNCTION annio_preparar(p_annio integer) RETURNS VOID
 AS
 $BODY$
 BEGIN
-  INSERT INTO annios (annio, abierto) VALUES (p_annio, false);
+  INSERT INTO annios (annio, abierto, anterior) VALUES (p_annio, false, (SELECT annio FROM annios WHERE annio = p_annio - 1 ));
   INSERT INTO fechas (fecha) 
     SELECT d FROM generate_series(make_date(p_annio,1,1), make_date(p_annio,12,31), '1 day'::INTERVAL) d;
 END;
