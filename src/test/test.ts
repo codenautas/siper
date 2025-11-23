@@ -393,7 +393,7 @@ describe("connected", function(){
                 await rrhhSession.tableDataTest('nov_per', [
                     {annio:2000, cod_nov:COD_VACACIONES, cantidad:20, usados:5, pendientes:0, saldo:15},
                     {annio:2000, cod_nov:COD_PRED_PAS, cantidad:null, usados:16, pendientes:0, saldo:null},
-                ], 'all', {fixedFields:{idper, annio:DESDE_AÑO}})
+                ], 'all', {fixedFields:{idper}})
             })
         })
         it("insertar una semana de vacaciones en una semana con feriados", async function(){
@@ -1099,6 +1099,56 @@ describe("connected", function(){
             })
         });
     });
+    describe("pasaje vacaciones", function(){
+        before(async function(){
+            await server.inDbClient(null, async client => {
+                await client.query(
+                    'UPDATE annios SET abierto = true WHERE annio = $1 + 1',
+                    [DESDE_AÑO]
+                ).execute();
+            })
+        })
+        after(async function(){
+            await server.inDbClient(null, async client => {
+                await client.query(
+                    'UPDATE annios SET abierto = false WHERE annio = $1 + 1',
+                    [DESDE_AÑO]
+                ).execute();
+            })
+        })
+        it.skip("después de abrir el año siguiente se tienen que pasar las vacaciones", async function(){
+            await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
+                const desde = date.iso('2000-02-11');
+                const hasta = date.iso('2000-02-17');
+                const cod_nov = COD_VACACIONES
+                await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
+                await rrhhSession.tableDataTest('nov_per',[
+                    {annio: 2000, cod_nov, cantidad:20, usados:0, pendientes:5, saldo:15},
+                    {annio: 2001, cod_nov, cantidad:15, usados:0, pendientes:0, saldo:15}
+                ],"all",{fixedFields:{idper, cod_nov}})
+                await rrhhSession.tableDataTest('per_nov_cant',[
+                    {annio: 2000, cod_nov, origen:2000, cantidad:20},
+                    {annio: 2001, cod_nov, origen:2000, cantidad:15}
+                ],"all",{fixedFields:{idper, cod_nov}})
+            })
+        })
+        it.skip("después de abrir el año siguiente se tienen que reiniciar los trámites", async function(){
+            await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
+                const desde = date.iso('2000-05-02');
+                const hasta = desde;
+                const cod_nov = COD_TRAMITE
+                await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
+                await rrhhSession.tableDataTest('nov_per',[
+                    {annio: 2000, cod_nov, cantidad:4, usados:0, pendientes:1, saldo:3},
+                    {annio: 2001, cod_nov, cantidad:4, usados:0, pendientes:0, saldo:4}
+                ],"all",{fixedFields:{idper, cod_nov}})
+                await rrhhSession.tableDataTest('per_nov_cant',[
+                    {annio: 2000, cod_nov, origen:2000, cantidad:4},
+                    {annio: 2001, cod_nov, origen:2001, cantidad:4}
+                ],"all",{fixedFields:{idper, cod_nov}})
+            })
+        })
+    })
     describe("pantallas", function(){
         it("tiene que ver un solo renglón de vacaciones", async function(){
             await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
