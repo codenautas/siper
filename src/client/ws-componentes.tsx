@@ -40,7 +40,7 @@ import * as ctts from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 import { DefinedType } from "guarantee-type";
 import { AppConfigClientSetup } from "../server/types-principal";
-import { obtenerDetalleVacaciones } from "./shared-functions";
+import { obtenerDetalleMultiorigen } from "./shared-functions";
 
 const EFIMERO = Symbol("EFIMERO");
 function setEfimero<T extends object|null>(tictac:T){
@@ -1011,7 +1011,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                 paramfun: {}
             }).then(function(data:any){
                 if (data[0]){
-                    data[0].detalle = obtenerDetalleVacaciones(data[0])
+                    data[0].detalle = obtenerDetalleMultiorigen(data[0])
                     setDetalleVacacionesPersona(data[0].detalle);
                 }else{
                     setDetalleVacacionesPersona(null);

@@ -20,7 +20,7 @@ export function annios(context:TableContext):TableDefinition{
        ],
         primaryKey: [annio.name],
         foreignKeys: [
-            { references: 'annios', fields:[{source:'anterior', target:'annio'}], abr:'ant'}
+            { references: 'annios', fields:[{source:'anterior', target:'annio'}], alias:'ant'}
         ],
         constraints:[
         ],

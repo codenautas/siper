@@ -9,7 +9,11 @@ import {sector} from "./table-sectores"
 
 export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean})=> `
     select a.annio, 
-            ${params.abierto ? 'origen, abierto.cantidad as abierto_cantidad,' : ''}
+            ${params.abierto ? `origen, 
+            abierto.cantidad as abierto_cantidad,
+            abierto.usados as abierto_usados,
+            abierto.pendientes as abierto_pendientes,
+            abierto.saldo as abierto_saldo,` : ''}
             cn.cod_nov, 
             p.idper, 
             p.sector,
@@ -41,7 +45,7 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
         personas p,
         lateral (
             select sum(cantidad) as cantidad,
-                    json_object_agg(origen, json_build_object('cantidad', cantidad) order by origen)::text as esquema
+                    json_object_agg(origen, json_build_object('cantidad', cantidad) order by origen)::text as esquema                    
                 from per_nov_cant pnc
                 where pnc.cod_nov = cn.cod_nov and pnc.annio = a.annio and pnc.idper = p.idper
         ) pnc,
@@ -53,7 +57,13 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
                 from novedades_vigentes nv
                 where nv.cod_nov = cn.cod_nov and nv.annio = a.annio and nv.idper = p.idper
         ) nv
-        ${params.abierto ? `, lateral (select origen, cantidad from per_nov_cant pnc where pnc.cod_nov = cn.cod_nov and pnc.annio = a.annio and pnc.idper = p.idper) abierto` : ``}
+        ${params.abierto ? ` , lateral (select * from jsonb_populate_recordset(
+            null::detalle_novedades_multiorigen, 
+            detalle_nov_multiorigen(
+                nv.usados, nv.pendientes, 
+                (select jsonb_object_agg(origen, jsonb_build_object('cantidad', cantidad) order by origen) from per_nov_cant pnc where pnc.cod_nov = cn.cod_nov and pnc.annio = a.annio and pnc.idper = p.idper)::text
+            )::jsonb
+        )) abierto` : ``}
         where true 
             ${params.annio? ` and a.annio = ${sqlTools.quoteLiteral(params.annio)} `:''}
             ${params.idper? ` and p.idper = ${sqlTools.quoteLiteral(params.idper)} `:''}
