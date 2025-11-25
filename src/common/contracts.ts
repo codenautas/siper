@@ -26,6 +26,8 @@ export const cod_nov = {
         requiere_ninguna_fichada: is.nullable.boolean,
         necesita_verificacion_manual: is.nullable.boolean,
         eximido_fichar: is.nullable.boolean,
+        inicializacion: is.nullable.string,
+        inicializacion_limite: is.nullable.number,
     })
 }
 export type CodNovedades = DefinedType<typeof cod_nov.description>
