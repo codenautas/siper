@@ -1026,6 +1026,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             desde:fecha, 
             hasta, 
             cod_nov, 
+            annio: undefined,
             detalles: detalles == "" ? null : detalles,
             dds0:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds0,
             dds1:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds1,

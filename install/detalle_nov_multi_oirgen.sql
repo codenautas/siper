@@ -98,7 +98,8 @@ SELECT annio, origen, x.idper, apellido, nombres,
             cn.registra,
             cn.prioritario,
             nv.saldo < 0 as error_saldo_negativo,
-            fch.error_falta_entrada
+            fch.error_falta_entrada,
+            cn.inicializacion = 'LICORD' as trasladable
     from cod_novedades cn
     left join lateral (
         select p.idper, cd.cod_nov, true as error_falta_entrada from novedades_vigentes nv

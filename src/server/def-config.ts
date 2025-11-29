@@ -77,6 +77,7 @@ install:
       - ../install/archivo_borrar_trg.sql
       - ../install/parseo-codigo-horario.sql
       - ../install/fecha_actual.sql
+      - ../install/inicializar_per_nov_cant.sql
 logo: 
   path: client/img
 `;

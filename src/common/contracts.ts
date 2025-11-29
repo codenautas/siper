@@ -99,6 +99,7 @@ export const novedades_registradas = {
         idper: is.string,
         desde: is.Date,
         hasta: is.Date,
+        annio: is.optional.number,
         cod_nov: is.nullable.string,
         cancela: is.nullable.boolean,
         dds0: is.nullable.boolean,
