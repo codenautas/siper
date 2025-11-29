@@ -39,6 +39,8 @@ type ModalResponse = {
     data?: FichadaData;
 }
 
+const ARGENTINA_TIMEZONE = 'America/Argentina/Buenos_Aires';
+
 const logout = () => {
     var root = document.getElementById('total-layout');
     if (root != null ) ReactDOM.unmountComponentAtNode(root)
@@ -49,18 +51,43 @@ const logout = () => {
 
 function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFichada:Tipos_fichada[] }) {
     const {infoUsuario, conn, tiposFichada} = props;
+    
     const formatDateTime = () => {
         const now = new Date();
-        const fechaFormateada = now.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        const horaFormateada = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-        const fechaISO = now.toISOString().split('T')[0];
+        
+        const formatter = new Intl.DateTimeFormat('es-AR', { 
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false,
+            timeZone: ARGENTINA_TIMEZONE
+        });
+        
+        const parts = formatter.formatToParts(now);
+        
+        const getPart = (type: string) => parts.find(p => p.type === type)?.value || '';
+        const year = getPart('year');
+        const month = getPart('month');
+        const day = getPart('day');
+        const hour = getPart('hour');
+        const minute = getPart('minute');
+        const second = getPart('second');
+
+        const fechaFormateada = `${day}/${month}/${year}`;
+        const horaFormateada = `${hour}:${minute}:${second}`;
+        const fechaISO = `${year}-${month}-${day}`;
+
         return {
             fechaFormateada: fechaFormateada,
             horaFormateada: horaFormateada,
-            fechaISO: fechaISO,
-            horaISO: horaFormateada,
+            fechaISO: fechaISO, 
+            horaISO: horaFormateada, 
         };
     };
+    
     const [currentDateTime, setCurrentDateTime] = useState(formatDateTime());
     useEffect(() => {
         const timerId = setInterval(() => {
@@ -164,7 +191,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | { name?: string; value: unknown }>) => {
         const name = e.target.name as keyof FichadaData;
-        const value = e.target.value || null;
+        let value = e.target.value || null;
         setFormData(prevData => ({
             ...prevData,
             [name]: value
@@ -348,7 +375,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                     helperText={validationErrors.tipo_fichada}
                     onChange={handleChange}
                     error={!!validationErrors.tipo_fichada}
-                    value={formData.tipo_fichada}
+                    value={formData.tipo_fichada || ''}
                 >
                     {tiposFichada.map(tf=>
                         <MenuItem key={tf.tipo_fichada} value={tf.tipo_fichada}>{tf.nombre}</MenuItem>
@@ -363,7 +390,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                     name="observaciones"
                     multiline
                     rows={2}
-                    value={formData.observaciones}
+                    value={formData.observaciones || ''}
                     onChange={handleChange}
                     size="small"
                 />
@@ -386,7 +413,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                     id="punto"
                     label={formData.punto ? "Coordenadas GPS (Latitud, Longitud)" : "Sin punto GPS"}
                     name="punto"
-                    value={formData.punto}
+                    value={formData.punto || ''}
                     InputLabelProps={{ shrink: true }}
                     inputProps={{ readOnly: true }}
                     color={errorEnPuntoGps() ? 'warning' : undefined}
@@ -418,7 +445,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                 
                 <Modal
                     open={openResponseModal}
-                    onClose={(_event, reason) => {
+                    onClose={(_event, reason) => {            
                         // Solo permite cerrar con el botón interno
                         if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
                             handleCloseModal();
@@ -559,7 +586,7 @@ function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, in
             </Box>
             <Modal
                     open={serverStatus=="desconectado"}
-                    onClose={(_event, _reason) => {
+                    onClose={(_event, _reason) => {            
                         //no se cierra
                     }}
                     aria-labelledby="modal-modal-title"
@@ -600,7 +627,7 @@ function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, in
 myOwn.wScreens.fichar = async function principal(addrParams:any){
     try{
         const infoUsuario: InfoUsuario = await myOwn.ajax.info_usuario();
-        const tiposFichadas:Tipos_fichada[]  = await myOwn.ajax.table_data({table:'tipos_fichada'});
+        const tiposFichadas:Tipos_fichada[] = await myOwn.ajax.table_data({table:'tipos_fichada'});
         renderConnectedApp(
             myOwn as never as Connector,
             { ...addrParams },

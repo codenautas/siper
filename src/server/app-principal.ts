@@ -207,6 +207,8 @@ export class AppSiper extends AppBackend{
         const be = this;
         await super.postConfig();
         cronMantenimiento(be);
+        be.inCron('falta_fichada_registrar', {vecesPorDia:24*60});
+        be.inCron(be.notificarFaltaFichadaAction, {vecesPorDia:24*60, name: 'falta_fichada_mail_notificar'});
     }
     override async getProcedures(){
         // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -471,5 +473,36 @@ export class AppSiper extends AppBackend{
             reglas               ,
             avisos_falta_fichada ,  
         }
-    }       
+    }   
+    notificarFaltaFichadaAction = async () => {
+        const be = this;
+        try {
+            await be.inTransaction(null, async (client) => {
+                const { rows } = await client
+                    .query(`SELECT idper, fecha, tipo_fichada, avisado_mail, avisado_wp
+                            FROM avisos_falta_fichada
+                            WHERE avisado_mail IS NULL AND avisado_wp IS NULL`) //filas de avisos_falta_fichada sin notificar
+                    .fetchAll();
+                if (rows.length > 0) {
+                    for (const row of rows) {
+                        
+                        console.log('row: ', row); //ACA FALTA LA FUNCION DE ENVIO DE MAIL
+                        
+                        client.query(`UPDATE avisos_falta_fichada
+                                     SET avisado_mail = NOW()
+                                     WHERE idper = $1 AND fecha = $2 AND tipo_fichada = $3
+                                     AND avisado_mail IS NULL
+                                     RETURNING idper`,[row.idper, row.fecha, row.tipo_fichada] //Actualizo timestamp de avisado_mail
+                        );
+                    }
+                    return `Se notificaron todas las faltas de fichada`;
+                } else {
+                    return `No hay falta de fichada para notificar`;
+                }
+            })
+            return
+        } catch (err) {
+            console.error(`Error en notificar falta fichada. ${err}`);
+        }
+    }
 }
