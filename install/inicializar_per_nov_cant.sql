@@ -22,7 +22,7 @@ BEGIN
             WHERE ini_per_nov_cant 
               AND p_annio BETWEEN extract(YEAR from desde) AND extract(YEAR from coalesce(hasta,'9999-12-31'))
         )
-        AND c.inicializacion NOT IN ('LICMAT');
+        AND c.inicializacion = 'PLANTA';
 END;
 $BODY$;
 

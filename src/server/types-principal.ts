@@ -95,5 +95,3 @@ export type Constructor<T> = new(...args: any[]) => T;
 export const idImportacion:FieldDefinition = {name: 'id_importacion', typeName: 'bigint', nullable:true, editable:false, // @ts-ignore */ 
     sequence:{}
 }
-
-export const TRAS = 'TRAS'; // origen del las vacacioens o novedades trasladadas provisoriamente

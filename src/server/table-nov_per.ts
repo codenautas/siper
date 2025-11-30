@@ -7,8 +7,10 @@ import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades"
 import {sector} from "./table-sectores"
 
-export const sqlNovPer = (params:{idper?:string, annio?:number|'abierto', abierto?:boolean})=> `
-    select ${params.annio == 'abierto' ? 'null::integer as annio' : 'a.annio'}, 
+const IN_AÑO_ABIERTO = 'in (select annio from annios where abierto)';
+
+export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean, annioAbierto?:boolean})=> `
+    select ${params.annioAbierto ? '' : 'a.annio,'}
             ${params.abierto ? `origen, 
             abierto.cantidad as abierto_cantidad,
             abierto.usados as abierto_usados,
@@ -30,8 +32,7 @@ export const sqlNovPer = (params:{idper?:string, annio?:number|'abierto', abiert
             cn.registra,
             cn.prioritario,
             nv.saldo < 0 as error_saldo_negativo,
-            fch.error_falta_entrada,
-            cn.inicializacion = 'LICORD' as trasladable
+            fch.error_falta_entrada
     from cod_novedades cn
     left join lateral (
         select p.idper, cd.cod_nov, true as error_falta_entrada from novedades_vigentes nv
@@ -42,13 +43,13 @@ export const sqlNovPer = (params:{idper?:string, annio?:number|'abierto', abiert
         group by p.idper, cd.cod_nov
     ) fch on cn.cod_nov = fch.cod_nov,
         parametros par,
-        annios a,
+        ${params.annioAbierto ? '' : 'annios a,'}
         personas p,
         lateral (
             select sum(cantidad) as cantidad,
                     json_object_agg(origen, json_build_object('cantidad', cantidad) order by origen)::text as esquema                    
                 from per_nov_cant pnc
-                where pnc.cod_nov = cn.cod_nov and pnc.annio = a.annio and pnc.idper = p.idper
+                where pnc.cod_nov = cn.cod_nov and pnc.idper = p.idper and pnc.annio ${params.annioAbierto ? IN_AÑO_ABIERTO : '= a.annio'}
         ) pnc,
         lateral (
             select 
@@ -56,7 +57,7 @@ export const sqlNovPer = (params:{idper?:string, annio?:number|'abierto', abiert
                     count(*) filter (where nv.fecha > fecha_actual()) as pendientes, 
                     pnc.cantidad - count(*) as saldo
                 from novedades_vigentes nv
-                where nv.cod_nov = cn.cod_nov and nv.annio = a.annio and nv.idper = p.idper
+                where nv.cod_nov = cn.cod_nov and nv.idper = p.idper and nv.annio ${params.annioAbierto ? IN_AÑO_ABIERTO : '= a.annio'}
         ) nv
         ${params.abierto ? ` , lateral (select * from jsonb_populate_recordset(
             null::detalle_novedades_multiorigen, 
@@ -66,8 +67,9 @@ export const sqlNovPer = (params:{idper?:string, annio?:number|'abierto', abiert
             )::jsonb
         )) abierto` : ``}
         where true 
-            ${params.annio == 'abierto' ? ' and a.abierto = true' : params.annio? ` and a.annio = ${sqlTools.quoteLiteral(params.annio)} `:''}
+            ${params.annio? ` and a.annio = ${sqlTools.quoteLiteral(params.annio)} `:''}
             ${params.idper? ` and p.idper = ${sqlTools.quoteLiteral(params.idper)} `:''}
+            ${params.annioAbierto ? ` and cn.inicializacion = 'LICORD` : ''}
 `;
 
 export function nov_per(_context: TableContext): TableDefinition {

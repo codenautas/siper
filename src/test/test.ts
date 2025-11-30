@@ -19,7 +19,7 @@ import { guarantee } from "guarantee-type"
 import { tipo_novedad, tipo_novedad_inicial, tipo_novedad_verificado } from "../server/table-tipos_novedad"
 
 import * as discrepances from 'discrepances';
-import { Time, TRAS } from "../server/types-principal";
+import { Time } from "../server/types-principal";
 
 const TIMEOUT_SPEED = 1000 * (process.env.BP_TIMEOUT_SPEED as unknown as number ?? 1);
 
@@ -1107,7 +1107,7 @@ describe("connected", function(){
         });
     });
     describe("pasaje vacaciones", function(){
-        const AÑO0 = DESDE_AÑO
+        // const AÑO0 = DESDE_AÑO
         const AÑO1 = AÑO_SIGUIENTE
         async function abrirAño(){
             await server.inDbClient(null, async client => {
@@ -1131,8 +1131,8 @@ describe("connected", function(){
                 ).execute();
             })
         })
-        it("después de abrir el año siguiente se tienen que trasladar las vacaciones a medida que se pidan", async function(){
-            await enNuevaPersona(this.test?.title!, {vacaciones: [{origen: AÑO0, cantidad: 15}, {origen: AÑO1, cantidad: 15}]}, async ({idper}) => {
+        it("después de abrir el año siguiente se tienen ver las vacaciones pedidas en el cuadro final", async function(){
+            await enNuevaPersona(this.test?.title!, {vacaciones: 30}, async ({idper}) => {
                 const desde0 = date.iso('2000-02-11');
                 const hasta0 = date.iso('2000-02-17');
                 const desde = date.iso('2001-03-11');
@@ -1141,27 +1141,16 @@ describe("connected", function(){
                 await registrarNovedad(rrhhSession, {desde:desde0, hasta:hasta0, idper, cod_nov});
                 await rrhhSession.tableDataTest('nov_per',[
                     {annio: 2000, cod_nov, cantidad:30, usados:0, pendientes:5, saldo:25},
-                ],"all",{fixedFields:{idper, cod_nov}})
+                ],"all",{fixedFields:{idper, cod_nov, annio: 2000}})
                 await abrirAño();
-                await rrhhSession.tableDataTest('per_nov_cant',[
-                    {annio: 2000, cod_nov, origen:AÑO0, cantidad:15},
-                    {annio: 2000, cod_nov, origen:AÑO1, cantidad:15},
-                    {annio: 2001, cod_nov, origen:TRAS, cantidad: 0},
-                ],"all",{fixedFields:{idper, cod_nov}})
                 await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
                 await rrhhSession.tableDataTest('nov_per',[
-                    {annio: 2000, cod_nov, cantidad:30, usados:0, pendientes:5, saldo:20},
-                    {annio: 2001, cod_nov, cantidad:5 , usados:0, pendientes:5, saldo: 0}
-                ],"all",{fixedFields:{idper, cod_nov}})
-                await rrhhSession.tableDataTest('per_nov_cant',[
-                    {annio: 2000, cod_nov, origen:AÑO0, cantidad:15},
-                    {annio: 2000, cod_nov, origen:AÑO1, cantidad:15},
-                    {annio: 2000, cod_nov, origen:TRAS, cantidad:-5},
-                    {annio: 2001, cod_nov, origen:TRAS, cantidad: 5},
-                ],"all",{fixedFields:{idper, cod_nov}})
+                    {annio: 2000, cod_nov, cantidad:30  , usados:0, pendientes:5, saldo:25  },
+                    {annio: 2001, cod_nov, cantidad:null, usados:0, pendientes:5, saldo:null}
+                ],"all",{fixedFields:{idper, cod_nov, annio:[2000, 2001]}})
             })
         })
-        it.skip("después de abrir el año siguiente se tienen que reiniciar los trámites pero no las vacaciones", async function(){
+        it("después de abrir el año siguiente se tienen que reiniciar los trámites pero no las vacaciones", async function(){
             await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
                 const desde = date.iso('2000-05-02');
                 const hasta = desde;
