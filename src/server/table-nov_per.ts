@@ -7,8 +7,8 @@ import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades"
 import {sector} from "./table-sectores"
 
-export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean})=> `
-    select a.annio, 
+export const sqlNovPer = (params:{idper?:string, annio?:number|'abierto', abierto?:boolean})=> `
+    select ${params.annio == 'abierto' ? 'null::integer as annio' : 'a.annio'}, 
             ${params.abierto ? `origen, 
             abierto.cantidad as abierto_cantidad,
             abierto.usados as abierto_usados,
@@ -30,7 +30,8 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
             cn.registra,
             cn.prioritario,
             nv.saldo < 0 as error_saldo_negativo,
-            fch.error_falta_entrada
+            fch.error_falta_entrada,
+            cn.inicializacion = 'LICORD' as trasladable
     from cod_novedades cn
     left join lateral (
         select p.idper, cd.cod_nov, true as error_falta_entrada from novedades_vigentes nv
@@ -65,7 +66,7 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
             )::jsonb
         )) abierto` : ``}
         where true 
-            ${params.annio? ` and a.annio = ${sqlTools.quoteLiteral(params.annio)} `:''}
+            ${params.annio == 'abierto' ? ' and a.abierto = true' : params.annio? ` and a.annio = ${sqlTools.quoteLiteral(params.annio)} `:''}
             ${params.idper? ` and p.idper = ${sqlTools.quoteLiteral(params.idper)} `:''}
 `;
 

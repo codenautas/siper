@@ -164,19 +164,19 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     await Promise.all(erroresTrasladables.map(async err=>{
                         await context.client.query(
                             `UPDATE per_nov_cant SET cantidad = cantidad + $1 
-                                WHERE idper = $2 AND cod_nov = $3 origen = 'TRAS' AND annio = $4`,
+                                WHERE idper = $2 AND cod_nov = $3 AND origen = 'TRAS' AND annio = $4`,
                             [-err.saldo, params.idper, err.cod_nov, annio]
                         ).execute()
                         var updated = await context.client.query(
                             `UPDATE per_nov_cant SET cantidad = cantidad - $1 
-                                WHERE idper = $2 AND cod_nov = $3 AND origen = 'TRAS AND annio = (SELECT anterior FROM annios WHERE annio = $4)
-                                RETURNING 1' 
+                                WHERE idper = $2 AND cod_nov = $3 AND origen = 'TRAS' AND annio = (SELECT anterior FROM annios WHERE annio = $4)
+                                RETURNING 1
                              `,
                             [-err.saldo, params.idper, err.cod_nov, annio]
                         ).execute()
                         if (!updated.rowCount) {
                             await context.client.query(
-                                `INSERT INTO per_nov_cant (cantidad, idper, cod_nov, 'TRAS', annio) 
+                                `INSERT INTO per_nov_cant (cantidad, idper, cod_nov, origen, annio) 
                                     SELECT $1, $2, $3, 'TRAS', (SELECT anterior FROM annios WHERE annio = $4)`,
                                 [-err.saldo, params.idper, err.cod_nov, annio]
                             ).execute()

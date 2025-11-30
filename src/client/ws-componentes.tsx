@@ -1088,7 +1088,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)} infoUsuario={infoUsuario}/>
             <Componente componentType="del-medio" scrollable={true}>
                 <div className="container-del-medio">
-                {infoUsuario.idper == null ? null : 
+                {idper == null ? null : 
                 <Box className="box-flex-gap">
                     <Paper className="paper-flex" 
                         onClick={() => setMostrandoLegajo(!mostrandoLegajo && es.registra)}
