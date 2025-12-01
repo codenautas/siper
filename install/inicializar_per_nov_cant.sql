@@ -1,7 +1,7 @@
 -- EJECUTAR LOCALMENTE, NO DESCOMENTAR Y COMMITEAR:
 -- SET search_path = siper; SET ROLE siper_owner;
 
-CREATE OR REPLACE PROCEDURE inicializar_per_nov_cant(p_annio integer)
+CREATE OR REPLACE PROCEDURE inicializar_per_nov_cant(p_annio integer, p_idper text DEFAULT NULL)
   SECURITY DEFINER
   LANGUAGE PLPGSQL
 AS
@@ -22,7 +22,8 @@ BEGIN
             WHERE ini_per_nov_cant 
               AND p_annio BETWEEN extract(YEAR from desde) AND extract(YEAR from coalesce(hasta,'9999-12-31'))
         )
-        AND c.inicializacion = 'PLANTA';
+        AND c.inicializacion = 'PLANTA'
+        AND (p_idper IS NULL OR p.idper = p_idper);
 END;
 $BODY$;
 

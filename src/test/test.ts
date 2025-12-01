@@ -1109,26 +1109,23 @@ describe("connected", function(){
     describe("pasaje vacaciones", function(){
         // const AÑO0 = DESDE_AÑO
         const AÑO1 = AÑO_SIGUIENTE
-        async function abrirAño(){
-            await server.inDbClient(null, async client => {
+        async function abrirAño(idper:string|null){
+            await server.inTransaction(null, async client => {
                 await client.query(
-                    `delete from per_nov_cant where idper like 'XX%' and annio = $1`,
-                    [AÑO1]
+                    `call inicializar_per_nov_cant($1 ${idper ? ',$2' : '' })`,
+                    [AÑO1, ...(idper ? [idper] : []) ]
                 ).execute();
                 await client.query(
-                    'call inicializar_per_nov_cant($1)',
-                    [AÑO1]
-                ).execute();
-                await client.query(
-                    'UPDATE annios SET abierto = true WHERE annio = $1',
+                    'UPDATE annios SET abierto = true WHERE annio = $1 AND NOT abierto',
                     [AÑO1]
                 ).execute();
             })
         }
         before(async function(){
+            await abrirAño(null)
         })
         after(async function(){
-            await server.inDbClient(null, async client => {
+            await server.inTransaction(null, async client => {
                 await client.query(
                     'UPDATE annios SET abierto = false WHERE annio = $1',
                     [AÑO1]
@@ -1146,7 +1143,7 @@ describe("connected", function(){
                 await rrhhSession.tableDataTest('nov_per',[
                     {annio: 2000, cod_nov, cantidad:30, usados:0, pendientes:5, saldo:25},
                 ],"all",{fixedFields:{idper, cod_nov, annio: 2000}})
-                await abrirAño();
+                await abrirAño(idper);
                 await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
                 await rrhhSession.tableDataTest('nov_per',[
                     {annio: 2000, cod_nov, cantidad:30  , usados:0, pendientes:5, saldo:25  },
@@ -1163,25 +1160,26 @@ describe("connected", function(){
                 const hasta = date.iso('2001-03-31'); // 15 días hábiles
                 const cod_nov = COD_VACACIONES
                 await registrarNovedad(rrhhSession, {desde:desde0, hasta:hasta0, idper, cod_nov});
-                await abrirAño();
+                await abrirAño(idper);
                 await expectError(async ()=>{
                     await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
                 }, ctts.ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES);
             })
         })
         it("después de abrir el año siguiente se tienen que reiniciar los trámites pero no las vacaciones", async function(){
-            await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {vacaciones: 20, tramites: 4}, async ({idper}) => {
                 const desde = date.iso('2000-05-02');
                 const hasta = desde;
                 const cod_nov = COD_TRAMITE
                 await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
+                await abrirAño(idper);
                 await rrhhSession.tableDataTest('nov_per',[
                     {annio: 2000, cod_nov, cantidad:4, usados:0, pendientes:1, saldo:3},
                     {annio: 2001, cod_nov, cantidad:4, usados:0, pendientes:0, saldo:4}
                 ],"all",{fixedFields:{idper, cod_nov}})
                 await rrhhSession.tableDataTest('per_nov_cant',[
-                    {annio: 2000, cod_nov, origen:2000, cantidad:4},
-                    {annio: 2001, cod_nov, origen:2001, cantidad:4}
+                    {annio: 2000, cod_nov, origen:'2000', cantidad:4},
+                    {annio: 2001, cod_nov, origen:'2001', cantidad:4}
                 ],"all",{fixedFields:{idper, cod_nov}})
                 await rrhhSession.tableDataTest('per_nov_cant',[
                 ],"all",{fixedFields:{idper, cod_nov:COD_VACACIONES, annio:2001}})
