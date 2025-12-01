@@ -7,10 +7,13 @@ import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades"
 import {sector} from "./table-sectores"
 
-const IN_AÑO_ABIERTO = 'in (select annio from annios where abierto)';
-
-export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean, annioAbierto?:boolean})=> `
-    select ${params.annioAbierto ? '' : 'a.annio,'}
+export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean, annioAbierto?:boolean})=>{
+    var filtroAño = (alias:string) => params.annioAbierto 
+        ? `(CASE WHEN cn.inicializacion = 'LICORD' THEN ${alias}.annio in (select annio from annios where abierto) ELSE ${alias}.annio = a.annio END)` 
+        : `${alias}.annio = a.annio`;
+    return `
+    select -- ${params.annioAbierto ? '' : 'a.annio,'}
+            a.annio,
             ${params.abierto ? `origen, 
             abierto.cantidad as abierto_cantidad,
             abierto.usados as abierto_usados,
@@ -43,13 +46,13 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
         group by p.idper, cd.cod_nov
     ) fch on cn.cod_nov = fch.cod_nov,
         parametros par,
-        ${params.annioAbierto ? '' : 'annios a,'}
+        annios a,
         personas p,
         lateral (
             select sum(cantidad) as cantidad,
                     json_object_agg(origen, json_build_object('cantidad', cantidad) order by origen)::text as esquema                    
                 from per_nov_cant pnc
-                where pnc.cod_nov = cn.cod_nov and pnc.idper = p.idper and pnc.annio ${params.annioAbierto ? IN_AÑO_ABIERTO : '= a.annio'}
+                where pnc.cod_nov = cn.cod_nov and pnc.idper = p.idper and ${filtroAño('pnc')}
         ) pnc,
         lateral (
             select 
@@ -57,20 +60,23 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
                     count(*) filter (where nv.fecha > fecha_actual()) as pendientes, 
                     pnc.cantidad - count(*) as saldo
                 from novedades_vigentes nv
-                where nv.cod_nov = cn.cod_nov and nv.idper = p.idper and nv.annio ${params.annioAbierto ? IN_AÑO_ABIERTO : '= a.annio'}
+                where nv.cod_nov = cn.cod_nov and nv.idper = p.idper and ${filtroAño('nv')}
         ) nv
         ${params.abierto ? ` , lateral (select * from jsonb_populate_recordset(
             null::detalle_novedades_multiorigen, 
             detalle_nov_multiorigen(
                 nv.usados, nv.pendientes, 
-                (select jsonb_object_agg(origen, jsonb_build_object('cantidad', cantidad) order by origen) from per_nov_cant pnc where pnc.cod_nov = cn.cod_nov and pnc.annio = a.annio and pnc.idper = p.idper)::text
+                (select     
+                    jsonb_object_agg(origen, jsonb_build_object('cantidad', cantidad) order by origen) 
+                    from per_nov_cant pnc 
+                    where pnc.cod_nov = cn.cod_nov and ${filtroAño('pnc')} and pnc.idper = p.idper
+                )::text
             )::jsonb
         )) abierto` : ``}
         where true 
-            ${params.annio? ` and a.annio = ${sqlTools.quoteLiteral(params.annio)} `:''}
-            ${params.idper? ` and p.idper = ${sqlTools.quoteLiteral(params.idper)} `:''}
-            ${params.annioAbierto ? ` and cn.inicializacion = 'LICORD` : ''}
-`;
+            ${params.annio ? ` and a.annio = ${sqlTools.quoteLiteral(params.annio)} `:''}
+            ${params.idper ? ` and p.idper = ${sqlTools.quoteLiteral(params.idper)} `:''}
+`};
 
 export function nov_per(_context: TableContext): TableDefinition {
     return {

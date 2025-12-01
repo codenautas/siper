@@ -1112,6 +1112,10 @@ describe("connected", function(){
         async function abrirAño(){
             await server.inDbClient(null, async client => {
                 await client.query(
+                    `delete from per_nov_cant where idper like 'XX%' and annio = $1`,
+                    [AÑO1]
+                ).execute();
+                await client.query(
                     'call inicializar_per_nov_cant($1)',
                     [AÑO1]
                 ).execute();
@@ -1148,6 +1152,21 @@ describe("connected", function(){
                     {annio: 2000, cod_nov, cantidad:30  , usados:0, pendientes:5, saldo:25  },
                     {annio: 2001, cod_nov, cantidad:null, usados:0, pendientes:5, saldo:null}
                 ],"all",{fixedFields:{idper, cod_nov, annio:[2000, 2001]}})
+            })
+        })
+        it("rechaza vacaciones en el año sigiuente si se pasa del total", async function(){
+            this.timeout(TIMEOUT_SPEED * 3);
+            await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
+                const desde0 = date.iso('2000-03-10');
+                const hasta0 = date.iso('2000-03-21'); // 10 días hábiles
+                const desde = date.iso('2001-03-10');
+                const hasta = date.iso('2001-03-31'); // 15 días hábiles
+                const cod_nov = COD_VACACIONES
+                await registrarNovedad(rrhhSession, {desde:desde0, hasta:hasta0, idper, cod_nov});
+                await abrirAño();
+                await expectError(async ()=>{
+                    await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
+                }, ctts.ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES);
             })
         })
         it("después de abrir el año siguiente se tienen que reiniciar los trámites pero no las vacaciones", async function(){

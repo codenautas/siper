@@ -152,11 +152,13 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             if (annio == null) {
                 throw new Error('FALTA result.annio');
             }
-            var inconsistencias = await context.client.query(`
+            var sqlInconsistencias = `
                 SELECT cod_nov, saldo, error_saldo_negativo, error_falta_entrada
-                    FROM (${sqlNovPer({idper, annio})}) x
+                    FROM (${sqlNovPer({idper, annio, annioAbierto:true})}) x
                     WHERE error_saldo_negativo or error_falta_entrada
-            `, []).fetchAll();
+            `
+            await fs.writeFile('local-guardar.sql', sqlInconsistencias, 'utf-8')
+            var inconsistencias = await context.client.query(sqlInconsistencias, []).fetchAll();
             if (inconsistencias.rows.length > 0) {
                 const erroresSaldoNegativo = inconsistencias.rows.filter(r => r.error_saldo_negativo);
                 const erroresFaltaEntrada = inconsistencias.rows.filter(r => r.error_falta_entrada);
