@@ -57,12 +57,14 @@ const FECHA_ACTUAL = date.iso('2000-01-31');
 const HORA_ACTUAL = '10:00';
 const PRE_AÑO = `1999`;
 const DESDE_AÑO = `2000`;
+const AÑO_SIGUIENTE = `2001`;
 const HASTA_AÑO = `2001`;
 const AÑOS_DE_PRUEBA = `annio BETWEEN ${PRE_AÑO} AND ${HASTA_AÑO}`;
 const FECHAS_DE_PRUEBA = `extract(year from fecha) BETWEEN ${DESDE_AÑO} AND ${DESDE_AÑO}`;
 const IDPER_DE_PRUEBA = `idper like 'XX%'`;
 const SECTOR = 'T';
-const SITUACION_REVISTA = "XX";
+const SITUACION_REVISTA_PLANTA = "XX PL";
+const SITUACION_REVISTA_TERCER = "XX TE";
 
 const COD_VACACIONES = "1";
 const COD_TRAMITE = "121";
@@ -172,7 +174,7 @@ describe("connected", function(){
                         `delete from novedades_vigentes where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
                         `delete from usuarios where ${IDPER_DE_PRUEBA}`,
                         `delete from personas where ${IDPER_DE_PRUEBA}`,
-                        `delete from situacion_revista where situacion_revista = '${SITUACION_REVISTA}'`,
+                        `delete from situacion_revista where situacion_revista IN ('${SITUACION_REVISTA_PLANTA}', '${SITUACION_REVISTA_TERCER}')`,
                         `delete from grupos where ${IDPER_DE_PRUEBA.replace('idper', 'grupo')}`,
                         `delete from fechas where ${AÑOS_DE_PRUEBA}`,
                         `delete from annios where ${AÑOS_DE_PRUEBA}`,
@@ -203,7 +205,8 @@ describe("connected", function(){
                             ('1', 'PRUEBA AUTOMATICA P.1.3.1', 'P13', 4, 'DEP'),
                             ('2', 'PRUEBA AUTOMATICA P.2'    , 'P'  , 2, 'SDG');
                         `,
-                        `insert into situacion_revista (situacion_revista, con_novedad) values ('${SITUACION_REVISTA}', true)`,
+                        `insert into situacion_revista (situacion_revista, con_novedad, ini_per_nov_cant) values ('${SITUACION_REVISTA_PLANTA}', true, true)`,
+                        `insert into situacion_revista (situacion_revista, con_novedad, ini_per_nov_cant) values ('${SITUACION_REVISTA_TERCER}', true, false)`,
                     ])
                 })
                 console.log("Borrado y listo!")
@@ -240,7 +243,7 @@ describe("connected", function(){
             discrepances.showAndThrow(rrhhSession.config.config.es, {admin:false, superior:false, rrhh:true, registra:true});
         })
     })
-    async function crearNuevaPersona(nombre:string, opts:{registra_novedades_desde?:Date, para_antiguedad_relativa?:Date}): Promise<ctts.Persona>{
+    async function crearNuevaPersona(nombre:string, opts:{registra_novedades_desde?:Date, para_antiguedad_relativa?:Date, situacion_revista?:string}): Promise<ctts.Persona>{
         var numero = autoNumero++;
         var persona = {
             cuil: (10330010005 + numero*11).toString(),
@@ -260,7 +263,7 @@ describe("connected", function(){
             idper: personaGrabada.idper,
             propio: true,
             desde: opts.registra_novedades_desde ?? date.iso(`${DESDE_AÑO}-01-01`), 
-            situacion_revista: SITUACION_REVISTA,
+            situacion_revista: opts.situacion_revista ?? SITUACION_REVISTA_PLANTA,
         };
         await rrhhSession.saveRecord(
             ctts.trayectoria_laboral,
@@ -281,15 +284,17 @@ describe("connected", function(){
     async function enNuevaPersona(
         nombre: string, 
         opciones: {
-            vacaciones?: number, tramites?: number, usuario?:{rol?:string, sector?:string, sesion?:boolean}, hoy?:Date, ahora?:Time,
-            registra_novedades_desde?:Date, para_antiguedad_relativa?:Date
+            vacaciones?: number|{origen:string, cantidad:number}[], 
+            tramites?: number, usuario?:{rol?:string, sector?:string, sesion?:boolean}, hoy?:Date, ahora?:Time,
+            registra_novedades_desde?:Date, para_antiguedad_relativa?:Date,
+            situacion_revista?: typeof SITUACION_REVISTA_PLANTA | typeof SITUACION_REVISTA_TERCER
         },
         probar: (persona: ctts.Persona, mas:{usuario: UsuarioConCredenciales, sesion:SesionEmuladaSiper}) => Promise<void>
     ){
         var haciendo = 'inicializando';
         try {
-            var persona = await crearNuevaPersona(nombre, {registra_novedades_desde: opciones.registra_novedades_desde, para_antiguedad_relativa: opciones.para_antiguedad_relativa});
-            var {vacaciones, tramites, hoy, ahora} = opciones;
+            var {vacaciones, tramites, hoy, ahora, ...personales} = opciones;
+            var persona = await crearNuevaPersona(nombre, personales);
             // await superiorSession.saveRecord(ctts.per_gru, {idper: persona.idper, clase: 'U', grupo: 'T'}, 'new');
             var usuario = null as unknown as UsuarioConCredenciales;
             var sesion = null as unknown as SesionEmuladaSiper;
@@ -300,7 +305,9 @@ describe("connected", function(){
                 }
                 if (opciones.usuario.sector) await rrhhSession.saveRecord(ctts.personas,{idper:persona.idper,sector:opciones.usuario.sector}, 'update')
             }
-            if (vacaciones) await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_VACACIONES, idper: persona.idper, cantidad: vacaciones }, 'new')
+            if (vacaciones) await Promise.all((typeof vacaciones == 'number' ? [{origen:'2000', cantidad:vacaciones}] : vacaciones).map(({origen, cantidad}) =>
+                superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen, cod_nov: COD_VACACIONES, idper: persona.idper, cantidad }, 'new')
+            ));
             if (tramites) await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_TRAMITE, idper:persona.idper, cantidad: 4 }, 'new')
             if (hoy || ahora) {
                 await server.inDbClient(ADMIN_REQ, async client => client.query(
@@ -1100,52 +1107,82 @@ describe("connected", function(){
         });
     });
     describe("pasaje vacaciones", function(){
-        before(async function(){
-            await server.inDbClient(null, async client => {
+        // const AÑO0 = DESDE_AÑO
+        const AÑO1 = AÑO_SIGUIENTE
+        async function abrirAño(idper:string|null){
+            await server.inTransaction(null, async client => {
                 await client.query(
-                    'UPDATE annios SET abierto = true WHERE annio = $1 + 1',
-                    [DESDE_AÑO]
+                    `call inicializar_per_nov_cant($1 ${idper ? ',$2' : '' })`,
+                    [AÑO1, ...(idper ? [idper] : []) ]
+                ).execute();
+                await client.query(
+                    'UPDATE annios SET abierto = true WHERE annio = $1 AND NOT abierto',
+                    [AÑO1]
                 ).execute();
             })
+        }
+        before(async function(){
+            await abrirAño(null)
         })
         after(async function(){
-            await server.inDbClient(null, async client => {
+            await server.inTransaction(null, async client => {
                 await client.query(
-                    'UPDATE annios SET abierto = false WHERE annio = $1 + 1',
-                    [DESDE_AÑO]
+                    'UPDATE annios SET abierto = false WHERE annio = $1',
+                    [AÑO1]
                 ).execute();
             })
         })
-        it.skip("después de abrir el año siguiente se tienen que pasar las vacaciones", async function(){
-            await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
-                const desde = date.iso('2000-02-11');
-                const hasta = date.iso('2000-02-17');
+        it("después de abrir el año siguiente se tienen ver las vacaciones pedidas en el cuadro final", async function(){
+            await enNuevaPersona(this.test?.title!, {vacaciones: 30}, async ({idper}) => {
+                const desde0 = date.iso('2000-02-11');
+                const hasta0 = date.iso('2000-02-17');
+                const desde = date.iso('2001-03-11');
+                const hasta = date.iso('2001-03-17');
                 const cod_nov = COD_VACACIONES
+                await registrarNovedad(rrhhSession, {desde:desde0, hasta:hasta0, idper, cod_nov});
+                await rrhhSession.tableDataTest('nov_per',[
+                    {annio: 2000, cod_nov, cantidad:30, usados:0, pendientes:5, saldo:25},
+                ],"all",{fixedFields:{idper, cod_nov, annio: 2000}})
+                await abrirAño(idper);
                 await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
                 await rrhhSession.tableDataTest('nov_per',[
-                    {annio: 2000, cod_nov, cantidad:20, usados:0, pendientes:5, saldo:15},
-                    {annio: 2001, cod_nov, cantidad:15, usados:0, pendientes:0, saldo:15}
-                ],"all",{fixedFields:{idper, cod_nov}})
-                await rrhhSession.tableDataTest('per_nov_cant',[
-                    {annio: 2000, cod_nov, origen:2000, cantidad:20},
-                    {annio: 2001, cod_nov, origen:2000, cantidad:15}
-                ],"all",{fixedFields:{idper, cod_nov}})
+                    {annio: 2000, cod_nov, cantidad:30  , usados:0, pendientes:5, saldo:25  },
+                    {annio: 2001, cod_nov, cantidad:null, usados:0, pendientes:5, saldo:null}
+                ],"all",{fixedFields:{idper, cod_nov, annio:[2000, 2001]}})
             })
         })
-        it.skip("después de abrir el año siguiente se tienen que reiniciar los trámites", async function(){
+        it("rechaza vacaciones en el año sigiuente si se pasa del total", async function(){
+            this.timeout(TIMEOUT_SPEED * 3);
             await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
+                const desde0 = date.iso('2000-03-10');
+                const hasta0 = date.iso('2000-03-21'); // 10 días hábiles
+                const desde = date.iso('2001-03-10');
+                const hasta = date.iso('2001-03-31'); // 15 días hábiles
+                const cod_nov = COD_VACACIONES
+                await registrarNovedad(rrhhSession, {desde:desde0, hasta:hasta0, idper, cod_nov});
+                await abrirAño(idper);
+                await expectError(async ()=>{
+                    await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
+                }, ctts.ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES);
+            })
+        })
+        it("después de abrir el año siguiente se tienen que reiniciar los trámites pero no las vacaciones", async function(){
+            await enNuevaPersona(this.test?.title!, {vacaciones: 20, tramites: 4}, async ({idper}) => {
                 const desde = date.iso('2000-05-02');
                 const hasta = desde;
                 const cod_nov = COD_TRAMITE
                 await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
+                await abrirAño(idper);
                 await rrhhSession.tableDataTest('nov_per',[
                     {annio: 2000, cod_nov, cantidad:4, usados:0, pendientes:1, saldo:3},
                     {annio: 2001, cod_nov, cantidad:4, usados:0, pendientes:0, saldo:4}
                 ],"all",{fixedFields:{idper, cod_nov}})
                 await rrhhSession.tableDataTest('per_nov_cant',[
-                    {annio: 2000, cod_nov, origen:2000, cantidad:4},
-                    {annio: 2001, cod_nov, origen:2001, cantidad:4}
+                    {annio: 2000, cod_nov, origen:'2000', cantidad:4},
+                    {annio: 2001, cod_nov, origen:'2001', cantidad:4}
                 ],"all",{fixedFields:{idper, cod_nov}})
+                await rrhhSession.tableDataTest('per_nov_cant',[
+                ],"all",{fixedFields:{idper, cod_nov:COD_VACACIONES, annio:2001}})
             })
         })
     })

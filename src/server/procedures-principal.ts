@@ -148,12 +148,17 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 oldRow: {},
                 status: 'new'
             });
-            const {idper, desde} = result.row as NovedadRegistrada;
-            var inconsistencias = await context.client.query(`
+            const {idper, annio} = result.row as NovedadRegistrada;
+            if (annio == null) {
+                throw new Error('FALTA result.annio');
+            }
+            var sqlInconsistencias = `
                 SELECT cod_nov, saldo, error_saldo_negativo, error_falta_entrada
-                    FROM (${sqlNovPer({idper, annio:desde.getFullYear()})}) x
+                    FROM (${sqlNovPer({idper, annio, annioAbierto:true})}) x
                     WHERE error_saldo_negativo or error_falta_entrada
-            `, []).fetchAll();
+            `
+            await fs.writeFile('local-guardar.sql', sqlInconsistencias, 'utf-8')
+            var inconsistencias = await context.client.query(sqlInconsistencias, []).fetchAll();
             if (inconsistencias.rows.length > 0) {
                 const erroresSaldoNegativo = inconsistencias.rows.filter(r => r.error_saldo_negativo);
                 const erroresFaltaEntrada = inconsistencias.rows.filter(r => r.error_falta_entrada);
@@ -524,7 +529,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     saldo as suma_saldo,
                     novedad
                     FROM (${sqlNovPer({annio: params.annio, abierto:true})}) x
-                        LEFT JOIN personas p ON p.idper = x.idper
+                        LEFT JOIN personas p ON p.idper = x.idper  
                     WHERE cod_nov = '1'
                     ORDER BY 1,3,2,4`
             ).fetchAll();
