@@ -88,6 +88,8 @@ export const per_nov_cant = {
         idper: is.string,
         origen: is.string,
         cantidad: is.number,
+        comienzo: is.nullable.Date,
+        vencimiento: is.nullable.Date,
     })
 } satisfies CommonEntityDefinition
 

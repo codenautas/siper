@@ -281,11 +281,12 @@ describe("connected", function(){
         await nuevaSession.login(usuario.credenciales);
         return nuevaSession
     }
+    type EsquemaPerNov = number|{origen:string, cantidad:number, comienzo?:Date, vencimiento?:Date}[]
     async function enNuevaPersona(
         nombre: string, 
         opciones: {
-            vacaciones?: number|{origen:string, cantidad:number}[], 
-            tramites?: number, usuario?:{rol?:string, sector?:string, sesion?:boolean}, hoy?:Date, ahora?:Time,
+            vacaciones?: EsquemaPerNov, 
+            tramites?: EsquemaPerNov, usuario?:{rol?:string, sector?:string, sesion?:boolean}, hoy?:Date, ahora?:Time,
             registra_novedades_desde?:Date, para_antiguedad_relativa?:Date,
             situacion_revista?: typeof SITUACION_REVISTA_PLANTA | typeof SITUACION_REVISTA_TERCER
         },
@@ -305,10 +306,17 @@ describe("connected", function(){
                 }
                 if (opciones.usuario.sector) await rrhhSession.saveRecord(ctts.personas,{idper:persona.idper,sector:opciones.usuario.sector}, 'update')
             }
-            if (vacaciones) await Promise.all((typeof vacaciones == 'number' ? [{origen:'2000', cantidad:vacaciones}] : vacaciones).map(({origen, cantidad}) =>
-                superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen, cod_nov: COD_VACACIONES, idper: persona.idper, cantidad }, 'new')
-            ));
-            if (tramites) await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'2000', cod_nov: COD_TRAMITE, idper:persona.idper, cantidad: 4 }, 'new')
+            var esquema = [
+                {cantidadOesquema: vacaciones, cod_nov:COD_VACACIONES},
+                {cantidadOesquema: tramites  , cod_nov:COD_TRAMITE   }
+            ];
+            await Promise.all(esquema.map(async paso => {
+                if (paso.cantidadOesquema) await Promise.all(
+                    (typeof paso.cantidadOesquema == 'number' ? [{origen:'2000', cantidad:paso.cantidadOesquema}] : paso.cantidadOesquema).map(
+                        ({origen, cantidad, comienzo, vencimiento}) =>
+                    superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen, cod_nov: paso.cod_nov, idper: persona.idper, cantidad, comienzo, vencimiento }, 'new')
+                ));
+            }));
             if (hoy || ahora) {
                 await server.inDbClient(ADMIN_REQ, async client => client.query(
                     "update parametros set fecha_hora_para_test = $1::date + $2::time ", 
