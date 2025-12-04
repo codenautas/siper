@@ -97,8 +97,8 @@ type UsuarioConCredenciales = ctts.Usuario & {credenciales: Credenciales};
 
 type SesionEmuladaSiper = EmulatedSession<AppSiper>;
 
-async function registrarNovedad(sesion: SesionEmuladaSiper, params: Partial<ctts.NovedadRegistrada>): Promise<ctts.NovedadRegistrada> {        
-    return sesion.callProcedure(ctts.registrar_novedad, {[tipo_novedad.name]: tipo_novedad_verificado, ...params})
+async function registrarNovedad(sesion: SesionEmuladaSiper, params: Partial<ctts.NovedadRegistrada>): Promise<ctts.NovedadRegistrada> { 
+    return sesion.callProcedure(ctts.registrar_novedad, {[tipo_novedad.name]: tipo_novedad_verificado, ...params, hasta: params.hasta ?? params.desde})
 }
 
 async function registrarFichada(server: AppSiper, params: Partial<ctts.Fichada>): Promise<ctts.Fichada> {
@@ -308,7 +308,7 @@ describe("connected", function(){
             }
             var esquema = [
                 {cantidadOesquema: vacaciones, cod_nov:COD_VACACIONES},
-                {cantidadOesquema: tramites  , cod_nov:COD_TRAMITE   }
+                {cantidadOesquema: tramites  , cod_nov:COD_TRAMITE   },
             ];
             await Promise.all(esquema.map(async paso => {
                 if (paso.cantidadOesquema) await Promise.all(
@@ -450,7 +450,7 @@ describe("connected", function(){
                     novedadRegistradaPorCargar
                 );
                 await registrarNovedad(rrhhSession,
-                    {desde:date.iso('2000-05-11'), hasta:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, idper}
+                    {desde:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, idper}
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
                     {fecha:date.iso('2000-05-01'), cod_nov:null           , idper},
@@ -475,9 +475,9 @@ describe("connected", function(){
             })
         })
         it("cargo un día de trámite", async function(){
-            await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {tramites: 4}, async ({idper}) => {
                 await registrarNovedad(superiorSession,
-                    {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
+                    {desde:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
                     {fecha:date.iso('2000-01-05'), cod_nov:COD_PRED_PAS, idper, trabajable:true},
@@ -486,9 +486,23 @@ describe("connected", function(){
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-05','2000-01-07']}})
             })
         })
+        it.skip("impide cargar 3 trámites en el segundo semestre, cuando se especifican vencimientos", async function(){
+            var tramites = [
+                {origen:'1S', cantidad: 2, comienzo: date.iso('2000-01-01'), vencimiento:date.iso('2000-06-30')},
+                {origen:'2S', cantidad: 2, comienzo: date.iso('2000-07-01'), vencimiento:date.iso('2000-12-31')},
+            ]
+            await enNuevaPersona(this.test?.title!, {tramites}, async ({idper}) => {
+                await registrarNovedad(superiorSession, {desde:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper});
+                await registrarNovedad(superiorSession, {desde:date.iso('2000-07-04'), cod_nov:COD_TRAMITE, idper});
+                await registrarNovedad(superiorSession, {desde:date.iso('2000-07-11'), cod_nov:COD_TRAMITE, idper});
+                await expectError(async ()=>{
+                    await registrarNovedad(superiorSession, {desde:date.iso('2000-07-18'), cod_nov:COD_TRAMITE, idper});
+                }, 'X')
+            })
+        })
         it("me impide cargar un día de trámite después de las 12", async function(){
             fallaEnLaQueQuieroOmitirElBorrado = true;
-            await enNuevaPersona(this.test?.title!, {ahora:'12:10'}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {ahora:'12:10', tramites: 4}, async ({idper}) => {
                 var novedadRegistradaPorCargar = {desde:FECHA_ACTUAL, hasta:FECHA_ACTUAL, cod_nov:COD_TRAMITE, idper}
                 await expectError(async ()=>{
                     await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
@@ -521,9 +535,9 @@ describe("connected", function(){
             })
         })
         it("intento ver novedades de otra persona", async function(){
-            await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {tramites: 4}, async ({idper}) => {
                 await registrarNovedad(superiorSession,
-                    {desde:date.iso('2000-01-03'), hasta:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, idper}
+                    {desde:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, idper}
                 );
                 await rrhhSession.tableDataTest('novedades_vigentes', [
                     {fecha:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, idper},
@@ -750,10 +764,10 @@ describe("connected", function(){
             })
         })
         it.skip("cargo una novedad y veo conozco el usuario y el momento de carga", async function(){
-            await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {tramites: 4}, async ({idper}) => {
                 var hoy = date.today();
                 var {fecha, usuario} = await registrarNovedad(superiorSession,
-                    {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
+                    {desde:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
                 );
                 discrepances.showAndThrow({fecha, usuario}, {fecha:hoy, usuario:superiorSession.config.username})
             })
@@ -986,9 +1000,9 @@ describe("connected", function(){
     })
     describe("códigos de novedades básicos", function(){
         it("cargo un día de trámite y cambio la novedad inicial", async function(){
-            await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {tramites: 4}, async ({idper}) => {
                 await registrarNovedad(superiorSession,
-                    {desde:date.iso('2000-01-06'), hasta:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
+                    {desde:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
                 );
                 await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-01-05'), hasta:date.iso('2000-01-07'), cod_nov:COD_NO_FICHAR, idper, [tipo_novedad.name]: tipo_novedad_inicial}
@@ -1177,9 +1191,8 @@ describe("connected", function(){
         it("después de abrir el año siguiente se tienen que reiniciar los trámites pero no las vacaciones", async function(){
             await enNuevaPersona(this.test?.title!, {vacaciones: 20, tramites: 4}, async ({idper}) => {
                 const desde = date.iso('2000-05-02');
-                const hasta = desde;
                 const cod_nov = COD_TRAMITE
-                await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
+                await registrarNovedad(rrhhSession, {desde, idper, cod_nov});
                 await abrirAño(idper);
                 await rrhhSession.tableDataTest('nov_per',[
                     {annio: 2000, cod_nov, cantidad:4, usados:0, pendientes:1, saldo:3},
