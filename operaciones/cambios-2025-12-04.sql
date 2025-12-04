@@ -2,11 +2,52 @@
 -- For the circular dependencies, the order in which Schema Diff writes the objects is not very sophisticated 
 -- and may require manual changes to the script to ensure changes are applied in the correct order.
 -- Please report an issue for any failure with the reproduction steps. 
+
+set search_path = siper, public;
+
+ALTER TABLE IF EXISTS siper.parametros
+    ADD COLUMN fecha_hora_para_test timestamp without time zone;
+
+
+CREATE OR REPLACE FUNCTION siper.fecha_hora_actual(
+        )
+    RETURNS timestamp without time zone
+    LANGUAGE 'sql'
+    COST 100
+    STABLE PARALLEL UNSAFE
+AS $BODY$
+
+      SELECT coalesce(fecha_hora_para_test, current_timestamp)
+        from parametros
+        where unico_registro;
+
+$BODY$;
+
+ALTER FUNCTION siper.fecha_hora_actual()
+    OWNER TO siper_muleto_owner;
+
+
+CREATE OR REPLACE FUNCTION siper.fecha_actual(
+        )
+    RETURNS date
+    LANGUAGE 'sql'
+    COST 100
+    STABLE PARALLEL UNSAFE
+AS $BODY$
+
+    SELECT date_trunc('day', fecha_hora_actual());
+$BODY$;
+
+ALTER FUNCTION siper.fecha_actual()
+    OWNER TO siper_muleto_owner;
+
+
+
  CREATE TABLE IF NOT EXISTS siper.avisos_falta_fichada
 (
     idper text COLLATE pg_catalog."default" NOT NULL,
     fecha date NOT NULL,
-    tipo_fichada text COLLATE pg_catalog."default" NOT NULL,
+    tipo_fichada text COLLATE pg_catalog."default",
     avisado_wp time without time zone,
     avisado_mail time without time zone,
     llegada_novedad time without time zone,
@@ -18,8 +59,11 @@
     CONSTRAINT "idper<>''" CHECK (idper <> ''::text),
     CONSTRAINT "tipo_fichada<>''" CHECK (tipo_fichada <> ''::text)
 )
-
 TABLESPACE pg_default;
+
+
+delete from siper.fichadas;
+
 
 ALTER TABLE IF EXISTS siper.avisos_falta_fichada
     OWNER to siper_muleto_owner;
@@ -130,15 +174,13 @@ ALTER TABLE IF EXISTS siper.cod_novedades
 
 ALTER TABLE IF EXISTS siper.cod_novedades
     ADD CONSTRAINT "inicializacion lista de metodos" CHECK (inicializacion = ANY (ARRAY['LICORD'::text, 'LICMAT'::text, 'PLANTA'::text]));
-ALTER TABLE IF EXISTS siper.parametros DROP COLUMN IF EXISTS avance_dia_automatico;
+-- ALTER TABLE IF EXISTS siper.parametros DROP COLUMN IF EXISTS avance_dia_automatico;
 
-ALTER TABLE IF EXISTS siper.parametros DROP COLUMN IF EXISTS fecha_actual;
+ALTER TABLE IF EXISTS siper.parametros RENAME COLUMN fecha_actual to fecha_actual_no_usar;
 
 ALTER TABLE IF EXISTS siper.parametros
     ADD COLUMN carga_nov_hasta_hora time without time zone NOT NULL DEFAULT '12:00:00'::time without time zone;
 
-ALTER TABLE IF EXISTS siper.parametros
-    ADD COLUMN fecha_hora_para_test timestamp without time zone;
 
 ALTER TABLE IF EXISTS siper.parametros
     ADD COLUMN permite_cargar_fichadas boolean DEFAULT true;
@@ -185,6 +227,14 @@ GRANT ALL ON TABLE siper.fichadas TO siper_muleto_owner;
 
 ALTER TABLE IF EXISTS siper.fichadas DROP COLUMN IF EXISTS origen;
 
+CREATE SEQUENCE IF NOT EXISTS siper.id_fichada_seq
+    INCREMENT 1
+    START 101
+    MINVALUE 1
+    MAXVALUE 9223372036854775807
+    CACHE 1;
+
+
 ALTER TABLE IF EXISTS siper.fichadas
     ADD COLUMN id_fichada bigint NOT NULL DEFAULT nextval('siper.id_fichada_seq'::regclass);
 
@@ -205,6 +255,9 @@ ALTER TABLE IF EXISTS siper.fichadas
 
 ALTER TABLE IF EXISTS siper.fichadas
     ADD COLUMN id_original text COLLATE pg_catalog."default";
+
+ALTER TABLE IF EXISTS siper.fichadas
+    drop CONSTRAINT fichadas_pkey;
 ALTER TABLE IF EXISTS siper.fichadas
     ADD CONSTRAINT fichadas_pkey PRIMARY KEY (idper, fecha, hora, id_fichada);
 
@@ -219,7 +272,8 @@ ALTER TABLE IF EXISTS siper.fichadas
     REFERENCES siper.tipos_fichada (tipo_fichada) MATCH SIMPLE
     ON UPDATE CASCADE
     ON DELETE NO ACTION;
-ALTER TABLE IF EXISTS siper.fichadas DROP CONSTRAINT IF EXISTS "origen<>''";
+
+-- ALTER TABLE IF EXISTS siper.fichadas DROP CONSTRAINT IF EXISTS "origen<>''";
 
 ALTER TABLE IF EXISTS siper.fichadas
     ADD CONSTRAINT "tipo_fichada<>''" CHECK (tipo_fichada <> ''::text);
@@ -329,7 +383,7 @@ END OR ( SELECT roles.puede_corregir_el_pasado
 ALTER TABLE IF EXISTS siper.personas
     ADD CONSTRAINT "max_nivel_ed<>''" CHECK (max_nivel_ed <> ''::text);
 
-ALTER INDEX IF EXISTS siper."perfiles_sgc 4 personas IDX" RENAME TO siper."perfil_sgc 4 personas IDX";
+ALTER INDEX IF EXISTS siper."perfiles_sgc 4 personas IDX" RENAME TO "perfil_sgc 4 personas IDX";
 
 
 ALTER POLICY "bp insert" ON siper.novedades_vigentes
@@ -451,10 +505,9 @@ CASE
 END OR ( SELECT roles.puede_corregir_el_pasado
    FROM siper.roles
   WHERE (roles.rol = siper.get_app_user('rol'::text)))));
-ALTER TABLE IF EXISTS siper.perfiles_sgc DROP CONSTRAINT IF EXISTS puestos_sgc_pkey;
 
-ALTER TABLE IF EXISTS siper.perfiles_sgc
-    ADD CONSTRAINT perfiles_sgc_pkey PRIMARY KEY (perfil_sgc);
+ALTER TABLE IF EXISTS siper.perfiles_sgc RENAME CONSTRAINT puestos_sgc_pkey TO perfiles_sgc_pkey;
+
 CREATE OR REPLACE TRIGGER changes_trg
     AFTER INSERT OR DELETE OR UPDATE 
     ON siper.perfiles_sgc
@@ -681,36 +734,10 @@ EXCEPTION
 END;
 $BODY$;
 
+
 ALTER FUNCTION siper.registrar_fichadas(text)
     OWNER TO siper_muleto_owner;
 
-CREATE OR REPLACE FUNCTION siper.fecha_actual(
-	)
-    RETURNS date
-    LANGUAGE 'sql'
-    COST 100
-    STABLE PARALLEL UNSAFE
-AS $BODY$
-
-    SELECT date_trunc('day', fecha_hora_actual());
-$BODY$;
-
-ALTER FUNCTION siper.fecha_actual()
-    OWNER TO siper_muleto_owner;
-
-CREATE OR REPLACE FUNCTION siper.fecha_hora_actual(
-	)
-    RETURNS timestamp without time zone
-    LANGUAGE 'sql'
-    COST 100
-    STABLE PARALLEL UNSAFE
-AS $BODY$
-
-      SELECT coalesce(fecha_hora_para_test, current_timestamp)
-        from parametros
-        where unico_registro;
-    
-$BODY$;
 
 ALTER FUNCTION siper.fecha_hora_actual()
     OWNER TO siper_muleto_owner;
@@ -778,12 +805,6 @@ BEGIN
   RETURN new;
 END;
 $BODY$;
-CREATE SEQUENCE IF NOT EXISTS siper.id_fichada_seq
-    INCREMENT 1
-    START 101
-    MINVALUE 1
-    MAXVALUE 9223372036854775807
-    CACHE 1;
 
 ALTER SEQUENCE siper.id_fichada_seq
     OWNER TO siper_muleto_owner;
