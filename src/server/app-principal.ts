@@ -207,8 +207,8 @@ export class AppSiper extends AppBackend{
         const be = this;
         await super.postConfig();
         cronMantenimiento(be);
-        be.inCron('falta_fichada_registrar', {vecesPorDia:24*60});
-        be.inCron(be.notificarFaltaFichadaAction, {vecesPorDia:24*60, name: 'falta_fichada_mail_notificar'});
+        await this.registrarFaltaFichadaProgramarHoy();
+        this.reprogramarManiana();
     }
     override async getProcedures(){
         // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -473,7 +473,48 @@ export class AppSiper extends AppBackend{
             reglas               ,
             avisos_falta_fichada ,  
         }
-    }   
+    }
+    registrarFaltaFichadaProgramarHoy = async () => {
+        const be = this;
+        await be.inTransaction(null, async (client) => {
+            const { rows } = await client.query(
+                'select run_at from obtener_horarios_avisos_falta_fichada()'
+            ).fetchAll();
+
+            for (const { run_at_ms } of rows) {
+                const delay = Number(run_at_ms) - Date.now();
+                if (delay <= 0) continue;
+
+                setTimeout(async () => {
+                    try {
+                        // 1) registrar
+                        await be.inDbClient(null, async (c2) => {
+                            await c2.query('call falta_fichada_registrar()').execute();
+                        });
+                        // 2) notificar
+                        await be.notificarFaltaFichadaAction();
+                    } catch (e) {
+                        console.error('Error en ejecución programada falta_fichada + notificar:', e);
+                    }
+                }, delay);
+            }
+        });
+
+    }
+    reprogramarManiana = () => {
+        const ahora = new Date();
+        const maniana = new Date(ahora);
+        maniana.setDate(ahora.getDate() + 1);
+        maniana.setHours(0, 5, 0, 0); // 00:05 del día siguiente
+        const delay = maniana.getTime() - ahora.getTime();
+        setTimeout(async () => {
+            try {
+                await this.registrarFaltaFichadaProgramarHoy();
+            } finally {
+                this.reprogramarManiana();
+            }
+        }, delay);
+    }
     notificarFaltaFichadaAction = async () => {
         const be = this;
         try {
@@ -488,12 +529,12 @@ export class AppSiper extends AppBackend{
                         
                         console.log('row: ', row); //ACA FALTA LA FUNCION DE ENVIO DE MAIL
                         
-                        client.query(`UPDATE avisos_falta_fichada
-                                     SET avisado_mail = NOW()
-                                     WHERE idper = $1 AND fecha = $2 AND tipo_fichada = $3
-                                     AND avisado_mail IS NULL
-                                     RETURNING idper`,[row.idper, row.fecha, row.tipo_fichada] //Actualizo timestamp de avisado_mail
-                        );
+                        await client.query(`UPDATE avisos_falta_fichada
+                                            SET avisado_mail = NOW()
+                                            WHERE idper = $1 AND fecha = $2 AND tipo_fichada = $3
+                                            AND avisado_mail IS NULL
+                                            RETURNING idper`, [row.idper, row.fecha, row.tipo_fichada]
+                        ).execute();
                     }
                     return `Se notificaron todas las faltas de fichada`;
                 } else {
