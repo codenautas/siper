@@ -207,6 +207,7 @@ export class AppSiper extends AppBackend{
         const be = this;
         await super.postConfig();
         cronMantenimiento(be);
+        await be.inCron('avance_de_dia_proc', {vecesPorDia:24*6});
     }
     override async getProcedures(){
         // eslint-disable-next-line @typescript-eslint/no-this-alias
