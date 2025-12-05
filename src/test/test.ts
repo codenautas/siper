@@ -1054,6 +1054,29 @@ describe("connected", function(){
             }
         });
     });
+    describe("reportes", function(){
+        it("exporta las vacaciones de todos los otros tests", async function(){
+            /* ATENCIÓN este no es un test unitario ni independiente.
+                Puede fallar porque haya cambios en los tests que generan vacaciones
+             */
+            const req = ADMIN_REQ as any;
+            const campos = `annio|origen|idper|sector|cantidad|usados|pendientes|saldo|suma_cantidad|suma_usados|suma_pendientes|suma_saldo|apellido`;
+            await server.inTransactionProcedureContext(req, async (context) => {
+                const params = {annio: DESDE_AÑO}
+                const result = await server.procedure.exportar_descanso_anual_remunerado.coreFunction(context, params);
+                const obtenido = result.rows.map((row:any) => campos.split('|').map(c=>''+row[c]).join('|'))
+                const expected = [
+                    '2000|2000|XX28|T|5|0|0|5|5|0|0|5|XX Prueba 28',
+                    '2000|2000|XX3|T|20|5|0|15|20|5|0|15|XX Prueba 3',
+                    '2000|2000|XX37|T|5|0|0|5|5|0|0|5|XX Prueba 37',
+                    '2000|2000|XX38|T|5|0|0|5|5|0|0|5|XX Prueba 38',
+                    '2000|2000|XX4|T|15|0|3|12|15|0|3|12|XX Prueba 4',
+                    '2000|2000|XX5|T|20|0|4|16|20|0|4|16|XX Prueba 5',
+                ];
+                discrepances.showAndThrow(obtenido, expected);
+            })
+        })
+    })
     describe("mantemiento", function(){
         it("los usuarios admin no pueden tener idper", async function(){
             await enNuevaPersona(this.test?.title!, {usuario:{sesion:false}}, async ({idper}, {usuario}) => {            
