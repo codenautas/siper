@@ -78,6 +78,7 @@ install:
       - ../install/parseo-codigo-horario.sql
       - ../install/fecha_actual.sql
       - ../install/inicializar_per_nov_cant.sql
+      - ../install/detalle_nov_multiorigen.sql
 logo: 
   path: client/img
 `;
