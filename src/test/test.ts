@@ -1111,10 +1111,10 @@ describe("connected", function(){
                 const result = await server.procedure.exportar_descanso_anual_remunerado.coreFunction(context, params);
                 const obtenido = result.rows.map((row:any) => campos.split('|').map(c=>''+row[c]).join('|'))
                 const expected = [
-                    '2000|2000|XX28|T|5|0|0|5|5|0|0|5|XX Prueba 28',
+                    '2000|2000|XX29|T|5|0|0|5|5|0|0|5|XX Prueba 29',
                     '2000|2000|XX3|T|20|5|0|15|20|5|0|15|XX Prueba 3',
-                    '2000|2000|XX37|T|5|0|0|5|5|0|0|5|XX Prueba 37',
                     '2000|2000|XX38|T|5|0|0|5|5|0|0|5|XX Prueba 38',
+                    '2000|2000|XX39|T|5|0|0|5|5|0|0|5|XX Prueba 39',
                     '2000|2000|XX4|T|15|0|3|12|15|0|3|12|XX Prueba 4',
                     '2000|2000|XX5|T|20|0|4|16|20|0|4|16|XX Prueba 5',
                 ];

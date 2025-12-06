@@ -3,7 +3,7 @@
 
 call set_app_user('perry');
 
-/*
+-- /*
 CREATE TYPE detalle_novedades_multiorigen as (
   origen text,
   cantidad integer,
