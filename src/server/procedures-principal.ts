@@ -3,7 +3,6 @@
 import {strict as likeAr, createIndex} from 'like-ar';
 import { ProcedureDef, ProcedureContext, UploadedFileInfo, BackendError } from './types-principal';
 import { NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles, FichadaData,
-    ERROR_FALTA_FICHADA, ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES
 } from '../common/contracts';
 import { sqlNovPer } from "./table-nov_per";
 
@@ -153,25 +152,34 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 throw new Error('FALTA result.annio');
             }
             var sqlInconsistencias = `
-                SELECT cod_nov, saldo, error_saldo_negativo, error_falta_entrada
+                SELECT cod_nov, saldo, error_saldo_negativo, error_falta_entrada, detalle_multiorigen
                     FROM (${sqlNovPer({idper, annio, annioAbierto:true})}) x
-                    WHERE error_saldo_negativo or error_falta_entrada
+                    WHERE error_saldo_negativo OR error_falta_entrada OR detalle_multiorigen ? 'error'
             `
             await fs.writeFile('local-guardar.sql', sqlInconsistencias, 'utf-8')
             var inconsistencias = await context.client.query(sqlInconsistencias, []).fetchAll();
             if (inconsistencias.rows.length > 0) {
                 const erroresSaldoNegativo = inconsistencias.rows.filter(r => r.error_saldo_negativo);
                 const erroresFaltaEntrada = inconsistencias.rows.filter(r => r.error_falta_entrada);
+                const erroresMultiDetalle = inconsistencias.rows.filter(r => r.detalle_multiorigen?.error ?? []);
+                var errores: string[] = []
+                var code: string = 'INDETERMINADO';
+                if (erroresMultiDetalle.length > 0){
+                    errores.concat(erroresMultiDetalle.map(d => d.error as string));
+                    code = ctts.ERROR_BRECHA_EN_CANTIDAD_DE_NOVEDADES;
+                }
                 if (erroresSaldoNegativo.length > 0){
-                    const error = expected(new Error(`La novedad registrada genera saldos negativos. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}, saldo: ${r.saldo}`).join('; ')}`));
-                    error.code = ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES
-                    throw error;
+                    errores.push(`La novedad registrada genera saldos negativos. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}, saldo: ${r.saldo}`).join('; ')}`);
+                    code = ctts.ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES
                 }
                 if (erroresFaltaEntrada.length > 0){
-                    const error = expected(new Error(`La novedad registrada requiere fichada de entrada. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}`).join('; ')}`));
-                    error.code = ERROR_FALTA_FICHADA
-                    throw error;
+                    errores.push(`La novedad registrada requiere fichada de entrada. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}`).join('; ')}`);
+                    code = ctts.ERROR_FALTA_FICHADA
                 }
+                const error = expected(new Error(errores.join('; ')));
+                error.code = code;
+                throw error;
+
             }
             return result.row;
         }

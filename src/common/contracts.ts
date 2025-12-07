@@ -953,6 +953,7 @@ export const ERROR_HORA_PASADA                      = '42501' // algún día vam
 //////////// ERRORES PROPIOS DEL BACKEND:
 export const ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES   = 'B9001';
 export const ERROR_FALTA_FICHADA                    = 'B9002';
+export const ERROR_BRECHA_EN_CANTIDAD_DE_NOVEDADES  = 'B9003';
 
 //////////// ERRORES POSTGRES: https://www.postgresql.org/docs/current/errcodes-appendix.html
 export const insufficient_privilege = '42501';

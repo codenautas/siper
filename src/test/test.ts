@@ -1212,22 +1212,24 @@ describe("connected", function(){
             })
         })
         it("rechaza vacaciones tomadas en el año incorrecto las del 2000 están vencidas no pasan al 2001 (sí al revés)", async function(){
+            fallaEnLaQueQuieroOmitirElBorrado = true;
             this.timeout(TIMEOUT_SPEED * 3);
             await enNuevaPersona(this.test?.title!, {vacaciones: [
                 {cantidad:10, origen:'2000', vencimiento:date.iso('2000-12-31')},
-                {cantidad:10, origen:'2001', vencimiento:date.iso('2001-12-31')}
+                {cantidad:10, origen:'2001'}
             ]}, async ({idper}) => {
                 const desde0 = date.iso('2000-02-01');
                 const hasta0 = date.iso('2000-02-07'); // 5 días hábiles
                 const desde = date.iso('2001-02-01');
                 const hasta = date.iso('2001-02-21'); // 15 días hábiles
                 const cod_nov = COD_VACACIONES
-                await registrarNovedad(rrhhSession, {desde:desde0, hasta:hasta0, idper, cod_nov});
                 await abrirAño(idper);
+                await registrarNovedad(rrhhSession, {desde:desde0, hasta:hasta0, idper, cod_nov});
                 await expectError(async ()=>{
                     await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
-                }, ctts.ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES);
+                }, ctts.ERROR_BRECHA_EN_CANTIDAD_DE_NOVEDADES);
             })
+            fallaEnLaQueQuieroOmitirElBorrado = false;
         })
         it("después de abrir el año siguiente se tienen que reiniciar los trámites pero no las vacaciones", async function(){
             await enNuevaPersona(this.test?.title!, {vacaciones: 20, tramites: 4}, async ({idper}) => {
