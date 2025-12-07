@@ -25,11 +25,13 @@ $BODY$
 DECLARE
   v_esquema record;
   v_renglon detalle_novedades_multiorigen;
-  v_result detalle_novedades_multiorigen[] := array[]::detalle_novedades_multiorigen[];
+  v_detalles detalle_novedades_multiorigen[] := array[]::detalle_novedades_multiorigen[];
   -- Locales al loop:
   v_resto integer;
   i integer := 1;
   v_inconsistencias integer := 0;
+  v_mensajes text[] := array[]::text[];
+  v_result jsonb := '{}'::jsonb;
 BEGIN
   IF p_esquema IS null THEN
     RETURN null;
@@ -60,17 +62,20 @@ BEGIN
         END IF;
         i := i + 1;
       END LOOP;
-      v_result := v_result || v_renglon;
+      v_detalles := v_detalles || v_renglon;
     END LOOP;
-    v_inconsistencias := v_inconsistencias + ARRAY_LENGTH(p_fechas, 1) - i + 1;
-    IF v_inconsistencias > 0 THEN
-      v_renglon.origen := 'inconsistencia';
-      v_renglon.cantidad := null;
-      v_renglon.pendientes := v_inconsistencias;
-      v_renglon.saldo := - v_inconsistencias;
-      v_result := v_result || v_renglon;
-    END IF;
-    RETURN to_jsonb(v_result)::text;
+    if v_inconsistencias > 0 then 
+      v_mensajes := array_append(v_mensajes, 'inconsistencia ' || v_inconsistencias || ' fecha(s) pasado el limite en el periodo');
+    end if; 
+    v_inconsistencias := ARRAY_LENGTH(p_fechas, 1) - i + 1;
+    if v_inconsistencias > 0 then 
+      v_mensajes := array_append(v_mensajes, 'inconsistencia ' || v_inconsistencias || ' fecha(s) pasado el limite final');
+    end if;
+    v_result := jsonb_build_object('detalle', to_jsonb(v_detalles));
+    if array_length(v_mensajes, 1) >0 then
+      v_result := v_result || jsonb_build_object('error', to_jsonb(v_mensajes));
+    end if; --1
+    RETURN v_result::text;
   END IF;
 END;
 $BODY$;
@@ -81,15 +86,15 @@ select esperado = detalle_nov_multiorigen(d.fechas, d.esquema) as ok, detalle_no
       VALUES (
           array['2021-01-03'::date, '2021-01-04'::date], 
           '{"2021":{"cantidad": 20}, "2022":{"cantidad": 30}}', 
-          '[{"saldo": 18, "origen": "2021", "usados": null, "cantidad": 20, "comienzo": null, "pendientes": 2, "vencimiento": null}, {"saldo": 30, "origen": "2022", "usados": null, "cantidad": 30, "comienzo": null, "pendientes": null, "vencimiento": null}]'
+          '{"detalle": [{"saldo": 18, "origen": "2021", "usados": null, "cantidad": 20, "comienzo": null, "pendientes": 2, "vencimiento": null}, {"saldo": 30, "origen": "2022", "usados": null, "cantidad": 30, "comienzo": null, "pendientes": null, "vencimiento": null}]}'
          ), (
           array['2021-01-03'::date, '2021-02-02'::date, '2021-02-02'::date], 
           '{"2021":{"cantidad": 20, "comienzo": "2021-01-01","vencimiento":"2021-01-31"}, "2022":{"cantidad": 30, "comienzo": "2021-02-01","vencimiento":"2021-02-28"}}', 
-          '[{"saldo": 19, "origen": "2021", "usados": null, "cantidad": 20, "comienzo": null, "pendientes": 1, "vencimiento": null}, {"saldo": 28, "origen": "2022", "usados": null, "cantidad": 30, "comienzo": null, "pendientes": 2, "vencimiento": null}]'
+          '{"detalle": [{"saldo": 19, "origen": "2021", "usados": null, "cantidad": 20, "comienzo": null, "pendientes": 1, "vencimiento": null}, {"saldo": 28, "origen": "2022", "usados": null, "cantidad": 30, "comienzo": null, "pendientes": 2, "vencimiento": null}]}'
          ), (
           array['2021-01-03'::date, '2021-02-02'::date, '2021-03-02'::date, '2021-04-02'::date], 
           '{"2021":{"cantidad": 20, "comienzo": "2021-01-01","vencimiento":"2021-01-31"}, "2022":{"cantidad": 30, "comienzo": "2021-03-01","vencimiento":"2021-03-31"}}', 
-          '[{"saldo": 19, "origen": "2021", "usados": null, "cantidad": 20, "comienzo": null, "pendientes": 1, "vencimiento": null}, {"saldo": 29, "origen": "2022", "usados": null, "cantidad": 30, "comienzo": null, "pendientes": 1, "vencimiento": null}, {"saldo": -2, "origen": "inconsistencia", "usados": null, "cantidad": null, "comienzo": null, "pendientes": 2, "vencimiento": null}]'
+          '{"error": ["inconsistencia 1 fecha(s) pasado el limite en el periodo", "inconsistencia 1 fecha(s) pasado el limite final"], "detalle": [{"saldo": 19, "origen": "2021", "usados": null, "cantidad": 20, "comienzo": null, "pendientes": 1, "vencimiento": null}, {"saldo": 29, "origen": "2022", "usados": null, "cantidad": 30, "comienzo": null, "pendientes": 1, "vencimiento": null}]}'
          )
     ) as d (fechas, esquema, esperado);
 -- */

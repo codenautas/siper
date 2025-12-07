@@ -1199,10 +1199,28 @@ describe("connected", function(){
         it("rechaza vacaciones en el año sigiuente si se pasa del total", async function(){
             this.timeout(TIMEOUT_SPEED * 3);
             await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
-                const desde0 = date.iso('2000-03-10');
-                const hasta0 = date.iso('2000-03-21'); // 10 días hábiles
-                const desde = date.iso('2001-03-10');
-                const hasta = date.iso('2001-03-31'); // 15 días hábiles
+                const desde0 = date.iso('2000-02-01');
+                const hasta0 = date.iso('2000-02-14'); // 10 días hábiles
+                const desde = date.iso('2001-02-01');
+                const hasta = date.iso('2001-02-21'); // 15 días hábiles
+                const cod_nov = COD_VACACIONES
+                await registrarNovedad(rrhhSession, {desde:desde0, hasta:hasta0, idper, cod_nov});
+                await abrirAño(idper);
+                await expectError(async ()=>{
+                    await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
+                }, ctts.ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES);
+            })
+        })
+        it("rechaza vacaciones tomadas en el año incorrecto las del 2000 están vencidas no pasan al 2001 (sí al revés)", async function(){
+            this.timeout(TIMEOUT_SPEED * 3);
+            await enNuevaPersona(this.test?.title!, {vacaciones: [
+                {cantidad:10, origen:'2000', vencimiento:date.iso('2000-12-31')},
+                {cantidad:10, origen:'2001', vencimiento:date.iso('2001-12-31')}
+            ]}, async ({idper}) => {
+                const desde0 = date.iso('2000-02-01');
+                const hasta0 = date.iso('2000-02-07'); // 5 días hábiles
+                const desde = date.iso('2001-02-01');
+                const hasta = date.iso('2001-02-21'); // 15 días hábiles
                 const cod_nov = COD_VACACIONES
                 await registrarNovedad(rrhhSession, {desde:desde0, hasta:hasta0, idper, cod_nov});
                 await abrirAño(idper);

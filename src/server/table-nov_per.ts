@@ -15,10 +15,10 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
     select -- ${params.annioAbierto ? '' : 'a.annio,'}
             a.annio,
             ${params.abierto ? `origen, 
-            abierto.cantidad as abierto_cantidad,
-            abierto.usados as abierto_usados,
-            abierto.pendientes as abierto_pendientes,
-            abierto.saldo as abierto_saldo,` : ''}
+            apertura.cantidad as abierto_cantidad,
+            apertura.usados as abierto_usados,
+            apertura.pendientes as abierto_pendientes,
+            apertura.saldo as abierto_saldo,` : ''}
             cn.cod_nov, 
             p.idper, 
             p.sector,
@@ -35,6 +35,7 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
             cn.registra,
             cn.prioritario,
             nv.saldo < 0 as error_saldo_negativo,
+            detalle_multiorigen,
             fch.error_falta_entrada
     from cod_novedades cn
     left join lateral (
@@ -58,21 +59,22 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
             select 
                     count(*) filter (where nv.fecha <= fecha_actual()) as usados, 
                     count(*) filter (where nv.fecha > fecha_actual()) as pendientes, 
-                    pnc.cantidad - count(*) as saldo
+                    pnc.cantidad - count(*) as saldo, 
+                    detalle_nov_multiorigen(
+                        array_agg(nv.fecha order by nv.fecha), 
+                        (select     
+                            jsonb_object_agg(origen, jsonb_build_object('cantidad', cantidad) order by origen) 
+                            from per_nov_cant pnc 
+                            where pnc.cod_nov = cn.cod_nov and ${filtroAño('pnc')} and pnc.idper = p.idper
+                        )::text
+                    )::jsonb as detalle_multiorigen
                 from novedades_vigentes nv
                 where nv.cod_nov = cn.cod_nov and nv.idper = p.idper and ${filtroAño('nv')}
         ) nv
         ${params.abierto ? ` , lateral (select * from jsonb_populate_recordset(
             null::detalle_novedades_multiorigen, 
-            detalle_nov_multiorigen(
-                nv.usados, nv.pendientes, 
-                (select     
-                    jsonb_object_agg(origen, jsonb_build_object('cantidad', cantidad) order by origen) 
-                    from per_nov_cant pnc 
-                    where pnc.cod_nov = cn.cod_nov and ${filtroAño('pnc')} and pnc.idper = p.idper
-                )::text
-            )::jsonb
-        )) abierto` : ``}
+            nv.detalle_multiorigen -> 'detalle'
+        )) apertura` : ``}
         where true 
             ${params.annio ? ` and a.annio = ${sqlTools.quoteLiteral(params.annio)} `:''}
             ${params.idper ? ` and p.idper = ${sqlTools.quoteLiteral(params.idper)} `:''}
