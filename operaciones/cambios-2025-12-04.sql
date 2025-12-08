@@ -173,7 +173,7 @@ ALTER TABLE IF EXISTS siper.cod_novedades
     ADD CONSTRAINT "inicializacion<>''" CHECK (inicializacion <> ''::text);
 
 ALTER TABLE IF EXISTS siper.cod_novedades
-    ADD CONSTRAINT "inicializacion lista de metodos" CHECK (inicializacion = ANY (ARRAY['LICORD'::text, 'LICMAT'::text, 'PLANTA'::text]));
+    ADD CONSTRAINT "inicializacion lista de metodos" CHECK (inicializacion = ANY (ARRAY['LICORD'::text, 'LICMAT'::text, 'CONST'::text]));
 -- ALTER TABLE IF EXISTS siper.parametros DROP COLUMN IF EXISTS avance_dia_automatico;
 
 ALTER TABLE IF EXISTS siper.parametros RENAME COLUMN fecha_actual to fecha_actual_no_usar;
@@ -768,7 +768,7 @@ BEGIN
         c.cod_nov,
         p.idper,
         CASE c.inicializacion WHEN 'LICORD' THEN 'TRAS' ELSE p_annio::text END as origen,
-        CASE c.inicializacion WHEN 'PLANTA' THEN c.inicializacion_limite ELSE 0 END as cantidad
+        CASE c.inicializacion WHEN 'CONST' THEN c.inicializacion_limite ELSE 0 END as cantidad
       FROM cod_novedades c,
         personas p
       WHERE p.activo 
@@ -778,7 +778,7 @@ BEGIN
             WHERE ini_per_nov_cant 
               AND p_annio BETWEEN extract(YEAR from desde) AND extract(YEAR from coalesce(hasta,'9999-12-31'))
         )
-        AND c.inicializacion = 'PLANTA'
+        AND c.inicializacion = 'CONST'
         AND (p_idper IS NULL OR p.idper = p_idper);
 END;
 $BODY$;

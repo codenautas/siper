@@ -140,6 +140,13 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name: 'tipo_novedad', typeName: 'text', defaultValue:'V', references:'tipos_novedad' },
         ],
         coreFunction: async function(context: ProcedureContext, params:NovedadRegistrada){
+            const annio_abierto = (await context.client.query(`select abierto from annios where annio = $1 `, [params.desde.getFullYear()]).fetchUniqueValue()).value;
+            // console.log('annio_abierto', annio_abierto)
+            if (!annio_abierto) {
+                var error = expected(new Error("annio cerrado"));
+                error.code = "B9004";
+                throw error;
+            }
             var result = await context.be.procedure.table_record_save.coreFunction(context, {
                 table: 'novedades_registradas',
                 primaryKeyValues: [],
@@ -152,7 +159,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 throw new Error('FALTA result.annio');
             }
             var sqlInconsistencias = `
-                SELECT cod_nov, saldo, error_saldo_negativo, error_falta_entrada, detalle_multiorigen
+                SELECT cod_nov, saldo, error_saldo_negativo, error_falta_entrada, detalle_multiorigen, annio_abierto
                     FROM (${sqlNovPer({idper, annio, annioAbierto:true})}) x
                     WHERE error_saldo_negativo OR error_falta_entrada OR (detalle_multiorigen ->> 'error' IS NOT NULL)
             `

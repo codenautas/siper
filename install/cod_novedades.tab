@@ -9,7 +9,7 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|priorit
 8|Cargo de mayor jerarquia||||true|||true|true||||
 9|Cesantia en tramite||||true||||||||
 10|Comision de servicios||||true|true||true|true||||
-11|Licencia por donacion de sangre (Art.30)||||true|||true|true|||PLANTA|2
+11|Licencia por donacion de sangre (Art.30)||||true|||true|true|||CONST|2
 12|Enfermedad familiar (Art. 20)|||true|true||true||||||
 13|Licencia por enfermedad largo tratamiento (Art. 21)||||true||true||true||||
 14|Licencia por enfermedad largo tratamiento (ART. 21 - 30%)||||true||true||true||||
@@ -19,9 +19,9 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|priorit
 18|Licencia por Adopcion hasta 3 años de edad||||true||||true||||
 19|Licencia por Maternidad|S|||true||||true|||LICMAT|
 20|Licencia por cargos electivos (Art. 29 )||||true||||||||
-21|Licencia por examen (Art. 25)||||true||true|true|true|||PLANTA|28
+21|Licencia por examen (Art. 25)||||true||true|true|true|||CONST|28
 22|Licencia sin goce de sueldo||||true||||true||||
-23|Licencia por matrimonio (Art. 27)|C|||true||||true|||PLANTA|10
+23|Licencia por matrimonio (Art. 27)|C|||true||||true|||CONST|10
 24|Licencia por nacimiento de hijo (Art. 26)|U|||true||||||||
 25|Privado de libertad||||true||||||||
 26|Renuncia en tramite||||true||||||||
@@ -85,12 +85,12 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|priorit
 118|Permiso vacacional||||true||||||||
 119|Adopcion multiple||||true||||||||
 120|Franco compensatorio RRHH||||true||||||||
-121|CC 09/10 Art. 67 c  Tramites particulares|U|||true|||true|true|||PLANTA|4
+121|CC 09/10 Art. 67 c  Tramites particulares|U|||true|||true|true|||CONST|4
 122|Duelo indirecto||||true||||||||
 123|Tramites Particulares- Modalidades||||true||||||||
-124|CC 09/10 Art. 67 d Mudanza||||true||||true|||PLANTA|1
+124|CC 09/10 Art. 67 d Mudanza||||true||||true|||CONST|1
 125|Paternidad multiple||||true||||||||
-126|Art 30 ter Licencia esp.l para controles de prev.||||true||||true|||PLANTA|1
+126|Art 30 ter Licencia esp.l para controles de prev.||||true||||true|||CONST|1
 127|Art 20 1er periodo (con haberes)||||true||||||||
 128|Art 20 2do periodo (sin haberes)||||true||||||||
 129|Ausencia por fuerza mayor||||true||||true||||
@@ -114,9 +114,9 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|priorit
 152|Baja en trámite por jubilación||||true||||||||
 153|Paternidad familia numerosa||||true||||||||
 154|Ley 6025, Art. 12. Licencia con goce de haberes por nacimiento de hijo/a (30 corridos - no gestante)||||true||||true||||
-155|Fallecimiento de Hijo/a||||true||||true|false||PLANTA|10
-156|Fallecimiento de Conyuge/Padre/Madre/Hno/Nieto||||true||||true|false||PLANTA|5
-157|Fallecimiento de Abuelos/as -Suegros/as||||true||||true|false||PLANTA|1
+155|Fallecimiento de Hijo/a||||true||||true|false||CONST|10
+156|Fallecimiento de Conyuge/Padre/Madre/Hno/Nieto||||true||||true|false||CONST|5
+157|Fallecimiento de Abuelos/as -Suegros/as||||true||||true|false||CONST|1
 158|Violencia de Genero||||true||||true||||
 159|Licencia por nacimiento de hijo (contratados)||||true||||||||
 160|Licencia por nacimiento de hijo (ACARA)||||true||||||||

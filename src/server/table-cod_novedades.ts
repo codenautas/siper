@@ -49,7 +49,7 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {constraintType:'unique', fields:[cod_nov.name,'c_dds']},
             {constraintType:'check' , expr:'c_dds is not false', consName:'c_dds si o vacio'},
             soloDigitosCons(cod_nov.name),
-            {constraintType:'check' , expr:`inicializacion in ('LICORD', 'LICMAT', 'PLANTA')`, consName:'inicializacion lista de metodos'},
+            {constraintType:'check' , expr:`inicializacion in ('LICORD', 'LICMAT', 'CONST')`, consName:'inicializacion lista de metodos'},
         ],
         foreignKeys:[
             {references: 'clases', fields:[clase.name]}

@@ -1256,6 +1256,53 @@ describe("connected", function(){
                 ],"all",{fixedFields:{idper, cod_nov:COD_VACACIONES, annio:2001}})
             })
         })
+        it("el cuadro final tiene que mostrar vacaciones del siguiente año", async function(){
+            await enNuevaPersona(this.test?.title!, {vacaciones: [
+                {origen:'2000', cantidad:10, vencimiento:date.iso('2000-12-31')},
+                {origen:'2001', cantidad:20}
+            ]}, async ({idper}) => {
+                const desde0 = date.iso('2000-02-11');
+                const hasta0 = date.iso('2000-02-17');
+                const desde = date.iso('2001-03-11');
+                const hasta = date.iso('2001-03-17');
+                const cod_nov = COD_VACACIONES
+                await registrarNovedad(rrhhSession, {desde:desde0, hasta:hasta0, idper, cod_nov});
+                await rrhhSession.tableDataTest('nov_per',[
+                    {annio: 2000, cod_nov, cantidad:30, usados:0, pendientes:5, saldo:25},
+                ],"all",{fixedFields:{idper, cod_nov, annio: 2000}})
+                await abrirAño(idper);
+                await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
+                await rrhhSession.tableDataTest('nov_per',[
+                    {annio: 2000, cod_nov, cantidad:30  , usados:0, pendientes:5, saldo:25  },
+                    {annio: 2001, cod_nov, cantidad:null, usados:0, pendientes:5, saldo:null}
+                ],"all",{fixedFields:{idper, cod_nov, annio:[2000, 2001]}})
+                const detalle = await rrhhSession.callProcedure(ctts.per_cant_multiorigen, {idper, annio:2000});
+                discrepances.showAndThrow(
+                    detalle,
+                    {detalle: [
+                        {origen: '2000', cantidad: 10, usados: null, pendientes: 5, saldo:  5, comienzo: null, vencimiento: null},
+                        {origen: '2001', cantidad: 20, usados: null, pendientes: 5, saldo: 15, comienzo: null, vencimiento: null}
+                    ]} as never as DefinedType<typeof ctts.per_cant_multiorigen.result>
+                );
+                const detalle2 = await rrhhSession.callProcedure(ctts.per_cant_multiorigen, {idper, annio:2001});
+                discrepances.showAndThrow(
+                    detalle2,
+                    {detalle: [
+                        {origen: '2000', cantidad: 10, usados: null, pendientes: 5, saldo:  5, comienzo: null, vencimiento: null},
+                        {origen: '2001', cantidad: 20, usados: null, pendientes: 5, saldo: 15, comienzo: null, vencimiento: null}
+                    ]} as never as DefinedType<typeof ctts.per_cant_multiorigen.result>
+                );
+            })
+        })
+        it("rechaza el año cerrado", async function(){
+            await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                const desde = date.iso('2001-03-11');
+                const cod_nov = COD_TRAMITE
+                await expectError(async ()=>{
+                    await registrarNovedad(rrhhSession, {desde, idper, cod_nov});
+                }, ctts.AÑO_CERRADO)
+            })
+        })
     })
     describe("pantallas", function(){
         it("tiene que ver un solo renglón de vacaciones", async function(){

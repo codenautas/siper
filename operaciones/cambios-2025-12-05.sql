@@ -152,19 +152,3 @@ DROP FUNCTION siper.parametros_trg();
 
 DROP TRIGGER IF EXISTS parametros_avance_dia_trg ON siper.parametros;
 
-set search_path = siper;
-
-select annio_preparar(2026);
-update annios set abierto = true where annio=2026;
-
-call inicializar_per_nov_cant(2026);
-
-update per_nov_cant set vencimiento = '2025-12-31' 
-  where cod_nov = '1' and origen='2023';
-
-update per_nov_cant set vencimiento = null, comienzo = null
-  where cod_nov = '1' and origen='2024';
-
-update per_nov_cant set vencimiento = null, comienzo = null
-  where cod_nov = '1' and origen='2025';
-

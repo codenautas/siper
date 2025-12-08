@@ -35,7 +35,8 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
             cn.prioritario,
             nv.saldo < 0 as error_saldo_negativo,
             detalle_multiorigen,
-            fch.error_falta_entrada
+            fch.error_falta_entrada,
+            a.abierto as annio_abierto
     from cod_novedades cn
     left join lateral (
         select p.idper, cd.cod_nov, true as error_falta_entrada from novedades_vigentes nv
@@ -92,7 +93,7 @@ export function nov_per(_context: TableContext): TableDefinition {
             {name: 'pendientes'  , typeName: 'integer', description: 'días pedidos que todavía no ocurrieron'},
             {name: 'saldo'       , typeName: 'integer', description: 'días restantes bajo el supuesto que los pendientes se tomarán según fueron pedidos'},
             {name: 'detalle'     , typeName: 'text'   , clientSide: 'detalle_dias'},
-            {name: 'detalle_multiorigen', typeName: 'text'},
+            {name: 'detalle_multiorigen', typeName: 'jsonb'},
             sector,
         ],
         primaryKey: [annio.name, cod_nov.name, idper.name],
