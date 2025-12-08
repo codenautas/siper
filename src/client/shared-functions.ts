@@ -14,6 +14,6 @@ type DetalleMultiorigen = {
 }
 
 export function obtenerDetalleMultiorigen(row:DetalleMultiorigen){
-    row.esquema = row.detalle_multiorigen;
+    row.esquema = row.detalle_multiorigen.detalle;
     return row.esquema;
 }
