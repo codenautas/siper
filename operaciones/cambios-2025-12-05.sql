@@ -9,13 +9,17 @@ set search_path = siper;
 
 -- DROP TYPE IF EXISTS siper.detalle_novedades_multiorigen;
 
+DROP FUNCTION IF EXISTS siper.detalle_nov_multiorigen(p_usados bigint, p_pendientes bigint, p_esquema text);
+
 CREATE TYPE siper.detalle_novedades_multiorigen AS
 (
 	origen text,
 	cantidad integer,
 	usados integer,
 	pendientes integer,
-	saldo integer
+	saldo integer,
+    comienzo date,
+    vencimiento date,
 );
 
 ALTER TYPE siper.detalle_novedades_multiorigen
@@ -28,9 +32,9 @@ CREATE OR REPLACE TRIGGER changes_trg
     ON siper.fichadas
     FOR EACH ROW
     EXECUTE FUNCTION his.changes_trg('idper,fecha,hora,id_fichada');
+
 CREATE OR REPLACE FUNCTION siper.detalle_nov_multiorigen(
-	p_usados bigint,
-	p_pendientes bigint,
+	p_fechas date[],
 	p_esquema text)
     RETURNS text
     LANGUAGE 'plpgsql'
@@ -39,47 +43,67 @@ CREATE OR REPLACE FUNCTION siper.detalle_nov_multiorigen(
 AS $BODY$
 DECLARE
   v_esquema record;
-  v_usados integer;
-  v_pendientes integer;
   v_renglon detalle_novedades_multiorigen;
-  v_result detalle_novedades_multiorigen[] := array[]::detalle_novedades_multiorigen[];
+  v_detalles detalle_novedades_multiorigen[] := array[]::detalle_novedades_multiorigen[];
   -- Locales al loop:
   v_resto integer;
+  i integer := 1;
+  v_inconsistencias integer := 0;
+  v_mensajes text[] := array[]::text[];
+  v_result jsonb := '{}'::jsonb;
 BEGIN
   IF p_esquema IS null THEN
-    RETURN null;
+    RETURN '{"detalle":[]}';
   ELSE
-    v_usados := coalesce(p_usados, 0);
-    v_pendientes := coalesce(p_pendientes, 0);
     FOR v_esquema IN 
-      SELECT key AS origen, (value->>'cantidad')::integer AS cantidad
+      SELECT key AS origen, (value->>'cantidad')::integer AS cantidad, (value->>'comienzo')::date AS comienzo, (value->>'vencimiento')::date AS vencimiento
         FROM jsonb_each(p_esquema::jsonb)
         ORDER BY key
     LOOP
+      RAISE NOTICE 'ESTOY %', v_esquema;
       v_renglon.cantidad := v_esquema.cantidad;
+      v_renglon.saldo := v_esquema.cantidad;
       v_renglon.origen := v_esquema.origen;
-      v_renglon.usados := case when v_usados > v_renglon.cantidad then v_renglon.cantidad else v_usados end;
-      v_usados := v_usados - v_renglon.usados;
-      v_resto := v_renglon.cantidad - v_renglon.usados;
-      v_renglon.pendientes := case when v_pendientes > v_resto then v_resto else v_pendientes end;
-      v_pendientes := v_pendientes - v_renglon.pendientes;
-      v_renglon.saldo := v_renglon.cantidad - (v_renglon.usados + v_renglon.pendientes);
-      v_result := v_result || v_renglon;
+      v_renglon.usados := null;
+      v_renglon.pendientes := null;
+      WHILE CASE WHEN i > ARRAY_LENGTH(p_fechas, 1) OR p_fechas is null THEN FALSE 
+        ELSE v_renglon.saldo > 0 AND (v_esquema.vencimiento IS NULL OR p_fechas[i] <= v_esquema.vencimiento) END 
+      LOOP
+        RAISE NOTICE 'TENGO % % % i:% %', v_renglon.saldo, i, p_fechas[i], p_fechas[i] < v_esquema.comienzo, p_fechas[i] <= v_esquema.vencimiento;
+        IF p_fechas[i] < v_esquema.comienzo THEN
+          v_inconsistencias := v_inconsistencias + 1;
+        ELSE
+          v_renglon.saldo := (v_renglon.saldo - 1);
+          IF p_fechas[i] <= fecha_actual() THEN
+            v_renglon.usados := COALESCE(v_renglon.usados, 0) + 1;
+          ELSE
+            v_renglon.pendientes := COALESCE(v_renglon.pendientes, 0) + 1;
+          END IF;
+        END IF;
+        i := i + 1;
+      END LOOP;
+      v_detalles := v_detalles || v_renglon;
+      RAISE NOTICE 'END LOOP % %', v_detalles, v_inconsistencias;
     END LOOP;
-    IF v_usados > 0 OR v_pendientes > 0 THEN
-      v_renglon.origen := 'inconsistencia';
-      v_renglon.cantidad := null;
-      v_renglon.usados := v_usados;
-      v_renglon.penientes := v_pendientes;
-      v_renglon.saldo := - v_usados - v_pendientes;
-      v_result := v_result || v_renglon;
-    END IF;
-    RETURN to_jsonb(v_result)::text;
+    if v_inconsistencias > 0 then 
+      v_mensajes := array_append(v_mensajes, 'inconsistencia ' || v_inconsistencias || ' fecha(s) en brecha agotada');
+    end if; 
+    RAISE NOTICE 'MENSAJES % %', v_mensajes, v_inconsistencias;
+    v_inconsistencias := ARRAY_LENGTH(p_fechas, 1) - i + 1;
+    if v_inconsistencias > 0 then 
+      v_mensajes := array_append(v_mensajes, 'inconsistencia ' || v_inconsistencias || ' fecha(s) pasado el limite');
+    end if;
+    RAISE NOTICE 'MENSAJES % %', v_mensajes, v_inconsistencias;
+    v_result := jsonb_build_object('detalle', to_jsonb(v_detalles));
+    if array_length(v_mensajes, 1) >0 then
+      v_result := v_result || jsonb_build_object('error', to_jsonb(v_mensajes));
+    end if; --1
+    RETURN v_result::text;
   END IF;
 END;
 $BODY$;
 
-ALTER FUNCTION siper.detalle_nov_multiorigen(bigint, bigint, text)
+ALTER FUNCTION siper.detalle_nov_multiorigen(date[], text)
     OWNER TO siper_muleto_owner;
 
 CREATE OR REPLACE PROCEDURE siper.avance_de_dia_proc(
@@ -125,3 +149,5 @@ DROP TRIGGER IF EXISTS parametros_trg ON siper.parametros;
 
 
 DROP FUNCTION siper.parametros_trg();
+
+DROP TRIGGER IF EXISTS parametros_avance_dia_trg ON siper.parametros;
