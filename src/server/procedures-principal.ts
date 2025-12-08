@@ -154,7 +154,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             var sqlInconsistencias = `
                 SELECT cod_nov, saldo, error_saldo_negativo, error_falta_entrada, detalle_multiorigen
                     FROM (${sqlNovPer({idper, annio, annioAbierto:true})}) x
-                    WHERE error_saldo_negativo OR error_falta_entrada OR detalle_multiorigen ? 'error'
+                    WHERE error_saldo_negativo OR error_falta_entrada OR (detalle_multiorigen ->> 'error' IS NOT NULL)
             `
             await fs.writeFile('local-guardar.sql', sqlInconsistencias, 'utf-8')
             var inconsistencias = await context.client.query(sqlInconsistencias, []).fetchAll();
@@ -528,9 +528,9 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 SELECT annio, origen, x.idper, apellido, nombres,
                 	x.sector,
                     abierto_cantidad as cantidad,
-                    0 as usados,
-                    0 as pendientes,
-                    abierto_cantidad as saldo,
+                    coalesce(abierto_usados,0) as usados,
+                    coalesce(abierto_pendientes,0) as pendientes,
+                    coalesce(abierto_saldo,0) as saldo,
                     cantidad as suma_cantidad,
                     usados as suma_usados,
                     pendientes as suma_pendientes,
@@ -541,37 +541,6 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     WHERE cod_nov = '1'
                     ORDER BY 1,3,2,4`
             ).fetchAll();
-            var i = 0;
-            var actual = null;
-            var usados = 0
-            var pendientes = 0
-            while (i < rows.length) {
-                var row = rows[i]
-                if (actual != row.idper) {
-                    actual = row.idper;
-                    usados = row.suma_usados;
-                    pendientes = row.suma_pendientes;    
-                }
-                if (usados <= row.saldo || rows[i+1]?.idper != actual) {
-                    row.saldo -= usados
-                    row.usados = usados
-                    usados = 0
-                } else {
-                    usados -= row.saldo
-                    row.usados = row.saldo
-                    row.saldo = 0
-                }
-                if (pendientes <= row.saldo || rows[i+1]?.idper != actual) {
-                    row.saldo -= pendientes
-                    row.pendientes = pendientes
-                    pendientes = 0
-                } else {
-                    pendientes -= row.saldo
-                    row.pendientes = row.saldo
-                    row.saldo = 0
-                }
-                i++;
-            }
             return {title, rows};
         }
     },

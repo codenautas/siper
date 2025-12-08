@@ -26,7 +26,6 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
             nv.usados,
             nv.pendientes,
             nv.saldo,
-            pnc.esquema,
             (pnc.cantidad > 0 or nv.usados > 0 or nv.pendientes > 0) as con_dato,
             cn.comun,
             cn.novedad,
@@ -50,8 +49,7 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
         annios a,
         personas p,
         lateral (
-            select sum(cantidad) as cantidad,
-                    json_object_agg(origen, json_build_object('cantidad', cantidad, 'comienzo', comienzo, 'vencimiento', vencimiento) order by origen)::text as esquema                    
+            select sum(cantidad) as cantidad
                 from per_nov_cant pnc
                 where pnc.cod_nov = cn.cod_nov and pnc.idper = p.idper and ${filtroAño('pnc')}
         ) pnc,
@@ -63,15 +61,15 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
                     detalle_nov_multiorigen(
                         array_agg(nv.fecha order by nv.fecha), 
                         (select     
-                            jsonb_object_agg(origen, jsonb_build_object('cantidad', cantidad, 'comienzo', comienzo, 'vencimiento', vencimiento) order by origen) 
+                            json_object_agg(origen, json_build_object('cantidad', cantidad, 'comienzo', comienzo, 'vencimiento', vencimiento) order by origen) 
                             from per_nov_cant pnc 
                             where pnc.cod_nov = cn.cod_nov and ${filtroAño('pnc')} and pnc.idper = p.idper
                         )::text
-                    )::jsonb as detalle_multiorigen
+                    )::json as detalle_multiorigen
                 from novedades_vigentes nv
                 where nv.cod_nov = cn.cod_nov and nv.idper = p.idper and ${filtroAño('nv')}
         ) nv
-        ${params.abierto ? ` , lateral (select * from jsonb_populate_recordset(
+        ${params.abierto ? ` , lateral (select * from json_populate_recordset(
             null::detalle_novedades_multiorigen, 
             nv.detalle_multiorigen -> 'detalle'
         )) apertura` : ``}
@@ -93,8 +91,8 @@ export function nov_per(_context: TableContext): TableDefinition {
             {name: 'usados'      , typeName: 'integer', description: 'días pedidos que ya fueron tomados'}, 
             {name: 'pendientes'  , typeName: 'integer', description: 'días pedidos que todavía no ocurrieron'},
             {name: 'saldo'       , typeName: 'integer', description: 'días restantes bajo el supuesto que los pendientes se tomarán según fueron pedidos'},
-            {name: 'esquema'     , typeName: 'text'   },
             {name: 'detalle'     , typeName: 'text'   , clientSide: 'detalle_dias'},
+            {name: 'detalle_multiorigen', typeName: 'text'},
             sector,
         ],
         primaryKey: [annio.name, cod_nov.name, idper.name],
@@ -114,6 +112,6 @@ export function nov_per(_context: TableContext): TableDefinition {
                    where con_dato
             )`
         },
-        hiddenColumns: ['esquema', 'detalle'],
+        hiddenColumns: ['detalle', 'detalle_multiorigen'],
     };
 }

@@ -31,22 +31,22 @@ DECLARE
   i integer := 1;
   v_inconsistencias integer := 0;
   v_mensajes text[] := array[]::text[];
-  v_result jsonb := '{}'::jsonb;
+  v_result json := '{}'::json;
 BEGIN
   IF p_esquema IS null THEN
     RETURN null;
   ELSE
     FOR v_esquema IN 
       SELECT key AS origen, (value->>'cantidad')::integer AS cantidad, (value->>'comienzo')::date AS comienzo, (value->>'vencimiento')::date AS vencimiento
-        FROM jsonb_each(p_esquema::jsonb)
+        FROM json_each(p_esquema::json)
         ORDER BY key
     LOOP
       RAISE NOTICE 'ESTOY %', v_esquema;
-      v_renglon.cantidad := v_esquema.cantidad;
-      v_renglon.saldo := v_esquema.cantidad;
       v_renglon.origen := v_esquema.origen;
+      v_renglon.cantidad := v_esquema.cantidad;
       v_renglon.usados := null;
       v_renglon.pendientes := null;
+      v_renglon.saldo := v_esquema.cantidad;
       WHILE CASE WHEN i > ARRAY_LENGTH(p_fechas, 1) THEN FALSE 
         ELSE v_renglon.saldo > 0 AND (v_esquema.vencimiento IS NULL OR p_fechas[i] <= v_esquema.vencimiento) END 
       LOOP
@@ -75,9 +75,9 @@ BEGIN
       v_mensajes := array_append(v_mensajes, 'inconsistencia ' || v_inconsistencias || ' fecha(s) pasado el limite');
     end if;
     RAISE NOTICE 'MENSAJES % %', v_mensajes, v_inconsistencias;
-    v_result := jsonb_build_object('detalle', to_jsonb(v_detalles));
+    v_result := json_build_object('detalle', to_json(v_detalles));
     if array_length(v_mensajes, 1) >0 then
-      v_result := v_result || jsonb_build_object('error', to_jsonb(v_mensajes));
+      v_result := v_result || json_build_object('error', to_json(v_mensajes));
     end if; --1
     RETURN v_result::text;
   END IF;
