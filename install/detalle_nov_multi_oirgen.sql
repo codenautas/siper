@@ -34,7 +34,7 @@ DECLARE
   v_result jsonb := '{}'::jsonb;
 BEGIN
   IF p_esquema IS null THEN
-    RETURN null;
+    RETURN '{"detalle":[]}';
   ELSE
     FOR v_esquema IN 
       SELECT key AS origen, (value->>'cantidad')::integer AS cantidad, (value->>'comienzo')::date AS comienzo, (value->>'vencimiento')::date AS vencimiento

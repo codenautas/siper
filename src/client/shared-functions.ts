@@ -14,6 +14,5 @@ type DetalleMultiorigen = {
 }
 
 export function obtenerDetalleMultiorigen(row:DetalleMultiorigen){
-    row.esquema = row.detalle_multiorigen.detalle;
-    return row.esquema;
+    return [...row.detalle_multiorigen.detalle, ...(row.detalle_multiorigen.detalle.error ?? [])] as unknown as string
 }

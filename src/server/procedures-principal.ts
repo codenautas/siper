@@ -675,6 +675,26 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 updatedRow: row.row,
             };
         },
+    },
+    {
+        parameters: [
+            {name:'idper'       , typeName:'text'    , references: 'personas'},
+            {name:'annio'       , typeName:'integer' }
+        ],
+        action: 'per_cant_multiorigen',
+        coreFunction: async function (context:ProcedureContext, parameters:any) {
+            const {idper, annio} = parameters;
+            const result = await context.client.query(`
+                select * 
+                    from (${sqlNovPer({idper, annio, annioAbierto:true})}) x
+                    where cod_nov = '1'
+            `).fetchAll();
+            /*
+            console.log(result.rows)
+            console.log(result.rows?.[0]?.detalle_multiorigen)
+            */
+            return result.rows?.[0]?.detalle_multiorigen ?? {detalle:[]};
+        }
     }
 ];
 

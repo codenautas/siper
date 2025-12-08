@@ -14,7 +14,7 @@ import { Contexts, EmulatedSession, expectError, loadLocalFile, saveLocalFile, b
 import * as ctts from "../common/contracts"
 
 import { date, datetime, timeInterval } from "best-globals";
-import { guarantee } from "guarantee-type"
+import { guarantee, DefinedType } from "guarantee-type"
 
 import { tipo_novedad, tipo_novedad_inicial, tipo_novedad_verificado } from "../server/table-tipos_novedad"
 
@@ -1194,6 +1194,13 @@ describe("connected", function(){
                     {annio: 2000, cod_nov, cantidad:30  , usados:0, pendientes:5, saldo:25  },
                     {annio: 2001, cod_nov, cantidad:null, usados:0, pendientes:5, saldo:null}
                 ],"all",{fixedFields:{idper, cod_nov, annio:[2000, 2001]}})
+                const detalle = await rrhhSession.callProcedure(ctts.per_cant_multiorigen, {idper, annio:2000});
+                discrepances.showAndThrow(
+                    detalle,
+                    {detalle: [
+                        {origen: '2000', cantidad: 30, usados: null, pendientes: 10, saldo: 20, comienzo: null, vencimiento: null}
+                    ]} as never as DefinedType<typeof ctts.per_cant_multiorigen.result>
+                );
             })
         })
         it("rechaza vacaciones en el año sigiuente si se pasa del total", async function(){

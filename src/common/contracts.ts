@@ -446,6 +446,24 @@ export const registrar_novedad = {
     result: novedades_registradas.description
 }
 
+export const per_cant_multiorigen = {
+    procedure: 'per_cant_multiorigen',
+    parameters: is.object({
+        idper: is.string,
+        annio: is.number
+    }),
+    result: is.object({
+        detalle: is.array.object({
+            origen: is.string,
+            cantidad: is.nullable.number,
+            usados: is.nullable.number,
+            pendientes: is.nullable.number,
+            saldo: is.nullable.number
+        }),
+        error: is.optional.array.string
+    })
+}
+
 export const annio = {
     table: 'annio',
     description: is.object({

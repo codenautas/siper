@@ -40,7 +40,6 @@ import * as ctts from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 import { DefinedType } from "guarantee-type";
 import { AppConfigClientSetup } from "../server/types-principal";
-import { obtenerDetalleMultiorigen } from "./shared-functions";
 
 const EFIMERO = Symbol("EFIMERO");
 function setEfimero<T extends object|null>(tictac:T){
@@ -283,13 +282,17 @@ type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<str
 type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, dds0: boolean, dds1: boolean, dds2: boolean, dds3: boolean, dds4: boolean, dds5: boolean, dds6: boolean, detalles:string, idr:number, dias_hoc:string, usuario:string, fecha:RealDate, tipo_novedad:string, tipos_novedad__orden:number, tipos_novedad__borrado_rapido:boolean}
 
 interface DetalleAnioNovPer {
+    origen: string;
     cantidad: number;
     usados: number;
     pendientes: number;
     saldo: number;
 }
 
-type ProvisorioDetalleNovPer = { detalle: Record<string, DetalleAnioNovPer> }
+type ProvisorioDetalleNovPer = {detalle:DetalleAnioNovPer[], error?:string[]}
+
+const DETALLE_VACIO:ProvisorioDetalleNovPer = {detalle:[]};
+
 
 type IdperFuncionCambio = (persona:ProvisorioPersonas)=>void
 
@@ -712,16 +715,16 @@ declare module "frontend-plus" {
         parametros: (params:object) => Promise<ParametrosResult>;
         registrar_novedad: (params:NovedadRegistrada) => Promise<NovedadRegistrada & { idr: number }>;
         fichadas_registrar:(params:{fichadas:FichadaData[]}) => Promise<RegistroFichadasResponse>
+        per_cant_multiorigen: (params: {annio: number,idper: string}) => Promise<ProvisorioDetalleNovPer>
     }
     interface Connector {
         config: AppConfigClientSetup
     }
 }
 
-function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
+function DetalleAniosNovPer(props:{detalleVacacionesPersona : ProvisorioDetalleNovPer}){
     const { detalleVacacionesPersona } = props
-    const detalle = (detalleVacacionesPersona || {}) as Record<string, DetalleAnioNovPer>;
-    const registros = Object.entries(detalle);
+    const registros = detalleVacacionesPersona ?? []
     return <Componente componentType="detalle-anios-novper">
         <div className="vacaciones-contenedor">
             <div className="vacaciones-renglon">
@@ -735,22 +738,26 @@ function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
                     <div className="vacaciones-titulo" key={info.abr} title={info.title}>{info.abr}</div>
                 )}
             </div>
-            {registros.length > 0 ? (
-                registros.map(([anio, registro]) => (
-                    <div key={anio} className="vacaciones-renglon">
-                        <div className="vacaciones-celda">
-                            {anio}
-                        </div>
-                        {ctts.info_nov_numeros.map(info => 
-                            <div className="vacaciones-celda" key={info.abr} title={info.title}>{registro[info.name]}</div>
-                        )}
+            {registros.detalle.map(registro => (
+                <div key={registro.origen} className="vacaciones-renglon">
+                    <div className="vacaciones-celda">
+                        {registro.origen}
                     </div>
-                ))
-            ) : (
+                    {ctts.info_nov_numeros.map(info => 
+                        <div className="vacaciones-celda" key={info.abr} title={info.title}>{registro[info.name]}</div>
+                    )}
+                </div>
+            ))}
+            {(registros.error ?? []).map(error => (
+                    <div key={error} className="vacaciones-error">
+                        {error}
+                    </div>
+            ))}
+            {!registros.detalle.length && !registros.error ? (
                 <div className="vacaciones-renglon">
                     sin información
                 </div>
-            )}
+            ) : null}
         </div>
     </Componente>
 }
@@ -963,7 +970,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     const [ultimaNovedad, setUltimaNovedad] = useState(0);
     const [annio, setAnnio] = useState((defaults.fecha ?? date.today()).getFullYear());
     const [fechaActual, setFechaActual] =  useState<RealDate>(date.today()); // corresponde today, es un default provisorio
-    const [detalleVacacionesPersona, setDetalleVacacionesPersona] = useState<ProvisorioDetalleNovPer|null>({} as ProvisorioDetalleNovPer)
+    const [detalleVacacionesPersona, setDetalleVacacionesPersona] = useState<ProvisorioDetalleNovPer>(DETALLE_VACIO)
     const [mostrandoLegajo, setMostrandoLegajo] = useState(false);
     const puede_cargar_novedades = puedeCargarNovedades(infoUsuario);
    
@@ -1001,20 +1008,11 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     useEffect(() => {
         if (idper) {
             setDetalleVacacionesPersona(setEfimero)
-            conn.ajax.table_data({
-                table: 'nov_per',
-                fixedFields: [
-                    {fieldName:'annio', value:annio}, 
-                    {fieldName:'idper', value:idper}, 
-                    {fieldName:'cod_nov', value:1}
-                ],
-                paramfun: {}
-            }).then(function(data:any){
-                if (data[0]){
-                    data[0].detalle = obtenerDetalleMultiorigen(data[0])
-                    setDetalleVacacionesPersona(data[0].detalle);
+            conn.ajax.per_cant_multiorigen({annio, idper}).then(function(detalle){
+                if (detalle){
+                    setDetalleVacacionesPersona(detalle);
                 }else{
-                    setDetalleVacacionesPersona(null);
+                    setDetalleVacacionesPersona(DETALLE_VACIO);
                 }
             }).catch(logError)
         }
