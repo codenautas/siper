@@ -20,7 +20,7 @@ BEGIN
           SELECT 1 
             FROM trayectoria_laboral tl INNER JOIN situacion_revista USING (situacion_revista) 
             WHERE ini_per_nov_cant AND p.idper = tl.idper
-              AND 2025 BETWEEN extract(YEAR from coalesce(desde,'1999-12-31')) AND extract(YEAR from coalesce(hasta,'9999-12-31'))
+              AND p_annio BETWEEN extract(YEAR from coalesce(desde,'1999-12-31')) AND extract(YEAR from coalesce(hasta,'9999-12-31'))
         )
         AND c.inicializacion = 'CONST'
         AND (p_idper IS NULL OR p.idper = p_idper);
