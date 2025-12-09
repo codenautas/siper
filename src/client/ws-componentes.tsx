@@ -238,7 +238,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                     onClick={() => {
                         if (!dia.fecha || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades || (dia.fecha < fechaActual && !infoUsuario.puede_corregir_el_pasado)) return;
                         const selectedDate = dia.fecha as RealDate;
-                        if (!fechaHasta || selectedDate <= fechaHasta) {
+                        if (!fechaHasta || selectedDate <= fechaHasta || fechaHasta.getFullYear() != selectedDate.getFullYear()) {
                             props.onFecha(selectedDate);
                             props.onFechaHasta(selectedDate);
                         } 
