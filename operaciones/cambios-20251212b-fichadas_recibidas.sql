@@ -25,10 +25,6 @@ alter table "fichadas_recibidas" alter column "fecha" set not null;
 alter table "fichadas_recibidas" alter column "hora" set not null;
 alter table "fichadas_recibidas" add constraint "tipo<>''" check ("tipo"<>'');
 alter table "fichadas_recibidas" alter column "tipo" set not null;
-alter table "fichadas_recibidas" add constraint "texto<>''" check ("texto"<>'');
-alter table "fichadas_recibidas" add constraint "dispositivo<>''" check ("dispositivo"<>'');
-alter table "fichadas_recibidas" add constraint "punto_gps<>''" check ("punto_gps"<>'');
-alter table "fichadas_recibidas" add constraint "id_originen<>''" check ("id_originen"<>'');
 
 alter table "fichadas_recibidas" add constraint "fichadas_recibidas personas REL" foreign key ("idper") references "personas" ("idper")  on update cascade;
 create index "idper 4 fichadas_recibidas IDX" ON "fichadas_recibidas" ("idper");
