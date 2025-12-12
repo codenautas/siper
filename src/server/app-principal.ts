@@ -36,6 +36,7 @@ import { horarios_per            } from "./table-horarios_per";
 import { horarios                } from "./table-horarios";
 import { tipos_fichada           } from "./table-tipos_fichada";
 import { fichadas                } from "./table-fichadas";
+import { fichadas_recibidas      } from "./table-fichadas_recibidas";
 import { trayectoria_laboral     } from "./table-trayectoria_laboral";
 import { capa_modalidades        } from "./table-capa_modalidades";
 import { capacitaciones          } from "./table-capacitaciones";
@@ -438,6 +439,7 @@ export class AppSiper extends AppBackend{
             horarios             ,
             tipos_fichada        ,
             fichadas             ,
+            fichadas_recibidas   ,
             capa_modalidades     ,
             capacitaciones       ,
             per_capa             ,
