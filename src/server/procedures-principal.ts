@@ -135,8 +135,6 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name: 'dds6'     , typeName: 'boolean', defaultValue:null, label:'sabado'     },
             {name: 'cancela'  , typeName: 'boolean', defaultValue:null, description:'cancelación de novedades'},
             {name: 'detalles' , typeName: 'text'   , defaultValue:null,                                       },
-            {name: 'fecha'    , typeName: 'date'  , defaultValue:null, },
-            {name: 'usuario' , typeName: 'text'   , defaultValue:null,                                       },
             {name: 'tipo_novedad', typeName: 'text', defaultValue:'V', references:'tipos_novedad' },
         ],
         coreFunction: async function(context: ProcedureContext, params:NovedadRegistrada){
@@ -147,14 +145,14 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 error.code = "B9004";
                 throw error;
             }
-            var result = await context.be.procedure.table_record_save.coreFunction(context, {
-                table: 'novedades_registradas',
-                primaryKeyValues: [],
-                newRow: params,
-                oldRow: {},
-                status: 'new'
-            });
-            const {idper, annio} = result.row as NovedadRegistrada;
+            var {idper, cod_nov, desde, hasta, dds0, dds1, dds2, dds3, dds4, dds5, dds6, cancela, detalles, tipo_novedad} = params;
+            var result = await context.client.query(`INSERT INTO novedades_registradas
+                (idper, cod_nov, desde, hasta, dds0, dds1, dds2, dds3, dds4, dds5, dds6, cancela, detalles, tipo_novedad, fecha, usuario)
+                values ($1, $2 , $3   , $4   , $5  , $6  , $7  , $8  , $9  , $10 , $11 , $12    , $13     , $14         , fecha_actual(), get_app_user())
+                returning *`,
+                [idper, cod_nov, desde, hasta, dds0, dds1, dds2, dds3, dds4, dds5, dds6, cancela, detalles, tipo_novedad]
+            ).fetchUniqueRow();
+            const {annio} = result.row as NovedadRegistrada;
             if (annio == null) {
                 throw new Error('FALTA result.annio');
             }

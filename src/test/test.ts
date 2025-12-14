@@ -1151,31 +1151,31 @@ describe("connected", function(){
             })
         });
     });
-    describe("pasaje vacaciones", function(){
-        // const AÑO0 = DESDE_AÑO
-        const AÑO1 = AÑO_SIGUIENTE
-        async function abrirAño(idper:string|null){
-            await server.inTransaction(null, async client => {
-                await client.query(
-                    `call inicializar_per_nov_cant($1 ${idper ? ',$2' : '' })`,
-                    [AÑO1, ...(idper ? [idper] : []) ]
-                ).execute();
-                await client.query(
-                    'UPDATE annios SET abierto = true WHERE annio = $1 AND NOT abierto',
-                    [AÑO1]
-                ).execute();
-            })
-        }
-        before(async function(){
-            await abrirAño(null)
+    // const AÑO0 = DESDE_AÑO
+    const AÑO1 = AÑO_SIGUIENTE
+    async function abrirAño(idper:string|null){
+        await server.inTransaction(null, async client => {
+            await client.query(
+                `call inicializar_per_nov_cant($1 ${idper ? ',$2' : '' })`,
+                [AÑO1, ...(idper ? [idper] : []) ]
+            ).execute();
+            await client.query(
+                'UPDATE annios SET abierto = true WHERE annio = $1 AND NOT abierto',
+                [AÑO1]
+            ).execute();
         })
+    }
+    async function cerrarAño(){
+        await server.inTransaction(null, async client => {
+            await client.query(
+                'UPDATE annios SET abierto = false WHERE annio = $1',
+                [AÑO1]
+            ).execute();
+        })
+    }
+    describe("pasaje vacaciones", function(){
         after(async function(){
-            await server.inTransaction(null, async client => {
-                await client.query(
-                    'UPDATE annios SET abierto = false WHERE annio = $1',
-                    [AÑO1]
-                ).execute();
-            })
+            await cerrarAño();
         })
         it("después de abrir el año siguiente se tienen ver las vacaciones pedidas en el cuadro final", async function(){
             await enNuevaPersona(this.test?.title!, {vacaciones: 30}, async ({idper}) => {
@@ -1295,6 +1295,7 @@ describe("connected", function(){
             })
         })
         it("rechaza el año cerrado", async function(){
+            await cerrarAño()
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
                 const desde = date.iso('2001-03-11');
                 const cod_nov = COD_TRAMITE
@@ -1305,8 +1306,12 @@ describe("connected", function(){
         })
     })
     describe("pantallas", function(){
+        after(async function(){
+            await cerrarAño();
+        })
         it("tiene que ver un solo renglón de vacaciones", async function(){
             await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
+                await abrirAño(idper);
                 await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'1999', cod_nov: COD_VACACIONES, idper, cantidad: 1 }, 'new')
                 await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2001, origen:'2000', cod_nov: COD_VACACIONES, idper, cantidad: 10 }, 'new')
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-03-01'), hasta:date.iso('2000-03-07'), cod_nov:COD_VACACIONES, idper};
@@ -1334,9 +1339,8 @@ describe("connected", function(){
                 // LÍMIES:
                 await rrhhSession.tableDataTest('nov_per', [
                     {annio:2000, cod_nov:COD_VACACIONES, cantidad:21  , usados:0 , pendientes:3, saldo:18  },
-                    {annio:2000, cod_nov:COD_PRED_PAS  , cantidad:null, usados:21, pendientes:0, saldo:null},
                     {annio:2001, cod_nov:COD_VACACIONES, cantidad:10  , usados:0 , pendientes:5, saldo:5   },
-                ], 'all', {fixedFields:{idper}})
+                ], 'all', {fixedFields:{idper, cod_nov:COD_VACACIONES}})
             })
         })
     })

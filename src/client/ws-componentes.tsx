@@ -1035,7 +1035,8 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             dds6:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds6,
             fecha: infoUsuario.fecha_actual,
             usuario: infoUsuario.usuario,
-            cancela: cod_nov == null
+            cancela: cod_nov == null,
+            tipo_novedad: 'V'
         }).then(function(result){
             setUltimaNovedad(result.idr as number);
             // setFecha(fechaActual);
