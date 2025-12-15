@@ -599,7 +599,7 @@ function Horario(props:{conn: Connector, idper:string, fecha:RealDate}){
                 setHorario(result);
             }).catch(logError);
         }
-    },[idper, fecha.getMilliseconds()])
+    },[idper, fecha])
 
     const desdeFecha = horario.desde;
     const hastaFecha = horario.hasta;
