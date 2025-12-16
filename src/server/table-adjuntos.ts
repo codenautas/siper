@@ -22,6 +22,7 @@ export function adjuntos(context:TableContext):TableDefinition{
             {...numero_adjunto, sequence:{ firstValue:101, name:'numero_adjunto_seq' }},
             {...idper, editable: false},
             {name:'tipo_adjunto', title: 'tipo adjunto', typeName:'text'},
+            {name:'referencia', typeName:'text', inTable:false, serverSide:true, editable:false},
             {name:'timestamp', typeName:'timestamp', defaultDbValue:'current_timestamp', editable:false, inTable:true, clientSide:'timestamp', title:'📅'},
             {name:'subir', editable:false, clientSide:'subirAdjunto', typeName:'text'},
             {name:'archivo_nombre', title:'archivo', editable:false , typeName:'text'},
@@ -39,6 +40,15 @@ export function adjuntos(context:TableContext):TableDefinition{
         detailTables: [
            {table:'adjuntos_atributos', fields:[idper.name, numero_adjunto.name, 'tipo_adjunto'], abr:'at', refreshFromParent:true, refreshParent:true },
         ],
-        sql: {orderBy: ['tipo_adjunto', numero_adjunto.name],}
+        sql: {
+            fields: {
+                referencia: {expr:`case adjuntos.tipo_adjunto 
+                    when 'DNI' then personas.documento 
+                    when 'TIT' then concat_ws(': ', personas.max_nivel_ed, (select x.nombre from niveles_educativos x where x.nivel_educativo = personas.max_nivel_ed)) 
+                    else null end
+                `}
+            },
+            orderBy: ['tipo_adjunto', numero_adjunto.name],
+        }
     }
 }
