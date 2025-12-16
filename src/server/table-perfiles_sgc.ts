@@ -5,7 +5,7 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 export const perfil_sgc: FieldDefinition = {
     name: 'perfil_sgc', 
     typeName: 'integer',
-    title: 'Perfil SGC'
+    title: 'perfil SGC'
 };
 
 export function perfiles_sgc(context:TableContext):TableDefinition{
@@ -13,7 +13,7 @@ export function perfiles_sgc(context:TableContext):TableDefinition{
     return {
         name:'perfiles_sgc',
         elementName: 'perfil_sgc',
-        title:'Perfil SGC',
+        title:'perfil SGC',
         editable:admin,
         fields:[
             perfil_sgc,
