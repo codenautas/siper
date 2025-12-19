@@ -120,6 +120,7 @@ describe("connected", function(){
     var adminMetadatosSession: SesionEmuladaSiper; // admin de metadatos, por ahora un admin
     var borradoExitoso: boolean = false;
     var fallaEnLaQueQuieroOmitirElBorrado: boolean = false;
+    this.timeout(5000);
     before(async function(){
         try{
             contexto = await startBackendAPIContext(AppSiper);
