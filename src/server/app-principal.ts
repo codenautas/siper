@@ -26,6 +26,7 @@ import { novedades_horarias      } from './table-novedades_horarias';
 import { novedades_vigentes      } from './table-novedades_vigentes';
 import { per_nov_cant            } from './table-per_nov_cant';
 import { nov_per                 } from './table-nov_per';
+import { nov_per_abierto         } from './table-nov_per_abierto';
 import { pautas                  } from './table-pautas';
 import { inconsistencias         } from './table-inconsistencias';
 import { usuarios                } from './table-usuarios';
@@ -252,7 +253,7 @@ export class AppSiper extends AppBackend{
                         {menuType:'proc', name:'parte_diario'},
                         {menuType:'proc', name:'informe_mensual'},
                         {menuType:'proc', name:'descanso_anual_remunerado'},
-                        {menuType:'proc', name:'exportar_descanso_anual_remunerado'},
+                        // {menuType:'proc', name:'exportar_descanso_anual_remunerado'},
                         // {menuType:'proc', name:'visor_de_fichadas'},
                         {menuType:'table', name:'novedades_totales', table:'nov_per', ff:[{fieldName:'annio', value:date.today().getFullYear()}]},
                     ]}
@@ -429,6 +430,7 @@ export class AppSiper extends AppBackend{
             novedades_vigentes   ,
             per_nov_cant         ,
             nov_per              ,
+            nov_per_abierto      ,
             pautas               ,
             inconsistencias      ,  
             usuarios             ,
