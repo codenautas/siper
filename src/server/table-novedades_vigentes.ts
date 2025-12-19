@@ -56,7 +56,7 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
         elementName:'novedad',
         editable:admin,
         fields: [
-            idper,
+            {...idper, editable: false },
             fecha,
             {name: 'ddsn'     , typeName: 'text'   , inTable:false, serverSide:true, editable:false },
             {name: 'cod_nov'  , typeName: 'text'   ,                                    },
