@@ -7,8 +7,9 @@ import { AppSiper } from '../server/app-principal';
 
 import {promises as fs} from 'fs'
 
-import { Contexts, EmulatedSession, expectError, loadLocalFile, saveLocalFile, benchmarksSave,
-    startBackendAPIContext, someTestFails
+import { AppBackendConstructor, 
+    Contexts, EmulatedSession, expectError, loadLocalFile, saveLocalFile, benchmarksSave,
+    startBackendAPIContext, startNavigatorContext, someTestFails
 } from "serial-tester";
 
 import * as ctts from "../common/contracts"
@@ -111,8 +112,39 @@ async function registrarFichada(server: AppSiper, params: Partial<ctts.Fichada>)
     })
     return result;
 }
+const TEST_BACKEND_VIA_API = {
+    name: "via api",
+    startContext: startBackendAPIContext
+}
 
-describe("connected", function(){
+const TEST_VIA_CHROMIUM = {
+    name: "via chromium",
+    startContext: (app:AppBackendConstructor<AppSiper>) => startNavigatorContext(app, {
+        browserType: 'chromium',
+        headless: false,
+        slowMo: 100
+    }),
+}
+
+console.log(TEST_BACKEND_VIA_API, TEST_VIA_CHROMIUM);
+
+var testIn: {name:string, startContext: (app:AppBackendConstructor<AppSiper>) => Promise<Contexts<AppSiper>>}[] = [
+    TEST_BACKEND_VIA_API,
+];
+
+if (process.argv.includes('--nav')) {
+    testIn.push(TEST_VIA_CHROMIUM);
+    console.log('######################## CON NAVEGADOR')
+}else if (process.argv.includes('--nav-only')) {
+    testIn = [TEST_VIA_CHROMIUM];
+    console.log('######################## SOLO NAVEGADOR')
+}else{
+    console.log('######################## SIN NAVEGADOR')
+
+}
+
+var backendsAUsar = testIn.length;
+testIn.forEach(t => describe("SiPer: " + t.name, function(){
     var server: AppSiper;
     var contexto: Contexts<AppSiper>;
     var rrhhSession: SesionEmuladaSiper;
@@ -122,7 +154,7 @@ describe("connected", function(){
     var fallaEnLaQueQuieroOmitirElBorrado: boolean = false;
     before(async function(){
         try{
-            contexto = await startBackendAPIContext(AppSiper);
+            contexto = await t.startContext(AppSiper);
             server = contexto.backend;
             adminMetadatosSession = contexto.createSession();
             await adminMetadatosSession.login({
@@ -1412,6 +1444,10 @@ describe("connected", function(){
             await stressTest();
             return;
         }
+        if (process.argv.includes('--no-close')){
+            this.timeout(TIMEOUT_SPEED * 40 + server.config.destres.minutos*60*1000);
+            return;
+        }
         if (!borradoExitoso || fallaEnLaQueQuieroOmitirElBorrado || someTestFails(this)) {
             console.log('se saltea la comprobación final porque no se pudo borrar las pruebas de la corrida anterior')
             // console.log('test', this.test)
@@ -1499,7 +1535,7 @@ describe("connected", function(){
                 error = err as Error;
             }
         }
-        await server.shutdownBackend()
+        await server.shutdownBackend({skipTurnOff: !!--backendsAUsar});
         console.log('server down!');
         server = null as unknown as AppSiper;
         setTimeout(()=>{
@@ -1508,5 +1544,4 @@ describe("connected", function(){
         }, 1000);
         if (error != null) throw error;
     })
-})
-
+}));

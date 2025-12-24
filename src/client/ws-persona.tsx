@@ -24,7 +24,7 @@ import {
 
 import { createIndex } from "like-ar";
 
-// @ts-ignore 
+// @ts-ignore
 var my=myOwn;
 
 function GrupoPeronas(props:{idGrupo:string, nombreGrupo:string, fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
