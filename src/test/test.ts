@@ -22,7 +22,8 @@ import { tipo_novedad, tipo_novedad_inicial, tipo_novedad_verificado } from "../
 import * as discrepances from 'discrepances';
 import { Time } from "../server/types-principal";
 
-const TIMEOUT_SPEED = 1000 * (process.env.BP_TIMEOUT_SPEED as unknown as number ?? 1);
+const TIMEOUT_SPEED_BE = 1000 * (process.env.BP_TIMEOUT_SPEED as unknown as number ?? 1);
+const VERBOSE = process.argv.includes('--verbose');
 
 /*
  * Para debuguear el servidor por separado hay abrir dos ventanas, en una corren los test (normalmente) 
@@ -114,11 +115,13 @@ async function registrarFichada(server: AppSiper, params: Partial<ctts.Fichada>)
 }
 const TEST_BACKEND_VIA_API = {
     name: "via api",
+    speed: 1,
     startContext: startBackendAPIContext
 }
 
 const TEST_VIA_CHROMIUM = {
     name: "via chromium",
+    speed: 10,
     startContext: (app:AppBackendConstructor<AppSiper>) => startNavigatorContext(app, {
         browserType: 'chromium',
         headless: false,
@@ -128,7 +131,7 @@ const TEST_VIA_CHROMIUM = {
 
 console.log(TEST_BACKEND_VIA_API, TEST_VIA_CHROMIUM);
 
-var testIn: {name:string, startContext: (app:AppBackendConstructor<AppSiper>) => Promise<Contexts<AppSiper>>}[] = [
+var testIn: {name:string, speed:number, startContext: (app:AppBackendConstructor<AppSiper>) => Promise<Contexts<AppSiper>>}[] = [
     TEST_BACKEND_VIA_API,
 ];
 
@@ -145,6 +148,8 @@ if (process.argv.includes('--nav')) {
 
 var backendsAUsar = testIn.length;
 testIn.forEach(t => describe("SiPer: " + t.name, function(){
+    const TIMEOUT_SPEED = TIMEOUT_SPEED_BE * t.speed;
+    this.timeout(TIMEOUT_SPEED);
     var server: AppSiper;
     var contexto: Contexts<AppSiper>;
     var rrhhSession: SesionEmuladaSiper;
@@ -154,18 +159,23 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
     var fallaEnLaQueQuieroOmitirElBorrado: boolean = false;
     before(async function(){
         try{
+            if (VERBOSE) console.log('Arranca el servidor')
             contexto = await t.startContext(AppSiper);
+            contexto.verbose = VERBOSE;
             server = contexto.backend;
+            if (VERBOSE) console.log('Sesión admin')
             adminMetadatosSession = contexto.createSession();
             await adminMetadatosSession.login({
                 username: 'perry',
                 password: 'white',
             });
+            if (VERBOSE) console.log('Sesión superior')
             superiorSession = contexto.createSession();
             await superiorSession.login({
                 username: 'lois',
                 password: 'lane',
             });
+            if (VERBOSE) console.log('Sesión rrhh')
             rrhhSession = contexto.createSession();
             await rrhhSession.login({
                 username: 'jimmi',
@@ -175,8 +185,10 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
             console.log(err);
             throw err;
         }
+        if (VERBOSE) console.log('Sesiones listas')
     })
     beforeEach(async function(){
+        if (VERBOSE) console.log('restaurando la DB para pruebas individuales')
         await server.inDbClient(ADMIN_REQ, async client=>{
             await client.executeSentences([
                 `update fechas set laborable=null, repite=null, inamovible=null where fecha in ('2000-01-10','2000-01-11')`,
@@ -185,6 +197,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 `delete from cod_novedades where cod_nov in ${NOVEDADES_TEST}`,
             ]);
         });
+        if (VERBOSE) console.log('restaurada la DB para pruebas individuales!')
     })
     it("borra todo y prepara para el control de tiempos", async function(){
         try{
@@ -227,7 +240,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                         `update fechas set cod_nov_pred_fecha = '${COD_PRED_PAS}' where extract(dow from fecha) between 1 and 5 and fecha <= '${FECHA_ACTUAL.toYmd()}'`,
                         `update annios set horario_habitual_desde = '10:00', horario_habitual_hasta = '17:00' where annio = '${DESDE_AÑO}'`,
                         `select annio_abrir('${DESDE_AÑO}')`,
-                        `update parametros set fecha_hora_para_test = '${FECHA_ACTUAL.toYmd()} 10:00', cod_nov_habitual = 999 where unico_registro`,
+                        `update parametros set fecha_hora_para_test = '${FECHA_ACTUAL.toYmd()} 10:00', cod_nov_habitual = '${COD_PRED_PAS}' where unico_registro`,
                         `insert into sectores (subsector, nombre_sector, pertenece_a, nivel, tipo_sec) values
                             ('Z', 'PRUEBA AUTOMATICA Z'      , null , 0, 'DE'),
                             ('${SECTOR}', 'PRUEBA AUTOMATICA ${SECTOR}', 'Z' , 1, 'DG'),
@@ -267,8 +280,8 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
     }
     describe("configuraciones", function(){
         it("verifica que exista la tabla de parámetros", async function(){
-            await rrhhSession.tableDataTest('parametros',[
-                {unico_registro:true},
+            await rrhhSession.tableDataTest(ctts.table_parametros, [
+                {cod_nov_habitual: COD_PRED_PAS},
             ], 'all')
         })
         it("verifica que un rrhh se considere registra también", async function(){
@@ -427,7 +440,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 // var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 // discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:5, dias_coincidentes:0})
                 await registrarNovedad(superiorSession, novedadRegistradaPorCargar);
-                await rrhhSession.tableDataTest('novedades_vigentes', [
+                await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-01-01'), cod_nov:null          , idper, trabajable: false, cod_nov_ini:null},
                     {fecha:date.iso('2000-01-02'), cod_nov:null          , idper, trabajable: false, cod_nov_ini:null},
                     {fecha:date.iso('2000-01-03'), cod_nov:COD_VACACIONES, idper, trabajable: true , cod_nov_ini:null},
@@ -453,7 +466,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                     mensaje: discrepances.test((x:string) => /confirma/.test(x)) as string, saldo: 12, falta_entrada: null
                 })
                 await registrarNovedad(rrhhSession, novedadRegistradaPorCargar);
-                await rrhhSession.tableDataTest('novedades_vigentes', [
+                await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-03-07'), cod_nov:null          , idper, trabajable:false},
                     {fecha:date.iso('2000-03-08'), cod_nov:COD_VACACIONES, idper, trabajable:true },
                     {fecha:date.iso('2000-03-09'), cod_nov:COD_VACACIONES, idper, trabajable:true },
@@ -484,7 +497,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 await registrarNovedad(rrhhSession,
                     {desde:date.iso('2000-05-11'), cod_nov:COD_TRAMITE, idper}
                 );
-                await rrhhSession.tableDataTest('novedades_vigentes', [
+                await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-05-01'), cod_nov:null           , idper},
                     {fecha:date.iso('2000-05-02'), cod_nov:COD_VACACIONES , idper},
                     {fecha:date.iso('2000-05-03'), cod_nov:COD_VACACIONES , idper},
@@ -511,7 +524,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
                 );
-                await rrhhSession.tableDataTest('novedades_vigentes', [
+                await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-01-05'), cod_nov:COD_PRED_PAS, idper, trabajable:true},
                     {fecha:date.iso('2000-01-06'), cod_nov:COD_TRAMITE , idper, trabajable:true},
                     {fecha:date.iso('2000-01-07'), cod_nov:COD_PRED_PAS, idper, trabajable:true},
@@ -542,7 +555,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 await expectError(async ()=>{
                     await registrarNovedad(rrhhSession, novedadRegistradaPorCargar);
                 }, ctts.ERROR_HORA_PASADA);
-                await rrhhSession.tableDataTest('novedades_vigentes', [
+                await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:FECHA_ACTUAL, cod_nov:COD_PRED_PAS, idper, trabajable:true},
                 ], 'all', {fixedFields:{idper, fecha:FECHA_ACTUAL}})
             })
@@ -571,18 +584,18 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, idper}
                 );
-                await rrhhSession.tableDataTest('novedades_vigentes', [
+                await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-01-03'), cod_nov:COD_TRAMITE, idper},
                 ], 'all', {fixedFields:{idper, fecha:'2000-01-03'}})
                 // el usuario básico no debería ver los datos de otra persona:
-                await basicoSession.tableDataTest('novedades_vigentes', [
+                await basicoSession.tableDataTest(ctts.novedades_vigentes, [
                 ], 'all', {fixedFields:{idper, fecha:'2000-01-03'}})
             })
         })
         it("quito un feriado y veo que hay más novedades", async function(){
             await enDosNuevasPersonasConFeriado10EneroFeriadoy11No(this.test?.title!, '10001', async (persona1, persona2, cod_nov) => {
                 /* Verifico que ese día tenga 2 novedades cargadas */
-                await superiorSession.tableDataTest('novedades_vigentes', [
+                await superiorSession.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
@@ -593,7 +606,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                     'update'
                 )
                 /* Verifico que esos días tengan 4 novedades vigentes */
-                await rrhhSession.tableDataTest('novedades_vigentes', [
+                await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-01-10'), cod_nov, idper: persona1.idper},
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
                     {fecha:date.iso('2000-01-10'), cod_nov, idper: persona2.idper},
@@ -605,7 +618,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
         it("agrego un feriado y veo que hay menos novedades", async function(){
             await enDosNuevasPersonasConFeriado10EneroFeriadoy11No(this.test?.title!, '10002', async (persona1, persona2, cod_nov) => {
                 /* Verifico que ese día tenga 2 novedades cargadas */
-                await rrhhSession.tableDataTest('novedades_vigentes', [
+                await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
                 ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
@@ -616,7 +629,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                     'update'
                 )
                 /* Verifico que esos días no tengan novedades vigentes */
-                await rrhhSession.tableDataTest('novedades_vigentes', [
+                await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                 ], 'all', {fixedFields:{cod_nov}})
            })
         })
@@ -625,7 +638,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper}
                 );
-                await sesion.tableDataTest('novedades_vigentes', [
+                await sesion.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, idper},
                     {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, idper},
                     {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
@@ -647,7 +660,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 await registrarNovedad(jefe11Session,
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
                 );
-                await jefe11Session.tableDataTest('novedades_vigentes', [
+                await jefe11Session.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, idper},
                     {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, idper},
                     {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
@@ -659,7 +672,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 await registrarNovedad(jefe11Session,
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
                 );
-                await jefe11Session.tableDataTest('novedades_vigentes', [
+                await jefe11Session.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-02-01'), cod_nov:COD_VACACIONES, idper},
                     {fecha:date.iso('2000-02-02'), cod_nov:COD_VACACIONES, idper},
                     {fecha:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
@@ -709,7 +722,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-02-10'), hasta:date.iso('2000-02-10'), cod_nov:COD_MUDANZA, idper, detalles:TEXTO_PRUEBA}
                 );
-                await rrhhSession.tableDataTest('novedades_vigentes', [
+                await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-02-10'), cod_nov:COD_MUDANZA, idper, detalles:TEXTO_PRUEBA},
                 ], 'all', {fixedFields:{idper, fecha:'2000-02-10'}})
             })
@@ -724,7 +737,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: otrapersona.idper}
                 );
-                await sesion.tableDataTest('novedades_vigentes', [
+                await sesion.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-02-01'), cod_nov:COD_PRED_PAS, idper: persona.idper},
                 ], 'all', {fixedFields:{fecha:'2000-02-01'}})
             })
@@ -790,7 +803,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
         })
         it("genera novedades desde registra_novedades_desde", async function(){
             await enNuevaPersona(this.test?.title!, {registra_novedades_desde: date.iso('2000-01-04')}, async ({idper}) => {
-                await rrhhSession.tableDataTest('novedades_vigentes', [
+                await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-01-04'), cod_nov:COD_PRED_PAS, idper},
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-01','2000-01-04']}})
             })
@@ -810,7 +823,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                     await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-04'), hasta:date.iso('2000-02-07'), cod_nov: COD_ENFERMEDAD, idper}
                     );
-                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         {fecha:date.iso('2000-02-04'), cod_nov:COD_ENFERMEDAD, idper},
                         {fecha:date.iso('2000-02-05'), cod_nov:COD_ENFERMEDAD, idper},
                         {fecha:date.iso('2000-02-06'), cod_nov:COD_ENFERMEDAD, idper},
@@ -828,7 +841,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                     await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-05'), hasta:date.iso('2000-02-07'), cod_nov: COD_ENFERMEDAD, idper}
                     );
-                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         {fecha:date.iso('2000-02-04'), cod_nov:COD_ENFERMEDAD, idper},
                         {fecha:date.iso('2000-02-05'), cod_nov:COD_ENFERMEDAD, idper},
                         {fecha:date.iso('2000-02-06'), cod_nov:COD_ENFERMEDAD, idper},
@@ -847,7 +860,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                     await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-07'), hasta:date.iso('2000-02-07'), cod_nov, idper}
                     );
-                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         {fecha:date.iso('2000-02-04'), cod_nov, idper},
                         {fecha:date.iso('2000-02-07'), cod_nov, idper},
                     ], 'all', {fixedFields:{idper, cod_nov}})
@@ -865,7 +878,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                     await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-08'), hasta:date.iso('2000-02-08'), cod_nov, idper}
                     );
-                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         {fecha:date.iso('2000-02-04'), cod_nov, idper},
                         {fecha:date.iso('2000-02-08'), cod_nov, idper},
                     ], 'all', {fixedFields:{idper, cod_nov}})
@@ -881,7 +894,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                     await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-06'), hasta:date.iso('2000-02-07'), cod_nov: COD_ENFERMEDAD, idper: persona.idper}
                     );
-                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         {fecha:date.iso('2000-02-04'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
                         {fecha:date.iso('2000-02-06'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
                         {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
@@ -899,7 +912,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                     await registrarNovedad(rrhhSession,
                         {desde:date.iso('2000-02-07'), hasta:date.iso('2000-02-07'), cod_nov: COD_ENFERMEDAD, idper: persona.idper}
                     );
-                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         {fecha:date.iso('2000-02-04'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
                         {fecha:date.iso('2000-02-05'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
                         {fecha:date.iso('2000-02-06'), cod_nov:null          , idper: persona.idper},
@@ -918,7 +931,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                             dds1:true, dds3:true, dds4:true
                         }
                     );
-                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         {fecha:date.iso('2000-01-17'), cod_nov:COD_DIAGRAMADO, idper},
                         {fecha:date.iso('2000-01-18'), cod_nov:COD_PRED_PAS  , idper},
                         {fecha:date.iso('2000-01-19'), cod_nov:COD_DIAGRAMADO, idper},
@@ -951,7 +964,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                             dds1:true, dds3:true, dds4:true
                         }
                     );
-                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         {fecha:date.iso('2000-01-17'), cod_nov:COD_DIAGRAMADO, idper},
                         {fecha:date.iso('2000-01-18'), cod_nov:COD_PRED_PAS  , idper},
                         {fecha:date.iso('2000-01-19'), cod_nov:COD_DIAGRAMADO, idper},
@@ -987,7 +1000,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
         describe("cod_nov_pred_fecha", function(){
             it("sin nada cargado está la novedad predeterminada pasada", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
-                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         {fecha:date.iso('2000-01-03'), cod_nov:COD_PRED_PAS  , idper},
                         {fecha:date.iso('2000-01-04'), cod_nov:COD_PRED_PAS  , idper},
                     ], 'all', {fixedFields:{idper, fecha:['2000-01-03','2000-01-04']}})
@@ -996,13 +1009,13 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
             it("actualizo una fecha y se actualizan los predeterminados", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
                     await server.inDbClient(ADMIN_REQ, async client => client.query("update fechas set cod_nov_pred_fecha = '22' where fecha = '2000-01-04'").execute())
-                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         {fecha:date.iso('2000-01-03'), cod_nov:COD_PRED_PAS  , idper},
                         {fecha:date.iso('2000-01-04'), cod_nov:'22'          , idper},
                         {fecha:date.iso('2000-01-05'), cod_nov:COD_PRED_PAS  , idper},
                     ], 'all', {fixedFields:{idper, fecha:['2000-01-03','2000-01-05']}})
                     await server.inDbClient(ADMIN_REQ, async client => client.query(`update fechas set cod_nov_pred_fecha = '${COD_PRED_PAS}' where fecha = '2000-01-04'`).execute())
-                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         {fecha:date.iso('2000-01-03'), cod_nov:COD_PRED_PAS  , idper},
                         {fecha:date.iso('2000-01-04'), cod_nov:COD_PRED_PAS  , idper},
                         {fecha:date.iso('2000-01-05'), cod_nov:COD_PRED_PAS  , idper},
@@ -1039,7 +1052,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-01-05'), hasta:date.iso('2000-01-07'), cod_nov:COD_NO_FICHAR, idper, [tipo_novedad.name]: tipo_novedad_inicial}
                 );
-                await rrhhSession.tableDataTest('novedades_vigentes', [
+                await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-01-05'), cod_nov:COD_NO_FICHAR, idper, trabajable:true, cod_nov_ini:COD_NO_FICHAR},
                     {fecha:date.iso('2000-01-06'), cod_nov:COD_TRAMITE  , idper, trabajable:true, cod_nov_ini:COD_NO_FICHAR},
                     {fecha:date.iso('2000-01-07'), cod_nov:COD_NO_FICHAR, idper, trabajable:true, cod_nov_ini:COD_NO_FICHAR},

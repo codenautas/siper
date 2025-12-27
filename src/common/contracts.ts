@@ -287,6 +287,28 @@ export const trayectoria_laboral = {
 
 export type Trayectoria_laboral = DefinedType<typeof trayectoria_laboral.description>
 
+export const table_parametros = {
+    table : 'parametros',
+    description: is.object({
+        cod_nov_habitual: is.string
+    })
+} satisfies CommonEntityDefinition
+
+export const novedades_vigentes = {
+    table: 'novedades_vigentes',
+    description: is.object({
+        idper: is.string,
+        fecha: is.Date,
+        annio: is.optional.number,
+        cod_nov: is.nullable.string,
+        detalles: is.nullable.string,
+        usuario: is.nullable.string,
+        tipo_novedad: is.nullable.string
+    })
+} satisfies CommonEntityDefinition
+
+export type NovedadesVigentes = DefinedType<typeof novedades_vigentes.description>
+
 ////////////// PROCEDIMEINTOS
 
 export const si_cargara_novedad = {
