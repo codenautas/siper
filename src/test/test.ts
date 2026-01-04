@@ -125,30 +125,16 @@ const TEST_VIA_CHROMIUM = {
     startContext: (app:AppBackendConstructor<AppSiper>) => startNavigatorContext(app, {
         browserType: 'chromium',
         headless: false,
-        slowMo: 100
+        slowMo: 10
     }),
 }
 
-console.log(TEST_BACKEND_VIA_API, TEST_VIA_CHROMIUM);
+var testConfig: {name:string, speed:number, startContext: (app:AppBackendConstructor<AppSiper>) => Promise<Contexts<AppSiper>>} = 
+    process.argv.includes('--nav') ? TEST_VIA_CHROMIUM : TEST_BACKEND_VIA_API;
 
-var testIn: {name:string, speed:number, startContext: (app:AppBackendConstructor<AppSiper>) => Promise<Contexts<AppSiper>>}[] = [
-    TEST_BACKEND_VIA_API,
-];
 
-if (process.argv.includes('--nav')) {
-    testIn.push(TEST_VIA_CHROMIUM);
-    console.log('######################## CON NAVEGADOR')
-}else if (process.argv.includes('--nav-only')) {
-    testIn = [TEST_VIA_CHROMIUM];
-    console.log('######################## SOLO NAVEGADOR')
-}else{
-    console.log('######################## SIN NAVEGADOR')
-
-}
-
-var backendsAUsar = testIn.length;
-testIn.forEach(t => describe("SiPer: " + t.name, function(){
-    const TIMEOUT_SPEED = TIMEOUT_SPEED_BE * t.speed;
+describe("SiPer: " + testConfig.name, function(){
+    const TIMEOUT_SPEED = TIMEOUT_SPEED_BE * testConfig.speed;
     this.timeout(TIMEOUT_SPEED);
     var server: AppSiper;
     var contexto: Contexts<AppSiper>;
@@ -160,7 +146,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
     before(async function(){
         try{
             if (VERBOSE) console.log('Arranca el servidor')
-            contexto = await t.startContext(AppSiper);
+            contexto = await testConfig.startContext(AppSiper);
             contexto.verbose = VERBOSE;
             server = contexto.backend;
             if (VERBOSE) console.log('Sesión admin')
@@ -337,6 +323,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
         },
         probar: (persona: ctts.Persona, mas:{usuario: UsuarioConCredenciales, sesion:SesionEmuladaSiper}) => Promise<void>
     ){
+        console.log('TEST', nombre);
         var haciendo = 'inicializando';
         try {
             var {vacaciones, tramites, hoy, ahora, ...personales} = opciones;
@@ -355,6 +342,18 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 {cantidadOesquema: vacaciones, cod_nov:COD_VACACIONES},
                 {cantidadOesquema: tramites  , cod_nov:COD_TRAMITE   },
             ];
+            for (const paso of esquema) {
+                if (paso.cantidadOesquema) {
+                    for (const {origen, cantidad, comienzo, vencimiento} of (
+                        typeof paso.cantidadOesquema == 'number' 
+                        ? [{origen:'2000', cantidad:paso.cantidadOesquema}] 
+                        : paso.cantidadOesquema
+                    )) {
+                        await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen, cod_nov: paso.cod_nov, idper: persona.idper, cantidad, comienzo, vencimiento }, 'new');
+                    }
+                }
+            }
+            /*
             await Promise.all(esquema.map(async paso => {
                 if (paso.cantidadOesquema) await Promise.all(
                     (typeof paso.cantidadOesquema == 'number' ? [{origen:'2000', cantidad:paso.cantidadOesquema}] : paso.cantidadOesquema).map(
@@ -362,6 +361,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                     superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen, cod_nov: paso.cod_nov, idper: persona.idper, cantidad, comienzo, vencimiento }, 'new')
                 ));
             }));
+            */
             if (hoy || ahora) {
                 await server.inDbClient(ADMIN_REQ, async client => client.query(
                     "update parametros set fecha_hora_para_test = $1::date + $2::time ", 
@@ -450,7 +450,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                     {fecha:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper, trabajable: true , cod_nov_ini:null},
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-01', '2000-01-07']}})
                 // LÍMIES:
-                await rrhhSession.tableDataTest('nov_per', [
+                await rrhhSession.tableDataTest(ctts.nov_per, [
                     {annio:2000, cod_nov:COD_VACACIONES, cantidad:20, usados:5, pendientes:0, saldo:15},
                     {annio:2000, cod_nov:COD_PRED_PAS, cantidad:null, usados:16, pendientes:0, saldo:null},
                 ], 'all', {fixedFields:{idper}})
@@ -474,7 +474,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                     {fecha:date.iso('2000-03-11'), cod_nov:null          , idper, trabajable:false},
                 ], 'all', {fixedFields:{idper, fecha:['2000-03-07','2000-03-11']}})
                 // LÍMIES:
-                await rrhhSession.tableDataTest('nov_per', [
+                await rrhhSession.tableDataTest(ctts.nov_per, [
                     {annio:2000, cod_nov:COD_VACACIONES, cantidad:15, usados:0, pendientes:3, saldo:12},
                     {annio:2000, cod_nov:COD_PRED_PAS, cantidad:null, usados:21, pendientes:0, saldo:null}, // días hábiles hasta el 31 de enero
                 ], 'all', {fixedFields:{idper, annio:DESDE_AÑO}})
@@ -512,7 +512,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                     {fecha:date.iso('2000-05-12'), cod_nov:COD_PRED_FUT   , idper},
                 ], 'all', {fixedFields:{idper, fecha:['2000-05-01', '2000-05-12']}})
                 // LÍMIES:
-                await rrhhSession.tableDataTest('nov_per', [
+                await rrhhSession.tableDataTest(ctts.nov_per, [
                     {annio:2000, cod_nov:COD_VACACIONES, cantidad:20, usados:0, pendientes:4, saldo:16},
                     {annio:2000, cod_nov:COD_TRAMITE   , cantidad:4 , usados:0, pendientes:1, saldo:3 },
                     {annio:2000, cod_nov:COD_PRED_PAS, cantidad:null, usados:21, pendientes:0, saldo:null}, // días hábiles hasta el 31 de enero
@@ -598,7 +598,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 await superiorSession.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
-                ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
+                ], 'all', {fixedFields:{cod_nov}})
                 /* quito el feriado */
                 await adminMetadatosSession.saveRecord(
                     ctts.fecha, 
@@ -621,7 +621,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona1.idper},
                     {fecha:date.iso('2000-01-11'), cod_nov, idper: persona2.idper},
-                ], 'all', {fixedFields:[{fieldName:'cod_nov', value:cod_nov}]})
+                ], 'all', {fixedFields:{cod_nov}})
                 /* agrego otro feriado */
                 await adminMetadatosSession.saveRecord(
                     ctts.fecha, 
@@ -751,7 +751,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 }, ctts.insufficient_privilege);
             })
         })
-        it("no puede cargarse una novedad horaria con superposición", async function(){
+        it.only("no puede cargarse una novedad horaria con superposición", async function(){
             await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
                 await expectError( async () => {
                     await adminMetadatosSession.saveRecord(ctts.cod_nov, {cod_nov:COD_COMISION, parcial:true}, 'update');
@@ -829,7 +829,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                         {fecha:date.iso('2000-02-06'), cod_nov:COD_ENFERMEDAD, idper},
                         {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper},
                     ], 'all', {fixedFields:{idper, fecha:['2000-02-04', '2000-02-07']}})
-                    await rrhhSession.tableDataTest('inconsistencias', [
+                    await rrhhSession.tableDataTest(ctts.inconsistencias, [
                     ], 'all', {fixedFields:{idper, pauta:PAUTA_CORRIDOS}})
                 })
             })
@@ -847,7 +847,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                         {fecha:date.iso('2000-02-06'), cod_nov:COD_ENFERMEDAD, idper},
                         {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper},
                     ], 'all', {fixedFields:{idper, fecha:['2000-02-04', '2000-02-07']}})
-                    await rrhhSession.tableDataTest('inconsistencias', [
+                    await rrhhSession.tableDataTest(ctts.inconsistencias, [
                     ], 'all', {fixedFields:{idper, pauta:PAUTA_CORRIDOS}})
                 })
             })
@@ -864,7 +864,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                         {fecha:date.iso('2000-02-04'), cod_nov, idper},
                         {fecha:date.iso('2000-02-07'), cod_nov, idper},
                     ], 'all', {fixedFields:{idper, cod_nov}})
-                    await rrhhSession.tableDataTest('inconsistencias', [
+                    await rrhhSession.tableDataTest(ctts.inconsistencias, [
                         {idper, cod_nov, pauta:PAUTA_CORRIDOS},
                     ], 'all', {fixedFields:{idper, pauta:PAUTA_CORRIDOS}})
                 })
@@ -882,7 +882,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                         {fecha:date.iso('2000-02-04'), cod_nov, idper},
                         {fecha:date.iso('2000-02-08'), cod_nov, idper},
                     ], 'all', {fixedFields:{idper, cod_nov}})
-                    await rrhhSession.tableDataTest('inconsistencias', [
+                    await rrhhSession.tableDataTest(ctts.inconsistencias, [
                     ], 'all', {fixedFields:{idper, pauta:PAUTA_CORRIDOS}})
                 })
             })
@@ -899,7 +899,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                         {fecha:date.iso('2000-02-06'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
                         {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
                     ], 'all', {fixedFields:{idper: persona.idper, cod_nov:COD_ENFERMEDAD}})
-                    await rrhhSession.tableDataTest('inconsistencias', [
+                    await rrhhSession.tableDataTest(ctts.inconsistencias, [
                         {idper: persona.idper, cod_nov:COD_ENFERMEDAD, pauta:PAUTA_CORRIDOS},
                     ], 'all', {fixedFields:{idper: persona.idper, pauta:PAUTA_CORRIDOS}})
                 })
@@ -918,7 +918,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                         {fecha:date.iso('2000-02-06'), cod_nov:null          , idper: persona.idper},
                         {fecha:date.iso('2000-02-07'), cod_nov:COD_ENFERMEDAD, idper: persona.idper},
                     ], 'all', {fixedFields:{idper: persona.idper, fecha: ['2000-02-04','2000-02-07']}})
-                    await rrhhSession.tableDataTest('inconsistencias', [
+                    await rrhhSession.tableDataTest(ctts.inconsistencias, [
                         {idper: persona.idper, cod_nov:COD_ENFERMEDAD, pauta:PAUTA_CORRIDOS},
                     ], 'all', {fixedFields:{idper: persona.idper, pauta:PAUTA_CORRIDOS}})
                 })
@@ -1036,7 +1036,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                         {idper:persona.idper, desde:date.iso('2024-01-01'), computa_antiguedad:true},
                         'new'
                     );
-                    await rrhhSession.tableDataTest('inconsistencias', [
+                    await rrhhSession.tableDataTest(ctts.inconsistencias, [
                         {idper: persona.idper, pauta:PAUTA_ANTCOMVSRE},
                     ], 'all', {fixedFields:[{fieldName:'idper', value:persona.idper}]})
                 })
@@ -1094,7 +1094,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
             it("permite cambiar de quién depende", async function(){
                 var sectorCambiado = 'T1';
                 await adminMetadatosSession.saveRecord(ctts.sectores, {sector: 'P1', pertenece_a:'T'}, 'update');
-                await superiorSession.tableDataTest('sectores', [
+                await superiorSession.tableDataTest(ctts.sectores, [
                     {sector: sectorCambiado, pertenece_a: 'T'}
                 ], 'all', {fixedFields:[{fieldName:'sector', value: sectorCambiado}]})
                 await adminMetadatosSession.saveRecord(ctts.sectores, {sector: sectorCambiado, pertenece_a:'P'}, 'update');
@@ -1119,7 +1119,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 await registrarNovedad(rrhhSession,
                     {desde:date.iso('2000-09-06'), hasta:date.iso('2000-09-17'), cod_nov: COD_VACACIONES, idper}
                 );
-                await rrhhSession.tableDataTest('parte_diario', [
+                await rrhhSession.tableDataTest(ctts.parte_diario, [
                     {idper, cod_nov: COD_VACACIONES, desde:date.iso('2000-01-17'), hasta:date.iso('2000-02-04'), habiles:15, corridos:19},
                 ], 'all', {fixedFields:[{fieldName:'idper', value: idper}, {fieldName:'fecha', value: '2000-01-28'}]})
             })
@@ -1133,7 +1133,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                     await server.inDbClient(ADMIN_REQ, async client=>{
                         client.query('UPDATE annios SET abierto = false');
                     })
-                    await rrhhSession.tableDataTest('parte_diario', [
+                    await rrhhSession.tableDataTest(ctts.parte_diario, [
                         {idper, cod_nov: COD_VACACIONES, desde:date.iso('2000-01-17'), hasta:date.iso('2000-02-04'), habiles:15, corridos:19},
                     ], 'all', {fixedFields:[{fieldName:'idper', value: idper}, {fieldName:'fecha', value: '2000-01-28'}]})
                 })
@@ -1176,8 +1176,8 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
             });
         })
         it("los usuarios superior no pueden ver a los admin", async function(){
-            await superiorSession.tableDataTest('usuarios', [], "all", {fixedFields:{rol: 'admin'}});
-            await superiorSession.tableDataTest('roles', [], "all", {fixedFields:{rol: 'admin'}});
+            await superiorSession.tableDataTest(ctts.usuarios, [], "all", {fixedFields:{rol: 'admin'}});
+            await superiorSession.tableDataTest(ctts.roles, [], "all", {fixedFields:{rol: 'admin'}});
         })
     })
     describe("horarios", function(){
@@ -1186,7 +1186,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 var horario_per = await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: 'LMV 8:13 XJ 9-16', desde:date.iso('2000-01-01'), hasta:date.iso('2000-12-31')}, 'new')
                 var horario = 'LMV8:13a15:13 XJ9a16'
                 discrepances.showAndThrow(horario_per.horario, horario)
-                await rrhhSession.tableDataTest('horarios_dds', [
+                await rrhhSession.tableDataTest(ctts.horarios_dds, [
                     {dds: 1, hora_desde: '8:13', hora_hasta: '15:13', trabaja: true},
                     {dds: 2, hora_desde: '8:13', hora_hasta: '15:13', trabaja: true},
                     {dds: 3, hora_desde: '9:00', hora_hasta: '16:00', trabaja: true},
@@ -1230,12 +1230,12 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 const hasta = date.iso('2001-03-17');
                 const cod_nov = COD_VACACIONES
                 await registrarNovedad(rrhhSession, {desde:desde0, hasta:hasta0, idper, cod_nov});
-                await rrhhSession.tableDataTest('nov_per',[
+                await rrhhSession.tableDataTest(ctts.nov_per,[
                     {annio: 2000, cod_nov, cantidad:30, usados:0, pendientes:5, saldo:25},
                 ],"all",{fixedFields:{idper, cod_nov, annio: 2000}})
                 await abrirAño(idper);
                 await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
-                await rrhhSession.tableDataTest('nov_per',[
+                await rrhhSession.tableDataTest(ctts.nov_per,[
                     {annio: 2000, cod_nov, cantidad:30  , usados:0, pendientes:5, saldo:25  },
                     {annio: 2001, cod_nov, cantidad:null, usados:0, pendientes:5, saldo:null}
                 ],"all",{fixedFields:{idper, cod_nov, annio:[2000, 2001]}})
@@ -1289,15 +1289,15 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 const cod_nov = COD_TRAMITE
                 await registrarNovedad(rrhhSession, {desde, idper, cod_nov});
                 await abrirAño(idper);
-                await rrhhSession.tableDataTest('nov_per',[
+                await rrhhSession.tableDataTest(ctts.nov_per,[
                     {annio: 2000, cod_nov, cantidad:4, usados:0, pendientes:1, saldo:3},
                     {annio: 2001, cod_nov, cantidad:4, usados:0, pendientes:0, saldo:4}
                 ],"all",{fixedFields:{idper, cod_nov}})
-                await rrhhSession.tableDataTest('per_nov_cant',[
+                await rrhhSession.tableDataTest(ctts.per_nov_cant,[
                     {annio: 2000, cod_nov, origen:'2000', cantidad:4},
                     {annio: 2001, cod_nov, origen:'2001', cantidad:4}
                 ],"all",{fixedFields:{idper, cod_nov}})
-                await rrhhSession.tableDataTest('per_nov_cant',[
+                await rrhhSession.tableDataTest(ctts.per_nov_cant,[
                 ],"all",{fixedFields:{idper, cod_nov:COD_VACACIONES, annio:2001}})
             })
         })
@@ -1312,12 +1312,12 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 const hasta = date.iso('2001-03-17');
                 const cod_nov = COD_VACACIONES
                 await registrarNovedad(rrhhSession, {desde:desde0, hasta:hasta0, idper, cod_nov});
-                await rrhhSession.tableDataTest('nov_per',[
+                await rrhhSession.tableDataTest(ctts.nov_per,[
                     {annio: 2000, cod_nov, cantidad:30, usados:0, pendientes:5, saldo:25},
                 ],"all",{fixedFields:{idper, cod_nov, annio: 2000}})
                 await abrirAño(idper);
                 await registrarNovedad(rrhhSession, {desde, hasta, idper, cod_nov});
-                await rrhhSession.tableDataTest('nov_per',[
+                await rrhhSession.tableDataTest(ctts.nov_per,[
                     {annio: 2000, cod_nov, cantidad:30  , usados:0, pendientes:5, saldo:25  },
                     {annio: 2001, cod_nov, cantidad:null, usados:0, pendientes:5, saldo:null}
                 ],"all",{fixedFields:{idper, cod_nov, annio:[2000, 2001]}})
@@ -1382,7 +1382,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 assert.deepEqual(resultVacaciones, [expectedResult]);
                 discrepances.showAndThrow(resultVacaciones, [expectedResult])
                 // LÍMIES:
-                await rrhhSession.tableDataTest('nov_per', [
+                await rrhhSession.tableDataTest(ctts.nov_per, [
                     {annio:2000, cod_nov:COD_VACACIONES, cantidad:21  , usados:0 , pendientes:3, saldo:18  },
                     {annio:2001, cod_nov:COD_VACACIONES, cantidad:10  , usados:0 , pendientes:5, saldo:5   },
                 ], 'all', {fixedFields:{idper, cod_nov:COD_VACACIONES}})
@@ -1548,7 +1548,7 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
                 error = err as Error;
             }
         }
-        await server.shutdownBackend({skipTurnOff: !!--backendsAUsar});
+        await server.shutdownBackend();
         console.log('server down!');
         server = null as unknown as AppSiper;
         setTimeout(()=>{
@@ -1557,4 +1557,4 @@ testIn.forEach(t => describe("SiPer: " + t.name, function(){
         }, 1000);
         if (error != null) throw error;
     })
-}));
+});

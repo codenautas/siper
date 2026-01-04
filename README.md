@@ -17,11 +17,11 @@ call npm run prepare && call npm start -- --dump-db && call run-sql create-schem
 Probar el front-end recompilando pero sin recrear la base de datos:
 
 ```sh
-call npm run prepare && call npm test -- --nav-only
+call npm run prepare && call npm test -- --nav
 ```
 
 Probar el front-end in recompilar y manteniendo el backend abierto para poder probar a mano
 
 ```sh
-npm test -- --nav-only --no-close
+npm test -- --nav --no-close
 ```

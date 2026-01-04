@@ -72,9 +72,10 @@ export const nov_per = {
         annio: is.number,
         cod_nov: is.string,
         idper: is.string,
-        cantidad: is.number,
-        limite: is.number,
-        saldo: is.number,
+        cantidad: is.nullable.number,
+        usados: is.nullable.number,
+        pendientes: is.nullable.number,
+        saldo: is.nullable.number,
     })
 } satisfies CommonEntityDefinition
 
@@ -303,11 +304,43 @@ export const novedades_vigentes = {
         cod_nov: is.nullable.string,
         detalles: is.nullable.string,
         usuario: is.nullable.string,
-        tipo_novedad: is.nullable.string
+        tipo_novedad: is.nullable.string,
+        trabajable: is.nullable.boolean,
+        cod_nov_ini: is.nullable.string,
     })
 } satisfies CommonEntityDefinition
 
 export type NovedadesVigentes = DefinedType<typeof novedades_vigentes.description>
+
+export const inconsistencias = {
+    table: 'inconsistencias',
+    description: is.object({
+        idper: is.string,
+        pauta: is.string
+    })
+}
+
+export const parte_diario = {
+    table: 'parte_diario',
+    description: is.object({
+        idper: is.string, 
+        cod_nov: is.string, 
+        desde: is.Date, 
+        hasta: is.Date, 
+        habiles: is.number, 
+        corridos: is.number,
+    })
+} 
+
+export const horarios_dds = {
+    table: 'horarios_dds',
+    description: is.object({
+        dds: is.number, 
+        hora_desde: is.string,
+        hora_hasta: is.string,
+        trabaja: is.boolean,
+    })
+} 
 
 ////////////// PROCEDIMEINTOS
 
