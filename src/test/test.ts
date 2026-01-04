@@ -1086,7 +1086,7 @@ describe("connected", function(){
                         {desde:date.iso('2000-01-15'), hasta:date.iso('2000-02-04'), cod_nov: COD_VACACIONES, idper}
                     );
                     await server.inDbClient(ADMIN_REQ, async client=>{
-                        client.query('UPDATE annios SET abierto = false');
+                        client.query('UPDATE annios SET abierto = false WHERE annio = 2000');
                     })
                     await rrhhSession.tableDataTest('parte_diario', [
                         {idper, cod_nov: COD_VACACIONES, desde:date.iso('2000-01-17'), hasta:date.iso('2000-02-04'), habiles:15, corridos:19},
@@ -1094,7 +1094,7 @@ describe("connected", function(){
                 })
             }finally{
                 await server.inDbClient(ADMIN_REQ, async client=>{
-                    client.query('UPDATE annios SET abierto = true');
+                    client.query('UPDATE annios SET abierto = true WHERE annio = 2000');
                 })
             }
         });
@@ -1169,7 +1169,7 @@ describe("connected", function(){
         before(async function(){
             await abrirAño(null)
         })
-        after(async function(){
+        this.afterEach(async function(){
             await server.inTransaction(null, async client => {
                 await client.query(
                     'UPDATE annios SET abierto = false WHERE annio = $1',
@@ -1307,36 +1307,45 @@ describe("connected", function(){
     describe("pantallas", function(){
         it("tiene que ver un solo renglón de vacaciones", async function(){
             await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
-                await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'1999', cod_nov: COD_VACACIONES, idper, cantidad: 1 }, 'new')
-                await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2001, origen:'2000', cod_nov: COD_VACACIONES, idper, cantidad: 10 }, 'new')
-                var novedadRegistradaPorCargar = {desde:date.iso('2000-03-01'), hasta:date.iso('2000-03-07'), cod_nov:COD_VACACIONES, idper};
-                await registrarNovedad(rrhhSession, novedadRegistradaPorCargar);
-                var novedadRegistradaPorCargar2 = {desde:date.iso('2001-03-01'), hasta:date.iso('2001-03-07'), cod_nov:COD_VACACIONES, idper};
-                await registrarNovedad(rrhhSession, novedadRegistradaPorCargar2);
-                var expectedResult: ctts.NovedadesDisponiblesResult = {
-                    cod_nov: COD_VACACIONES,
-                    novedad: "Art. 18 Descanso anual remunerado",
-                    con_detalles: false, 
-                    con_disponibilidad: true, 
-                    con_info_nov: true,
-                    puede_cargar: true,
-                    prioritario: true,
-                    c_dds: null,
-                    cantidad:21, 
-                    usados: 0,
-                    pendientes: 3,
-                    saldo: 18,
-                };
-                var result = await rrhhSession.callProcedure(ctts.novedades_disponibles, {idper, annio: Number(DESDE_AÑO)})
-                var resultVacaciones = result.filter(x => x.cod_nov == COD_VACACIONES)
-                assert.deepEqual(resultVacaciones, [expectedResult]);
-                discrepances.showAndThrow(resultVacaciones, [expectedResult])
-                // LÍMIES:
-                await rrhhSession.tableDataTest('nov_per', [
-                    {annio:2000, cod_nov:COD_VACACIONES, cantidad:21  , usados:0 , pendientes:3, saldo:18  },
-                    {annio:2000, cod_nov:COD_PRED_PAS  , cantidad:null, usados:21, pendientes:0, saldo:null},
-                    {annio:2001, cod_nov:COD_VACACIONES, cantidad:10  , usados:0 , pendientes:5, saldo:5   },
-                ], 'all', {fixedFields:{idper}})
+                try{
+                    await server.inDbClient(ADMIN_REQ, async client=>{
+                        client.query('UPDATE annios SET abierto = true WHERE annio = 2001');
+                    })
+                    await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'1999', cod_nov: COD_VACACIONES, idper, cantidad: 1 }, 'new')
+                    await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2001, origen:'2000', cod_nov: COD_VACACIONES, idper, cantidad: 10 }, 'new')
+                    var novedadRegistradaPorCargar = {desde:date.iso('2000-03-01'), hasta:date.iso('2000-03-07'), cod_nov:COD_VACACIONES, idper};
+                    await registrarNovedad(rrhhSession, novedadRegistradaPorCargar);
+                    var novedadRegistradaPorCargar2 = {desde:date.iso('2001-03-01'), hasta:date.iso('2001-03-07'), cod_nov:COD_VACACIONES, idper};
+                    await registrarNovedad(rrhhSession, novedadRegistradaPorCargar2);
+                    var expectedResult: ctts.NovedadesDisponiblesResult = {
+                        cod_nov: COD_VACACIONES,
+                        novedad: "Art. 18 Descanso anual remunerado",
+                        con_detalles: false, 
+                        con_disponibilidad: true, 
+                        con_info_nov: true,
+                        puede_cargar: true,
+                        prioritario: true,
+                        c_dds: null,
+                        cantidad:21, 
+                        usados: 0,
+                        pendientes: 3,
+                        saldo: 18,
+                    };
+                    var result = await rrhhSession.callProcedure(ctts.novedades_disponibles, {idper, annio: Number(DESDE_AÑO)})
+                    var resultVacaciones = result.filter(x => x.cod_nov == COD_VACACIONES)
+                    assert.deepEqual(resultVacaciones, [expectedResult]);
+                    discrepances.showAndThrow(resultVacaciones, [expectedResult])
+                    // LÍMIES:
+                    await rrhhSession.tableDataTest('nov_per', [
+                        {annio:2000, cod_nov:COD_VACACIONES, cantidad:21  , usados:0 , pendientes:3, saldo:18  },
+                        {annio:2000, cod_nov:COD_PRED_PAS  , cantidad:null, usados:21, pendientes:0, saldo:null},
+                        {annio:2001, cod_nov:COD_VACACIONES, cantidad:10  , usados:0 , pendientes:5, saldo:5   },
+                    ], 'all', {fixedFields:{idper}})
+                }finally{
+                    await server.inDbClient(ADMIN_REQ, async client=>{
+                        client.query('UPDATE annios SET abierto = false WHERE annio = 2001');
+                    })
+                }
             })
         })
     })
