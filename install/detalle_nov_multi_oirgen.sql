@@ -85,6 +85,12 @@ END;
 $BODY$;
 
 /* CASOS DE PRUEBA
+create temporary table if not exists fecha_hora_para_test(fecha_hora_para_test timestamp);
+delete from fecha_hora_para_test;
+insert into fecha_hora_para_test select fecha_hora_para_test from parametros;
+
+update parametros set fecha_hora_para_test = '2000-01-01';
+
 select esperado = detalle_nov_multiorigen(d.fechas, d.esquema) as ok, detalle_nov_multiorigen(d.fechas, d.esquema), esperado
   FROM (
       VALUES (
@@ -109,4 +115,7 @@ select esperado = detalle_nov_multiorigen(d.fechas, d.esquema) as ok, detalle_no
           '{"detalle": [{"saldo": 2, "origen": "2021", "usados": null, "cantidad": 2, "comienzo": null, "pendientes": null, "vencimiento": null}, {"saldo": 2, "origen": "2022", "usados": null, "cantidad": 2, "comienzo": null, "pendientes": null, "vencimiento": null}]}'
          )
     ) as d (fechas, esquema, esperado);
+
+update parametros set fecha_hora_para_test = (select fecha_hora_para_test from parametros);
+delete from fecha_hora_para_test;
 -- */

@@ -158,9 +158,11 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             if (annio == null) {
                 throw new Error('FALTA result.annio');
             }
+            const annioAbierto = (await (context.client.query(`select abierto from annios where annio = $1`, [annio]).fetchUniqueValue())).value;
+            // const annioAbierto = true;
             var sqlInconsistencias = `
                 SELECT cod_nov, saldo, error_saldo_negativo, error_falta_entrada, detalle_multiorigen, annio_abierto
-                    FROM (${sqlNovPer({idper, annio, annioAbierto:true})}) x
+                    FROM (${sqlNovPer({idper, annio, annioAbierto})}) x
                     WHERE error_saldo_negativo OR error_falta_entrada OR (detalle_multiorigen ->> 'error' IS NOT NULL)
             `
             await fs.writeFile('local-guardar.sql', sqlInconsistencias, 'utf-8')
@@ -691,9 +693,11 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         action: 'per_cant_multiorigen',
         coreFunction: async function (context:ProcedureContext, parameters:any) {
             const {idper, annio} = parameters;
+            const annioAbierto = (await (context.client.query(`select abierto from annios where annio = $1`, [annio]).fetchUniqueValue())).value;
+            // const annioAbierto = true;
             const result = await context.client.query(`
                 select * 
-                    from (${sqlNovPer({idper, annio, annioAbierto:true})}) x
+                    from (${sqlNovPer({idper, annio, annioAbierto})}) x
                     where cod_nov = '1'
             `).fetchAll();
             /*
