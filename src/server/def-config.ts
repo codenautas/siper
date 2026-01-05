@@ -80,6 +80,7 @@ install:
       - ../install/fecha_actual.sql
       - ../install/inicializar_per_nov_cant.sql
       - ../install/detalle_nov_multi_oirgen.sql
+      - ../install/cola_cambios_usuarios.sql
 logo: 
   path: client/img
 `;

@@ -28,6 +28,7 @@ export function usuarios(context: TableContext): TableDefinition{
                 {name:'clave_nueva'      , typeName:'text', clientSide:'newPass', allow:{select:rolConPermisos, update:true, insert:false}} satisfies FieldDefinition,
             ]: []),
             {...idper, editable:rolConPermisos},
+            {name:'principal'                     , typeName:'boolean' ,defaultValue:true},
             {name:'sector', typeName:'text', editable:false, serverSide:true, inTable:false},
             {name:'nombre_sector', typeName:'text', editable:false, serverSide:true, inTable:false},
             {name:'algoritmo_pass'                , typeName:'text'     , editable:false },

@@ -76,6 +76,7 @@ import { niveles_educativos      } from "./table-niveles_educativos";
 import { tipos_novedad           } from "./table-tipos_novedad";
 import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
+import {cola_sincronizacion_usuarios_modulo} from "./table-cola_sincronizacion_usuarios_modulo"
 
 import { ProceduresPrincipal } from './procedures-principal'
 
@@ -88,6 +89,20 @@ import { rm } from 'fs/promises';
 
 import * as fsNoPromises from 'fs'
 import * as Path from 'path';
+
+/*
+const configFichadasDb: sql.config = {
+    user: 'tu_usuario',
+    password: 'tu_nueva_password',
+    server: 'IP_DEL_SERVIDOR',
+    database: 'NombreBBDD',
+    port: 1433,
+    options: {
+        encrypt: false, // Cambiar a true si conectas a Azure
+        trustServerCertificate: true 
+    }
+};
+*/
 
 /* Dos líneas para incluir contracts: */
 var persona: Persona | null = null;
@@ -318,6 +333,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'componentesSiper', name:'componentes'},
                         ]},
                         {menuType:'menu', name:'config', label:'configurar', menuContent:[
+                            {menuType:'table', name:'cola_sincronizacion_usuarios_modulo'   },
                             {menuType:'table', name:'fechas'        },
                             {menuType:'menu', name:'ref personas'   , description:'tablas referenciales de personas', menuContent:[
                                 {menuType:'table', name:'sectores'         , table:'sectores_edit' },
@@ -472,7 +488,8 @@ export class AppSiper extends AppBackend{
             niveles_educativos   ,
             bandas_horarias      ,
             reglas               ,
-            avisos_falta_fichada ,  
+            avisos_falta_fichada ,   
+            cola_sincronizacion_usuarios_modulo,
         }
     }       
 }
