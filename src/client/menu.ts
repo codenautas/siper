@@ -3,7 +3,7 @@ import {DateTime, date} from "best-globals";
 import {html} from "js-to-html"
 import * as likeAr from "like-ar";
 
-import { obtenerDetalleVacaciones } from "./shared-functions";
+import { obtenerDetalleMultiorigen } from "./shared-functions";
 
 // @ts-expect-error no conoce en este punto el TypeStore
 TypeStore.type.text.postInputs.soloDigitos = 
@@ -36,7 +36,7 @@ myOwn.clientSides.detalle_dias = {
     update: function(){},
     prepare: function(depot, fieldName){
         // @ts-ignore
-        myOwn.agregar_json(depot.rowControls[fieldName], obtenerDetalleVacaciones(depot.row));
+        myOwn.agregar_json(depot.rowControls[fieldName], obtenerDetalleMultiorigen(depot.row));
     }
 };
 

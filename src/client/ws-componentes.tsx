@@ -40,10 +40,9 @@ import * as ctts from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 import { DefinedType } from "guarantee-type";
 import { AppConfigClientSetup } from "../server/types-principal";
-import { obtenerDetalleVacaciones } from "./shared-functions";
 
 const EFIMERO = Symbol("EFIMERO");
-function setEfimero<T extends {}|null>(tictac:T){
+function setEfimero<T extends object|null>(tictac:T){
     if (tictac != null) {
         // @ts-expect-error Situación especial para marcar objetos que ya no están disponibles porque se pidió un dato nuevo
         tictac[EFIMERO] = true;
@@ -60,8 +59,8 @@ export function Componente(props:{children:ReactNode[]|ReactNode, componentType:
     esEfimero?: any
 }){
     return <Card className={"componente-" + props.componentType} 
-        siper-esEfimero={props.esEfimero === true || props.esEfimero?.[EFIMERO] ? "si" : "no"}
-        siper-esScrollable={props.scrollable === true ? "si" : "no"}
+        siper-es-efimero={props.esEfimero === true || props.esEfimero?.[EFIMERO] ? "si" : "no"}
+        siper-es-scrollable={props.scrollable === true ? "si" : "no"}
         sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}
     >
         {props.children}
@@ -172,9 +171,6 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
         }
     },[idper, periodo.mes, periodo.annio, ultimaNovedad])
 
-    // @ts-expect-error
-    var es:{rrhh:boolean} = conn.config?.config?.es||{}
-
     const isPastMonth = periodo.mes < fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio < fechaActual.getFullYear();
     const isFutureMonth = periodo.mes > fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio > fechaActual.getFullYear();
 
@@ -198,27 +194,24 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 </Select>
                 <Select 
                     className="selector-annio"
-                    value={periodo.annio}
+                    value={periodo.annio ?? new Date().getFullYear()}
                     onChange={(event) => { // buscar el tipo correcto
                         setPeriodo({mes:periodo.mes, annio:Number(event.target.value)});
                     }}
                 >
-                    {
-                        // @ts-ignore
-                        annios.map((annio:Annio) => (
-                        <MenuItem key={annio.annio} value={annio.annio}>
-                            {annio.annio.toString()}
-                        </MenuItem>
-                    ))
-                        }
+                    {(!annios?.length ? [{annio:new Date().getFullYear(), cerrado:false}] : annios).map((annio:Annio) => (
+                            <MenuItem key={annio.annio} value={annio.annio}>
+                                {annio.annio.toString()}
+                            </MenuItem>
+                    ))}
                 </Select>
                 <Button
                     variant="outlined"
                     es-este-mes={isFutureMonth?"no-futuro":isPastMonth?"no-pasado":"si"}
                     onClick={()=>{ 
                         setPeriodo({mes: fechaActual.getMonth()+1, annio: fechaActual.getFullYear()});
-                        props.onFecha && props.onFecha(fechaActual);
-                        props.onFechaHasta && props.onFechaHasta(fechaActual);
+                        props.onFecha?.(fechaActual);
+                        props.onFechaHasta?.(fechaActual);
                     }}
                 >
                     <span hoy-signo-de="futuro">{"<"}</span>
@@ -232,8 +225,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 ).array()}
             </Box>
             {calendario.map(semana => <Box key={semana[0].semana} className="calendario-semana">
-                {semana.map(dia => 
-                <Tooltip key={dia.dia} title={dia.novedad || "Sin novedad"} arrow>
+                {semana.map((dia, i) => 
+                <Tooltip key={dia.dia || "V" + i} title={dia.novedad || "Sin novedad"} arrow>
                 <div
                     className={`calendario-dia tipo-dia-${dia.tipo_dia} 
                         ${fecha && sameValue(dia.fecha, fecha) ? 'calendario-dia-seleccionado' : ''}
@@ -242,7 +235,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                     onClick={() => {
                         if (!dia.fecha || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades || (dia.fecha < fechaActual && !infoUsuario.puede_corregir_el_pasado)) return;
                         const selectedDate = dia.fecha as RealDate;
-                        if (!fechaHasta || selectedDate <= fechaHasta) {
+                        if (!fechaHasta || selectedDate <= fechaHasta || fechaHasta.getFullYear() != selectedDate.getFullYear()) {
                             props.onFecha(selectedDate);
                             props.onFechaHasta(selectedDate);
                         } 
@@ -282,19 +275,21 @@ type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,c
 type ProvisorioPersonaTelefono = {idper: string, tipo_telefono: string, tipos_telefono__descripcion?: string, telefono: string, observaciones?: string, nro_item?: number, orden?: number}
 type ProvisorioSectores = {pactivas: number, activo: boolean,sector:string, nombre_sector:string, pertenece_a:string, nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, hijos:ProvisorioSectoresAumentados[], profundidad:number}
-// @ts-ignore
-type ProvisorioCodNovedades = {cod_nov:string, novedad:string}
 
 type ProvisorioNovedadesRegistradas = {idper:string, cod_nov:string, desde:RealDate, hasta:RealDate, cod_novedades__novedad:string, dds0: boolean, dds1: boolean, dds2: boolean, dds3: boolean, dds4: boolean, dds5: boolean, dds6: boolean, detalles:string, idr:number, dias_hoc:string, usuario:string, fecha:RealDate, tipo_novedad:string, tipos_novedad__orden:number, tipos_novedad__borrado_rapido:boolean}
 
 interface DetalleAnioNovPer {
+    origen: string;
     cantidad: number;
     usados: number;
     pendientes: number;
     saldo: number;
 }
 
-type ProvisorioDetalleNovPer = { detalle: Record<string, DetalleAnioNovPer> }
+type ProvisorioDetalleNovPer = {detalle:DetalleAnioNovPer[], error?:string[]}
+
+const DETALLE_VACIO:ProvisorioDetalleNovPer = {detalle:[]};
+
 
 type IdperFuncionCambio = (persona:ProvisorioPersonas)=>void
 
@@ -515,7 +510,6 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
             paramfun: {}
         }).then(function(novedadesRegistradas){
             novedadesRegistradas.sort(compareForOrder([{column:'idr', order:-1}]))
-            console.log(novedadesRegistradas)
             setNovedades(novedadesRegistradas);
         }).catch(logError)
     },[idper, ultimaNovedad, annio])
@@ -534,8 +528,8 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                 persona.fecha_egreso && n.hasta > persona.fecha_egreso ? "Fecha hasta posterior a la fecha de egreso" : null,
             ].filter(Boolean);
             return (
-            <Box>
-            <Box key={JSON.stringify(n)} className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar && quiereBorrar.idr === n.idr?' por-borrar':''}`} 
+            <Box key={JSON.stringify(n)} >
+            <Box className={`novedades-renglon ${ultimaNovedad == n.idr ? 'ultima-novedad' : ''}${quiereBorrar && quiereBorrar.idr === n.idr?' por-borrar':''}`} 
                 tiene-problemas={problemas.length ? 'si' : 'no'} title={problemas.join('. ')}
             >
                 <span className="fechas">
@@ -564,7 +558,7 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                     <div>Eliminando</div>
                     <CircularProgress/>
                 </div> : <div className="modal-borrar-novedad">
-                    ¿Confirma el borrado de la novedad registrada <strong>"{quiereBorrar!.cod_novedades__novedad}"</strong>
+                    ¿Confirma el borrado de la novedad registrada <strong>{quiereBorrar!.cod_novedades__novedad}</strong>
                     {
                         sameValue(quiereBorrar!.desde, quiereBorrar!.hasta)
                             ? `en ${quiereBorrar!.desde.toDmy()}`
@@ -688,18 +682,21 @@ type Hora = string;
 
 type HorarioSemanaVigenteDia = {hora_desde:Hora, hora_hasta:Hora, cod_nov:string, trabaja:boolean, dds:0 | 1 | 2 | 3 | 4 | 5 | 6}
 type HorarioSemanaVigenteResult = {desde:RealDate, hasta:RealDate, bh_descripcion:string, dias:Record<string, HorarioSemanaVigenteDia>}
-type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean, dias_habiles: number, saldo: number}
+type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean, dias_habiles: number, saldo: number, falta_entrada: boolean}
 declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: () => Promise<DefinedType<typeof ctts.info_usuario.result>>;
         calendario_persona: (params:DefinedType<typeof ctts.calendario_persona.parameters>) => Promise<CalendarioResult[]>;
         novedades_disponibles: (params:{
-
+            idper:string
+            annio:number
         }) => Promise<NovedadesDisponiblesResult[]>;
         personas_novedad_actual: (params:{
             fecha: Date
         }) => Promise<PersonasNovedadActualResult[]>;
         horario_semana_vigente: (params:{
+            idper:string
+            fecha:Date
         }) => Promise<HorarioSemanaVigenteResult>;
         si_cargara_novedad: (params:{
             idper:string,
@@ -711,19 +708,19 @@ declare module "frontend-plus" {
             table: string;
             primaryKeyValues: any[];    
         }) => Promise<void>;
-        parametros: (params:{}) => Promise<ParametrosResult>;
+        parametros: (params:object) => Promise<ParametrosResult>;
         registrar_novedad: (params:NovedadRegistrada) => Promise<NovedadRegistrada & { idr: number }>;
         fichadas_registrar:(params:{fichadas:FichadaData[]}) => Promise<RegistroFichadasResponse>
+        per_cant_multiorigen: (params: {annio: number,idper: string}) => Promise<ProvisorioDetalleNovPer>
     }
     interface Connector {
         config: AppConfigClientSetup
     }
 }
 
-function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
+function DetalleAniosNovPer(props:{detalleVacacionesPersona : ProvisorioDetalleNovPer}){
     const { detalleVacacionesPersona } = props
-    const detalle = (detalleVacacionesPersona || {}) as Record<string, DetalleAnioNovPer>;
-    const registros = Object.entries(detalle);
+    const registros = detalleVacacionesPersona ?? []
     return <Componente componentType="detalle-anios-novper">
         <div className="vacaciones-contenedor">
             <div className="vacaciones-renglon">
@@ -737,22 +734,26 @@ function DetalleAniosNovPer(props:{detalleVacacionesPersona : any}){
                     <div className="vacaciones-titulo" key={info.abr} title={info.title}>{info.abr}</div>
                 )}
             </div>
-            {registros.length > 0 ? (
-                registros.map(([anio, registro]) => (
-                    <div key={anio} className="vacaciones-renglon">
-                        <div className="vacaciones-celda">
-                            {anio}
-                        </div>
-                        {ctts.info_nov_numeros.map(info => 
-                            <div className="vacaciones-celda" key={info.abr} title={info.title}>{registro[info.name]}</div>
-                        )}
+            {registros.detalle.map(registro => (
+                <div key={registro.origen} className="vacaciones-renglon">
+                    <div className="vacaciones-celda">
+                        {registro.origen}
                     </div>
-                ))
-            ) : (
+                    {ctts.info_nov_numeros.map(info => 
+                        <div className="vacaciones-celda" key={info.abr} title={info.title}>{registro[info.name]}</div>
+                    )}
+                </div>
+            ))}
+            {(registros.error ?? []).map(error => (
+                    <div key={error} className="vacaciones-error">
+                        {error}
+                    </div>
+            ))}
+            {!registros.detalle.length && !registros.error ? (
                 <div className="vacaciones-renglon">
                     sin información
                 </div>
-            )}
+            ) : null}
         </div>
     </Componente>
 }
@@ -781,7 +782,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 fixedFields: [{fieldName:'idper', value:idper}],
                 paramfun: {}
             }).then(function(domicilios){
-                domicilios.sort(compareForOrder([{column:'idper'},{column:'orden'},{column:'nro_item'}])),
+                domicilios.sort(compareForOrder([{column:'idper'},{column:'orden'},{column:'nro_item'}]));
                 setDomicilios(domicilios);
                 console.log(domicilios)
             }).catch(logError);
@@ -965,7 +966,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     const [ultimaNovedad, setUltimaNovedad] = useState(0);
     const [annio, setAnnio] = useState((defaults.fecha ?? date.today()).getFullYear());
     const [fechaActual, setFechaActual] =  useState<RealDate>(date.today()); // corresponde today, es un default provisorio
-    const [detalleVacacionesPersona, setDetalleVacacionesPersona] = useState<ProvisorioDetalleNovPer|null>({} as ProvisorioDetalleNovPer)
+    const [detalleVacacionesPersona, setDetalleVacacionesPersona] = useState<ProvisorioDetalleNovPer>(DETALLE_VACIO)
     const [mostrandoLegajo, setMostrandoLegajo] = useState(false);
     const puede_cargar_novedades = puedeCargarNovedades(infoUsuario);
    
@@ -1003,20 +1004,11 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     useEffect(() => {
         if (idper) {
             setDetalleVacacionesPersona(setEfimero)
-            conn.ajax.table_data({
-                table: 'nov_per',
-                fixedFields: [
-                    {fieldName:'annio', value:annio}, 
-                    {fieldName:'idper', value:idper}, 
-                    {fieldName:'cod_nov', value:1}
-                ],
-                paramfun: {}
-            }).then(function(data:any){
-                if (data[0]){
-                    data[0].detalle = obtenerDetalleVacaciones(data[0])
-                    setDetalleVacacionesPersona(data[0].detalle);
+            conn.ajax.per_cant_multiorigen({annio, idper}).then(function(detalle){
+                if (detalle){
+                    setDetalleVacacionesPersona(detalle);
                 }else{
-                    setDetalleVacacionesPersona(null);
+                    setDetalleVacacionesPersona(DETALLE_VACIO);
                 }
             }).catch(logError)
         }
@@ -1028,6 +1020,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             desde:fecha, 
             hasta, 
             cod_nov, 
+            annio: undefined,
             detalles: detalles == "" ? null : detalles,
             dds0:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds0,
             dds1:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds1,
@@ -1038,7 +1031,8 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             dds6:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds6,
             fecha: infoUsuario.fecha_actual,
             usuario: infoUsuario.usuario,
-            cancela: cod_nov == null
+            cancela: cod_nov == null,
+            tipo_novedad: 'V'
         }).then(function(result){
             setUltimaNovedad(result.idr as number);
             // setFecha(fechaActual);
@@ -1081,14 +1075,15 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
 
     // @ts-expect-error
     var es:{rrhh:boolean, registra:boolean} = conn.config?.config?.es||{}
-    var inconsistente = siCargaraNovedad?.saldo != null && siCargaraNovedad.saldo < 0;
+    var inconsistente = (siCargaraNovedad?.saldo != null && siCargaraNovedad.saldo < 0) ||
+                        (siCargaraNovedad?.falta_entrada != null && siCargaraNovedad.falta_entrada == true);
     return infoUsuario.usuario == null ?  
             <CircularProgress />
         : <Paper className="componente-pantalla-1">
             <ListaPersonasEditables conn={conn} sector={infoUsuario.sector} idper={idper} fecha={fecha} onIdper={p=>setPersona(p)} infoUsuario={infoUsuario}/>
             <Componente componentType="del-medio" scrollable={true}>
                 <div className="container-del-medio">
-                {infoUsuario.idper == null ? null : 
+                {idper == null ? null : 
                 <Box className="box-flex-gap">
                     <Paper className="paper-flex" 
                         onClick={() => setMostrandoLegajo(!mostrandoLegajo && es.registra)}
@@ -1181,7 +1176,8 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         </Paper>;
 }
 
-export function renderRol( infoUsuario: InfoUsuario ) {
+export function renderRol( _infoUsuario: InfoUsuario ) {
+    /*
     const observer = new MutationObserver(() => {
         const activeUserElement = document.getElementById('active-user');
         if (activeUserElement) {
@@ -1199,6 +1195,7 @@ export function renderRol( infoUsuario: InfoUsuario ) {
 
     // Desconectar el observador cuando ya no sea necesario
     return () => observer.disconnect();
+    */
 }
 
 function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, infoUsuario: InfoUsuario }) {
@@ -1227,6 +1224,7 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, i
                 <Typography flexGrow={2}>
                     SiPer - Principal
                 </Typography>
+                <div>
                 <IconButton color="inherit">
                     <a
                         href={getManualHref(props.infoUsuario.rol)}
@@ -1234,11 +1232,12 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, i
                         className="link-manual"
                     >
                         <ICON.Info />
-                        <Typography>
-                            <small>Ayuda</small>
-                        </Typography>
                     </a>
                 </IconButton>
+                <Typography id="active-user">
+                    {props.infoUsuario.usuario}
+                </Typography>
+                </div>
             </Toolbar>
         </AppBar>
         <Pantalla1 conn={props.conn} fixedFields={props.fixedFields}/>

@@ -68,14 +68,14 @@ export function inconsistencias(_context: TableContext): TableDefinition{
                      SELECT pe.idper, NULL::INTEGER as annio, 'ANTCOMVSRE' pauta, NULL::TEXT as cod_nov 
                        /*,q.fecha_actual-pe.para_antiguedad_relativa, q.antiguedad*/
                        FROM personas pe 
-                       JOIN (SELECT idper, fecha_actual, SUM(coalesce(hasta,fecha_actual)-desde) antiguedad
-                             /*case when hasta is NULL then current_date else hasta end*/
+                       JOIN (SELECT idper, fecha_actual() as fecha_actual, SUM(coalesce(hasta,fecha_actual())-desde) antiguedad
+                             /*case when hasta is NULL then fecha_actual() else hasta end*/
                              FROM trayectoria_laboral h
                              JOIN parametros p ON unico_registro
-                             GROUP BY idper, fecha_actual
+                             GROUP BY idper
                             ) q1
                        ON pe.idper = q1.idper
-                       WHERE pe.activo and q1.fecha_actual-pe.para_antiguedad_relativa <> /*IS DISTINCT FROM*/ q1.antiguedad
+                       WHERE pe.activo and fecha_actual()-pe.para_antiguedad_relativa <> /*IS DISTINCT FROM*/ q1.antiguedad
                      UNION
                      SELECT idper, EXTRACT(year FROM desde) annio, 'CORRIDOS' pauta, cod_nov 
                      FROM (SELECT v.idper, v.cod_nov, r.desde, r.hasta, r.hasta-r.desde+1 cantdias , count(*) cantnov

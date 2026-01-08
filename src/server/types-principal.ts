@@ -3,6 +3,7 @@ import { AppSiper } from "./app-principal";
 
 // exposes APIs from this package
 export * from "backend-plus";
+export * from "serial-tester";
 export * from "pg-promise-strict";
 
 declare module "backend-plus"{
@@ -24,8 +25,23 @@ declare module "backend-plus"{
         es:{admin:boolean, superior:boolean, rrhh:boolean, registra:boolean}
     }
 
+    interface AppConfig {
+        test?:{
+            "only-in-db"?: string
+        }
+        destres?:{
+            minutos: number
+        }
+    }
+
     interface FieldDefinition {
         grupo?:string
+    }
+}
+
+declare module "serial-tester"{
+    interface ClientConfig{
+        username:string
     }
 }
 
@@ -64,6 +80,15 @@ export function sinEspaciosMail(fieldName: string):Constraint{
         expr: `${fieldName} similar to '[^[:space:]]+@[^[:space:]]+'`
     }
 }
+
+export class BackendError extends Error {
+    constructor(message:string, public code:string) {
+        super(message);
+        this.name = 'BackendError';
+    }
+}
+
+export type Time = `${number}:${number}` | `${number}:${number}:${number}` 
 
 export type Constructor<T> = new(...args: any[]) => T;
 

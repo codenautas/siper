@@ -16,8 +16,12 @@ export function annios(context:TableContext):TableDefinition{
             {name: 'abierto'                     , typeName: 'boolean', nullable: false, defaultValue: false, editable: false},
             {name: 'horario_habitual_desde'      , typeName: 'time'                                                    },
             {name: 'horario_habitual_hasta'      , typeName: 'time'                                                    },
+            {name: 'anterior'                    , typeName: 'integer', editable: false},
        ],
         primaryKey: [annio.name],
+        foreignKeys: [
+            { references: 'annios', fields:[{source:'anterior', target:'annio'}], alias:'ant'}
+        ],
         constraints:[
         ],
         detailTables:[

@@ -26,6 +26,8 @@ export const cod_nov = {
         requiere_ninguna_fichada: is.nullable.boolean,
         necesita_verificacion_manual: is.nullable.boolean,
         eximido_fichar: is.nullable.boolean,
+        inicializacion: is.nullable.string,
+        inicializacion_limite: is.nullable.number,
     })
 }
 export type CodNovedades = DefinedType<typeof cod_nov.description>
@@ -70,9 +72,10 @@ export const nov_per = {
         annio: is.number,
         cod_nov: is.string,
         idper: is.string,
-        cantidad: is.number,
-        limite: is.number,
-        saldo: is.number,
+        cantidad: is.nullable.number,
+        usados: is.nullable.number,
+        pendientes: is.nullable.number,
+        saldo: is.nullable.number,
     })
 } satisfies CommonEntityDefinition
 
@@ -86,6 +89,8 @@ export const per_nov_cant = {
         idper: is.string,
         origen: is.string,
         cantidad: is.number,
+        comienzo: is.nullable.Date,
+        vencimiento: is.nullable.Date,
     })
 } satisfies CommonEntityDefinition
 
@@ -97,6 +102,7 @@ export const novedades_registradas = {
         idper: is.string,
         desde: is.Date,
         hasta: is.Date,
+        annio: is.optional.number,
         cod_nov: is.nullable.string,
         cancela: is.nullable.boolean,
         dds0: is.nullable.boolean,
@@ -108,7 +114,8 @@ export const novedades_registradas = {
         dds6: is.nullable.boolean,
         detalles: is.nullable.string,
         fecha: is.nullable.Date,
-        usuario: is.nullable.string
+        usuario: is.nullable.string,
+        tipo_novedad: is.nullable.string
     })
 } satisfies CommonEntityDefinition
 
@@ -281,6 +288,60 @@ export const trayectoria_laboral = {
 
 export type Trayectoria_laboral = DefinedType<typeof trayectoria_laboral.description>
 
+export const table_parametros = {
+    table : 'parametros',
+    description: is.object({
+        cod_nov_habitual: is.string
+    })
+} satisfies CommonEntityDefinition
+
+export const novedades_vigentes = {
+    table: 'novedades_vigentes',
+    description: is.object({
+        idper: is.string,
+        fecha: is.Date,
+        annio: is.optional.number,
+        cod_nov: is.nullable.string,
+        detalles: is.nullable.string,
+        usuario: is.nullable.string,
+        tipo_novedad: is.nullable.string,
+        trabajable: is.nullable.boolean,
+        cod_nov_ini: is.nullable.string,
+    })
+} satisfies CommonEntityDefinition
+
+export type NovedadesVigentes = DefinedType<typeof novedades_vigentes.description>
+
+export const inconsistencias = {
+    table: 'inconsistencias',
+    description: is.object({
+        idper: is.string,
+        pauta: is.string
+    })
+}
+
+export const parte_diario = {
+    table: 'parte_diario',
+    description: is.object({
+        idper: is.string, 
+        cod_nov: is.string, 
+        desde: is.Date, 
+        hasta: is.Date, 
+        habiles: is.number, 
+        corridos: is.number,
+    })
+} 
+
+export const horarios_dds = {
+    table: 'horarios_dds',
+    description: is.object({
+        dds: is.number, 
+        hora_desde: is.string,
+        hora_hasta: is.string,
+        trabaja: is.boolean,
+    })
+} 
+
 ////////////// PROCEDIMEINTOS
 
 export const si_cargara_novedad = {
@@ -300,6 +361,7 @@ export const si_cargara_novedad = {
         con_detalles: is.nullable.boolean,
         c_dds: is.nullable.boolean,
         saldo: is.nullable.number,
+        falta_entrada: is.nullable.boolean,
     })
 }
 
@@ -450,6 +512,24 @@ export const registrar_novedad = {
     result: novedades_registradas.description
 }
 
+export const per_cant_multiorigen = {
+    procedure: 'per_cant_multiorigen',
+    parameters: is.object({
+        idper: is.string,
+        annio: is.number
+    }),
+    result: is.object({
+        detalle: is.array.object({
+            origen: is.string,
+            cantidad: is.nullable.number,
+            usados: is.nullable.number,
+            pendientes: is.nullable.number,
+            saldo: is.nullable.number
+        }),
+        error: is.optional.array.string
+    })
+}
+
 export const annio = {
     table: 'annio',
     description: is.object({
@@ -505,7 +585,7 @@ export const tipos_adjunto_atributos = {
     })
 } satisfies CommonEntityDefinition
 
-export type tipos_adjunto_atributos = DefinedType<typeof tipos_adjunto_atributos.description>
+export type Tipos_adjunto_atributos = DefinedType<typeof tipos_adjunto_atributos.description>
 
 export const archivos_borrar = {
     table: 'archivos_borrar',
@@ -559,7 +639,7 @@ export const sexos = {
     })
 }
 
-export type sexos = DefinedType<typeof sexos.description>
+export type Sexos = DefinedType<typeof sexos.description>
 
 export const estados_civiles = {
     table : 'estado_civil',
@@ -570,7 +650,7 @@ export const estados_civiles = {
     })
 }
 
-export type estados_civiles = DefinedType<typeof estados_civiles.description>
+export type EstadosCiviles = DefinedType<typeof estados_civiles.description>
 
 export const agrupamientos = {
     table : 'agrupamientos',
@@ -580,7 +660,7 @@ export const agrupamientos = {
     })
 }
 
-export type agrupamientos = DefinedType<typeof agrupamientos.description>
+export type Agrupamientos = DefinedType<typeof agrupamientos.description>
 
 export const tramos = {
     table : 'tramos',
@@ -590,7 +670,7 @@ export const tramos = {
     })
 }
 
-export type tramos = DefinedType<typeof tramos.description>
+export type Tramos = DefinedType<typeof tramos.description>
 
 export const grados = {
     table : 'grados',
@@ -601,7 +681,7 @@ export const grados = {
     })
 }
 
-export type grados = DefinedType<typeof grados.description>
+export type Grados = DefinedType<typeof grados.description>
 
 export const categorias = {
     table : 'categorias',
@@ -611,7 +691,7 @@ export const categorias = {
     })
 }
 
-export type categorias = DefinedType<typeof categorias.description>
+export type Categorias = DefinedType<typeof categorias.description>
 
 export const situacion_revista = {
     table : 'situacion_revista',
@@ -622,7 +702,7 @@ export const situacion_revista = {
     })
 }
 
-export type situacion_revista = DefinedType<typeof situacion_revista.description>
+export type SituacionRevista = DefinedType<typeof situacion_revista.description>
 
 export const expedientes = {
     table : 'expedientes',
@@ -632,7 +712,7 @@ export const expedientes = {
     })
 }
 
-export type expedientes = DefinedType<typeof expedientes.description>
+export type Expedientes = DefinedType<typeof expedientes.description>
 
 export const funciones = {
     table : 'funciones',
@@ -643,7 +723,7 @@ export const funciones = {
     })
 }
 
-export type funciones = DefinedType<typeof funciones.description>
+export type Funciones = DefinedType<typeof funciones.description>
 
 export const nivel_grado = {
     table : 'nivel_grado',
@@ -653,7 +733,7 @@ export const nivel_grado = {
     })
 }
 
-export type nivel_grado = DefinedType<typeof nivel_grado.description>
+export type NivelGrado = DefinedType<typeof nivel_grado.description>
 
 export const tareas = {
     table : 'tareas',
@@ -673,7 +753,7 @@ export const tareas = {
     })
 }
 
-export type tareas = DefinedType<typeof tareas.description>
+export type Tareas = DefinedType<typeof tareas.description>
 
 export const motivos_egreso = {
     table : 'motivos_egreso',
@@ -684,7 +764,7 @@ export const motivos_egreso = {
     })
 }
 
-export type motivos_egreso = DefinedType<typeof motivos_egreso.description>
+export type MotivosEgreso = DefinedType<typeof motivos_egreso.description>
 
 export const jerarquias = {
     table : 'jerarquias',
@@ -695,7 +775,7 @@ export const jerarquias = {
     })
 }
 
-export type jerarquias = DefinedType<typeof jerarquias.description>
+export type Jerarquias = DefinedType<typeof jerarquias.description>
 
 export const provincias = {
     table : 'provincias',
@@ -799,7 +879,7 @@ export const perfiles_sgc = {
     })
 }
 
-export type perfiles_sgc = DefinedType<typeof perfiles_sgc.description>
+export type PerfilesSgc = DefinedType<typeof perfiles_sgc.description>
 
 export const niveles_educativos = {
     table : 'niveles_educativos',
@@ -809,7 +889,7 @@ export const niveles_educativos = {
     })
 }
 
-export type niveles_educativos = DefinedType<typeof niveles_educativos.description>
+export type NivelesEducativos = DefinedType<typeof niveles_educativos.description>
 
 export const per_telefonos = {
     table: 'per_telefonos',
@@ -834,14 +914,14 @@ export const bandas_horarias = {
     })
 } satisfies CommonEntityDefinition
 
-export type bandas_horarias = DefinedType<typeof bandas_horarias.description>
+export type BandasHorarias = DefinedType<typeof bandas_horarias.description>
 
-export const Fichada = {
+export const fichadas = {
     table: 'fichadas',
     description: is.object({
         idper: is.string,
         annio: is.number,
-        id_fichada: is.bigint,
+        id_fichada: is.number,
         tipo_fichada: is.nullable.string,
         fecha: is.Date,
         hora: is.nullable.string,
@@ -852,7 +932,7 @@ export const Fichada = {
     })
 } satisfies CommonEntityDefinition
 
-export type Fichada = DefinedType<typeof Fichada.description>
+export type Fichada = DefinedType<typeof fichadas.description>
 
 
 //para app de fichadas
@@ -904,7 +984,7 @@ export const reglas = {
     })
 } satisfies CommonEntityDefinition
 
-export type reglas = DefinedType<typeof reglas.description>
+export type Reglas = DefinedType<typeof reglas.description>
 
 export const avisos_falta_fichada = {
     table: 'avisos_falta_fichada',
@@ -918,7 +998,7 @@ export const avisos_falta_fichada = {
     })
 } satisfies CommonEntityDefinition
 
-export type avisos_falta_fichada = DefinedType<typeof avisos_falta_fichada.description>
+export type AvisosFaltaFichada = DefinedType<typeof avisos_falta_fichada.description>
 
 export const meses = [
     {  value:1, name:'enero' },
@@ -952,9 +1032,13 @@ export const ERROR_COD_NOVEDAD_NO_INDICA_CON_HORARIO= 'P1007';
 export const ERROR_COD_NOVEDAD_NO_INDICA_CON_NOVEDAD= 'P1008';
 export const ERROR_SECTORES_DESNIVELADOS            = 'P1009';
 export const ERROR_SECTOR_HUERFANO_NO_TOPE          = 'P1010';
+export const ERROR_HORA_PASADA                      = '42501' // algún día vamos a preferir que sea 'P1011', por ahora es la política la que falla;
 
 //////////// ERRORES PROPIOS DEL BACKEND:
 export const ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES   = 'B9001';
+export const ERROR_FALTA_FICHADA                    = 'B9002';
+export const ERROR_BRECHA_EN_CANTIDAD_DE_NOVEDADES  = 'B9003';
+export const AÑO_CERRADO                            = 'B9004';
 
 //////////// ERRORES POSTGRES: https://www.postgresql.org/docs/current/errcodes-appendix.html
 export const insufficient_privilege = '42501';

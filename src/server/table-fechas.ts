@@ -25,7 +25,7 @@ export function fechas(context:TableContext):TableDefinition{
         editable: admin,
         fields: [
             fecha,
-            {name: 'laborable' , typeName: 'boolean', isName:true},
+            {name: 'laborable' , typeName: 'boolean'},
             {name: 'dia'       , typeName: 'text'   , title:'día', inTable:false, serverSide:true, editable:false},
             {name: 'leyenda'   , typeName: 'text'   , description: 'lo que se verá en el calendario cuando haya suficiente espacio'},
             {name: 'abr'       , typeName: 'text'   , description: 'lo que se verá en el calendario cuando haya poco espacio'},

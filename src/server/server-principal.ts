@@ -2,4 +2,7 @@
 
 import {AppSiper} from "./app-principal";
 
-new AppSiper().start();
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
+new AppSiper().start().catch(e=>{
+    console.log(e)
+})

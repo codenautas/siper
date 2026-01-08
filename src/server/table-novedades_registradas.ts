@@ -40,8 +40,8 @@ export function politicaNovedadesComun(alias:string, cargarOver:'cargar'|'ver'){
 export function politicaNovedades(alias:string, nombreFecha:string){
     var politicaModficacion = `(${politicaNovedadesComun(alias, 'cargar')})`
     + ((alias == 'personas' || alias == 'trayectoria_laboral') ? '' : ` AND (
-            (${nombreFecha} 
-                >= (SELECT fecha_actual FROM parametros WHERE unico_registro)
+            ( 
+                CASE WHEN ${nombreFecha} > fecha_actual() THEN true WHEN ${nombreFecha} < fecha_actual() THEN false ELSE (SELECT fecha_hora_actual() - fecha_actual() <= carga_nov_hasta_hora FROM parametros) END 
             ) OR (
                 SELECT puede_corregir_el_pasado FROM roles WHERE rol = get_app_user('rol')
             )
@@ -67,11 +67,11 @@ export function politicaNovedades(alias:string, nombreFecha:string){
     }
 }
 
-export function novedades_registradas(_context: TableContext): TableDefinition{
+export function novedades_registradas(context: TableContext): TableDefinition{
     return {
         name: 'novedades_registradas',
         elementName: 'novedad registrada',
-        editable: true,
+        editable: context.forDump,
         fields:[
             idper,
             {name: 'desde'    , typeName: 'date'   ,                                    },

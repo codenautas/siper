@@ -1,17 +1,31 @@
 "use strict";
 
 import {strict as likeAr, createIndex} from 'like-ar';
-import { ProcedureDef, ProcedureContext, UploadedFileInfo } from './types-principal';
-import { NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles, FichadaData } from '../common/contracts';
+import { ProcedureDef, ProcedureContext, UploadedFileInfo, BackendError } from './types-principal';
+import { NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles, FichadaData,
+} from '../common/contracts';
 import { sqlNovPer } from "./table-nov_per";
 
-import { date, datetime } from 'best-globals'
+import { date, datetime, RealDate } from 'best-globals'
 import { DefinedType} from 'guarantee-type';
 import { FixedFields } from 'frontend-plus';
 import { expected } from 'cast-error';
 import { sqlPersonas } from "./table-personas";
-import json4all = require('json4all');
+import * as json4all from 'json4all';
 import * as fs from 'fs/promises';
+import * as ctts from "../common/contracts.js"
+
+async function prevalidarCargaDeNovedades(context: ProcedureContext, params:Partial<NovedadRegistrada>){
+    var diaActualPeroTarde = (await context.client.query(
+        `select fecha_actual() = $1 and (fecha_hora_actual() - fecha_actual()) > carga_nov_hasta_hora
+            from parametros`,
+        [params.desde]
+    ).fetchUniqueValue()).value as RealDate
+    if (diaActualPeroTarde && !context.es.superior) {
+        throw new BackendError("no se pueden cargar novedades el mismo día a esta hora", ctts.ERROR_HORA_PASADA);
+    }
+}
+
 
 export const ProceduresPrincipal:ProcedureDef[] = [
     {
@@ -54,6 +68,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             if (cancela == null && cod_nov == null) {
                 throw Error("debe especificar cod_nov or cancela");
             }
+            await prevalidarCargaDeNovedades(context, params);
             const info = await context.client.query(
                 `select concat_ws(' ',
                             '¿confirmar el registro de',
@@ -65,15 +80,19 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             ')?' || case 
                                 when (case when corridos then cantidad - total_corridos else cantidad - total_habiles end) < 0
                                     then ' ¡ATENCIÓN: NO LE QUEDAN DÍAS SUFICIENTES!'
+                                    else '' end,
+                                    case when ( cn.requiere_entrada and fich.fecha is null) then ' ¡ATENCIÓN: NO FICHO!'
                                     else '' end
                         ) as mensaje,
                         dias_corridos, dias_habiles, dias_coincidentes,
                         con_detalles,
                         cn.c_dds,
-                        case when corridos then cantidad - total_corridos else cantidad - total_habiles end as saldo
+                        case when corridos then cantidad - total_corridos else cantidad - total_habiles end as saldo,
+                        cn.requiere_entrada and fich.fecha is null as falta_entrada
                     from personas p 
                         inner join (select $1::date as desde, $2::date as hasta) params on true
-                        left join cod_novedades cn on cn.cod_nov = $3,
+                        left join cod_novedades cn on cn.cod_nov = $3
+                        left join fichadas fich on fich.idper = p.idper and fich.fecha = $1,
                         lateral (select sum(cantidad) as cantidad from per_nov_cant pnc where pnc.idper = p.idper and pnc.cod_nov = cn.cod_nov) s,
                         lateral (
                             select count(*) filter (where f.fecha between params.desde and params.hasta) as dias_corridos,
@@ -116,28 +135,56 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name: 'dds6'     , typeName: 'boolean', defaultValue:null, label:'sabado'     },
             {name: 'cancela'  , typeName: 'boolean', defaultValue:null, description:'cancelación de novedades'},
             {name: 'detalles' , typeName: 'text'   , defaultValue:null,                                       },
-            {name: 'fecha'    , typeName: 'date'  , defaultValue:null, },
-            {name: 'usuario' , typeName: 'text'   , defaultValue:null,                                       },
             {name: 'tipo_novedad', typeName: 'text', defaultValue:'V', references:'tipos_novedad' },
         ],
         coreFunction: async function(context: ProcedureContext, params:NovedadRegistrada){
-            var result = await context.be.procedure.table_record_save.coreFunction(context, {
-                table: 'novedades_registradas',
-                primaryKeyValues: [],
-                newRow: params,
-                oldRow: {},
-                status: 'new'
-            });
-            const {idper, desde} = result.row as NovedadRegistrada;
-            var inconsistencias = await context.client.query(`
-                SELECT cod_nov, saldo
-                    FROM (${sqlNovPer({idper, annio:desde.getFullYear()})}) x
-                    WHERE error_saldo_negativo
-            `, []).fetchAll();
-            if (inconsistencias.rows.length > 0) {
-                var error = expected(new Error(`La novedad registrada genera saldos negativos. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}, saldo: ${r.saldo}`).join('; ')}`));
-                error.code = 'B9001'; // ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES
+            const annio_abierto = (await context.client.query(`select abierto from annios where annio = $1 `, [params.desde.getFullYear()]).fetchUniqueValue()).value;
+            // console.log('annio_abierto', annio_abierto)
+            if (!annio_abierto) {
+                var error = expected(new Error("annio cerrado"));
+                error.code = "B9004";
                 throw error;
+            }
+            var {idper, cod_nov, desde, hasta, dds0, dds1, dds2, dds3, dds4, dds5, dds6, cancela, detalles, tipo_novedad} = params;
+            var result = await context.client.query(`INSERT INTO novedades_registradas
+                (idper, cod_nov, desde, hasta, dds0, dds1, dds2, dds3, dds4, dds5, dds6, cancela, detalles, tipo_novedad, fecha, usuario)
+                values ($1, $2 , $3   , $4   , $5  , $6  , $7  , $8  , $9  , $10 , $11 , $12    , $13     , $14         , fecha_actual(), get_app_user())
+                returning *`,
+                [idper, cod_nov, desde, hasta, dds0, dds1, dds2, dds3, dds4, dds5, dds6, cancela, detalles, tipo_novedad]
+            ).fetchUniqueRow();
+            const {annio} = result.row as NovedadRegistrada;
+            if (annio == null) {
+                throw new Error('FALTA result.annio');
+            }
+            var sqlInconsistencias = `
+                SELECT cod_nov, saldo, error_saldo_negativo, error_falta_entrada, detalle_multiorigen, annio_abierto
+                    FROM (${sqlNovPer({idper, annio, annioAbierto:true})}) x
+                    WHERE error_saldo_negativo OR error_falta_entrada OR (detalle_multiorigen ->> 'error' IS NOT NULL)
+            `
+            await fs.writeFile('local-guardar.sql', sqlInconsistencias, 'utf-8')
+            var inconsistencias = await context.client.query(sqlInconsistencias, []).fetchAll();
+            if (inconsistencias.rows.length > 0) {
+                const erroresSaldoNegativo = inconsistencias.rows.filter(r => r.error_saldo_negativo);
+                const erroresFaltaEntrada = inconsistencias.rows.filter(r => r.error_falta_entrada);
+                const erroresMultiDetalle = inconsistencias.rows.filter(r => r.detalle_multiorigen?.error ?? []);
+                var errores: string[] = []
+                var code: string = 'INDETERMINADO';
+                if (erroresMultiDetalle.length > 0){
+                    errores.concat(erroresMultiDetalle.map(d => d.error as string));
+                    code = ctts.ERROR_BRECHA_EN_CANTIDAD_DE_NOVEDADES;
+                }
+                if (erroresSaldoNegativo.length > 0){
+                    errores.push(`La novedad registrada genera saldos negativos. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}, saldo: ${r.saldo}`).join('; ')}`);
+                    code = ctts.ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES
+                }
+                if (erroresFaltaEntrada.length > 0){
+                    errores.push(`La novedad registrada requiere fichada de entrada. ${inconsistencias.rows.map(r => `cod nov ${r.cod_nov}`).join('; ')}`);
+                    code = ctts.ERROR_FALTA_FICHADA
+                }
+                const error = expected(new Error(errores.join('; ')));
+                error.code = code;
+                throw error;
+
             }
             return result.row;
         }
@@ -345,7 +392,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         parameters: [],
         coreFunction: async function(context: ProcedureContext, _params:any){
             const info = await context.client.query(
-                `select idper, sector, current_date as fecha, usuario, 
+                `select idper, sector, fecha_actual() as fecha, usuario, 
                         coalesce(p.apellido, u.apellido) as apellido,
                         coalesce(p.nombres, u.nombre) as nombres,
                         p.cuil,
@@ -354,7 +401,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         puede_cargar_todo,
                         roles.*,
                         (puede_cargar_propio and u.activo is true) as cargable,
-                        fecha_actual,
+                        fecha_actual() as fecha_actual,
                         s.nivel as sector_nivel
                     from usuarios u 
                         inner join parametros on true
@@ -451,7 +498,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             var grilla = {
                 tableName:'nov_per', 
                 fixedFields: [{fieldName:'cod_nov', value:1}] as FixedFields, 
-                tableDef:{title:'descanso anual remunerado', hiddenColumns:['esquema'] as string[], firstDisplayCount:2000}
+                tableDef:{title:'descanso anual remunerado', hiddenColumns:['esquema', 'detalle', 'detalle_multiorigen'] as string[], firstDisplayOverLimit:2000, firstDisplayCount:2000}
             }
             if (params.annio != null) {
                 grilla.fixedFields.push({fieldName:'annio', value:params.annio});
@@ -479,57 +526,26 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             generarInmediato: true
         },
         coreFunction: async function(context: ProcedureContext, params:any){
-            var paramsDb = await context.client.query('select fecha_actual from parametros').fetchAll()
-            var title = 'Descanso anual remunerado del ' + params.annio + ' al '+paramsDb.rows[0].fecha_actual.toDmy();
-            title = 'vacaciones ' + params.annio + ' al '+paramsDb.rows[0].fecha_actual.toDmy().replace(/\//g, '-');
+            var fecha_actual = (await context.client.query('select fecha_actual()').fetchUniqueValue()).value as RealDate
+            var title = 'Descanso anual remunerado del ' + params.annio + ' al '+ fecha_actual.toDmy();
+            title = 'vacaciones ' + params.annio + ' al '+ fecha_actual.toDmy().replace(/\//g, '-');
             var {rows} = await context.client.query(`
                 SELECT annio, origen, x.idper, apellido, nombres,
                 	x.sector,
                     abierto_cantidad as cantidad,
-                    0 as usados,
-                    0 as pendientes,
-                    abierto_cantidad as saldo,
+                    coalesce(abierto_usados,0) as usados,
+                    coalesce(abierto_pendientes,0) as pendientes,
+                    coalesce(abierto_saldo,0) as saldo,
                     cantidad as suma_cantidad,
                     usados as suma_usados,
                     pendientes as suma_pendientes,
                     saldo as suma_saldo,
                     novedad
                     FROM (${sqlNovPer({annio: params.annio, abierto:true})}) x
-                        LEFT JOIN personas p ON p.idper = x.idper
+                        LEFT JOIN personas p ON p.idper = x.idper  
                     WHERE cod_nov = '1'
                     ORDER BY 1,3,2,4`
             ).fetchAll();
-            var i = 0;
-            var actual = null;
-            var usados = 0
-            var pendientes = 0
-            while (i < rows.length) {
-                var row = rows[i]
-                if (actual != row.idper) {
-                    actual = row.idper;
-                    usados = row.suma_usados;
-                    pendientes = row.suma_pendientes;    
-                }
-                if (usados <= row.saldo || rows[i+1]?.idper != actual) {
-                    row.saldo -= usados
-                    row.usados = usados
-                    usados = 0
-                } else {
-                    usados -= row.saldo
-                    row.usados = row.saldo
-                    row.saldo = 0
-                }
-                if (pendientes <= row.saldo || rows[i+1]?.idper != actual) {
-                    row.saldo -= pendientes
-                    row.pendientes = pendientes
-                    pendientes = 0
-                } else {
-                    pendientes -= row.saldo
-                    row.pendientes = row.saldo
-                    row.saldo = 0
-                }
-                i++;
-            }
             return {title, rows};
         }
     },
@@ -579,7 +595,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         parameters: [],
         coreFunction: async function (context: ProcedureContext) {
             const info = await context.client.query(
-                `SELECT fecha_actual FROM parametros;`
+                `SELECT fecha_actual() as fecha_actual FROM parametros;`
             ).fetchUniqueRow();
             return info.row
         }
@@ -623,6 +639,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const tmpPath = (file as any).path as string;
             const size = (file as any).size ?? (await fs.stat(tmpPath)).size;
             if (size > MAX_SIZE) {
+                // eslint-disable-next-line no-empty
                 try { await fs.rm(tmpPath, { force: true }); } catch { }
                 throw new Error("El archivo supera el tamaño máximo permitido de 1 MB.");
             }
@@ -636,6 +653,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
 
             // NO sobrescribir si ya existe
             if (await exists(newPath)) {
+                // eslint-disable-next-line no-empty
                 try { await fs.rm(tmpPath, { force: true }); } catch { }
                 throw new Error(`Ya existe un archivo con el nombre ${extendedFilename}.`);
             }
@@ -662,6 +680,26 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 updatedRow: row.row,
             };
         },
+    },
+    {
+        parameters: [
+            {name:'idper'       , typeName:'text'    , references: 'personas'},
+            {name:'annio'       , typeName:'integer' }
+        ],
+        action: 'per_cant_multiorigen',
+        coreFunction: async function (context:ProcedureContext, parameters:any) {
+            const {idper, annio} = parameters;
+            const result = await context.client.query(`
+                select * 
+                    from (${sqlNovPer({idper, annio, annioAbierto:true})}) x
+                    where cod_nov = '1'
+            `).fetchAll();
+            /*
+            console.log(result.rows)
+            console.log(result.rows?.[0]?.detalle_multiorigen)
+            */
+            return result.rows?.[0]?.detalle_multiorigen ?? {detalle:[]};
+        }
     }
 ];
 

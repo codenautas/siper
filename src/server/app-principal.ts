@@ -36,6 +36,7 @@ import { horarios_per            } from "./table-horarios_per";
 import { horarios                } from "./table-horarios";
 import { tipos_fichada           } from "./table-tipos_fichada";
 import { fichadas                } from "./table-fichadas";
+import { fichadas_recibidas      } from "./table-fichadas_recibidas";
 import { trayectoria_laboral     } from "./table-trayectoria_laboral";
 import { capa_modalidades        } from "./table-capa_modalidades";
 import { capacitaciones          } from "./table-capacitaciones";
@@ -84,6 +85,9 @@ import { Persona } from "../common/contracts"
 
 import { unexpected } from "cast-error";
 import { rm } from 'fs/promises';
+
+import * as fsNoPromises from 'fs'
+import * as Path from 'path';
 
 /* Dos líneas para incluir contracts: */
 var persona: Persona | null = null;
@@ -135,11 +139,12 @@ export class AppSiper extends AppBackend{
     async inCron(actionOrSqlProcedure:()=>Promise<void>, opts:{vecesPorDia: number, name:string}):Promise<void>
     async inCron(actionOrSqlProcedure:string, opts:{vecesPorDia: number, name?:string}):Promise<void>
     async inCron(actionOrSqlProcedure:string|(()=>Promise<void>), opts:{vecesPorDia: number, name:string}){
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const be = this;
         const action = typeof actionOrSqlProcedure == "string" ? 
             async ()=>{
                 await be.inDbClient(null, async client => {
-                    client.query(`call ${actionOrSqlProcedure}()`).execute()
+                    return client.query(`call ${actionOrSqlProcedure}()`).execute()
                 });
             }
             : actionOrSqlProcedure;
@@ -161,6 +166,7 @@ export class AppSiper extends AppBackend{
     }
     override addLoggedServices(): void {
         super.addLoggedServices();
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const be = this;
         const app = be.app;
         // @ts-ignore
@@ -174,8 +180,7 @@ export class AppSiper extends AppBackend{
                  res.status(400).send("Faltan parámetros necesarios: idper o tipo_adjunto");
                 return;
             }
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
+            // @ts-expect-error sabemos que estos req son compatibles pero no para TS
             await be.inDbClient(req, async (client) => {
                 const result = await client.query(
                     `SELECT archivo_nombre, archivo_nombre_fisico
@@ -188,10 +193,8 @@ export class AppSiper extends AppBackend{
                     res.status(404).send("Archivo no encontrado");
                     return;
                 }
-                const path = require('path');
-                const fs = require('fs');
-                const filePath = path.join(be.rootPath || process.cwd(), 'local-attachments', 'adjuntos', String(result.row.archivo_nombre_fisico));
-                if (!fs.existsSync(filePath)) {
+                const filePath = Path.join(be.rootPath || process.cwd(), 'local-attachments', 'adjuntos', String(result.row.archivo_nombre_fisico));
+                if (!fsNoPromises.existsSync(filePath)) {
                     res.status(404).send('Archivo no existe en disco');
                     return;
                 }
@@ -201,12 +204,14 @@ export class AppSiper extends AppBackend{
         });
     }
     override async postConfig(){
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const be = this;
-        super.postConfig();
+        await super.postConfig();
         cronMantenimiento(be);
-        be.inCron('avance_de_dia_proc', {vecesPorDia:24*6})
+        await be.inCron('avance_de_dia_proc', {vecesPorDia:24*6});
     }
     override async getProcedures(){
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         var be = this;
         return [
             ...await super.getProcedures(),
@@ -436,6 +441,7 @@ export class AppSiper extends AppBackend{
             horarios             ,
             tipos_fichada        ,
             fichadas             ,
+            fichadas_recibidas   ,
             capa_modalidades     ,
             capacitaciones       ,
             per_capa             ,

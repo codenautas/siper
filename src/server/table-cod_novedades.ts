@@ -41,12 +41,15 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {name: 'requiere_ninguna_fichada',     typeName: 'boolean' },
             {name: 'necesita_verificacion_manual', typeName: 'boolean' },
             {name: 'eximido_fichar',               typeName: 'boolean' },
+            {name: 'inicializacion'              , typeName: 'text'    , description:'una lista de algoritmos para inicializar'},
+            {name: 'inicializacion_limite'       , typeName: 'integer' , description:'la cantidad con que se inicializa' },
         ],
         primaryKey:[cod_nov.name],
         constraints:[
             {constraintType:'unique', fields:[cod_nov.name,'c_dds']},
             {constraintType:'check' , expr:'c_dds is not false', consName:'c_dds si o vacio'},
             soloDigitosCons(cod_nov.name),
+            {constraintType:'check' , expr:`inicializacion in ('LICORD', 'LICMAT', 'CONST')`, consName:'inicializacion lista de metodos'},
         ],
         foreignKeys:[
             {references: 'clases', fields:[clase.name]}

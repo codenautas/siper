@@ -164,7 +164,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | { name?: string; value: unknown }>) => {
         const name = e.target.name as keyof FichadaData;
-        let value = e.target.value || null;
+        const value = e.target.value || null;
         setFormData(prevData => ({
             ...prevData,
             [name]: value
@@ -418,7 +418,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                 
                 <Modal
                     open={openResponseModal}
-                    onClose={(_event, reason) => {            
+                    onClose={(_event, reason) => {
                         // Solo permite cerrar con el botón interno
                         if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
                             handleCloseModal();
@@ -559,7 +559,7 @@ function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, in
             </Box>
             <Modal
                     open={serverStatus=="desconectado"}
-                    onClose={(_event, _reason) => {            
+                    onClose={(_event, _reason) => {
                         //no se cierra
                     }}
                     aria-labelledby="modal-modal-title"

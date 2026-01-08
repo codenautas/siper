@@ -5,9 +5,13 @@ create or replace procedure avance_de_dia_proc()
   language sql
   security definer
 begin atomic
-  update parametros 
-    set fecha_actual = current_date 
-    where avance_dia_automatico and fecha_actual + '3 hours'::interval < current_timestamp; -- cambia a las 3 del día siguiente
+  UPDATE fechas f
+    SET cod_nov_pred_fecha = cod_nov_habitual
+    FROM parametros, annios a
+    WHERE cod_nov_pred_fecha is null
+      AND fecha <= fecha_actual()
+      AND f.annio = a.annio
+      AND a.abierto;
 end;
 
 /* 
