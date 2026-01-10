@@ -139,7 +139,6 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         ],
         coreFunction: async function(context: ProcedureContext, params:NovedadRegistrada){
             const annio_abierto = (await context.client.query(`select abierto from annios where annio = $1 `, [params.desde.getFullYear()]).fetchUniqueValue()).value;
-            // console.log('annio_abierto', annio_abierto)
             if (!annio_abierto) {
                 var error = expected(new Error("annio cerrado"));
                 error.code = "B9004";
@@ -694,10 +693,6 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     from (${sqlNovPer({idper, annio, annioAbierto:true})}) x
                     where cod_nov = '1'
             `).fetchAll();
-            /*
-            console.log(result.rows)
-            console.log(result.rows?.[0]?.detalle_multiorigen)
-            */
             return result.rows?.[0]?.detalle_multiorigen ?? {detalle:[]};
         }
     }

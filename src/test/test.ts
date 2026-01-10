@@ -323,7 +323,6 @@ describe("SiPer: " + testConfig.name, function(){
         },
         probar: (persona: ctts.Persona, mas:{usuario: UsuarioConCredenciales, sesion:SesionEmuladaSiper}) => Promise<void>
     ){
-        console.log('TEST', nombre);
         var haciendo = 'inicializando';
         try {
             var {vacaciones, tramites, hoy, ahora, ...personales} = opciones;
@@ -751,7 +750,7 @@ describe("SiPer: " + testConfig.name, function(){
                 }, ctts.insufficient_privilege);
             })
         })
-        it.only("no puede cargarse una novedad horaria con superposición", async function(){
+        it("no puede cargarse una novedad horaria con superposición", async function(){
             await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
                 await expectError( async () => {
                     await adminMetadatosSession.saveRecord(ctts.cod_nov, {cod_nov:COD_COMISION, parcial:true}, 'update');

@@ -775,7 +775,6 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
             }).then(personas => {
                 setPersona(personas[0]);
                 setCargandoLegajo(false);
-                console.log(personas[0])
             }).catch(logError);
             conn.ajax.table_data<ProvisorioPersonaDomicilio>({
                 table: 'per_domicilios',
@@ -784,7 +783,6 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
             }).then(function(domicilios){
                 domicilios.sort(compareForOrder([{column:'idper'},{column:'orden'},{column:'nro_item'}]));
                 setDomicilios(domicilios);
-                console.log(domicilios)
             }).catch(logError);
             conn.ajax.table_data<ProvisorioPersonaTelefono>({
                 table: 'per_telefonos',
@@ -793,7 +791,6 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
             }).then(function (telefonos) {
                 telefonos.sort(compareForOrder([{ column: 'idper' }, { column: 'orden' }, { column: 'nro_item' }]));
                 setTelefonos(telefonos);
-                console.log(telefonos)
             }).catch(logError);
         }
     }, [idper])
