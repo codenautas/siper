@@ -50,11 +50,10 @@ novedades_vigentes_con_marca_de_cambio_de_cod_nov AS(
     from novedades_vigentes_desde_hasta`
 
 export function novedades_vigentes(context: TableContext): TableDefinition {
-    var admin = context.es.admin;
     return {
         name:'novedades_vigentes',
         elementName:'novedad',
-        editable:admin,
+        editable:context.forDump,
         fields: [
             idper,
             fecha,
