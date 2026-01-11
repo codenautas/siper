@@ -12,7 +12,7 @@ import { politicaNovedades } from "./table-novedades_registradas";
 export const sqlNovedadesVigentesConDesdeHastaHabiles = `
 with novedades_fecha AS(
   SELECT 
-      p.idper, nv.ficha, nv.ent_fich, nv.sal_fich, nv.sector, nv.annio, nv.trabajable, nv.detalles, f.dds, f.laborable,
+      p.idper, nv.ficha, nv.fichadas, nv.sector, nv.annio, nv.trabajable, nv.detalles, f.dds, f.laborable,
     COALESCE(nv.fecha, f.fecha) as fecha,
     CASE
       WHEN cod_nov is null and (dds in (6,0) or laborable = false) then '¡FERIADO O FIN DE SEMANA!' --'888'
@@ -45,7 +45,7 @@ novedades_vigentes_con_marca_de_cambio_de_cod_nov AS(
     from novedades_vigentes_identificando_tiras_cod_nov_iguales ncg
     order by ncg.idper, ncg.numero_tira_cod_nov_iguales
   )
-  select idper, fecha, cod_nov, ficha, ent_fich, sal_fich, sector, annio, trabajable, detalles,
+  select idper, fecha, cod_nov, ficha, fichadas, sector, annio, trabajable, detalles,
          desde, hasta, habiles, hasta - desde + 1 as corridos
     from novedades_vigentes_desde_hasta`
 
@@ -60,9 +60,7 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
             {name: 'ddsn'     , typeName: 'text'   , inTable:false, serverSide:true, editable:false },
             {name: 'cod_nov'  , typeName: 'text'   ,                                    },
             {name: 'ficha'    , typeName: 'text'   ,                                    },
-            /* campos de sistemas externos: */
-            {name: 'ent_fich' , typeName: 'text'   , title:'entrada - fichada'          },
-            {name: 'sal_fich' , typeName: 'text'   , title:'salida - fichada'           },
+            {name: 'fichadas' , typeName: 'time_range', title:'hora de entrada y salida'},
             /* campos redundantes que reflejan el estado del personas al momento de obtener la novedad */
             {name: 'sector'   , typeName: 'text'   ,                                    },
             /* campos automáticos */

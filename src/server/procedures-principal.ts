@@ -465,7 +465,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         resultOk:'showGrid',
         coreFunction: async function(context: ProcedureContext, params:any){
             var grilla = {
-                tableName:'fichadas_vigentes', 
+                tableName:'fichadas', 
                 fixedFields: [] as FixedFields, 
                 tableDef:{title:'visor de fichadas', hiddenColumns:[] as string[]}
             }

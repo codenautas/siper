@@ -25,6 +25,10 @@ import { Time } from "../server/types-principal";
 const TIMEOUT_SPEED_BE = 1000 * (process.env.BP_TIMEOUT_SPEED as unknown as number ?? 1);
 const VERBOSE = process.argv.includes('--verbose');
 
+type TIME = string;
+
+const TIME_RANGE = (desde:TIME, hasta:TIME) => `(${desde == null ? '' : desde},${hasta == null ? '' : hasta})`
+
 /*
  * Para debuguear el servidor por separado hay abrir dos ventanas, en una corren los test (normalmente) 
  * y en la otra corre el servidor (para poner breakpoints elegir cuál se corre en visual studio code).
@@ -993,6 +997,24 @@ describe("SiPer: " + testConfig.name, function(){
                     var novedadRegistradaPorCargar = {desde:fecha, hasta:fecha, cod_nov, idper}
                     var novedad = await registrarNovedad(rrhhSession, novedadRegistradaPorCargar);
                     assert.equal(novedad.cod_nov, cod_nov);
+                })
+            })
+            it("fichadas está vacío mañana", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    const fecha = date.iso('2000-02-01');
+                    await rrhhSession.tableDataTest(ctts.fichadas_vigentes, [
+                        {idper, fecha, fichadas: TIME_RANGE(null, null)}
+                    ], 'all', {fixedFields:{idper, fecha}})
+                })
+            })
+            it("solo tiene horario de entrada", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    const fecha = FECHA_ACTUAL;
+                    const hora = '8:55';
+                    await registrarFichada(server, {idper, fecha, hora, tipo_fichada:'E'});
+                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
+                        {idper, fecha, fichadas: TIME_RANGE(hora, null)}
+                    ], 'all', {fixedFields:{idper, fecha}})
                 })
             })
         })

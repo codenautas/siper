@@ -8,6 +8,8 @@ type CommonEntityDefinition = {
     description: Description
 }
 
+export const isTimeRange = is.string;
+
 export const cod_nov = {
     table: 'cod_novedades',
     description: is.object({
@@ -341,6 +343,15 @@ export const horarios_dds = {
         trabaja: is.boolean,
     })
 } 
+
+export const fichadas_vigentes = {
+    table: 'fichadas_vigentes',
+    description: is.object({
+        idper: is.string,
+        fecha: is.Date,
+        fichadas: isTimeRange
+    })
+}
 
 ////////////// PROCEDIMEINTOS
 

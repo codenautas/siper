@@ -18,18 +18,17 @@ MERGE INTO novedades_vigentes nv
   WHEN MATCHED AND 
       (nv.ficha IS DISTINCT FROM q.ficha 
       OR nv.cod_nov IS DISTINCT FROM q.cod_nov 
-      OR nv.ent_fich IS DISTINCT FROM q.ent_fich 
-      OR nv.sal_fich IS DISTINCT FROM q.sal_fich 
+      OR nv.fichadas IS DISTINCT FROM q.fichadas
       OR nv.sector IS DISTINCT FROM q.sector
       OR nv.detalles IS DISTINCT FROM q.detalles
       OR nv.trabajable IS DISTINCT FROM q.trabajable
       OR nv.cod_nov_ini IS DISTINCT FROM q.cod_nov_ini
       ) THEN
-    UPDATE SET ficha = q.ficha, cod_nov = q.cod_nov, ent_fich = q.ent_fich, sal_fich = q.sal_fich, sector = q.sector, detalles = q.detalles,
+    UPDATE SET ficha = q.ficha, cod_nov = q.cod_nov, fichadas = q.fichadas, sector = q.sector, detalles = q.detalles,
       trabajable = q.trabajable, cod_nov_ini = q.cod_nov_ini
   WHEN NOT MATCHED THEN
-    INSERT (idper, ficha, fecha, cod_nov, ent_fich, sal_fich, sector, detalles, trabajable, cod_nov_ini)
-      VALUES (q.idper, q.ficha, q.fecha, q.cod_nov, q.ent_fich, q.sal_fich, q.sector, q.detalles, q.trabajable, q.cod_nov_ini)
+    INSERT   (  idper,   ficha,   fecha,   cod_nov,   fichadas,   sector,   detalles,   trabajable,   cod_nov_ini)
+      VALUES (q.idper, q.ficha, q.fecha, q.cod_nov, q.fichadas, q.sector, q.detalles, q.trabajable, q.cod_nov_ini)
   WHEN NOT MATCHED BY SOURCE AND nv.fecha BETWEEN p_desde AND p_hasta/*idper** AND nv.idper = p_idper**idper*/ THEN DELETE;
 END;
 $BODY$;
