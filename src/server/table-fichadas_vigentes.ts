@@ -17,7 +17,7 @@ export function fichadas_vigentes(_context: TableContext): TableDefinition{
             {name: 'fecha' , typeName: 'date'},
             añoEnBaseAFecha,
             cod_nov,
-            {name: 'fichadas'        , typeName: 'time_range'},
+            {name: 'fichadas'        , typeName: 'time_range', nullable:false, defaultDbValue:"'(,)'"},
             {name: 'horario_entrada' , typeName: 'time'},
             {name: 'horario_salida'  , typeName: 'time'},
         ],

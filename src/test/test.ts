@@ -27,7 +27,7 @@ const VERBOSE = process.argv.includes('--verbose');
 
 type TIME = string;
 
-const TIME_RANGE = (desde:TIME, hasta:TIME) => `(${desde == null ? '' : desde},${hasta == null ? '' : hasta})`
+const TIME_RANGE = (desde:TIME, hasta:TIME) => `${desde == null ? '(' : '[' + desde},${hasta == null ? '' : hasta})`
 
 /*
  * Para debuguear el servidor por separado hay abrir dos ventanas, en una corren los test (normalmente) 
@@ -148,6 +148,7 @@ describe("SiPer: " + testConfig.name, function(){
     var borradoExitoso: boolean = false;
     var fallaEnLaQueQuieroOmitirElBorrado: boolean = false;
     before(async function(){
+        this.timeout(TIMEOUT_SPEED * 3)
         try{
             if (VERBOSE) console.log('Arranca el servidor')
             contexto = await testConfig.startContext(AppSiper);
@@ -178,6 +179,7 @@ describe("SiPer: " + testConfig.name, function(){
         if (VERBOSE) console.log('Sesiones listas')
     })
     beforeEach(async function(){
+        this.timeout(TIMEOUT_SPEED * 3)
         if (VERBOSE) console.log('restaurando la DB para pruebas individuales')
         await server.inDbClient(ADMIN_REQ, async client=>{
             await client.executeSentences([
@@ -1010,9 +1012,9 @@ describe("SiPer: " + testConfig.name, function(){
             it("solo tiene horario de entrada", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = FECHA_ACTUAL;
-                    const hora = '8:55';
+                    const hora = '08:55:00';
                     await registrarFichada(server, {idper, fecha, hora, tipo_fichada:'E'});
-                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
+                    await rrhhSession.tableDataTest(ctts.fichadas_vigentes, [
                         {idper, fecha, fichadas: TIME_RANGE(hora, null)}
                     ], 'all', {fixedFields:{idper, fecha}})
                 })

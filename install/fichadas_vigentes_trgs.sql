@@ -5,7 +5,7 @@
  * Estos son todos los triggers (sobre fechas y personas y annios) que van a rellenar fichadas_vigentes
  * y actualizar los datos correspondientes
  */
-CREATE OR REPLACE FUNCTION personas_fichadas_vigentes_ins_trg()
+CREATE OR REPLACE FUNCTION personas_fichadas_vigentes_trg()
   RETURNS TRIGGER
   SECURITY DEFINER
   LANGUAGE PLPGSQL
@@ -30,7 +30,7 @@ BEGIN
 END;
 $BODY$;
 
-CREATE OR REPLACE FUNCTION annios_fichadas_vigentes_ins_trg()
+CREATE OR REPLACE FUNCTION annios_fichadas_vigentes_trg()
   RETURNS TRIGGER
   SECURITY DEFINER
   LANGUAGE PLPGSQL
@@ -55,7 +55,7 @@ BEGIN
 END;
 $BODY$;
 
-CREATE OR REPLACE FUNCTION fechas_fichadas_vigentes_ins_trg()
+CREATE OR REPLACE FUNCTION fechas_fichadas_vigentes_trg()
   RETURNS TRIGGER
   SECURITY DEFINER
   LANGUAGE PLPGSQL
@@ -71,7 +71,8 @@ BEGIN
     UPDATE fichadas_vigentes fv
       SET fichadas = rango_simple_fichadas(fv.idper, fv.fecha)
       FROM personas p, annios a
-      WHERE fv.annio = new.annio
+      WHERE fv.fecha = new.fecha
+        AND fv.annio = a.annio
         AND fv.idper = p.idper
         AND a.abierto
         AND p.activo;
@@ -93,20 +94,26 @@ $sql$
     WHERE fecha = p_fecha AND idper = p_idper;
 $sql$;
 
-CREATE TRIGGER personas_fichadas_vigentes_ins_trg 
+CREATE TRIGGER personas_fichadas_vigentes_trg 
   AFTER INSERT OR UPDATE OF activo
   ON personas 
   FOR EACH ROW 
-  EXECUTE PROCEDURE personas_fichadas_vigentes_ins_trg();
+  EXECUTE PROCEDURE personas_fichadas_vigentes_trg();
 
-CREATE TRIGGER annios_fichadas_vigentes_ins_trg 
+CREATE TRIGGER annios_fichadas_vigentes_trg 
   AFTER INSERT OR UPDATE OF abierto
   ON annios 
   FOR EACH ROW 
-  EXECUTE PROCEDURE annios_fichadas_vigentes_ins_trg();
+  EXECUTE PROCEDURE annios_fichadas_vigentes_trg();
 
-CREATE TRIGGER fechas_fichadas_vigentes_ins_trg 
+CREATE TRIGGER fechas_fichadas_vigentes_trg 
   AFTER INSERT OR UPDATE OF laborable
   ON fechas 
   FOR EACH ROW 
-  EXECUTE PROCEDURE fechas_fichadas_vigentes_ins_trg();
+  EXECUTE PROCEDURE fechas_fichadas_vigentes_trg();
+
+CREATE TRIGGER fichadas_fichadas_vigentes_trg 
+  AFTER INSERT OR UPDATE
+  ON fichadas 
+  FOR EACH ROW 
+  EXECUTE PROCEDURE fechas_fichadas_vigentes_trg();
