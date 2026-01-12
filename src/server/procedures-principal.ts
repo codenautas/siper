@@ -774,14 +774,12 @@ export async function ejecutarSP(parameters: any, client: Client, configFichadas
         if (!respuesta) {
             throw new Error('El procedimiento no devolvió ningún resultado.');
         }
-        //@ts-ignore TODO revisar
-        let estadoFinal = null;
+        let estadoFinal;
         if (respuesta.ResultCode < 0) {
             estadoFinal = nuevoIntentoCount >= MAX_INTENTOS ? ESTADOS.AGOTADO : ESTADOS.ERROR;
         } else {
             estadoFinal = ESTADOS.PROCESADO;
         }
-        const ESTADO = respuesta.ResultCode < 0 ? ESTADOS.ERROR : ESTADOS.PROCESADO;
         await client.query(`
             update cola_sincronizacion_usuarios_modulo
                 set intentos = intentos + 1, 
@@ -790,7 +788,7 @@ export async function ejecutarSP(parameters: any, client: Client, configFichadas
                     actualizado_en = NOW()
                 where num_sincro = $1
                 returning *
-        `, [num_sincro, json4all.stringify(respuesta), ESTADO]).fetchUniqueRow();
+        `, [num_sincro, json4all.stringify(respuesta), estadoFinal]).fetchUniqueRow();
     } catch (err) {
         //@ts-ignore message existe
         const error = `Error crítico en la operación: ${err.message}.`;
