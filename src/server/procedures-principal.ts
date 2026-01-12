@@ -722,6 +722,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
 export async function ejecutarSP(parameters: any, client: Client, configFichadasDb:sql.config) {
     const { num_sincro } = parameters;
     const MAX_INTENTOS = 5;
+    await client.query(`CALL set_app_user('!login')`).execute();
     const ITEM_COLA = (await client.query(`
         select * 
             from cola_sincronizacion_usuarios_modulo
@@ -801,7 +802,6 @@ export async function ejecutarSP(parameters: any, client: Client, configFichadas
                 WHERE num_sincro = $1
                 returning *
         `, [num_sincro, nuevoIntentoCount, error, estadoFinalCatch]).fetchUniqueRow();
-        throw err;
     } finally {
         if (pool) {
             await pool.close();

@@ -133,11 +133,13 @@ const cronMantenimiento = (be:AppBackend) => {
 
 
 const cronSincroUsuarios = async(be:AppBackend) => {
-
     const interval = setInterval(async ()=>{
+        var procesadosOk = 0;
+        var procesadosError = 0;
         try{
             console.log('inicia cron sincro usuarios')
-            var result = await be.inTransaction(null, async (client)=>{
+            
+            await be.inTransaction(null, async (client)=>{
                 const filasPendientes = (await client.query(`
                     SELECT num_sincro 
                         FROM cola_sincronizacion_usuarios_modulo
@@ -147,8 +149,7 @@ const cronSincroUsuarios = async(be:AppBackend) => {
                     LIMIT 50
                 `).fetchAll()).rows;
 
-                let procesadosOk = 0;
-                let procesadosError = 0;
+                
 
                 for (const fila of filasPendientes) {
                     try {
@@ -160,15 +161,13 @@ const cronSincroUsuarios = async(be:AppBackend) => {
                         procesadosError++;
                     }
                 }
-
                 return ;
             })
-            console.log("result proc sincro usuarios: ", result)
         }catch(err){
             // @ts-ignore
             console.log(`error sincro usuarios. ${err.message}`);
         }finally{
-            console.log('termina cron sincro usuarios')
+            console.log(`termina cron sincro usuarios, procesados ok: ${procesadosOk}, con error: ${procesadosError}`)
         }
     },60 *1000); //cada 60 seg
     be.shutdownCallbackListAdd({

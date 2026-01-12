@@ -124,7 +124,7 @@ BEGIN
         INSERT INTO siper.cola_sincronizacion_usuarios_modulo (idper, accion, estado, creado_en, actualizado_en)
         VALUES (v_idper_previo, 'DESACTIVAR', 'PENDIENTE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         ON CONFLICT (idper) WHERE (estado != 'PROCESADO')
-        DO UPDATE SET accion = 'DESACTIVAR', estado = 'PENDIENTE', actualizado_en = CURRENT_TIMESTAMP, intentos = 0;
+        DO UPDATE SET accion = 'DESACTIVAR', estado = 'PENDIENTE', actualizado_en = CURRENT_TIMESTAMP, intentos = 0, respuesta_sp= null;
     END IF;
 
     -- Actualizar o Desactivar (por borrado) el ID actual
@@ -142,7 +142,8 @@ BEGIN
             accion = EXCLUDED.accion, 
             estado = 'PENDIENTE', 
             actualizado_en = CURRENT_TIMESTAMP,
-            intentos = 0;
+            intentos = 0,
+            respuesta_sp= null;
     END IF;
 
     RETURN NULL;
