@@ -13,7 +13,7 @@ SELECT
 FROM 
     siper.usuarios
 WHERE 
-    idper IS NOT NULL
+    principal
 GROUP BY 
     idper
 HAVING 
