@@ -1,7 +1,8 @@
 "use strict";
 
 import { AppBackend, Context, Request, ClientSetup,
-    ClientModuleDefinition, OptsClientPage, MenuDefinition, MenuInfoBase
+    ClientModuleDefinition, OptsClientPage, MenuDefinition, MenuInfoBase,
+    ProcedureDef
 } from "./types-principal";
 
 import { date } from 'best-globals'
@@ -78,7 +79,7 @@ import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
 import {cola_sincronizacion_usuarios_modulo} from "./table-cola_sincronizacion_usuarios_modulo"
 
-import { ProceduresPrincipal } from './procedures-principal'
+import { ACCION_SINCRONIZAR_USUARIOS_MODULO, ejecutarSP, ProceduresPrincipal } from './procedures-principal'
 
 import {staticConfigYaml} from './def-config';
 
@@ -89,20 +90,6 @@ import { rm } from 'fs/promises';
 
 import * as fsNoPromises from 'fs'
 import * as Path from 'path';
-
-/*
-const configFichadasDb: sql.config = {
-    user: 'tu_usuario',
-    password: 'tu_nueva_password',
-    server: 'IP_DEL_SERVIDOR',
-    database: 'NombreBBDD',
-    port: 1433,
-    options: {
-        encrypt: false, // Cambiar a true si conectas a Azure
-        trustServerCertificate: true 
-    }
-};
-*/
 
 /* Dos líneas para incluir contracts: */
 var persona: Persona | null = null;
@@ -136,6 +123,56 @@ const cronMantenimiento = (be:AppBackend) => {
     },60000);
     be.shutdownCallbackListAdd({
         message:'cron Mantenimiento',
+        fun:async function(){
+            clearInterval(interval);
+            return Promise.resolve();
+        }
+    });
+
+}
+
+
+const cronSincroUsuarios = async(be:AppBackend) => {
+
+    const interval = setInterval(async ()=>{
+        try{
+            console.log('inicia cron sincro usuarios')
+            var result = await be.inTransaction(null, async (client)=>{
+                const filasPendientes = (await client.query(`
+                    SELECT num_sincro 
+                        FROM cola_sincronizacion_usuarios_modulo
+                        WHERE estado IN ('PENDIENTE', 'ERROR')
+                        AND intentos < 5
+                    ORDER BY creado_en ASC
+                    LIMIT 50
+                `).fetchAll()).rows;
+
+                let procesadosOk = 0;
+                let procesadosError = 0;
+
+                for (const fila of filasPendientes) {
+                    try {
+                        await ejecutarSP({ num_sincro: fila.num_sincro }, client, be.getContextForDump().be.config['modulo-fichadas-db'])
+                        procesadosOk++;
+                    } catch (err) {
+                        //@ts-ignore message existe
+                        console.error(`Fallo crítico en fila ${fila.num_sincro}:`, err.message);
+                        procesadosError++;
+                    }
+                }
+
+                return ;
+            })
+            console.log("result proc sincro usuarios: ", result)
+        }catch(err){
+            // @ts-ignore
+            console.log(`error sincro usuarios. ${err.message}`);
+        }finally{
+            console.log('termina cron sincro usuarios')
+        }
+    },60 *1000); //cada 60 seg
+    be.shutdownCallbackListAdd({
+        message:'cron sincro usuarios',
         fun:async function(){
             clearInterval(interval);
             return Promise.resolve();
@@ -224,6 +261,7 @@ export class AppSiper extends AppBackend{
         await super.postConfig();
         cronMantenimiento(be);
         await be.inCron('avance_de_dia_proc', {vecesPorDia:24*6});
+        cronSincroUsuarios(be);
     }
     override async getProcedures(){
         // eslint-disable-next-line @typescript-eslint/no-this-alias

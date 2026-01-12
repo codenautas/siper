@@ -9,6 +9,16 @@ db:
   schema: siper
   user: siper_admin
   password: cambiar_esta_clave
+modulo-fichadas-db:
+  user: usuario,
+  password: cambiar_esta_clave
+  server: host o ip
+  database: database
+  port: 1433
+  options:
+    encrypt: false
+    trustServerCertificate: true
+    
 install:
   dump:
     drop-his: false # poner en true en desarrollo

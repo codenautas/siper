@@ -20,6 +20,7 @@
     "frontend-plus": "^0.0.16",
     "guarantee-type": "^0.2.2",
     "json4all": "^1.4.0",
+    "mssql": "^12.2.0",
     "pg-triggers": "^0.4.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
@@ -28,6 +29,7 @@
     "@eslint/js": "^9.39.1",
     "@types/fs-extra": "^11.0.4",
     "@types/mocha": "^10.0.10",
+    "@types/mssql": "^9.1.8",
     "@types/node": "^24.10.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

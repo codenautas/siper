@@ -5,6 +5,7 @@ import { AppSiper } from "./app-principal";
 export * from "backend-plus";
 export * from "serial-tester";
 export * from "pg-promise-strict";
+import * as sql from 'mssql';
 
 declare module "backend-plus"{
     interface Context {
@@ -32,6 +33,7 @@ declare module "backend-plus"{
         destres?:{
             minutos: number
         }
+        "modulo-fichadas-db": sql.config;
     }
 
     interface FieldDefinition {
@@ -95,3 +97,35 @@ export type Constructor<T> = new(...args: any[]) => T;
 export const idImportacion:FieldDefinition = {name: 'id_importacion', typeName: 'bigint', nullable:true, editable:false, // @ts-ignore */ 
     sequence:{}
 }
+
+//MODULO EXTERNO FICHADAS
+export interface IEmpleadoInput {
+    nombre: string;
+    apellido: string;
+    documento: string;
+    legajo: string;
+    estado?: 0 | 1; // 0: Activo, 1: No Activo
+    fechaEstado?: Date;
+    contrasenia?: string | null;
+}
+
+export type UpsertResponse = { 
+    ResultCode: 1; 
+    ResultMessage: 'OK'; 
+    PerCodigo: number; 
+    EmpCodigo: number; 
+    EstCodigo: number; 
+} | { 
+    ResultCode: 0; 
+    ResultMessage: 'NOCHANGE'; 
+    PerCodigo: number; 
+    EmpCodigo: number; 
+    EstCodigo: number; 
+} | { 
+    ResultCode: -1; 
+    ResultMessage: string;
+    PerCodigo: null; 
+    EmpCodigo: null; 
+    EstCodigo: null; 
+};
+// FIN MODULO EXTERNO FICHADAS

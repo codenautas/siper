@@ -54,6 +54,7 @@ alter table "cola_sincronizacion_usuarios_modulo" alter column "estado" set not 
 alter table "cola_sincronizacion_usuarios_modulo" alter column "intentos" set not null;
 alter table "cola_sincronizacion_usuarios_modulo" add constraint "respuesta_sp<>''" check ("respuesta_sp"<>'');
 alter table "cola_sincronizacion_usuarios_modulo" add constraint "estados_cola" check (estado IN ('PENDIENTE', 'EN_PROCESO', 'PROCESADO', 'ERROR', 'AGOTADO'));
+alter table "cola_sincronizacion_usuarios_modulo" add constraint "acciones_cola" check (accion IN ('DESACTIVAR', 'ACTUALIZAR'));
 
 CREATE UNIQUE INDEX "idx_idper_activo_sincro" 
 ON "cola_sincronizacion_usuarios_modulo" ("idper") 
@@ -123,7 +124,7 @@ BEGIN
         INSERT INTO siper.cola_sincronizacion_usuarios_modulo (idper, accion, estado, creado_en, actualizado_en)
         VALUES (v_idper_previo, 'DESACTIVAR', 'PENDIENTE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         ON CONFLICT (idper) WHERE (estado != 'PROCESADO')
-        DO UPDATE SET accion = 'DESACTIVAR', estado = 'PENDIENTE', actualizado_en = CURRENT_TIMESTAMP;
+        DO UPDATE SET accion = 'DESACTIVAR', estado = 'PENDIENTE', actualizado_en = CURRENT_TIMESTAMP, intentos = 0;
     END IF;
 
     -- Actualizar o Desactivar (por borrado) el ID actual
@@ -140,7 +141,8 @@ BEGIN
         DO UPDATE SET 
             accion = EXCLUDED.accion, 
             estado = 'PENDIENTE', 
-            actualizado_en = CURRENT_TIMESTAMP;
+            actualizado_en = CURRENT_TIMESTAMP,
+            intentos = 0;
     END IF;
 
     RETURN NULL;
