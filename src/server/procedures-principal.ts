@@ -744,7 +744,7 @@ export async function ejecutarSP(parameters: any, client: Client, configFichadas
         PER_DESACTIVADA
     :
         ((await client.query(`
-            select p.nombres as nombre, p.apellido, p.documento, p.idper as legajo, 0 as estado, u.hashpass as contrasenia
+            select p.nombres as nombre, p.apellido, p.documento, p.idper as legajo, (not coalesce(u.activo,false))::integer as estado, u.hashpass as contrasenia
                 from usuarios u join personas p using (idper) 
                 where p.idper = $1 and u.principal
         `, [ITEM_COLA.idper]).fetchUniqueRow()).row) as IEmpleadoInput;
