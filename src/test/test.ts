@@ -1019,6 +1019,18 @@ describe("SiPer: " + testConfig.name, function(){
                     ], 'all', {fixedFields:{idper, fecha}})
                 })
             })
+            it("las fichadas vigentes van a novedades vigentes", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    const fecha = FECHA_ACTUAL;
+                    const desde = '08:00:00';
+                    const hasta = '15:00:00';
+                    await registrarFichada(server, {idper, fecha, hora: desde, tipo_fichada:'E'});
+                    await registrarFichada(server, {idper, fecha, hora: hasta, tipo_fichada:'S'});
+                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
+                        {idper, fecha, fichadas: TIME_RANGE(desde, hasta)}
+                    ], 'all', {fixedFields:{idper, fecha}})
+                })
+            })
         })
         describe("cod_nov_pred_fecha", function(){
             it("sin nada cargado está la novedad predeterminada pasada", async function(){

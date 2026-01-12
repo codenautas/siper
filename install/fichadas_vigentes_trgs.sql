@@ -81,6 +81,26 @@ BEGIN
 END;
 $BODY$;
 
+CREATE OR REPLACE FUNCTION fichadas_vigentes_novedades_vigentes_trg()
+  RETURNS TRIGGER
+  SECURITY DEFINER
+  LANGUAGE PLPGSQL
+AS
+$BODY$
+BEGIN
+  IF tg_op = 'INSERT' THEN
+    IF new.fichadas <> '(,)' THEN
+      CALL actualizar_novedades_vigentes_idper(new.fecha, new.fecha, new.idper);
+    END IF;
+  ELSE
+    IF new.fichadas IS DISTINCT FROM old.fichadas END THEN
+      CALL actualizar_novedades_vigentes_idper(new.fecha, new.fecha, new.idper);
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$BODY$;
+
 CREATE OR REPLACE FUNCTION rango_simple_fichadas(p_idper text, p_fecha date) 
   RETURNS time_range 
   STABLE LANGUAGE SQL
@@ -117,3 +137,9 @@ CREATE TRIGGER fichadas_fichadas_vigentes_trg
   ON fichadas 
   FOR EACH ROW 
   EXECUTE PROCEDURE fechas_fichadas_vigentes_trg();
+
+CREATE TRIGGER fichadas_vigentes_novedades_vigentes_trg 
+  AFTER INSERT OR UPDATE
+  ON fichadas_vigentes
+  FOR EACH ROW 
+  EXECUTE PROCEDURE fichadas_vigentes_novedades_vigentes_trg();
