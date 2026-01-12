@@ -764,6 +764,7 @@ export async function ejecutarSP(parameters: any, client: Client, configFichadas
         request.input('Documento', sql.VarChar(20), datos.documento);
         request.input('Legajo', sql.VarChar(50), datos.legajo);
         request.input('Estado', sql.Int, datos.estado);
+        request.input('FechaEstado', sql.DateTime, datos.fechaEstado || new Date());
         request.input('Contrasenia', sql.VarChar(sql.MAX), datos.contrasenia || null);
 
         const result = await request.execute<UpsertResponse>('spUpsertEmpleado');
