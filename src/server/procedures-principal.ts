@@ -773,7 +773,7 @@ export async function ejecutarSP(parameters: any, client: Client, configFichadas
         if (!respuesta) {
             throw new Error('El procedimiento no devolvió ningún resultado.');
         }
-        let estadoFinal;
+        let estadoFinal = null;
         if (respuesta.ResultCode < 0) {
             estadoFinal = nuevoIntentoCount >= MAX_INTENTOS ? ESTADOS.AGOTADO : ESTADOS.ERROR;
         } else {

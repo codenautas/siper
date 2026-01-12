@@ -1,8 +1,7 @@
 "use strict";
 
 import { AppBackend, Context, Request, ClientSetup,
-    ClientModuleDefinition, OptsClientPage, MenuDefinition, MenuInfoBase,
-    ProcedureDef
+    ClientModuleDefinition, OptsClientPage, MenuDefinition, MenuInfoBase
 } from "./types-principal";
 
 import { date } from 'best-globals'
@@ -79,7 +78,7 @@ import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
 import {cola_sincronizacion_usuarios_modulo} from "./table-cola_sincronizacion_usuarios_modulo"
 
-import { ACCION_SINCRONIZAR_USUARIOS_MODULO, ejecutarSP, ProceduresPrincipal } from './procedures-principal'
+import { ejecutarSP, ProceduresPrincipal } from './procedures-principal'
 
 import {staticConfigYaml} from './def-config';
 
