@@ -700,10 +700,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             */
             return result.rows?.[0]?.detalle_multiorigen ?? {detalle:[]};
         }
-    }
-];
-
-
+    },
     {
         action: 'consolidar_fichadas',
         parameters:[
