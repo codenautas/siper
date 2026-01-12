@@ -52,6 +52,7 @@ install:
       - ../install/per_domicilios_pk_trg.sql
       - ../install/per_telefonos_pk_trg.sql
       - ../install/function_registrar_fichadas.sql
+      - ../install/function_get_telefonos.sql
       post-adapt:
       - ../node_modules/pg-triggers/lib/recreate-his.sql
       - ../node_modules/pg-triggers/lib/table-changes.sql
