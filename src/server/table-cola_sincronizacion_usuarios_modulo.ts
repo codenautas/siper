@@ -2,8 +2,6 @@
 
 import {TableDefinition, TableContext} from "./types-principal";
 
-import {idper} from "./table-personas"
-
 export const ACCIONES = {
     DESACTIVAR: 'DESACTIVAR',
     ACTUALIZAR: 'ACTUALIZAR'
@@ -25,7 +23,7 @@ export function cola_sincronizacion_usuarios_modulo(context: TableContext): Tabl
         editable: context.forDump,
         fields:[
             {name: 'num_sincro'       , typeName: 'bigint' , nullable: false, sequence:{firstValue:1, name:'cola_usuarios_seq'}},
-            {name: idper.name         , typeName: 'text'   , nullable: false},
+            {name: 'usuario'          , typeName: 'text'   , nullable: false},
             {name: 'accion'           , typeName: 'text'   , nullable: false},
             {name: 'estado'           , typeName: 'text'   , nullable: false},
             {name: 'intentos'         , typeName: 'integer', nullable: false, defaultValue:0},

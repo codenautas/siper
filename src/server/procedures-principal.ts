@@ -747,7 +747,7 @@ export async function ejecutarSP(parameters: any, client: Client, pool: sql.Conn
         nombre: '',
         apellido: '',
         documento: '',
-        legajo: ITEM_COLA.idper,
+        legajo: ITEM_COLA.usuario,
         estado: 1,
     };
 
@@ -755,10 +755,10 @@ export async function ejecutarSP(parameters: any, client: Client, pool: sql.Conn
         PER_DESACTIVADA
     :
         ((await client.query(`
-            select p.nombres as nombre, p.apellido, p.documento, p.idper as legajo, (not coalesce(u.activo,false))::integer as estado, u.hashpass as contrasenia
+            select p.nombres as nombre, p.apellido, p.documento, u.usuario as legajo, (not coalesce(u.activo,false))::integer as estado, u.hashpass as contrasenia
                 from usuarios u join personas p using (idper) 
-                where p.idper = $1 and u.principal
-        `, [ITEM_COLA.idper]).fetchUniqueRow()).row) as IEmpleadoInput;
+                where u.usuario = $1
+        `, [ITEM_COLA.usuario]).fetchUniqueRow()).row) as IEmpleadoInput;
 
     const nuevoIntentoCount = (ITEM_COLA.intentos || 0) + 1;
     try {
