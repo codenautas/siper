@@ -71,7 +71,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
             { name: 'habiles', typeName: 'integer' },
             { name: 'corridos', typeName: 'integer' },
             { name: 'banda_horaria', typeName: 'text'},
-            { name: 'bh_descripcion', typeName: 'text', title: 'descripcion' },
+            { name: 'bh_descripcion', typeName: 'text', title: 'descripción' },
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],
         hiddenColumns: ['fichada'],

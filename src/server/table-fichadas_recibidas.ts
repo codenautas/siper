@@ -10,7 +10,7 @@ import {idper} from "./table-personas"
 export const id_fichada: FieldDefinition = {
     name: 'id_fichada',
     typeName: 'bigint', 
-    editable:false,
+    editable: false,
 }
 
 export function fichadas_recibidas(context: TableContext): TableDefinition{
@@ -19,18 +19,23 @@ export function fichadas_recibidas(context: TableContext): TableDefinition{
         elementName: 'fichada_recibida',
         editable: context.forDump,
         fields:[
-            {name: 'idper'            , typeName: 'text', nullable: false       },
-            {name: 'fecha'            , typeName: 'date', nullable: false       },
-            {name: 'hora'             , typeName: 'time', nullable: false       },
-            {name: 'tipo'             , typeName: 'text', nullable: false       },
-            {name: 'texto'            , typeName: 'text', allowEmptyText:true    },
-            {name: 'dispositivo'      , typeName: 'text', allowEmptyText:true    },
-            {name: 'punto_gps'        , typeName: 'text', allowEmptyText:true    },
-            {name: 'id_originen'      , typeName: 'text', allowEmptyText:true    },
+            {...id_fichada            , sequence:{name: 'id_fichada', firstValue: 100}},
+            {name: 'idper'            , typeName: 'text'     , nullable: false        },
+            {name: 'fecha'            , typeName: 'date'     , nullable: false        },
+            {name: 'hora'             , typeName: 'time'     , nullable: false        },
+            {name: 'tipo'             , typeName: 'text'     , nullable: false        },
+            {name: 'texto'            , typeName: 'text'     , allowEmptyText: true   },
+            {name: 'dispositivo'      , typeName: 'text'     , allowEmptyText: true   },
+            {name: 'punto_gps'        , typeName: 'text'     , allowEmptyText: true   },
+            {name: 'id_origen'        , typeName: 'text'     , allowEmptyText: true   },
+            {name: 'recepcion'        , typeName: 'timestamp', defaultDbValue: 'current_timestamp'}
         ],         
-        primaryKey: ['idper', 'fecha', 'hora'],
+        primaryKey: [id_fichada.name],
         foreignKeys: [
             {references: 'personas', fields: [{source:'idper', target:idper.name}], displayFields:['apellido', 'nombres', 'cuil', 'ficha']},
-        ]
+        ],
+        sql:{
+            skipEnance: true
+        }
     };
 }

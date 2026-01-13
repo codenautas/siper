@@ -24,7 +24,7 @@ import {
 
 import { createIndex } from "like-ar";
 
-// @ts-ignore 
+// @ts-ignore
 var my=myOwn;
 
 function GrupoPeronas(props:{idGrupo:string, nombreGrupo:string, fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
@@ -39,11 +39,8 @@ function GrupoPeronas(props:{idGrupo:string, nombreGrupo:string, fieldsProps:Gen
 function PersonaDisplay(props:{fieldsProps:GenericFieldProperties[], optionsInfo:OptionsInfo}){
     const {fieldsProps, optionsInfo} = props;
     const f = createIndex(fieldsProps, f => f.fd.name)
-    const rowsSectores = optionsInfo.tables!.sectores;
+    // const rowsSectores = optionsInfo.tables!.sectores;
     if (f.idper == null) return <Card> <Typography>Cargando...</Typography> </Card>
-
-    console.log(rowsSectores);
-
     return <Card style={{ width: 'auto' }} className="ficha-personas">
     <Box
       sx={{

@@ -18,7 +18,7 @@ export function novedades_horarias(_context: TableContext): TableDefinition{
         fields:[
             idper,
             fecha,
-            {name: 'lapso'     , typeName: 'tsrange'   , editable:false                     },
+            {name: 'lapso'     , typeName: 'tsrange'   , editable:false, nullable: true     },
             {name: 'desde_hora', typeName: 'time'      ,                                    },
             {name: 'hasta_hora', typeName: 'time'      ,                                    },
             cod_nov,

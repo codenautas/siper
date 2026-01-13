@@ -59,8 +59,8 @@ export function Componente(props:{children:ReactNode[]|ReactNode, componentType:
     esEfimero?: any
 }){
     return <Card className={"componente-" + props.componentType} 
-        siper-esEfimero={props.esEfimero === true || props.esEfimero?.[EFIMERO] ? "si" : "no"}
-        siper-esScrollable={props.scrollable === true ? "si" : "no"}
+        siper-es-efimero={props.esEfimero === true || props.esEfimero?.[EFIMERO] ? "si" : "no"}
+        siper-es-scrollable={props.scrollable === true ? "si" : "no"}
         sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}
     >
         {props.children}
@@ -194,19 +194,16 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 </Select>
                 <Select 
                     className="selector-annio"
-                    value={periodo.annio}
+                    value={periodo.annio ?? new Date().getFullYear()}
                     onChange={(event) => { // buscar el tipo correcto
                         setPeriodo({mes:periodo.mes, annio:Number(event.target.value)});
                     }}
                 >
-                    {
-                        // @ts-ignore
-                        annios.map((annio:Annio) => (
-                        <MenuItem key={annio.annio} value={annio.annio}>
-                            {annio.annio.toString()}
-                        </MenuItem>
-                    ))
-                        }
+                    {(!annios?.length ? [{annio:new Date().getFullYear(), cerrado:false}] : annios).map((annio:Annio) => (
+                            <MenuItem key={annio.annio} value={annio.annio}>
+                                {annio.annio.toString()}
+                            </MenuItem>
+                    ))}
                 </Select>
                 <Button
                     variant="outlined"
@@ -228,8 +225,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 ).array()}
             </Box>
             {calendario.map(semana => <Box key={semana[0].semana} className="calendario-semana">
-                {semana.map(dia => 
-                <Tooltip key={dia.dia} title={dia.novedad || "Sin novedad"} arrow>
+                {semana.map((dia, i) => 
+                <Tooltip key={dia.dia || "V" + i} title={dia.novedad || "Sin novedad"} arrow>
                 <div
                     className={`calendario-dia tipo-dia-${dia.tipo_dia} 
                         ${fecha && sameValue(dia.fecha, fecha) ? 'calendario-dia-seleccionado' : ''}
@@ -513,7 +510,6 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
             paramfun: {}
         }).then(function(novedadesRegistradas){
             novedadesRegistradas.sort(compareForOrder([{column:'idr', order:-1}]))
-            console.log(novedadesRegistradas)
             setNovedades(novedadesRegistradas);
         }).catch(logError)
     },[idper, ultimaNovedad, annio])
@@ -779,7 +775,6 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
             }).then(personas => {
                 setPersona(personas[0]);
                 setCargandoLegajo(false);
-                console.log(personas[0])
             }).catch(logError);
             conn.ajax.table_data<ProvisorioPersonaDomicilio>({
                 table: 'per_domicilios',
@@ -788,7 +783,6 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
             }).then(function(domicilios){
                 domicilios.sort(compareForOrder([{column:'idper'},{column:'orden'},{column:'nro_item'}]));
                 setDomicilios(domicilios);
-                console.log(domicilios)
             }).catch(logError);
             conn.ajax.table_data<ProvisorioPersonaTelefono>({
                 table: 'per_telefonos',
@@ -797,7 +791,6 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
             }).then(function (telefonos) {
                 telefonos.sort(compareForOrder([{ column: 'idper' }, { column: 'orden' }, { column: 'nro_item' }]));
                 setTelefonos(telefonos);
-                console.log(telefonos)
             }).catch(logError);
         }
     }, [idper])
@@ -1035,7 +1028,8 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
             dds6:(siCargaraNovedad?.c_dds || null) && novedadRegistrada.dds6,
             fecha: infoUsuario.fecha_actual,
             usuario: infoUsuario.usuario,
-            cancela: cod_nov == null
+            cancela: cod_nov == null,
+            tipo_novedad: 'V'
         }).then(function(result){
             setUltimaNovedad(result.idr as number);
             // setFecha(fechaActual);
@@ -1179,7 +1173,8 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
         </Paper>;
 }
 
-export function renderRol( infoUsuario: InfoUsuario ) {
+export function renderRol( _infoUsuario: InfoUsuario ) {
+    /*
     const observer = new MutationObserver(() => {
         const activeUserElement = document.getElementById('active-user');
         if (activeUserElement) {
@@ -1197,6 +1192,7 @@ export function renderRol( infoUsuario: InfoUsuario ) {
 
     // Desconectar el observador cuando ya no sea necesario
     return () => observer.disconnect();
+    */
 }
 
 function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, infoUsuario: InfoUsuario }) {
@@ -1225,6 +1221,7 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, i
                 <Typography flexGrow={2}>
                     SiPer - Principal
                 </Typography>
+                <div>
                 <IconButton color="inherit">
                     <a
                         href={getManualHref(props.infoUsuario.rol)}
@@ -1232,11 +1229,12 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, i
                         className="link-manual"
                     >
                         <ICON.Info />
-                        <Typography>
-                            <small>Ayuda</small>
-                        </Typography>
                     </a>
                 </IconButton>
+                <Typography id="active-user">
+                    {props.infoUsuario.usuario}
+                </Typography>
+                </div>
             </Toolbar>
         </AppBar>
         <Pantalla1 conn={props.conn} fixedFields={props.fixedFields}/>

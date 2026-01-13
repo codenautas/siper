@@ -67,11 +67,11 @@ export function politicaNovedades(alias:string, nombreFecha:string){
     }
 }
 
-export function novedades_registradas(_context: TableContext): TableDefinition{
+export function novedades_registradas(context: TableContext): TableDefinition{
     return {
         name: 'novedades_registradas',
         elementName: 'novedad registrada',
-        editable: true,
+        editable: context.forDump,
         fields:[
             idper,
             {name: 'desde'    , typeName: 'date'   ,                                    },

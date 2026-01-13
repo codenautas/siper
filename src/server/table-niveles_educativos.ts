@@ -5,21 +5,21 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 export const nivel_educativo: FieldDefinition = {
     name: 'nivel_educativo', 
     typeName: 'text',
-    title: 'Nivel Educativo'
+    title: 'nivel educativo'
 };
 
 export const max_nivel_ed: FieldDefinition = {
     name: 'max_nivel_ed', 
     typeName: 'text',
-    title: 'Max Nivel Educativo'
+    title: 'máx nivel educativo'
 };
 
 export function niveles_educativos(context:TableContext):TableDefinition{
     var admin = context.es.admin;
     return {
         name:'niveles_educativos',
-        elementName: 'nivel_educativo',
-        title:'Nivel Educativo',
+        elementName: 'nivel educativo',
+        title:'niveles educativos',
         editable:admin,
         fields:[
             nivel_educativo,
