@@ -21,6 +21,8 @@ HAVING
 ORDER BY 
     cantidad DESC;
 
+update usuarios set principal = null where usuario in ();
+
 CREATE UNIQUE INDEX idx_usuarios_idper_principal_true
 ON siper.usuarios (idper)
 WHERE (principal = true);
@@ -36,13 +38,13 @@ create table "cola_sincronizacion_usuarios_modulo" (
   "actualizado_en" timestamp
 , primary key ("num_sincro")
 );
-grant select, insert, update, delete on "cola_sincronizacion_usuarios_modulo" to siper_admin;
-grant all on "cola_sincronizacion_usuarios_modulo" to siper_owner;
+grant select, insert, update, delete on "cola_sincronizacion_usuarios_modulo" to siper_muleto_admin;
+grant all on "cola_sincronizacion_usuarios_modulo" to siper_muleto_owner;
 
 
 CREATE SEQUENCE "cola_usuarios_seq" START 1;
 ALTER TABLE "cola_sincronizacion_usuarios_modulo" ALTER COLUMN "num_sincro" SET DEFAULT nextval('cola_usuarios_seq'::regclass);
-GRANT USAGE, SELECT ON SEQUENCE "cola_usuarios_seq" TO siper_admin;
+GRANT USAGE, SELECT ON SEQUENCE "cola_usuarios_seq" TO siper_muleto_admin;
 
 alter table "cola_sincronizacion_usuarios_modulo" alter column "num_sincro" set not null;
 alter table "cola_sincronizacion_usuarios_modulo" add constraint "idper<>''" check ("idper"<>'');
