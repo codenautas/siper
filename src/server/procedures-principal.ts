@@ -16,6 +16,7 @@ import * as fs from 'fs/promises';
 import * as ctts from "../common/contracts.js"
 import * as sql from 'mssql';
 import { ACCIONES, ESTADOS } from './table-cola_sincronizacion_usuarios_modulo';
+import { getConfigFichadasDb, MAX_INTENTOS } from './app-principal';
 
 async function prevalidarCargaDeNovedades(context: ProcedureContext, params:Partial<NovedadRegistrada>){
     var diaActualPeroTarde = (await context.client.query(
@@ -713,15 +714,32 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         ],
         action: 'cambio_usuario_modulo_procesar',
         coreFunction: async function (context:ProcedureContext, parameters:any) {
-            const configFichadasDb = context.be.config['modulo-fichadas-db'];
-            return await ejecutarSP(parameters, context.client, configFichadasDb);
+            let pool: sql.ConnectionPool | null = null;
+            try{
+                pool = await new sql.ConnectionPool(getConfigFichadasDb(context.be)).connect();
+                await ejecutarSP(parameters, context.client, pool!);
+            }catch(err){
+                await context.client.query(`
+                    update cola_sincronizacion_usuarios_modulo
+                        SET intentos = intentos + 1, 
+                            respuesta_sp = $2, 
+                            estado = $3,
+                            actualizado_en = NOW()
+                        WHERE num_sincro = $1
+                        returning *
+                `,
+                //@ts-ignore 
+                [parameters.num_sincro, `${err.code}: ${err.message}`, ESTADOS.ERROR]).fetchUniqueRow();
+            } finally {
+                if (pool && pool.connected) await pool.close();
+            }
+            return 'ok'
         }  
     }
 ];
 
-export async function ejecutarSP(parameters: any, client: Client, configFichadasDb:sql.config) {
+export async function ejecutarSP(parameters: any, client: Client, pool: sql.ConnectionPool) {
     const { num_sincro } = parameters;
-    const MAX_INTENTOS = 5;
     await client.query(`CALL set_app_user('!login')`).execute();
     const ITEM_COLA = (await client.query(`
         select * 
@@ -749,14 +767,8 @@ export async function ejecutarSP(parameters: any, client: Client, configFichadas
                 where p.idper = $1 and u.principal
         `, [ITEM_COLA.idper]).fetchUniqueRow()).row) as IEmpleadoInput;
 
-    let pool: sql.ConnectionPool | null = null;
     const nuevoIntentoCount = (ITEM_COLA.intentos || 0) + 1;
     try {
-        pool = await sql.connect({
-            ...configFichadasDb,
-            connectionTimeout: 5000,
-            requestTimeout: 10000
-        });
         const request = pool.request();
 
         request.input('Nombre', sql.VarChar(255), datos.nombre);
@@ -803,9 +815,6 @@ export async function ejecutarSP(parameters: any, client: Client, configFichadas
                 returning *
         `, [num_sincro, nuevoIntentoCount, error, estadoFinalCatch]).fetchUniqueRow();
     } finally {
-        if (pool) {
-            await pool.close();
-        }
         return 'ok';
     }
 }

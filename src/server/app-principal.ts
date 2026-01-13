@@ -76,9 +76,10 @@ import { niveles_educativos      } from "./table-niveles_educativos";
 import { tipos_novedad           } from "./table-tipos_novedad";
 import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
-import {cola_sincronizacion_usuarios_modulo} from "./table-cola_sincronizacion_usuarios_modulo"
+import {cola_sincronizacion_usuarios_modulo, ESTADOS} from "./table-cola_sincronizacion_usuarios_modulo"
 
 import { ejecutarSP, ProceduresPrincipal } from './procedures-principal'
+import * as sql from 'mssql';
 
 import {staticConfigYaml} from './def-config';
 
@@ -130,45 +131,129 @@ const cronMantenimiento = (be:AppBackend) => {
 
 }
 
+export const MAX_INTENTOS = 5;
 
-const cronSincroUsuarios = async(be:AppBackend) => {
-    const interval = setInterval(async ()=>{
-        var procesadosOk = 0;
-        var procesadosError = 0;
-        try{
-            console.log('inicia cron sincro usuarios')
-            
-            await be.inTransaction(null, async (client)=>{
-                const filasPendientes = (await client.query(`
-                    SELECT num_sincro 
-                        FROM cola_sincronizacion_usuarios_modulo
-                        WHERE estado IN ('PENDIENTE', 'ERROR')
-                        AND intentos < 5
-                    ORDER BY creado_en ASC
-                    LIMIT 50
-                `).fetchAll()).rows;
+export const getConfigFichadasDb = (be:AppBackend)=> ({
+    ...be.getContextForDump().be.config['modulo-fichadas-db'],
+    connectionTimeout: 5000,
+    requestTimeout: 5000
+});
 
-                
+const cronSincroUsuarios = async (be: AppBackend) => {
+    // Intervalo de 60 segundos
+    const interval = setInterval(async () => {
+        let filas: any[] = [];
+        const configFichadasDb = getConfigFichadasDb(be);
+        try {
+            await be.inTransaction(null, async (client) => {
+                filas = (await client.query(`
+                    SELECT num_sincro FROM cola_sincronizacion_usuarios_modulo
+                        WHERE estado IN ('${ESTADOS.PENDIENTE}', '${ESTADOS.ERROR}') AND intentos < $1
+                        ORDER BY creado_en ASC LIMIT 50
+                        FOR UPDATE SKIP LOCKED
+                `, [MAX_INTENTOS]).fetchAll()).rows;
+            });
 
-                for (const fila of filasPendientes) {
-                    try {
-                        await ejecutarSP({ num_sincro: fila.num_sincro }, client, be.getContextForDump().be.config['modulo-fichadas-db'])
-                        procesadosOk++;
-                    } catch (err) {
-                        //@ts-ignore message existe
-                        console.error(`Fallo crítico en fila ${fila.num_sincro}:`, err.message);
-                        procesadosError++;
+            if (filas.length === 0) return;
+            let pool: sql.ConnectionPool | null = null;
+            try {
+                pool = await new sql.ConnectionPool({
+                    ...configFichadasDb,
+                    connectionTimeout: 10000,
+                    requestTimeout: 15000
+                }).connect();
+
+                await be.inTransaction(null, async (client) => {
+                    for (const fila of filas) {
+                        await ejecutarSP({ num_sincro: fila.num_sincro }, client, pool!);
                     }
+                });
+
+            } catch (connErr) {
+                //@ts-ignore
+                const errorMsg = `SQL Server Offline: ${connErr.message}`;
+                const idsProcesados = filas.map(f => f.num_sincro);
+
+                await be.inTransaction(null, async (client) => {
+                    await client.query(`
+                        UPDATE cola_sincronizacion_usuarios_modulo c
+                            SET intentos = c.intentos + 1,
+                                respuesta_sp = $2,
+                                estado = CASE WHEN c.intentos + 1 >= $3 THEN '${ESTADOS.AGOTADO}' ELSE '${ESTADOS.ERROR}' END,
+                                actualizado_en = NOW()
+                            WHERE c.num_sincro = ANY($1)
+                    `, [idsProcesados, errorMsg, MAX_INTENTOS]).execute();
+                });
+            } finally {
+                if (pool?.connected) {
+                    await pool.close();
+                    console.log('Pool de SQL Server cerrado correctamente.');
                 }
-                return ;
-            })
-        }catch(err){
-            // @ts-ignore
-            console.log(`error sincro usuarios. ${err.message}`);
-        }finally{
-            console.log(`termina cron sincro usuarios, procesados ok: ${procesadosOk}, con error: ${procesadosError}`)
+            }
+        } catch (errPostgres) {
+            //@ts-ignore
+            console.error('Error crítico exterior:', errPostgres.message);
         }
-    },60 *1000); //cada 60 seg
+    }, 60 * 1000);
+
+    // Shutdown para evitar procesos zombis al reiniciar el servidor
+    be.shutdownCallbackListAdd({
+        message: 'Finalizando cron de sincronización de usuarios...',
+        fun: async function() {
+            clearInterval(interval);
+            return Promise.resolve();
+        }
+    });
+};
+/*
+const cronSincroUsuarios = async (be: AppBackend) => {
+    const interval = setInterval(async () => {
+        let pool: sql.ConnectionPool | null = null;
+        try {
+            var filas:any[] = [];
+            pool = await new sql.ConnectionPool(getConfigFichadasDb(be)).connect();
+            await be.inTransaction(null, async (client) => {
+                filas = (await client.query(`
+                    SELECT num_sincro FROM cola_sincronizacion_usuarios_modulo
+                        WHERE estado IN ('PENDIENTE', 'ERROR') AND intentos < $1
+                        ORDER BY creado_en ASC 
+                        LIMIT 50
+                `, [MAX_INTENTOS]).fetchAll()).rows;
+
+                for (const fila of filas) {
+                    await ejecutarSP({ num_sincro: fila.num_sincro }, client, pool!);
+                }
+            });
+
+        } catch (connErr) {
+            //@ts-ignore
+            console.error(`SQL Server offline: ${connErr.message}. Marcando lote como error.`);
+            await be.inTransaction(null, async (client) => {
+                const idsProcesados = filas.map(f => f.num_sincro);
+                // Si por algún motivo no hay filas, evitamos ejecutar la query
+                if (idsProcesados.length === 0) return;
+
+                // 2. Ejecutamos el update masivo usando el array de IDs
+                await client.query(`
+                    UPDATE cola_sincronizacion_usuarios_modulo c
+                    SET 
+                        intentos = c.intentos + 1,
+                        respuesta_sp = $2,
+                        estado = CASE 
+                            WHEN c.intentos + 1 >= $3 THEN '${ESTADOS.AGOTADO}' 
+                            ELSE '${ESTADOS.ERROR}' 
+                        END,
+                        actualizado_en = NOW()
+                    WHERE c.num_sincro = ANY($1)
+                    returning *
+                `,
+                //@ts-ignore 
+                [idsProcesados, MAX_INTENTOS, `Error de conexión: ${connErr.message}`]).fetchAll();
+            });
+        } finally {
+            if (pool && pool.connected) await pool.close();
+        }
+    }, 60 * 1000);
     be.shutdownCallbackListAdd({
         message:'cron sincro usuarios',
         fun:async function(){
@@ -177,7 +262,7 @@ const cronSincroUsuarios = async(be:AppBackend) => {
         }
     });
 
-}
+}*/
 export class AppSiper extends AppBackend{
     constructor(){
         super();
