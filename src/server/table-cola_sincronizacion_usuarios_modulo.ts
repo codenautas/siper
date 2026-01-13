@@ -30,6 +30,7 @@ export function cola_sincronizacion_usuarios_modulo(context: TableContext): Tabl
             {name: 'estado'           , typeName: 'text'   , nullable: false},
             {name: 'intentos'         , typeName: 'integer', nullable: false, defaultValue:0},
             {name: 'ejecutar_SP'      , editable:false, clientSide:'ejecutarSPModuloFichadas', typeName:'text'},
+            {name: 'parametros'       , typeName: 'text'   },
             {name: 'respuesta_sp'     , typeName: 'text'   },
             {name: 'creado_en'        , typeName: 'timestamp'  },
             {name: 'actualizado_en'   , typeName: 'timestamp'  },

@@ -769,7 +769,6 @@ export async function ejecutarSP(parameters: any, client: Client, pool: sql.Conn
         request.input('Documento', sql.VarChar(20), datos.documento);
         request.input('Legajo', sql.VarChar(50), datos.legajo);
         request.input('Estado', sql.Int, datos.estado);
-        request.input('FechaEstado', sql.DateTime, datos.fechaEstado || new Date());
         request.input('Contrasenia', sql.VarChar(sql.MAX), datos.contrasenia || null);
 
         const result = await request.execute<UpsertResponse>('spUpsertEmpleado');
@@ -789,11 +788,12 @@ export async function ejecutarSP(parameters: any, client: Client, pool: sql.Conn
             update cola_sincronizacion_usuarios_modulo
                 set intentos = intentos + 1, 
                     respuesta_sp = $2, 
-                    estado = $3, 
+                    parametros = $3
+                    estado = $4, 
                     actualizado_en = NOW()
                 where num_sincro = $1
                 returning *
-        `, [num_sincro, json4all.stringify(respuesta), estadoFinal]).fetchUniqueRow();
+        `, [num_sincro, json4all.stringify(respuesta), json4all.stringify(datos), estadoFinal]).fetchUniqueRow();
     } catch (err) {
         //@ts-ignore message existe
         const error = `Error crítico en la operación: ${err.message}.`;
