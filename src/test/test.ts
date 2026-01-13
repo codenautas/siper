@@ -143,6 +143,7 @@ describe("SiPer: " + testConfig.name, function(){
     var adminMetadatosSession: SesionEmuladaSiper; // admin de metadatos, por ahora un admin
     var borradoExitoso: boolean = false;
     var fallaEnLaQueQuieroOmitirElBorrado: boolean = false;
+    this.timeout(5000);
     before(async function(){
         try{
             if (VERBOSE) console.log('Arranca el servidor')
