@@ -797,6 +797,7 @@ export async function ejecutarSP(parameters: any, client: Client, pool: sql.Conn
     } catch (err) {
         //@ts-ignore message existe
         const error = `Error crítico en la operación: ${err.message}.`;
+        console.log(error);
         const estadoFinalCatch = nuevoIntentoCount >= MAX_INTENTOS ? ESTADOS.AGOTADO : ESTADOS.ERROR;
         await client.query(`
             update cola_sincronizacion_usuarios_modulo
