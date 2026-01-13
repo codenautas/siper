@@ -2,8 +2,6 @@
 
 import {TableDefinition, TableContext, FieldDefinition} from "./types-principal";
 
-import {idper} from "./table-personas"
-
 //no importo los fields porque si cambian las definiciones puede afectar al funcionamiento 
 //de la empresa que ingresa en esta tabla
 
@@ -30,10 +28,7 @@ export function fichadas_recibidas(context: TableContext): TableDefinition{
             {name: 'id_origen'        , typeName: 'text'     , allowEmptyText: true   },
             {name: 'recepcion'        , typeName: 'timestamp', defaultDbValue: 'current_timestamp'}
         ],         
-        primaryKey: [id_fichada.name],
-        foreignKeys: [
-            {references: 'personas', fields: [{source:'idper', target:idper.name}], displayFields:['apellido', 'nombres', 'cuil', 'ficha']},
-        ],
+        primaryKey: [id_fichada.name]
         sql:{
             skipEnance: true
         }

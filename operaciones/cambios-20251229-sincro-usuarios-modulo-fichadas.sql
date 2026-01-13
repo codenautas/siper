@@ -120,3 +120,7 @@ CREATE TRIGGER tr_sincro_usuarios_modulo_global
     ON "usuarios"
     FOR EACH ROW
     EXECUTE FUNCTION siper.fn_trigger_sincro_usuarios_modulo();
+
+
+alter table "fichadas_recibidas" drop constraint "fichadas_recibidas personas REL";
+drop index "idper 4 fichadas_recibidas IDX" ;
