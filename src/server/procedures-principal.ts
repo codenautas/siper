@@ -715,14 +715,14 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 await context.client.query(`
                     update cola_sincronizacion_usuarios_modulo
                         SET intentos = intentos + 1, 
-                            respuesta_sp = $2, 
-                            estado = $3,
+                            respuesta_sp = $3, 
+                            estado = $4,
                             actualizado_en = NOW()
-                        WHERE num_sincro = $1
+                        WHERE num_sincro = $1 and estado <> $2
                         returning *
                 `,
                 //@ts-ignore 
-                [parameters.num_sincro, `${err.code}: ${err.message}`, ESTADOS.ERROR]).fetchUniqueRow();
+                [parameters.num_sincro, ESTADOS.PROCESADO, `${err.code}: ${err.message}`, ESTADOS.ERROR]).fetchUniqueRow();
             } finally {
                 if (pool && pool.connected) await pool.close();
             }
@@ -788,7 +788,7 @@ export async function ejecutarSP(parameters: any, client: Client, pool: sql.Conn
             update cola_sincronizacion_usuarios_modulo
                 set intentos = intentos + 1, 
                     respuesta_sp = $2, 
-                    parametros = $3
+                    parametros = $3,
                     estado = $4, 
                     actualizado_en = NOW()
                 where num_sincro = $1
