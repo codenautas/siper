@@ -89,6 +89,7 @@ export function personas(context: TableContext): TableDefinition {
             {...horario, inTable:false},
             bh_personas,
             {name: 'telefonos', typeName: 'text', inTable:false},
+            {name: 'domicilios', typeName: 'text', inTable:false},
         ],
         primaryKey: [idper.name],
         foreignKeys: [
@@ -136,6 +137,7 @@ export function personas(context: TableContext): TableDefinition {
             fields: {
                 cuil_valido:{ expr:`validar_cuit(cuil)` },
                 telefonos:{ expr:`get_telefonos(idper)`},
+                domicilios:{ expr:`get_domicilios(idper)`},
             },
             // where: es.rrhh ? 'true' : es.registra ? `personas.activo AND sector_pertenece(personas.sector, ${quoteLiteral(user.sector)})` : `personas.idper = ${quoteLiteral(user.idper)}`
             from:`(${sqlPersonas})`
