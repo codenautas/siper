@@ -18,7 +18,7 @@ export function fichadas_recibidas(context: TableContext): TableDefinition{
         editable: context.forDump,
         fields:[
             {...id_fichada            , sequence:{name: 'id_fichada', firstValue: 100}},
-            {name: 'idper'            , typeName: 'text'     , nullable: false        },
+            {name: 'fichador'            , typeName: 'text'     , nullable: false        },
             {name: 'fecha'            , typeName: 'date'     , nullable: false        },
             {name: 'hora'             , typeName: 'time'     , nullable: false        },
             {name: 'tipo'             , typeName: 'text'     , nullable: false        },
@@ -28,7 +28,7 @@ export function fichadas_recibidas(context: TableContext): TableDefinition{
             {name: 'id_origen'        , typeName: 'text'     , allowEmptyText: true   },
             {name: 'recepcion'        , typeName: 'timestamp', defaultDbValue: 'current_timestamp'}
         ],         
-        primaryKey: [id_fichada.name]
+        primaryKey: [id_fichada.name],
         sql:{
             skipEnance: true
         }

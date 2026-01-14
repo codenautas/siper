@@ -126,6 +126,8 @@ alter table "fichadas_recibidas" drop constraint "fichadas_recibidas personas RE
 drop index "idper 4 fichadas_recibidas IDX" ;
 
 
+alter table fichadas_recibidas rename column idper to fichador;
+
 --permisos faltantes en grilla fichadas recibidas
 SET ROLE postgres;
 
