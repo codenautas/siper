@@ -12,19 +12,18 @@ Gestionar la sincronización de identidades entre Siper y el módulo externo. La
 ## 3. Flujo de Encolado
 El proceso se activa automáticamente ante las siguientes operaciones en la tabla de usuarios:
 - **INSERT o DELETE** de un usuario.
-- **UPDATE** exclusivamente de los campos: nombre, apellido, activo, hashpass e idper.
+- **UPDATE** exclusivamente de los campos: usuario, activo, hashpass e idper.
 
 **Nota:** Cambios en otros campos (como teléfono o mail) no dispararán la sincronización para optimizar el rendimiento.
 
 ### Condiciones de Entrada
 Para que un evento sea efectivamente encolado, deben cumplirse estas condiciones:
-- **Existencia de ID Per**: El registro debe poseer un idper no nulo.
 - **Algoritmo Específico**: El campo algoritmo_pass debe ser estrictamente igual a 'PG-SHA256'.
 
 ### Lógica de Decisión
 El trigger evalúa dos posibles acciones simultáneas:
-- **Desactivación de Identidad Previa**: Si un UPDATE cambia el idper o el usuario deja de ser principal, se encola una orden de DESACTIVAR para el ID que quedó huérfano.
-- **Sincronización de Registro Actual**: Si es un DELETE físico: Se encola DESACTIVAR. Si es un INSERT/UPDATE y el usuario es principal: Se encola ACTUALIZAR (solo si hubo cambios en campos críticos)
+- **Desactivación de Identidad Previa**: Si un UPDATE cambia el usuario o bien se hace un DELETE del mismo, se encola una orden de DESACTIVAR para el ID que quedó huérfano.
+- **Sincronización de Registro Actual**: Si es un INSERT/UPDATE: Se encola ACTUALIZAR (solo si hubo cambios en campos críticos)
 
 
 ## 4. Acciones de Sincronización
