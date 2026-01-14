@@ -124,3 +124,10 @@ CREATE TRIGGER tr_sincro_usuarios_modulo_global
 
 alter table "fichadas_recibidas" drop constraint "fichadas_recibidas personas REL";
 drop index "idper 4 fichadas_recibidas IDX" ;
+
+
+--permisos faltantes en grilla fichadas recibidas
+SET ROLE postgres;
+
+grant select, insert, update, delete on "fichadas_recibidas" to siper_muleto_admin;
+grant all on "fichadas_recibidas" to siper_muleto_owner;
