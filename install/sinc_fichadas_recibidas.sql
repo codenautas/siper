@@ -1,6 +1,7 @@
 CREATE OR REPLACE FUNCTION procesar_fichada_recibida_trg() RETURNS trigger
     LANGUAGE plpgsql
     SECURITY DEFINER
+    set search_path=siper
 AS
 $$
 DECLARE

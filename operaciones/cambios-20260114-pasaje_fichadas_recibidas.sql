@@ -14,6 +14,7 @@ ALTER TABLE fichadas_recibidas
 CREATE OR REPLACE FUNCTION procesar_fichada_recibida_trg() RETURNS trigger
     LANGUAGE plpgsql
     SECURITY DEFINER
+    set search_path=siper
 AS
 $$
 DECLARE
@@ -60,3 +61,8 @@ CREATE TRIGGER procesar_fichada_recibida_trg
     BEFORE INSERT ON fichadas_recibidas
     FOR EACH ROW
     EXECUTE PROCEDURE procesar_fichada_recibida_trg();
+
+insert into "tipos_fichada" ("tipo_fichada", "nombre", "orden") values
+('E', 'ENTRADA', 10),
+('S', 'SALIDA', 20),
+('O', 'OTROS', 30);
