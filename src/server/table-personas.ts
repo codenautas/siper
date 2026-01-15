@@ -88,6 +88,7 @@ export function personas(context: TableContext): TableDefinition {
             max_nivel_ed,
             {...horario, inTable:false},
             bh_personas,
+            {name: 'telefonos', typeName: 'text', inTable:false},
         ],
         primaryKey: [idper.name],
         foreignKeys: [
@@ -134,6 +135,8 @@ export function personas(context: TableContext): TableDefinition {
             policies: politicaNovedades('personas', 'registra_novedades_desde'),
             fields: {
                 cuil_valido:{ expr:`validar_cuit(cuil)` },
+                telefonos:{ expr:`(SELECT string_agg(tipo_telefono || ':' ||telefono, ' , ') as telefonos 
+                                   FROM siper.per_telefonos t WHERE personas.idper = t.idper)`},
             },
             // where: es.rrhh ? 'true' : es.registra ? `personas.activo AND sector_pertenece(personas.sector, ${quoteLiteral(user.sector)})` : `personas.idper = ${quoteLiteral(user.idper)}`
             from:`(${sqlPersonas})`
