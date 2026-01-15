@@ -16,13 +16,13 @@ export const ESTADOS = {
 };
 
 
-export function cola_sincronizacion_usuarios_modulo(context: TableContext): TableDefinition{
+export function sinc_fichadores(context: TableContext): TableDefinition{
     return {
-        name: 'cola_sincronizacion_usuarios_modulo',
-        elementName: 'sincronizacion_usuarios_modulo',
+        name: 'sinc_fichadores',
+        elementName: 'sinc_fichador',
         editable: context.forDump,
         fields:[
-            {name: 'num_sincro'       , typeName: 'bigint' , nullable: false, sequence:{firstValue:1, name:'cola_usuarios_seq'}},
+            {name: 'num_sincro'       , typeName: 'bigint' , nullable: false, sequence:{firstValue:1, name:'sinc_usuarios_seq'}},
             {name: 'usuario'          , typeName: 'text'   , nullable: false},
             {name: 'accion'           , typeName: 'text'   , nullable: false},
             {name: 'estado'           , typeName: 'text'   , nullable: false},

@@ -2,7 +2,7 @@ set search_path=siper;
 SET ROLE siper_muleto_owner;
 --SET ROLE siper_owner;
 
-create table "cola_sincronizacion_usuarios_modulo" (
+create table "sinc_fichadores" (
   "num_sincro" bigint, 
   "usuario" text, 
   "accion" text, 
@@ -14,29 +14,29 @@ create table "cola_sincronizacion_usuarios_modulo" (
   "actualizado_en" timestamp
 , primary key ("num_sincro")
 );
-grant select, insert, update, delete on "cola_sincronizacion_usuarios_modulo" to siper_muleto_admin;
-grant all on "cola_sincronizacion_usuarios_modulo" to siper_muleto_owner;
+grant select, insert, update, delete on "sinc_fichadores" to siper_muleto_admin;
+grant all on "sinc_fichadores" to siper_muleto_owner;
 
 
-CREATE SEQUENCE "cola_usuarios_seq" START 1;
-ALTER TABLE "cola_sincronizacion_usuarios_modulo" ALTER COLUMN "num_sincro" SET DEFAULT nextval('cola_usuarios_seq'::regclass);
-GRANT USAGE, SELECT ON SEQUENCE "cola_usuarios_seq" TO siper_muleto_admin;
+CREATE SEQUENCE "sinc_usuarios_seq" START 1;
+ALTER TABLE "sinc_fichadores" ALTER COLUMN "num_sincro" SET DEFAULT nextval('sinc_usuarios_seq'::regclass);
+GRANT USAGE, SELECT ON SEQUENCE "sinc_usuarios_seq" TO siper_muleto_admin;
 
-alter table "cola_sincronizacion_usuarios_modulo" alter column "num_sincro" set not null;
-alter table "cola_sincronizacion_usuarios_modulo" add constraint "usuario<>''" check ("usuario"<>'');
-alter table "cola_sincronizacion_usuarios_modulo" alter column "usuario" set not null;
-alter table "cola_sincronizacion_usuarios_modulo" add constraint "accion<>''" check ("accion"<>'');
-alter table "cola_sincronizacion_usuarios_modulo" alter column "accion" set not null;
-alter table "cola_sincronizacion_usuarios_modulo" add constraint "estado<>''" check ("estado"<>'');
-alter table "cola_sincronizacion_usuarios_modulo" alter column "estado" set not null;
-alter table "cola_sincronizacion_usuarios_modulo" alter column "intentos" set not null;
-alter table "cola_sincronizacion_usuarios_modulo" add constraint "respuesta_sp<>''" check ("respuesta_sp"<>'');
-alter table "cola_sincronizacion_usuarios_modulo" add constraint "parametros<>''" check ("parametros"<>'');
-alter table "cola_sincronizacion_usuarios_modulo" add constraint "estados_cola" check (estado IN ('PENDIENTE', 'EN_PROCESO', 'PROCESADO', 'ERROR', 'AGOTADO'));
-alter table "cola_sincronizacion_usuarios_modulo" add constraint "acciones_cola" check (accion IN ('DESACTIVAR', 'ACTUALIZAR'));
+alter table "sinc_fichadores" alter column "num_sincro" set not null;
+alter table "sinc_fichadores" add constraint "usuario<>''" check ("usuario"<>'');
+alter table "sinc_fichadores" alter column "usuario" set not null;
+alter table "sinc_fichadores" add constraint "accion<>''" check ("accion"<>'');
+alter table "sinc_fichadores" alter column "accion" set not null;
+alter table "sinc_fichadores" add constraint "estado<>''" check ("estado"<>'');
+alter table "sinc_fichadores" alter column "estado" set not null;
+alter table "sinc_fichadores" alter column "intentos" set not null;
+alter table "sinc_fichadores" add constraint "respuesta_sp<>''" check ("respuesta_sp"<>'');
+alter table "sinc_fichadores" add constraint "parametros<>''" check ("parametros"<>'');
+alter table "sinc_fichadores" add constraint "estados_cola" check (estado IN ('PENDIENTE', 'EN_PROCESO', 'PROCESADO', 'ERROR', 'AGOTADO'));
+alter table "sinc_fichadores" add constraint "acciones_cola" check (accion IN ('DESACTIVAR', 'ACTUALIZAR'));
 
 CREATE UNIQUE INDEX "idx_usuario_activo_sincro" 
-ON "cola_sincronizacion_usuarios_modulo" ("usuario") 
+ON "sinc_fichadores" ("usuario") 
 WHERE ("estado" != 'PROCESADO');
 
 CREATE OR REPLACE FUNCTION siper.fn_trigger_sincro_usuarios_modulo()
@@ -94,7 +94,7 @@ BEGIN
 
     -- Acción para el usuario PREVIO (solo en renombres)
     IF (v_debe_desactivar_previo) THEN
-        INSERT INTO siper.cola_sincronizacion_usuarios_modulo (usuario, accion, estado, creado_en, actualizado_en)
+        INSERT INTO siper.sinc_fichadores (usuario, accion, estado, creado_en, actualizado_en)
         VALUES (OLD.usuario, 'DESACTIVAR', 'PENDIENTE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)
         ON CONFLICT (usuario) WHERE (estado != 'PROCESADO')
         DO UPDATE SET accion = 'DESACTIVAR', estado = 'PENDIENTE', actualizado_en = NOW(), intentos = 0, respuesta_sp = null;
@@ -102,7 +102,7 @@ BEGIN
 
     -- Acción para el usuario ACTUAL (Alta, Modificación, Baja o Desvínculo)
     IF (v_debe_procesar_actual) THEN
-        INSERT INTO siper.cola_sincronizacion_usuarios_modulo (usuario, accion, estado, creado_en, actualizado_en)
+        INSERT INTO siper.sinc_fichadores (usuario, accion, estado, creado_en, actualizado_en)
         VALUES (CASE WHEN TG_OP = 'DELETE' THEN OLD.usuario ELSE NEW.usuario END, v_accion_actual, 'PENDIENTE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)
         ON CONFLICT (usuario) WHERE (estado != 'PROCESADO')
         DO UPDATE SET accion = v_accion_actual, estado = 'PENDIENTE', actualizado_en = NOW(), intentos = 0, respuesta_sp = null;

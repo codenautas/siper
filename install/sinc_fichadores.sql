@@ -1,5 +1,5 @@
 CREATE UNIQUE INDEX "idx_usuario_activo_sincro" 
-ON "cola_sincronizacion_usuarios_modulo" ("usuario") 
+ON "sinc_fichadores" ("usuario") 
 WHERE ("estado" != 'PROCESADO');
 
 CREATE OR REPLACE FUNCTION siper.fn_trigger_sincro_usuarios_modulo()
@@ -57,7 +57,7 @@ BEGIN
 
     -- Acción para el usuario PREVIO (solo en renombres)
     IF (v_debe_desactivar_previo) THEN
-        INSERT INTO siper.cola_sincronizacion_usuarios_modulo (usuario, accion, estado, creado_en, actualizado_en)
+        INSERT INTO siper.sinc_fichadores (usuario, accion, estado, creado_en, actualizado_en)
         VALUES (OLD.usuario, 'DESACTIVAR', 'PENDIENTE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)
         ON CONFLICT (usuario) WHERE (estado != 'PROCESADO')
         DO UPDATE SET accion = 'DESACTIVAR', estado = 'PENDIENTE', actualizado_en = NOW(), intentos = 0, respuesta_sp = null;
@@ -65,7 +65,7 @@ BEGIN
 
     -- Acción para el usuario ACTUAL (Alta, Modificación, Baja o Desvínculo)
     IF (v_debe_procesar_actual) THEN
-        INSERT INTO siper.cola_sincronizacion_usuarios_modulo (usuario, accion, estado, creado_en, actualizado_en)
+        INSERT INTO siper.sinc_fichadores (usuario, accion, estado, creado_en, actualizado_en)
         VALUES (CASE WHEN TG_OP = 'DELETE' THEN OLD.usuario ELSE NEW.usuario END, v_accion_actual, 'PENDIENTE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)
         ON CONFLICT (usuario) WHERE (estado != 'PROCESADO')
         DO UPDATE SET accion = v_accion_actual, estado = 'PENDIENTE', actualizado_en = NOW(), intentos = 0, respuesta_sp = null;

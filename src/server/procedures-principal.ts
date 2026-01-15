@@ -15,7 +15,7 @@ import * as json4all from 'json4all';
 import * as fs from 'fs/promises';
 import * as ctts from "../common/contracts.js"
 import * as sql from 'mssql';
-import { ACCIONES, ESTADOS } from './table-cola_sincronizacion_usuarios_modulo';
+import { ACCIONES, ESTADOS } from './table-sinc_fichadores';
 import { getConfigFichadasDb, MAX_INTENTOS } from './app-principal';
 
 async function prevalidarCargaDeNovedades(context: ProcedureContext, params:Partial<NovedadRegistrada>){
@@ -703,7 +703,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     },
     {
         parameters: [
-            {name:'num_sincro'  , typeName:'bigint'    , references: 'cola_sincronizacion_usuarios_modulo'},
+            {name:'num_sincro'  , typeName:'bigint'    , references: 'sinc_fichadores'},
         ],
         action: 'cambio_usuario_modulo_procesar',
         coreFunction: async function (context:ProcedureContext, parameters:any) {
@@ -713,7 +713,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 await ejecutarSP(parameters, context.client, pool!);
             }catch(err){
                 await context.client.query(`
-                    update cola_sincronizacion_usuarios_modulo
+                    update sinc_fichadores
                         SET intentos = intentos + 1, 
                             respuesta_sp = $3, 
                             estado = $4,
@@ -736,7 +736,7 @@ export async function ejecutarSP(parameters: any, client: Client, pool: sql.Conn
     await client.query(`CALL set_app_user('!login')`).execute();
     const ITEM_COLA = (await client.query(`
         select * 
-            from cola_sincronizacion_usuarios_modulo
+            from sinc_fichadores
             where num_sincro = $1
             FOR UPDATE
     `, [num_sincro]).fetchUniqueRow()).row;
@@ -785,7 +785,7 @@ export async function ejecutarSP(parameters: any, client: Client, pool: sql.Conn
             estadoFinal = ESTADOS.PROCESADO;
         }
         await client.query(`
-            update cola_sincronizacion_usuarios_modulo
+            update sinc_fichadores
                 set intentos = intentos + 1, 
                     respuesta_sp = $2, 
                     parametros = $3,
@@ -800,7 +800,7 @@ export async function ejecutarSP(parameters: any, client: Client, pool: sql.Conn
         console.log(error);
         const estadoFinalCatch = nuevoIntentoCount >= MAX_INTENTOS ? ESTADOS.AGOTADO : ESTADOS.ERROR;
         await client.query(`
-            update cola_sincronizacion_usuarios_modulo
+            update sinc_fichadores
                 SET intentos = $2, 
                     respuesta_sp = $3, 
                     estado = $4,

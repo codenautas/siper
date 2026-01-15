@@ -76,7 +76,7 @@ import { niveles_educativos      } from "./table-niveles_educativos";
 import { tipos_novedad           } from "./table-tipos_novedad";
 import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
-import {cola_sincronizacion_usuarios_modulo, ESTADOS} from "./table-cola_sincronizacion_usuarios_modulo"
+import {sinc_fichadores, ESTADOS} from "./table-sinc_fichadores"
 
 import { ejecutarSP, ProceduresPrincipal } from './procedures-principal'
 import * as sql from 'mssql';
@@ -147,7 +147,7 @@ const cronSincroUsuarios = async (be: AppBackend) => {
         try {
             await be.inTransaction(null, async (client) => {
                 filas = (await client.query(`
-                    SELECT num_sincro FROM cola_sincronizacion_usuarios_modulo
+                    SELECT num_sincro FROM sinc_fichadores
                         WHERE estado IN ('${ESTADOS.PENDIENTE}', '${ESTADOS.ERROR}') AND intentos < $1
                         ORDER BY creado_en ASC LIMIT 50
                         FOR UPDATE SKIP LOCKED
@@ -176,7 +176,7 @@ const cronSincroUsuarios = async (be: AppBackend) => {
 
                 await be.inTransaction(null, async (client) => {
                     await client.query(`
-                        UPDATE cola_sincronizacion_usuarios_modulo c
+                        UPDATE sinc_fichadores c
                             SET intentos = c.intentos + 1,
                                 respuesta_sp = $2,
                                 estado = CASE WHEN c.intentos + 1 >= $3 THEN '${ESTADOS.AGOTADO}' ELSE '${ESTADOS.ERROR}' END,
@@ -205,64 +205,7 @@ const cronSincroUsuarios = async (be: AppBackend) => {
         }
     });
 };
-/*
-const cronSincroUsuarios = async (be: AppBackend) => {
-    const interval = setInterval(async () => {
-        let pool: sql.ConnectionPool | null = null;
-        try {
-            var filas:any[] = [];
-            pool = await new sql.ConnectionPool(getConfigFichadasDb(be)).connect();
-            await be.inTransaction(null, async (client) => {
-                filas = (await client.query(`
-                    SELECT num_sincro FROM cola_sincronizacion_usuarios_modulo
-                        WHERE estado IN ('PENDIENTE', 'ERROR') AND intentos < $1
-                        ORDER BY creado_en ASC 
-                        LIMIT 50
-                `, [MAX_INTENTOS]).fetchAll()).rows;
 
-                for (const fila of filas) {
-                    await ejecutarSP({ num_sincro: fila.num_sincro }, client, pool!);
-                }
-            });
-
-        } catch (connErr) {
-            //@ts-ignore
-            console.error(`SQL Server offline: ${connErr.message}. Marcando lote como error.`);
-            await be.inTransaction(null, async (client) => {
-                const idsProcesados = filas.map(f => f.num_sincro);
-                // Si por algún motivo no hay filas, evitamos ejecutar la query
-                if (idsProcesados.length === 0) return;
-
-                // 2. Ejecutamos el update masivo usando el array de IDs
-                await client.query(`
-                    UPDATE cola_sincronizacion_usuarios_modulo c
-                    SET 
-                        intentos = c.intentos + 1,
-                        respuesta_sp = $2,
-                        estado = CASE 
-                            WHEN c.intentos + 1 >= $3 THEN '${ESTADOS.AGOTADO}' 
-                            ELSE '${ESTADOS.ERROR}' 
-                        END,
-                        actualizado_en = NOW()
-                    WHERE c.num_sincro = ANY($1)
-                    returning *
-                `,
-                //@ts-ignore 
-                [idsProcesados, MAX_INTENTOS, `Error de conexión: ${connErr.message}`]).fetchAll();
-            });
-        } finally {
-            if (pool && pool.connected) await pool.close();
-        }
-    }, 60 * 1000);
-    be.shutdownCallbackListAdd({
-        message:'cron sincro usuarios',
-        fun:async function(){
-            clearInterval(interval);
-            return Promise.resolve();
-        }
-    });
-
-}*/
 export class AppSiper extends AppBackend{
     constructor(){
         super();
@@ -454,7 +397,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'componentesSiper', name:'componentes'},
                         ]},
                         {menuType:'menu', name:'config', label:'configurar', menuContent:[
-                            {menuType:'table', name:'cola_sincronizacion_usuarios_modulo'   },
+                            {menuType:'table', name:'sinc_fichadores'   },
                             {menuType:'table', name:'fechas'        },
                             {menuType:'menu', name:'ref personas'   , description:'tablas referenciales de personas', menuContent:[
                                 {menuType:'table', name:'sectores'         , table:'sectores_edit' },
@@ -610,7 +553,7 @@ export class AppSiper extends AppBackend{
             bandas_horarias      ,
             reglas               ,
             avisos_falta_fichada ,   
-            cola_sincronizacion_usuarios_modulo,
+            sinc_fichadores,
         }
     }       
 }

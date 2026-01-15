@@ -1,11 +1,11 @@
-# Especificación Técnica: Tabla siper.cola_sincronizacion_usuarios_modulo
+# Especificación Técnica: Tabla siper.sinc_fichadores
 
 ## 1. Propósito
 Gestionar la sincronización de identidades entre Siper y el módulo externo. La solución asegura que solo los usuarios designados como "Principales" sean replicados, administrando cambios de identidad, bajas lógicas y físicas, y garantizando la entrega del estado más reciente mediante una cola de eventos persistente.
 
 ## 2. Componentes de la Solución
 - **Tabla de Usuarios (siper.usuarios)**: Origen de datos. Incorpora el campo principal (booleano) para determinar la identidad activa por cada idper.
-- **Tabla de Cola (siper.cola_sincronizacion_usuarios_modulo)**: Registro persistente de eventos pendientes de procesar.
+- **Tabla de Sincronizaciones (siper.sinc_fichadores)**: Registro persistente de eventos pendientes de procesar.
 - **Índice Único Parcial**: Restricción a nivel de base de datos que impide la existencia de más de un usuario principal = true por cada idper.
 - **Trigger de Sincronización (tr_sincro_usuarios_modulo_global)**: El "agente" que detecta cambios y gestiona la cola.
 
