@@ -27,8 +27,8 @@ export function fichadas_recibidas(context: TableContext): TableDefinition{
             {name: 'punto_gps'        , typeName: 'text'     , allowEmptyText: true   },
             {name: 'id_origen'        , typeName: 'text'     , allowEmptyText: true   },
             {name: 'recepcion'        , typeName: 'timestamp', defaultDbValue: 'current_timestamp'},
-            {name: 'migrado_estado'   , typeName: 'text'     , defaultDbValue: 'current_timestamp'},
-            {name: 'migrado_log'      , typeName: 'text'     , nullable: false, defaultDbValue: "'pendiente'"}
+            {name: 'migrado_estado'   , typeName: 'text'     , nullable: false, defaultDbValue: "'ANTERIOR_A_TRIGGER'"},
+            {name: 'migrado_log'      , typeName: 'text'     }
         ],         
         primaryKey: [id_fichada.name],
         sql:{

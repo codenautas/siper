@@ -3,7 +3,7 @@ SET ROLE siper_muleto_owner;
 --SET ROLE siper_owner;
 
 ALTER TABLE fichadas_recibidas 
-  ADD COLUMN migrado_estado text DEFAULT 'PENDIENTE';
+  ADD COLUMN migrado_estado text DEFAULT 'ANTERIOR_A_TRIGGER';
 
 ALTER TABLE fichadas_recibidas 
   ADD COLUMN migrado_log text;
@@ -28,7 +28,7 @@ BEGIN
         IF v_idper IS NULL THEN
             RAISE EXCEPTION 'Usuario "%" no encontrado en la tabla usuarios', NEW.fichador;
         END IF;
-        
+
         CASE 
             WHEN lower(NEW.tipo) IN ('e', 'entrada') THEN v_tipo_mapeado := 'E';
             WHEN lower(NEW.tipo) IN ('s', 'salida')  THEN v_tipo_mapeado := 'S';
