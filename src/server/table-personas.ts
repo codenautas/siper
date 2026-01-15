@@ -136,7 +136,21 @@ export function personas(context: TableContext): TableDefinition {
             policies: politicaNovedades('personas', 'registra_novedades_desde'),
             fields: {
                 cuil_valido:{ expr:`validar_cuit(cuil)` },
-                domicilios:{ expr:`get_domicilios(idper)`},
+                domicilios:{ expr:`(select string_agg(concat_ws(' ', tipo_domicilio || ' :', nombre_calle || ' ' || altura,
+                                  '(CP:' || codigo_postal || ')',
+                                  'Piso:' || piso, 'Depto:' || depto,
+                                  '- Torre:' || torre, '- Nudo:' || nudo, '- Ala:' || ala,
+                                  '- Prov:' || p.nombre_provincia, '- Loc:' || l.nombre_localidad,
+                                  '- Barrio:' || b.nombre_barrio, '- Obs:' || observaciones)
+                                  , ' , '
+                                  ) as domicilios
+                                  from per_domicilios pd
+                                  left join provincias p on p.provincia = pd.provincia
+                                  left join localidades l on pd.localidad = l.localidad and pd.provincia = l.provincia
+                                  left join barrios b on b.barrio = pd.barrio
+                                  where personas.idper = pd.idper
+                                  group by pd.idper
+                                )`},
                 telefonos:{ expr:`(SELECT string_agg(tipo_telefono || ':' ||telefono, ' , ') as telefonos 
                                    FROM siper.per_telefonos t WHERE personas.idper = t.idper)`},
             },
