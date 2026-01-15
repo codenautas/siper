@@ -2,8 +2,6 @@
 
 import {TableDefinition, TableContext, FieldDefinition} from "./types-principal";
 
-import {idper} from "./table-personas"
-
 //no importo los fields porque si cambian las definiciones puede afectar al funcionamiento 
 //de la empresa que ingresa en esta tabla
 
@@ -20,7 +18,7 @@ export function fichadas_recibidas(context: TableContext): TableDefinition{
         editable: context.forDump,
         fields:[
             {...id_fichada            , sequence:{name: 'id_fichada', firstValue: 100}},
-            {name: 'idper'            , typeName: 'text'     , nullable: false        },
+            {name: 'fichador'         , typeName: 'text'     , nullable: false        },
             {name: 'fecha'            , typeName: 'date'     , nullable: false        },
             {name: 'hora'             , typeName: 'time'     , nullable: false        },
             {name: 'tipo'             , typeName: 'text'     , nullable: false        },
@@ -28,12 +26,11 @@ export function fichadas_recibidas(context: TableContext): TableDefinition{
             {name: 'dispositivo'      , typeName: 'text'     , allowEmptyText: true   },
             {name: 'punto_gps'        , typeName: 'text'     , allowEmptyText: true   },
             {name: 'id_origen'        , typeName: 'text'     , allowEmptyText: true   },
-            {name: 'recepcion'        , typeName: 'timestamp', defaultDbValue: 'current_timestamp'}
+            {name: 'recepcion'        , typeName: 'timestamp', defaultDbValue: 'current_timestamp'},
+            {name: 'migrado_estado'   , typeName: 'text'     , defaultDbValue: 'current_timestamp'},
+            {name: 'migrado_log'      , typeName: 'text'     , nullable: false, defaultDbValue: "'pendiente'"}
         ],         
         primaryKey: [id_fichada.name],
-        foreignKeys: [
-            {references: 'personas', fields: [{source:'idper', target:idper.name}], displayFields:['apellido', 'nombres', 'cuil', 'ficha']},
-        ],
         sql:{
             skipEnance: true
         }

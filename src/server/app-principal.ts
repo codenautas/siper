@@ -76,8 +76,10 @@ import { niveles_educativos      } from "./table-niveles_educativos";
 import { tipos_novedad           } from "./table-tipos_novedad";
 import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
+import {sinc_fichadores, ESTADOS} from "./table-sinc_fichadores"
 
-import { ProceduresPrincipal } from './procedures-principal'
+import { ejecutarSP, ProceduresPrincipal } from './procedures-principal'
+import * as sql from 'mssql';
 
 import {staticConfigYaml} from './def-config';
 
@@ -128,6 +130,82 @@ const cronMantenimiento = (be:AppBackend) => {
     });
 
 }
+
+export const MAX_INTENTOS = 5;
+
+export const getConfigFichadasDb = (be:AppBackend)=> ({
+    ...be.getContextForDump().be.config['modulo-fichadas-db'],
+    connectionTimeout: 5000,
+    requestTimeout: 5000
+});
+
+const cronSincroUsuarios = async (be: AppBackend) => {
+    // Intervalo de 60 segundos
+    const interval = setInterval(async () => {
+        let filas: any[] = [];
+        const configFichadasDb = getConfigFichadasDb(be);
+        try {
+            await be.inTransaction(null, async (client) => {
+                filas = (await client.query(`
+                    SELECT num_sincro FROM sinc_fichadores
+                        WHERE estado IN ('${ESTADOS.PENDIENTE}', '${ESTADOS.ERROR}') AND intentos < $1
+                        ORDER BY creado_en ASC LIMIT 50
+                        FOR UPDATE SKIP LOCKED
+                `, [MAX_INTENTOS]).fetchAll()).rows;
+            });
+
+            if (filas.length === 0) return;
+            let pool: sql.ConnectionPool | null = null;
+            try {
+                pool = await new sql.ConnectionPool({
+                    ...configFichadasDb,
+                    connectionTimeout: 10000,
+                    requestTimeout: 15000
+                }).connect();
+
+                await be.inTransaction(null, async (client) => {
+                    for (const fila of filas) {
+                        await ejecutarSP({ num_sincro: fila.num_sincro }, client, pool!);
+                    }
+                });
+
+            } catch (connErr) {
+                //@ts-ignore
+                const errorMsg = `SQL Server Offline: ${connErr.message}`;
+                const idsProcesados = filas.map(f => f.num_sincro);
+
+                await be.inTransaction(null, async (client) => {
+                    await client.query(`
+                        UPDATE sinc_fichadores c
+                            SET intentos = c.intentos + 1,
+                                respuesta_sp = $2,
+                                estado = CASE WHEN c.intentos + 1 >= $3 THEN '${ESTADOS.AGOTADO}' ELSE '${ESTADOS.ERROR}' END,
+                                actualizado_en = NOW()
+                            WHERE c.num_sincro = ANY($1)
+                    `, [idsProcesados, errorMsg, MAX_INTENTOS]).execute();
+                });
+            } finally {
+                if (pool?.connected) {
+                    await pool.close();
+                    console.log('Pool de SQL Server cerrado correctamente.');
+                }
+            }
+        } catch (errPostgres) {
+            //@ts-ignore
+            console.error('Error crítico exterior:', errPostgres.message);
+        }
+    }, 60 * 1000);
+
+    // Shutdown para evitar procesos zombis al reiniciar el servidor
+    be.shutdownCallbackListAdd({
+        message: 'Finalizando cron de sincronización de usuarios...',
+        fun: async function() {
+            clearInterval(interval);
+            return Promise.resolve();
+        }
+    });
+};
+
 export class AppSiper extends AppBackend{
     constructor(){
         super();
@@ -209,6 +287,7 @@ export class AppSiper extends AppBackend{
         await super.postConfig();
         cronMantenimiento(be);
         await be.inCron('avance_de_dia_proc', {vecesPorDia:24*6});
+        cronSincroUsuarios(be);
     }
     override async getProcedures(){
         // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -318,6 +397,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'componentesSiper', name:'componentes'},
                         ]},
                         {menuType:'menu', name:'config', label:'configurar', menuContent:[
+                            {menuType:'table', name:'sinc_fichadores'   },
                             {menuType:'table', name:'fechas'        },
                             {menuType:'menu', name:'ref personas'   , description:'tablas referenciales de personas', menuContent:[
                                 {menuType:'table', name:'sectores'         , table:'sectores_edit' },
@@ -472,7 +552,8 @@ export class AppSiper extends AppBackend{
             niveles_educativos   ,
             bandas_horarias      ,
             reglas               ,
-            avisos_falta_fichada ,  
+            avisos_falta_fichada ,   
+            sinc_fichadores,
         }
     }       
 }
