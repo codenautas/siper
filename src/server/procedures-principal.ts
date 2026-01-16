@@ -1,7 +1,7 @@
 "use strict";
 
 import {strict as likeAr, createIndex} from 'like-ar';
-import { ProcedureDef, ProcedureContext, UploadedFileInfo, BackendError } from './types-principal';
+import { ProcedureDef, ProcedureContext, UploadedFileInfo, BackendError, UpsertResponse, IEmpleadoInput, Client } from './types-principal';
 import { NovedadRegistrada, calendario_persona, historico_persona, novedades_disponibles, FichadaData,
 } from '../common/contracts';
 import { sqlNovPer } from "./table-nov_per";
@@ -14,6 +14,9 @@ import { sqlPersonas } from "./table-personas";
 import * as json4all from 'json4all';
 import * as fs from 'fs/promises';
 import * as ctts from "../common/contracts.js"
+import * as sql from 'mssql';
+import { ACCIONES, ESTADOS } from './table-sinc_fichadores';
+import { getConfigFichadasDb, MAX_INTENTOS } from './app-principal';
 
 async function prevalidarCargaDeNovedades(context: ProcedureContext, params:Partial<NovedadRegistrada>){
     var diaActualPeroTarde = (await context.client.query(
@@ -25,6 +28,8 @@ async function prevalidarCargaDeNovedades(context: ProcedureContext, params:Part
         throw new BackendError("no se pueden cargar novedades el mismo día a esta hora", ctts.ERROR_HORA_PASADA);
     }
 }
+
+export const ACCION_SINCRONIZAR_USUARIOS_MODULO = 'sincronizacion_usuarios_modulo';
 
 
 export const ProceduresPrincipal:ProcedureDef[] = [
@@ -695,6 +700,116 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             `).fetchAll();
             return result.rows?.[0]?.detalle_multiorigen ?? {detalle:[]};
         }
+    },
+    {
+        parameters: [
+            {name:'num_sincro'  , typeName:'bigint'    , references: 'sinc_fichadores'},
+        ],
+        action: 'cambio_usuario_modulo_procesar',
+        coreFunction: async function (context:ProcedureContext, parameters:any) {
+            let pool: sql.ConnectionPool | null = null;
+            try{
+                pool = await new sql.ConnectionPool(getConfigFichadasDb(context.be)).connect();
+                await ejecutarSP(parameters, context.client, pool!);
+            }catch(err){
+                await context.client.query(`
+                    update sinc_fichadores
+                        SET intentos = intentos + 1, 
+                            respuesta_sp = $3, 
+                            estado = $4,
+                            actualizado_en = NOW()
+                        WHERE num_sincro = $1 and estado <> $2
+                        returning *
+                `,
+                //@ts-ignore 
+                [parameters.num_sincro, ESTADOS.PROCESADO, `${err.code}: ${err.message}`, ESTADOS.ERROR]).fetchUniqueRow();
+            } finally {
+                if (pool && pool.connected) await pool.close();
+            }
+            return 'ok'
+        }  
     }
 ];
+
+export async function ejecutarSP(parameters: any, client: Client, pool: sql.ConnectionPool) {
+    const { num_sincro } = parameters;
+    await client.query(`CALL set_app_user('!login')`).execute();
+    const ITEM_COLA = (await client.query(`
+        select * 
+            from sinc_fichadores
+            where num_sincro = $1
+            FOR UPDATE
+    `, [num_sincro]).fetchUniqueRow()).row;
+    if (ITEM_COLA.estado == ESTADOS.PROCESADO) {
+        throw Error(`no se puede ejecutar la sincronización porque el elemento está marcado como ${ESTADOS.PROCESADO}`);
+    }
+    const PER_DESACTIVADA: IEmpleadoInput = {
+        nombre: '',
+        apellido: '',
+        documento: '',
+        legajo: ITEM_COLA.usuario,
+        estado: 1,
+    };
+
+    const datos: IEmpleadoInput = ITEM_COLA.accion == ACCIONES.DESACTIVAR ?
+        PER_DESACTIVADA
+    :
+        ((await client.query(`
+            select p.nombres as nombre, p.apellido, p.documento, u.usuario as legajo, (not coalesce(u.activo,false))::integer as estado, u.hashpass as contrasenia
+                from usuarios u join personas p using (idper) 
+                where u.usuario = $1
+        `, [ITEM_COLA.usuario]).fetchUniqueRow()).row) as IEmpleadoInput;
+
+    const nuevoIntentoCount = (ITEM_COLA.intentos || 0) + 1;
+    try {
+        const request = pool.request();
+
+        request.input('Nombre', sql.VarChar(255), datos.nombre);
+        request.input('Apellido', sql.VarChar(255), datos.apellido);
+        request.input('Documento', sql.VarChar(20), datos.documento);
+        request.input('Legajo', sql.VarChar(50), datos.legajo);
+        request.input('Estado', sql.Int, datos.estado);
+        request.input('Contrasenia', sql.VarChar(sql.MAX), datos.contrasenia || null);
+
+        const result = await request.execute<UpsertResponse>('spUpsertEmpleado');
+
+        const respuesta = result.recordset[0];
+
+        if (!respuesta) {
+            throw new Error('El procedimiento no devolvió ningún resultado.');
+        }
+        let estadoFinal;
+        if (respuesta.ResultCode < 0) {
+            estadoFinal = nuevoIntentoCount >= MAX_INTENTOS ? ESTADOS.AGOTADO : ESTADOS.ERROR;
+        } else {
+            estadoFinal = ESTADOS.PROCESADO;
+        }
+        await client.query(`
+            update sinc_fichadores
+                set intentos = intentos + 1, 
+                    respuesta_sp = $2, 
+                    parametros = $3,
+                    estado = $4, 
+                    actualizado_en = NOW()
+                where num_sincro = $1
+                returning *
+        `, [num_sincro, json4all.stringify(respuesta), json4all.stringify(datos), estadoFinal]).fetchUniqueRow();
+    } catch (err) {
+        //@ts-ignore message existe
+        const error = `Error crítico en la operación: ${err.message}.`;
+        console.log(error);
+        const estadoFinalCatch = nuevoIntentoCount >= MAX_INTENTOS ? ESTADOS.AGOTADO : ESTADOS.ERROR;
+        await client.query(`
+            update sinc_fichadores
+                SET intentos = $2, 
+                    respuesta_sp = $3, 
+                    estado = $4,
+                    actualizado_en = NOW()
+                WHERE num_sincro = $1
+                returning *
+        `, [num_sincro, nuevoIntentoCount, error, estadoFinalCatch]).fetchUniqueRow();
+    } finally {
+        return 'ok';
+    }
+}
 

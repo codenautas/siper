@@ -229,3 +229,62 @@ myOwn.clientSides.bajarAdjunto = {
     prepare: function (_depot: myOwn.Depot, _fieldName: string): void {
     },
 };
+
+var crearSVG = (path:string,props:any) => {
+    var svg = html.svg(props || {},[
+        html.path({
+            d:path
+        })
+    ]).create();
+    svg.setAttribute("viewBox","0 0 25 25");
+    return svg
+}
+
+var crearBotonSP = (depot:myOwn.Depot)=>{
+    var svg = crearSVG("M2 20h20v-4H2zm2-3h2v2H4zM2 4v4h20V4zm4 3H4V5h2zm-4 7h20v-4H2zm2-3h2v2H4z",{class:"svg-acciones"})
+    let button = html.button({},[
+        'Ejecutar SP modulo',
+        //@ts-ignore svg es htmlelement
+        svg,
+    ]).create();
+    button.onclick = ()=> {
+        var actionFun = async ()=>{
+            var waitGif = html.img({src:'img/loading16.gif'}).create();
+            try{
+                button.disabled=true;
+                waitGif.style.display = 'block';
+                depot.rowControls.ejecutar_SP.appendChild(waitGif);
+                console.log("ejecuta")
+                const result = await my.ajax.cambio_usuario_modulo_procesar({num_sincro:depot.row.num_sincro});
+                console.log(result)
+                var grid=depot.manager;
+                grid.retrieveRowAndRefresh(depot);
+            }catch(err){
+                //@ts-ignore
+                alertPromise(err.message)
+                throw err
+            }finally{
+                button.disabled=false
+                waitGif.style.display = 'none';
+            }
+        }
+        
+        var confirmPromiseOpts: DialogOptions = {}
+        if(true){
+            confirmPromiseOpts.askForNoRepeat = 'no volver a mostrar'; //muestra mensaje por default pero anda igual
+            var buttonsDef = [
+                {label:'sí', value:true},
+                {label:'no', value:false}
+            ]
+            confirmPromise(`confirma acción sincro?`, {...confirmPromiseOpts, buttonsDef}).then(actionFun);
+        }
+    }
+    return button
+}
+
+myOwn.clientSides.ejecutarSPModuloFichadas = {
+    prepare: function(depot, _fieldName){
+        depot.rowControls.ejecutar_SP.appendChild(crearBotonSP(depot));
+        
+    }
+}
