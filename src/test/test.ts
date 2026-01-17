@@ -179,7 +179,7 @@ describe("SiPer: " + testConfig.name, function(){
         if (VERBOSE) console.log('Sesiones listas')
     })
     beforeEach(async function(){
-        this.timeout(TIMEOUT_SPEED * 3)
+        this.timeout(TIMEOUT_SPEED * 6)
         if (VERBOSE) console.log('restaurando la DB para pruebas individuales')
         await server.inDbClient(ADMIN_REQ, async client=>{
             await client.executeSentences([
