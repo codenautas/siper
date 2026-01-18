@@ -531,6 +531,15 @@ export const per_cant_multiorigen = {
     })
 }
 
+export const consolidar_fichadas = {
+    procedure: 'consolidar_fichadas',
+    parameters: is.object({
+        idper: is.string,
+        fecha: is.Date
+    }),
+    result: is.boolean
+}
+
 export const annio = {
     table: 'annio',
     description: is.object({

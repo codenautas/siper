@@ -22,7 +22,7 @@ export function fichadas_vigentes(_context: TableContext): TableDefinition{
             {name: 'horario_salida'  , typeName: 'time'},
         ],
         primaryKey: [idper.name, 'fecha'],
-        softForeignKeys: [
+        foreignKeys: [
             {references: 'personas', fields: [idper.name], displayFields:['ficha', 'apellido', 'nombres']},
             {references: 'cod_novedades', fields: [cod_nov.name], displayFields:['novedad']},
         ],

@@ -728,6 +728,16 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             }
             return 'ok'
         }  
+    },
+    {
+        action: 'consolidar_fichadas',
+        parameters: [
+            {name: 'fecha'         , typeName: 'date'   },
+            {name: 'idper'         , typeName: 'text'   , references: 'personas', defaultValue: null},
+        ],
+        coreFunction:  async function (/*context:ProcedureContext, parameters:any*/) {
+            return true;
+        }
     }
 ];
 
