@@ -34,6 +34,7 @@ export function fechas(context:TableContext):TableDefinition{
             {name: 'dds'       , typeName: 'integer', generatedAs: 'extract(dow from fecha)' /*, inTable:false, serverSide:true, editable:false*/},
             {...cod_nov, name: 'cod_nov_pred_fecha', editable:false, title:'cod nov'},
             añoEnBaseAFecha,
+            {name: 'fichadas_consolidadas', typeName: 'boolean', defaultValue:false},
         ],
         primaryKey: [fecha.name],
         foreignKeys: [

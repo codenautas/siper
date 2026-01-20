@@ -20,20 +20,9 @@ BEGIN
         WHERE a.abierto
       ON CONFLICT DO NOTHING;
     UPDATE fichadas_vigentes fv
-      SET
-        fichadas = r.rango,
-        cod_nov  = cod_nov_por_fichadas(fv.annio, r.rango)
-      FROM (
-        SELECT
-          idper,
-          fecha,
-          rango_simple_fichadas(idper, fecha) AS rango
-        FROM fichadas_vigentes
-        WHERE idper = new.idper
-      ) r,
-      annios a
-      WHERE fv.idper = r.idper
-        AND fv.fecha = r.fecha
+      SET fichadas = rango_simple_fichadas(fv.idper, fv.fecha)
+      FROM annios a 
+      WHERE fv.idper = new.idper
         AND fv.annio = a.annio
         AND a.abierto;
   END IF;
@@ -56,23 +45,11 @@ BEGIN
           AND p.activo
       ON CONFLICT DO NOTHING;
     UPDATE fichadas_vigentes fv
-      SET
-        fichadas = r.rango,
-        cod_nov = cod_nov_por_fichadas(fv.annio, r.rango)
-      FROM (
-        SELECT
-          idper,
-          fecha,
-          rango_simple_fichadas(idper, fecha) AS rango
-        FROM fichadas_vigentes
-        WHERE annio = new.annio
-      ) r,
-      personas p
-      WHERE fv.idper = r.idper
-        AND fv.fecha = r.fecha
+      SET fichadas = rango_simple_fichadas(fv.idper, fv.fecha)
+      FROM personas p
+      WHERE fv.annio = new.annio
         AND fv.idper = p.idper
-        AND p.activo
-        AND fv.annio = new.annio;
+        AND p.activo;
   END IF;
   RETURN NEW;
 END;
@@ -92,22 +69,9 @@ BEGIN
         WHERE p.activo
       ON CONFLICT DO NOTHING;
     UPDATE fichadas_vigentes fv
-      SET
-        fichadas = r.rango,
-        cod_nov  = cod_nov_por_fichadas(fv.annio, r.rango)
-      FROM (
-        SELECT
-          idper,
-          fecha,
-          rango_simple_fichadas(idper, fecha) AS rango
-        FROM fichadas_vigentes
-        WHERE fecha = new.fecha
-      ) r,
-      personas p,
-      annios a
-      WHERE fv.idper = r.idper
-        AND fv.fecha = r.fecha
-        AND fv.idper = p.idper
+      SET fichadas = rango_simple_fichadas(fv.idper, fv.fecha)
+      FROM personas p, annios a
+      WHERE fv.fecha = new.fecha
         AND fv.annio = a.annio
         AND p.activo
         AND a.abierto;
@@ -115,7 +79,6 @@ BEGIN
   RETURN NEW;
 END;
 $BODY$;
-
 
 CREATE OR REPLACE FUNCTION fichadas_fichadas_vigentes_trg()
   RETURNS TRIGGER
@@ -126,53 +89,43 @@ $BODY$
 DECLARE
   v_idper  text;
   v_fecha  date;
-  v_rango  time_range;
-  v_annio  int;
 BEGIN
-  v_idper := COALESCE(new.idper, old.idper);
-  v_fecha := COALESCE(new.fecha, old.fecha);
+  v_idper := COALESCE(NEW.idper, OLD.idper);
+  v_fecha := COALESCE(NEW.fecha, OLD.fecha);
 
   INSERT INTO fichadas_vigentes (idper, fecha)
   VALUES (v_idper, v_fecha)
   ON CONFLICT DO NOTHING;
-
-  SELECT annio
-    INTO v_annio
-    FROM fichadas_vigentes
-   WHERE idper = v_idper
-     AND fecha = v_fecha
-   LIMIT 1;
-
-  IF v_annio IS NOT NULL THEN
-    v_rango := rango_simple_fichadas(v_idper, v_fecha);
-
-    UPDATE fichadas_vigentes
-      SET
-        fichadas = v_rango,
-        cod_nov  = cod_nov_por_fichadas(v_annio, v_rango)
-      WHERE idper = v_idper
-        AND fecha = v_fecha;
-  END IF;
-  RETURN NEW;
+  UPDATE fichadas_vigentes
+    SET fichadas = rango_simple_fichadas(v_idper, v_fecha)
+    WHERE idper = v_idper
+      AND fecha = v_fecha;
+  RETURN NULL;
 END;
 $BODY$;
 
-CREATE OR REPLACE FUNCTION fichadas_vigentes_novedades_vigentes_trg()
+CREATE OR REPLACE FUNCTION fichadas_vigentes_cod_nov_trg()
   RETURNS TRIGGER
   SECURITY DEFINER
-  LANGUAGE PLPGSQL
+  LANGUAGE plpgsql
 AS
 $BODY$
+DECLARE
+  v_annio int;
 BEGIN
-  IF tg_op = 'INSERT' THEN
-    IF new.fichadas <> '(,)' THEN
-      CALL actualizar_novedades_vigentes_idper(new.fecha, new.fecha, new.idper);
-    END IF;
-  ELSE
-    IF new.fichadas IS DISTINCT FROM old.fichadas THEN
-      CALL actualizar_novedades_vigentes_idper(new.fecha, new.fecha, new.idper);
-    END IF;
+  SELECT f.annio
+    INTO v_annio
+    FROM fechas f
+    JOIN annios a ON a.annio = f.annio
+   WHERE f.fecha = NEW.fecha
+     --AND COALESCE(f.laborable, false)
+     AND COALESCE(a.abierto, false)
+   LIMIT 1;
+
+  IF v_annio IS NOT NULL THEN
+    NEW.cod_nov := cod_nov_por_fichadas(v_annio, NEW.fichadas);
   END IF;
+
   RETURN NEW;
 END;
 $BODY$;
@@ -212,7 +165,7 @@ $sql$
     WHEN d.ent IS NULL AND d.sal IS NULL THEN r.codnov_sin_fichadas
     WHEN d.ent IS NULL OR  d.sal IS NULL THEN r.codnov_unica_fichada
     WHEN d.horas < r.umbral_horas_diarias THEN r.codnov_sin_fichadas
-    ELSE r.codnov_con_fichadas
+    ELSE NULL
   END
   FROM datos d
   LEFT JOIN reglas r ON r.annio = p_annio;
@@ -236,14 +189,14 @@ CREATE TRIGGER fechas_fichadas_vigentes_trg
   FOR EACH ROW 
   EXECUTE PROCEDURE fechas_fichadas_vigentes_trg();
 
-CREATE TRIGGER fichadas_fichadas_vigentes_trg 
-  AFTER INSERT OR UPDATE
-  ON fichadas 
-  FOR EACH ROW  
-  EXECUTE PROCEDURE fichadas_fichadas_vigentes_trg();
-
-CREATE TRIGGER fichadas_vigentes_novedades_vigentes_trg 
-  AFTER INSERT OR UPDATE
+CREATE TRIGGER fichadas_vigentes_cod_nov_trg
+  BEFORE INSERT OR UPDATE OF fichadas
   ON fichadas_vigentes
-  FOR EACH ROW 
-  EXECUTE PROCEDURE fichadas_vigentes_novedades_vigentes_trg();
+  FOR EACH ROW
+  EXECUTE PROCEDURE fichadas_vigentes_cod_nov_trg();
+
+CREATE TRIGGER fichadas_fichadas_vigentes_trg
+  AFTER INSERT OR UPDATE
+  ON fichadas
+  FOR EACH ROW
+  EXECUTE PROCEDURE fichadas_fichadas_vigentes_trg();

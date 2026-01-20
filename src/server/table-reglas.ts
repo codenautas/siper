@@ -13,7 +13,6 @@ export function reglas(_context: TableContext): TableDefinition{
             annio,
             {name: 'codnov_unica_fichada',              typeName: 'text'    },
             {name: 'codnov_sin_fichadas',               typeName: 'text'    },
-            {name: 'codnov_con_fichadas',               typeName: 'text'    },
             {name: 'umbral_horas_mensuales',            typeName: 'integer' },
             {name: 'umbral_horas_diarias',              typeName: 'integer' },
             {name: 'umbral_horas_semanales',            typeName: 'integer' },
