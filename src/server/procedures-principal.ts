@@ -735,7 +735,23 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name: 'fecha'         , typeName: 'date'   },
             {name: 'idper'         , typeName: 'text'   , references: 'personas', defaultValue: null},
         ],
-        coreFunction:  async function (/*context:ProcedureContext, parameters:any*/) {
+        coreFunction:  async function (context:ProcedureContext, parameters:any) {
+            const {fecha, idper} = parameters;
+            await context.client.query(
+                `update fechas set fichadas_consolidadas = true where fecha = $1`,
+                [fecha]
+            ).execute();
+            if (idper) {
+                await context.client.query(
+                    `call actualizar_novedades_vigentes_idper($1::date, $1::date, $2::text)`,
+                    [fecha, idper]
+                ).execute();
+            } else {
+                await context.client.query(
+                    `call actualizar_novedades_vigentes($1::date, $1::date)`,
+                    [fecha]
+                ).execute();
+            }
             return true;
         }
     }
