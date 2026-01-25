@@ -109,13 +109,21 @@ async function registrarNovedad(sesion: SesionEmuladaSiper, params: Partial<ctts
     return sesion.callProcedure(ctts.registrar_novedad, {[tipo_novedad.name]: tipo_novedad_verificado, ...params, hasta: params.hasta ?? params.desde})
 }
 
-async function registrarFichada(server: AppSiper, params: Partial<ctts.Fichada>): Promise<ctts.Fichada> {
+async function registrarFichada(server: AppSiper, params: Partial<ctts.Fichada>, tabla?:'fichadas_recibidas'): Promise<ctts.FechaHora> {
     var result = await server.inTransaction(null, async client => {
-        var result = await client.query(
-            `insert into fichadas (${Object.keys(params)}) values (${Object.keys(params).map((_, i) =>"$" + (i+1))}) returning *`,
-            Object.keys(params).map(k => params[k as keyof ctts.Fichada])
-        ).fetchUniqueRow();
-        return guarantee(ctts.fichadas.description, result.row);
+        var result
+        if (tabla == 'fichadas_recibidas') {
+            result = await client.query(
+                `insert into fichadas_recibidas (fichador, fecha, hora, tipo) values ($1, $2, $3, $4) returning *`,
+                [params.idper, params.fecha, params.hora, params.tipo_fichada]
+            ).fetchUniqueRow();
+        } else {
+            result = await client.query(
+                `insert into fichadas (${Object.keys(params)}) values (${Object.keys(params).map((_, i) =>"$" + (i+1))}) returning *`,
+                Object.keys(params).map(k => params[k as keyof ctts.Fichada])
+            ).fetchUniqueRow();
+        }
+        return guarantee(ctts.fecha_hora, result.row);
     })
     return result;
 }
@@ -1057,6 +1065,16 @@ describe("SiPer: " + testConfig.name, function(){
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta)})
                 })
             })
+            it("las fichadas se redondean al minuto para arriba y para abajo", async function(){
+                await enNuevaPersona(this.test?.title!, {usuario:{sesion:false}}, async ({idper}, {usuario}) => {
+                    const fecha = FECHA_ACTUAL;
+                    const desde = '08:03:00';
+                    const hasta = '15:03:00';
+                    await registrarFichada(server, {idper: usuario.usuario, fecha, hora: '08:03:52', tipo_fichada:'E'}, 'fichadas_recibidas');
+                    await registrarFichada(server, {idper: usuario.usuario, fecha, hora: '15:02:10', tipo_fichada:'S'}, 'fichadas_recibidas');
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta)})
+                })
+            })
             it("sin fichada consolida como ausente", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = FECHA_ACTUAL;
@@ -1090,6 +1108,17 @@ describe("SiPer: " + testConfig.name, function(){
                 })
             })
             it("las fichadas en feriados no cambian el cod_nov", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    const fecha = date.iso('2000-05-01');
+                    const entrada = '09:00:00';
+                    await registrarFichada(server, {idper, fecha, hora: entrada, tipo_fichada:'E'});
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, null), cod_nov: COD_ABANDONO, cod_nov_final: null})
+                    const salida  = '16:00:00';
+                    await registrarFichada(server, {idper, fecha, hora: salida , tipo_fichada:'S'});
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov: null, cod_nov_final: null})
+                })
+            })
+            it("las fichadas fuera de horario colapsan a los horarios permitidos", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = date.iso('2000-05-01');
                     const entrada = '09:00:00';

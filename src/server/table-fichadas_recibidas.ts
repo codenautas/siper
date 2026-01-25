@@ -14,7 +14,7 @@ export const id_fichada: FieldDefinition = {
 export function fichadas_recibidas(context: TableContext): TableDefinition{
     return {
         name: 'fichadas_recibidas',
-        elementName: 'fichada_recibida',
+        elementName: 'fichada recibida',
         editable: context.forDump,
         fields:[
             {...id_fichada            , sequence:{name: 'id_fichada', firstValue: 100}},

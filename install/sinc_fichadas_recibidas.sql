@@ -7,6 +7,7 @@ $$
 DECLARE
     v_idper text;
     v_tipo_mapeado text;
+    v_hora_redondeada time;
 BEGIN
     BEGIN
         SELECT idper INTO v_idper 
@@ -17,17 +18,21 @@ BEGIN
             RAISE EXCEPTION 'Usuario "%" no encontrado en la tabla usuarios', NEW.fichador;
         END IF;
         
-        CASE 
-            WHEN lower(NEW.tipo) IN ('e', 'entrada') THEN v_tipo_mapeado := 'E';
-            WHEN lower(NEW.tipo) IN ('s', 'salida')  THEN v_tipo_mapeado := 'S';
-            ELSE v_tipo_mapeado := 'O';
+        v_tipo_mapeado := CASE 
+            WHEN lower(NEW.tipo) IN ('e', 'entrada') THEN 'E'
+            WHEN lower(NEW.tipo) IN ('s', 'salida' ) THEN 'S'
+            ELSE 'O'
         END CASE;
+
+        v_hora_redondeada := date_trunc('minute', 
+            new.hora + CASE v_tipo_mapeado WHEN 'E' THEN '0'::interval WHEN 'S' THEN '59 seconds'::interval ELSE '30 seconds'::interval END
+        );
 
         INSERT INTO fichadas (
             idper, fecha, hora, tipo_fichada, 
             observaciones, punto, tipo_dispositivo
         ) VALUES (
-            v_idper, NEW.fecha, NEW.hora, v_tipo_mapeado,
+            v_idper, NEW.fecha, v_hora_redondeada, v_tipo_mapeado,
             NEW.texto, NEW.punto_gps, NEW.dispositivo
         );
 

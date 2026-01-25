@@ -353,6 +353,9 @@ export const fichadas_vigentes = {
     })
 }
 
+export const fecha_hora = is.object({fecha: is.Date, hora: isTimeRange});
+export type FechaHora = DefinedType<typeof fecha_hora>;
+
 ////////////// PROCEDIMEINTOS
 
 export const si_cargara_novedad = {
