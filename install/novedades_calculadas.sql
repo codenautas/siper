@@ -13,7 +13,7 @@ $BODY$
   SELECT
       idper, fecha, 
       CASE WHEN trabajable OR nr_corridos THEN 
-        coalesce(CASE WHEN fichadas_consolidadas AND coalesce(nr_requiere_fichadas, true) THEN fv_cod_nov ELSE null END, nr_cod_nov, cod_nov_pred_fecha) 
+        coalesce(CASE WHEN fichadas_consolidadas AND nr_requiere_fichadas THEN fv_cod_nov ELSE null END, nr_cod_nov, cod_nov_pred_fecha) 
       ELSE null END as cod_nov, 
       ficha, fichadas, sector, annio,
       trabajable, detalles, cod_nov_ini
@@ -24,7 +24,7 @@ $BODY$
           CASE WHEN (nr.c_dds IS NOT TRUE -- FILTRO PARA DIAGRAMADO POR DIA DE SEMANA:
             OR CASE extract(DOW from f.fecha) WHEN 0 THEN nr.dds0 WHEN 1 THEN nr.dds1 WHEN 2 THEN nr.dds2 WHEN 3 THEN nr.dds3 WHEN 4 THEN nr.dds4 WHEN 5 THEN nr.dds5 WHEN 6 THEN nr.dds6 END
           ) THEN nr.cod_nov ELSE null END as nr_cod_nov,
-          nr.requiere_fichadas as nr_requiere_fichadas,
+          COALESCE(nr.requiere_fichadas, nr.cod_nov IS NULL) as nr_requiere_fichadas,
           nr.corridos as nr_corridos,
           cod_nov_pred_fecha, 
           ni.cod_nov as cod_nov_ini,

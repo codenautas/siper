@@ -1006,22 +1006,24 @@ describe("SiPer: " + testConfig.name, function(){
             async function verificaFichadas(args:{idper:string, fecha:Date, fichadas: TIME, cod_nov?:string, cod_nov_final?:string}){
                 const {cod_nov_final, ...registroFichadasEsperado} = args;
                 const {idper, fecha, cod_nov} = registroFichadasEsperado;
+                /*
                 var row = await server.inDbClient(ADMIN_REQ, async client =>
                     (await client.query(`
                         SELECT a.abierto, v.*, r.* FROM annios a INNER JOIN fichadas_vigentes v USING (annio) INNER JOIN reglas r USING (annio) WHERE idper = $1 AND fecha = $2
                     `, [idper, fecha]).fetchUniqueRow()).row
                 )
-                console.log('REVISANDO FICHADAS VIGENTES PARA', row)
+                // console.log('REVISANDO FICHADAS VIGENTES PARA', row)
+                */
                 await rrhhSession.tableDataTest(ctts.fichadas_vigentes, [
                     registroFichadasEsperado
                 ], 'all', {fixedFields:{idper, fecha}})
-                if (cod_nov_final) {
+                if (cod_nov_final !== undefined) {
                     registroFichadasEsperado.cod_nov = cod_nov_final;
                 }
                 if (cod_nov !== undefined) {
-                    console.log('CONSOLIDANDO LLAMANDO AL PROCEDIMIENTO', {idper, fecha})
+                    // console.log('CONSOLIDANDO LLAMANDO AL PROCEDIMIENTO', {idper, fecha})
                     await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper, fecha})
-                    console.log('REVISANDO NOVEDADES VIGENTES', {idper, fecha})
+                    // console.log('REVISANDO NOVEDADES VIGENTES', {idper, fecha})
                     await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         registroFichadasEsperado
                     ], 'all', {fixedFields:{idper, fecha}})
@@ -1084,7 +1086,18 @@ describe("SiPer: " + testConfig.name, function(){
                     const salida  = '16:00:00';
                     await registrarFichada(server, {idper, fecha, hora: entrada, tipo_fichada:'E'});
                     await registrarFichada(server, {idper, fecha, hora: salida , tipo_fichada:'S'});
-                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov_final: COD_PRED_PAS})
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov: null, cod_nov_final: COD_PRED_PAS})
+                })
+            })
+            it("las fichadas en feriados no cambian el cod_nov", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    const fecha = date.iso('2000-05-01');
+                    const entrada = '09:00:00';
+                    await registrarFichada(server, {idper, fecha, hora: entrada, tipo_fichada:'E'});
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, null), cod_nov: COD_ABANDONO, cod_nov_final: null})
+                    const salida  = '16:00:00';
+                    await registrarFichada(server, {idper, fecha, hora: salida , tipo_fichada:'S'});
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov: null, cod_nov_final: null})
                 })
             })
         })
