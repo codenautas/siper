@@ -145,14 +145,21 @@ CREATE OR REPLACE FUNCTION rango_simple_fichadas(p_idper text, p_fecha date)
   STABLE LANGUAGE SQL
 AS
 $sql$
+  WITH horas_entrada_salida as (
+    SELECT 
+        MIN(hora) FILTER (WHERE tipo_fichada = 'E') as hora_entrada,
+        MAX(hora) FILTER (WHERE tipo_fichada = 'S') as hora_salida
+      FROM fichadas f 
+      WHERE f.fecha = p_fecha AND f.idper = p_idper
+  )
   SELECT time_range(
-        MIN(CASE WHEN hora < bh.hora_desde THEN bh.hora_desde WHEN hora > bh.hora_hasta THEN NULL ELSE hora END) FILTER (WHERE tipo_fichada = 'E'),
-        MAX(CASE WHEN hora > bh.hora_hasta THEN bh.hora_hasta WHEN hora < bh.hora_desde THEN null ELSE hora END) FILTER (WHERE tipo_fichada = 'S')
-      )
-    FROM fichadas f 
-      INNER JOIN personas p USING (idper) 
-      INNER JOIN bandas_horarias bh USING (banda_horaria)
-    WHERE f.fecha = p_fecha AND f.idper = p_idper;
+      CASE WHEN hora_entrada < bh.hora_desde THEN bh.hora_desde ELSE hora_entrada END,
+      CASE WHEN hora_salida  > bh.hora_hasta THEN bh.hora_hasta ELSE hora_salida  END
+    )
+    FROM horas_entrada_salida, 
+        personas p 
+          INNER JOIN bandas_horarias bh USING (banda_horaria)
+      WHERE p.idper = p_idper;
 $sql$;
 
 CREATE TRIGGER personas_fichadas_vigentes_trg 
