@@ -114,24 +114,19 @@ BEGIN
     INTO v_annio_abierto
     FROM annios a
    WHERE a.annio = v_annio;
-  RAISE NOTICE 'fichadas_vigentes_cod_nov_trg % [% %] % % % %.',new.fichadas, lower(new.fichadas), upper(new.fichadas), new.idper, new.fecha, v_annio, v_annio_abierto;
   IF v_annio_abierto THEN
     SELECT *
       INTO v_regla
       FROM reglas
       WHERE annio = v_annio;
     IF lower(new.fichadas) IS NULL AND upper(new.fichadas) IS NULL THEN
-      RAISE NOTICE 'paso 1a %',v_regla.codnov_sin_fichadas;
       NEW.cod_nov := v_regla.codnov_sin_fichadas;
     ELSIF lower(new.fichadas) IS NULL OR upper(new.fichadas) IS NULL THEN
-      RAISE NOTICE 'paso 1B %',v_regla.codnov_unica_fichada;
       NEW.cod_nov := v_regla.codnov_unica_fichada;
     ELSE
-      RAISE NOTICE 'paso 1C';
       NEW.cod_nov := NULL;
     END IF;
   END IF;
-  RAISE NOTICE 'paso 2';
   IF tg_op = 'INSERT' THEN
     IF new.fichadas <> '(,)' THEN
       CALL actualizar_novedades_vigentes_idper(new.fecha, new.fecha, new.idper);
@@ -151,11 +146,13 @@ CREATE OR REPLACE FUNCTION rango_simple_fichadas(p_idper text, p_fecha date)
 AS
 $sql$
   SELECT time_range(
-        MIN(hora) FILTER (WHERE tipo_fichada = 'E'),
-        MAX(hora) FILTER (WHERE tipo_fichada = 'S')
+        MIN(CASE WHEN hora < bh.hora_desde THEN bh.hora_desde WHEN hora > bh.hora_hasta THEN NULL ELSE hora END) FILTER (WHERE tipo_fichada = 'E'),
+        MAX(CASE WHEN hora > bh.hora_hasta THEN bh.hora_hasta WHEN hora < bh.hora_desde THEN null ELSE hora END) FILTER (WHERE tipo_fichada = 'S')
       )
-    FROM fichadas
-    WHERE fecha = p_fecha AND idper = p_idper;
+    FROM fichadas f 
+      INNER JOIN personas p USING (idper) 
+      INNER JOIN bandas_horarias bh USING (banda_horaria)
+    WHERE f.fecha = p_fecha AND f.idper = p_idper;
 $sql$;
 
 CREATE TRIGGER personas_fichadas_vigentes_trg 

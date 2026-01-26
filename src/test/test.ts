@@ -300,6 +300,7 @@ describe("SiPer: " + testConfig.name, function(){
             registra_novedades_desde: opts.registra_novedades_desde ?? date.iso(`${DESDE_AÑO}-01-01`),
             para_antiguedad_relativa: opts.para_antiguedad_relativa ?? date.iso(`${DESDE_AÑO}-01-01`),
             sector: SECTOR,
+            banda_horaria: 'NORMAL'
         } satisfies Partial<ctts.Persona>;
         var personaGrabada = await rrhhSession.saveRecord(
             ctts.personas,
@@ -1014,14 +1015,6 @@ describe("SiPer: " + testConfig.name, function(){
             async function verificaFichadas(args:{idper:string, fecha:Date, fichadas: TIME, cod_nov?:string, cod_nov_final?:string}){
                 const {cod_nov_final, ...registroFichadasEsperado} = args;
                 const {idper, fecha, cod_nov} = registroFichadasEsperado;
-                /*
-                var row = await server.inDbClient(ADMIN_REQ, async client =>
-                    (await client.query(`
-                        SELECT a.abierto, v.*, r.* FROM annios a INNER JOIN fichadas_vigentes v USING (annio) INNER JOIN reglas r USING (annio) WHERE idper = $1 AND fecha = $2
-                    `, [idper, fecha]).fetchUniqueRow()).row
-                )
-                // console.log('REVISANDO FICHADAS VIGENTES PARA', row)
-                */
                 await rrhhSession.tableDataTest(ctts.fichadas_vigentes, [
                     registroFichadasEsperado
                 ], 'all', {fixedFields:{idper, fecha}})
@@ -1029,9 +1022,7 @@ describe("SiPer: " + testConfig.name, function(){
                     registroFichadasEsperado.cod_nov = cod_nov_final;
                 }
                 if (cod_nov !== undefined) {
-                    // console.log('CONSOLIDANDO LLAMANDO AL PROCEDIMIENTO', {idper, fecha})
                     await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper, fecha})
-                    // console.log('REVISANDO NOVEDADES VIGENTES', {idper, fecha})
                     await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         registroFichadasEsperado
                     ], 'all', {fixedFields:{idper, fecha}})
@@ -1073,6 +1064,16 @@ describe("SiPer: " + testConfig.name, function(){
                     await registrarFichada(server, {idper: usuario.usuario, fecha, hora: '08:03:52', tipo_fichada:'E'}, 'fichadas_recibidas');
                     await registrarFichada(server, {idper: usuario.usuario, fecha, hora: '15:02:10', tipo_fichada:'S'}, 'fichadas_recibidas');
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta)})
+                })
+            })
+            it("las fichadas se acomodan a los límites de la banda horaria", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                    const fecha = FECHA_ACTUAL;
+                    const desde = '07:03:00';
+                    const hasta = '21:03:00';
+                    await registrarFichada(server, {idper, fecha, hora: desde, tipo_fichada:'E'});
+                    await registrarFichada(server, {idper, fecha, hora: hasta, tipo_fichada:'S'});
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE('08:00:00', '20:00:00')})
                 })
             })
             it("sin fichada consolida como ausente", async function(){
