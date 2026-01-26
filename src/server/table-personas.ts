@@ -20,23 +20,6 @@ export const idper: FieldDefinition = {
     postInput: 'upperWithoutDiacritics',
 }
 
-export const s_revista_personas = {
-  ...s_revista,
-  inTable: false,
-  editable:false,
-};
-
-export const agrupamiento_personas = {
-  ...agrupamiento,
-  inTable: false,
-  editable:false,
-};
-
-export const bh_personas = {
-  ...banda_horaria,
-  title: 'banda horaria',
-};
-
 export const sqlPersonas= `
 SELECT p.*, t.categoria, t.situacion_revista, 
         t.motivo_egreso, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado,
@@ -68,7 +51,7 @@ export function personas(context: TableContext): TableDefinition {
             {...sector,                                         grupo:'funcion', },
             {name: 'es_jefe'  , typeName: 'boolean'                                               },
             {name: 'categoria', typeName: 'text', title:'categoría', inTable:false, editable:false},
-            s_revista_personas,
+            {...s_revista                                          , inTable:false, editable:false},
             {name: 'registra_novedades_desde', typeName: 'date'                                   },
             {name: 'para_antiguedad_relativa', typeName: 'date', title: 'para antigüedad relativa'},
             {name: 'activo' , typeName: 'boolean', nullable:false , defaultValue:false            },
@@ -78,7 +61,7 @@ export function personas(context: TableContext): TableDefinition {
             {name: 'nacionalidad'            , typeName: 'text', title: 'nacionalidad'            },
             {name: 'jerarquia'               , typeName: 'text', title: 'jerarquía', inTable:false, editable:false},
             {name: 'cargo_atgc'              , typeName: 'text', title: 'cargo/ATGC', inTable:false, editable:false},
-            agrupamiento_personas,
+            {...agrupamiento                                                        , inTable:false, editable:false},
             {name: 'tramo'                   , typeName: 'text', title: 'tramo', inTable:false, editable:false    },
             {name: 'grado'                   , typeName: 'text', title: 'grado', inTable:false, editable:false    },
             {name: 'fecha_nacimiento'        , typeName: 'date', title: 'fecha nacimiento'        },
@@ -87,7 +70,7 @@ export function personas(context: TableContext): TableDefinition {
             perfil_sgc,
             max_nivel_ed,
             {...horario, inTable:false},
-            bh_personas,
+            {...banda_horaria                , title: 'banda horaria'},
         ],
         primaryKey: [idper.name],
         foreignKeys: [
@@ -95,7 +78,7 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'paises'           , fields:[{source:'nacionalidad',target:'pais'}]      },
             {references: 'sexos'              , fields:['sexo']            },
             {references: 'tipos_doc'          , fields:['tipo_doc']        },
-            {references: 'bandas_horarias'    , fields:[bh_personas.name]  },
+            {references: 'bandas_horarias'    , fields:[banda_horaria.name]},
             {references: 'perfiles_sgc'       , fields:[perfil_sgc.name]   },
             {references: 'niveles_educativos' , fields:[{source:'max_nivel_ed',target:nivel_educativo.name}] },
         ],
@@ -103,7 +86,7 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'jerarquias'      , fields:['jerarquia']     },
             {references: 'motivos_egreso'  , fields:['motivo_egreso'] },
             {references: 'categorias'      , fields:['categoria']     },
-            {references: 'agrupamientos'   , fields:[agrupamiento_personas.name]},
+            {references: 'agrupamientos'   , fields:[agrupamiento.name]},
             {references: 'grados'          , fields:['tramo','grado'] },
         ],
         constraints: [
