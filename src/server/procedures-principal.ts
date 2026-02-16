@@ -490,12 +490,14 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         parameters: [
             {name:'annio'  , typeName:'integer', label: 'año', references: 'annios', defaultValue:date.today().getFullYear()},
             {name:'idper'  , typeName:'text', label:'persona', references: 'personas', defaultValue:null},
-            {name:'sector'  , typeName:'text', label:'sector', references: 'sectores', defaultValue:null}
+            {name:'sector'  , typeName:'text', label:'sector', references: 'sectores', defaultValue:null},
+            {name:'abierto' , typeName:'boolean', label:'abierto', defaultValue:false}
         ],
         resultOk:'showGrid',
         coreFunction: async function(context: ProcedureContext, params:any){
+            var grillaTableName = params.abierto?'nov_per_abierto':'nov_per';
             var grilla = {
-                tableName:'nov_per', 
+                tableName:grillaTableName, 
                 fixedFields: [{fieldName:'cod_nov', value:1}] as FixedFields, 
                 tableDef:{title:'descanso anual remunerado', hiddenColumns:['esquema', 'detalle', 'detalle_multiorigen'] as string[], firstDisplayOverLimit:2000, firstDisplayCount:2000}
             }
