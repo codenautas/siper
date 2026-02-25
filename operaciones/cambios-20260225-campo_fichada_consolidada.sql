@@ -16,7 +16,7 @@ create table "fichadas_vigentes" (
   "horario_salida" time
 , primary key ("idper", "fecha")
 );
-grant select on "fichadas_vigentes" to siper_admin;
+grant select on "fichadas_vigentes" to siper_muleto;
 grant all on "fichadas_vigentes" to siper_muleto_owner;
 
 
@@ -386,6 +386,7 @@ CREATE TRIGGER fichadas_vigentes_novedades_vigentes_trg
 CREATE OR REPLACE FUNCTION procesar_fichada_recibida_trg() RETURNS trigger
     LANGUAGE plpgsql
     SECURITY DEFINER
+    set search_path=siper
 AS
 $$
 DECLARE
