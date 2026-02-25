@@ -71,6 +71,9 @@ div.calendario-dia, div.calendario-nombre-dia
   border-right 0.5px dotted gray
   padding 2px
 
+div.calendario-dia
+  position relative
+
 div.calendario-nombre-dia
   align-content center
   align-self center
@@ -84,6 +87,21 @@ span.calendario-dia-contenido
   font-size 120%
   margin-top 0.5em
   align-self center
+
+span.calendario-dia-contenido.calendario-dia-con-fichada
+  color #bdbdbd
+
+span.calendario-dia-fichada-entrada
+  position absolute
+  top 2px
+  right 2px
+  font-size 70%
+
+span.calendario-dia-fichada-salida
+  position absolute
+  right 2px
+  bottom 2px
+  font-size 70%
 
 div.tipo-dia-no-laborable
   background-color #dfdddd

@@ -249,13 +249,13 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 >
                     <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
                     {dia.fecha && sameValue(dia.fecha, fechaActual) ? (
-                        <span style={{fontSize:'80%', alignSelf:'center'}}>
+                        <span className="calendario-dia-fichada-entrada">
                             {dia.entrada}
                         </span>
                     ) : null}
-                    <span className={`calendario-dia-contenido ${dia ? 'con_novedad_si' : 'con_novedad_no' }`}>{dia.cod_nov ?? ''}</span>
+                    <span className={`calendario-dia-contenido ${dia ? 'con_novedad_si' : 'con_novedad_no' } ${(dia.entrada || dia.salida) ? 'calendario-dia-con-fichada' : ''}`}>{dia.cod_nov ?? ''}</span>
                     {dia.fecha && sameValue(dia.fecha, fechaActual) ? (
-                        <span style={{fontSize:'80%', alignSelf:'center', marginTop:'auto'}}>
+                        <span className="calendario-dia-fichada-salida">
                             {dia.salida}
                         </span>
                     ) : null}
