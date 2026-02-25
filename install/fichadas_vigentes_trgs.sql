@@ -132,7 +132,7 @@ BEGIN
       CALL actualizar_novedades_vigentes_idper(new.fecha, new.fecha, new.idper);
     END IF;
   ELSE
-    IF new.fichadas IS DISTINCT FROM old.fichadas END THEN
+    IF new.fichadas IS DISTINCT FROM old.fichadas THEN
       CALL actualizar_novedades_vigentes_idper(new.fecha, new.fecha, new.idper);
     END IF;
   END IF;

@@ -440,6 +440,8 @@ export const calendario_persona = {
         tipo_dia: is.string,
         novedad: is.string,
         mismo_mes: is.boolean,
+        entrada: is.nullable.string,
+        salida: is.nullable.string
     })
 }
 

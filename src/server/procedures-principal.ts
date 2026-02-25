@@ -202,13 +202,14 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         ],
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof calendario_persona.parameters>){
             const {idper, annio, mes} = params;
+            const fechaActual = datetime.now();
             const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
             const info = await context.client.query(
                 `select case when extract(year from f.fecha) = x.annio then f.fecha else null end as fecha,
                         extract(day from f.fecha) as dia,
                         extract(dow from f.fecha) as dds,
                         (f.fecha - '2001-01-01'::date - dds) / 7 as semana,
-                        v.cod_nov,
+                        case when f.fecha = $3::date then coalesce(fv.cod_nov, v.cod_nov) else v.cod_nov end as cod_nov,
                         case extract(dow from f.fecha)
                             when 0 then 'no-laborable' 
                             when 6 then 'no-laborable' 
@@ -219,7 +220,9 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                                 end 
                         end as tipo_dia,
                         cn.novedad,
-                        extract(month from f.fecha) = mes as mismo_mes
+                        extract(month from f.fecha) = mes as mismo_mes,
+                        lower(fv.fichadas) as entrada,
+                        upper(fv.fichadas) as salida
                     from (
                         select  fecha - 2 - extract(dow from fecha - 2)::integer      as desde,
                                 fecha - 2 - extract(dow from fecha - 2)::integer + 41 as hasta,
@@ -232,9 +235,10 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         lateral (select * from fechas where annio = x.annio) f
                         left join novedades_vigentes v on v.fecha = f.fecha and v.idper = $1
                         left join cod_novedades cn on cn.cod_nov = v.cod_nov
+                        left join fichadas_vigentes fv on fv.fecha = f.fecha and fv.idper = $1
                     where f.fecha between desde and hasta
                     order by f.fecha`,
-                [idper, desde]
+                [idper, desde, fechaActual]
             ).fetchAll();
             return info.rows
         }

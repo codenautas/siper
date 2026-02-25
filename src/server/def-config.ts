@@ -53,7 +53,6 @@ install:
       - ../install/per_telefonos_pk_trg.sql
       - ../install/function_registrar_fichadas.sql
       - ../install/sinc_fichadas_recibidas.sql    
-      - ../install/fichadas_vigentes_trgs.sql  
       post-adapt:
       - ../node_modules/pg-triggers/lib/recreate-his.sql
       - ../node_modules/pg-triggers/lib/table-changes.sql
@@ -83,6 +82,7 @@ install:
       - ../install/inicializar_per_nov_cant.sql
       - ../install/detalle_nov_multi_oirgen.sql
       - ../install/sinc_fichadores.sql
+      - ../install/fichadas_vigentes_trgs.sql  
 logo: 
   path: client/img
 `;
