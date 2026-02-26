@@ -1,12 +1,25 @@
 -- EJECUTAR LOCALMENTE, NO DESCOMENTAR Y COMMITEAR:
 -- SET search_path = siper; SET ROLE siper_owner;
 
+CREATE TYPE novedades_calculadas_return AS (
+  idper text,
+  fecha date,
+  cod_nov text,
+  ficha text,
+  fichadas time_range,
+  sector text,
+  annio integer,
+  trabajable boolean,
+  detalles text,
+  cod_nov_ini text
+);
+
 DO
 $CREATOR$
 DECLARE
   v_sql text := $SQL_CON_TAG$
 
-CREATE OR REPLACE FUNCTION novedades_calculadas/*idper**_idper**idper*/(p_desde date, p_hasta date/*idper**, p_idper text**idper*/) RETURNS SETOF novedades_vigentes
+CREATE OR REPLACE FUNCTION novedades_calculadas/*idper**_idper**idper*/(p_desde date, p_hasta date/*idper**, p_idper text**idper*/) RETURNS SETOF novedades_calculadas_return
   LANGUAGE SQL STABLE
 AS
 $BODY$

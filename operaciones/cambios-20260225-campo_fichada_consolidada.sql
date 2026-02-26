@@ -33,16 +33,33 @@ alter table "fichadas_vigentes" add constraint "fichadas_vigentes cod_novedades 
 create index "idper 4 fichadas_vigentes IDX" ON "fichadas_vigentes" ("idper");
 create index "cod_nov 4 fichadas_vigentes IDX" ON "fichadas_vigentes" ("cod_nov");
 
+-- CORRER SEPARADAS DE NOVEDADES_CALCULADAS
+
+DROP FUNCTION IF EXISTS novedades_calculadas(date, date);
+DROP FUNCTION IF EXISTS novedades_calculadas_idper(date, date, text);
 
 -- EJECUTAR LOCALMENTE, NO DESCOMENTAR Y COMMITEAR:
 -- SET search_path = siper; SET ROLE siper_owner;
+
+CREATE TYPE novedades_vigentes_funcion AS (
+  idper text,
+  fecha date,
+  cod_nov text,
+  ficha text,
+  fichadas time_range,
+  sector text,
+  annio integer,
+  trabajable boolean,
+  detalles text,
+  cod_nov_ini text
+);
 
 DO
 $CREATOR$
 DECLARE
   v_sql text := $SQL_CON_TAG$
 
-CREATE OR REPLACE FUNCTION novedades_calculadas/*idper**_idper**idper*/(p_desde date, p_hasta date/*idper**, p_idper text**idper*/) RETURNS SETOF novedades_vigentes
+CREATE OR REPLACE FUNCTION novedades_calculadas/*idper**_idper**idper*/(p_desde date, p_hasta date/*idper**, p_idper text**idper*/) RETURNS SETOF novedades_vigentes_funcion
   LANGUAGE SQL STABLE
 AS
 $BODY$
