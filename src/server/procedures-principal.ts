@@ -202,14 +202,13 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         ],
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof calendario_persona.parameters>){
             const {idper, annio, mes} = params;
-            const fechaActual = datetime.now();
             const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
             const info = await context.client.query(
                 `select case when extract(year from f.fecha) = x.annio then f.fecha else null end as fecha,
                         extract(day from f.fecha) as dia,
                         extract(dow from f.fecha) as dds,
                         (f.fecha - '2001-01-01'::date - dds) / 7 as semana,
-                        case when f.fecha = $3::date then coalesce(fv.cod_nov, v.cod_nov) else v.cod_nov end as cod_nov,
+                        v.cod_nov,
                         case extract(dow from f.fecha)
                             when 0 then 'no-laborable' 
                             when 6 then 'no-laborable' 
@@ -221,8 +220,17 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         end as tipo_dia,
                         cn.novedad,
                         extract(month from f.fecha) = mes as mismo_mes,
-                        lower(fv.fichadas) as entrada,
-                        upper(fv.fichadas) as salida
+                        case
+                        when f.fichadas_consolidadas
+                            then lower(v.fichadas)
+                            else lower(fv.fichadas)
+                        end as entrada,
+                        case
+                        when f.fichadas_consolidadas
+                            then upper(v.fichadas)
+                            else upper(fv.fichadas)
+                        end as salida,
+                        f.fichadas_consolidadas as consolidada
                     from (
                         select  fecha - 2 - extract(dow from fecha - 2)::integer      as desde,
                                 fecha - 2 - extract(dow from fecha - 2)::integer + 41 as hasta,
@@ -238,7 +246,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         left join fichadas_vigentes fv on fv.fecha = f.fecha and fv.idper = $1
                     where f.fecha between desde and hasta
                     order by f.fecha`,
-                [idper, desde, fechaActual]
+                [idper, desde]
             ).fetchAll();
             return info.rows
         }
