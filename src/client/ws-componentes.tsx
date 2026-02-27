@@ -235,9 +235,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
             </Box>
             {calendario.map(semana => <Box key={semana[0].semana} className="calendario-semana">
                 {semana.map((dia, i) => {
-                    const diaTieneFichada = (dia.entrada || dia.salida)
-                    const mostrarDiaConsolidado = mostrarfichadasconsolidadas && dia.consolidada && diaTieneFichada;
-                    const diaEsHoyConFichada = diaTieneFichada && sameValue(dia.fecha, fecha);
+                    const diaTieneFichada = !!(dia.entrada || dia.salida);
+                    const mostrarFichadaEnDia = diaTieneFichada && (!dia.consolidada || mostrarfichadasconsolidadas);
                     return <Tooltip key={dia.dia || "V" + i} title={dia.novedad || "Sin novedad"} arrow>
                         <div
                             className={`calendario-dia tipo-dia-${dia.tipo_dia} 
@@ -260,13 +259,13 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                             }}
                         >
                             <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
-                            {(mostrarDiaConsolidado || diaEsHoyConFichada) && dia.entrada ? (
+                            {mostrarFichadaEnDia && dia.entrada ? (
                                 <span className="calendario-dia-fichada-entrada">
                                     {dia.entrada}
                                 </span>
                             ) : null}
-                            <span className={`calendario-dia-contenido ${dia ? 'con_novedad_si' : 'con_novedad_no' } ${diaEsHoyConFichada ? 'calendario-dia-con-fichada' : ''}`}>{dia.cod_nov ?? ''}</span>
-                            {(mostrarDiaConsolidado || diaEsHoyConFichada) && dia.salida ? (
+                            <span className={`calendario-dia-contenido ${dia ? 'con_novedad_si' : 'con_novedad_no' } ${diaTieneFichada ? 'calendario-dia-con-fichada' : ''}`}>{dia.cod_nov ?? ''}</span>
+                            {mostrarFichadaEnDia && dia.salida ? (
                                 <span className="calendario-dia-fichada-salida">
                                     {dia.salida}
                                 </span>
