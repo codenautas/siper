@@ -126,6 +126,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
     const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
     const [botonRetrocederHabilitado, setBotonRetrocederHabilitado] = useState<boolean>(true); 
     const [botonAvanzarHabilitado, setBotonAvanzarHabilitado] = useState<boolean>(true); 
+    const [mostrarfichadasconsolidadas, setMostrarFichadasConsolidadas] = useState(false);
     const puede_cargar_novedades = puedeCargarNovedades(infoUsuario);
 
     useEffect(function(){
@@ -218,6 +219,14 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                     Hoy
                     <span hoy-signo-de="pasado">{">"}</span>
                 </Button>
+                <Checkbox
+                    checked={mostrarfichadasconsolidadas}
+                    onChange={(_event, checked) => setMostrarFichadasConsolidadas(checked)}
+                    className="check-box"
+                    sin-padding="si"
+                    icon={<ICON.Clock />}
+                    checkedIcon={<ICON.ClockFill />}
+                />
             </Box>
             <Box className="calendario-semana">
                 {likeAr(DDS).map(dds =>
@@ -225,42 +234,46 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                 ).array()}
             </Box>
             {calendario.map(semana => <Box key={semana[0].semana} className="calendario-semana">
-                {semana.map((dia, i) => 
-                <Tooltip key={dia.dia || "V" + i} title={dia.novedad || "Sin novedad"} arrow>
-                <div
-                    className={`calendario-dia tipo-dia-${dia.tipo_dia} 
-                        ${fecha && sameValue(dia.fecha, fecha) ? 'calendario-dia-seleccionado' : ''}
-                        ${fechaHasta != null && fecha <= dia.fecha && dia.fecha <= fechaHasta ? 'calendario-dia-seleccionado' : ''}`}
-                    es-otro-mes={dia.mismo_mes ? "no" : "si"}
-                    onClick={() => {
-                        if (!dia.fecha || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades || (dia.fecha < fechaActual && !infoUsuario.puede_corregir_el_pasado)) return;
-                        const selectedDate = dia.fecha as RealDate;
-                        if (!fechaHasta || selectedDate <= fechaHasta || fechaHasta.getFullYear() != selectedDate.getFullYear()) {
-                            props.onFecha(selectedDate);
-                            props.onFechaHasta(selectedDate);
-                        } 
-                        else {
-                            props.onFechaHasta(selectedDate);
-                        }
-                        if (dia.fecha.getMonth() + 1 !== periodo.mes) {
-                            setPeriodo({mes: dia.fecha.getMonth() + 1, annio: dia.fecha.getFullYear()});
-                        }
-                    }}
-                >
-                    <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
-                    {dia.fecha && sameValue(dia.fecha, fechaActual) ? (
-                        <span className="calendario-dia-fichada-entrada">
-                            {dia.entrada}
-                        </span>
-                    ) : null}
-                    <span className={`calendario-dia-contenido ${dia ? 'con_novedad_si' : 'con_novedad_no' } ${(dia.entrada || dia.salida) ? 'calendario-dia-con-fichada' : ''}`}>{dia.cod_nov ?? ''}</span>
-                    {dia.fecha && sameValue(dia.fecha, fechaActual) ? (
-                        <span className="calendario-dia-fichada-salida">
-                            {dia.salida}
-                        </span>
-                    ) : null}
-                </div>
-                </Tooltip>)}
+                {semana.map((dia, i) => {
+                    const diaTieneFichada = (dia.entrada || dia.salida)
+                    const mostrarDiaConsolidado = mostrarfichadasconsolidadas && dia.consolidada && diaTieneFichada;
+                    const diaEsHoyConFichada = diaTieneFichada && sameValue(dia.fecha, fecha);
+                    return <Tooltip key={dia.dia || "V" + i} title={dia.novedad || "Sin novedad"} arrow>
+                        <div
+                            className={`calendario-dia tipo-dia-${dia.tipo_dia} 
+                                ${fecha && sameValue(dia.fecha, fecha) ? 'calendario-dia-seleccionado' : ''}
+                                ${fechaHasta != null && fecha <= dia.fecha && dia.fecha <= fechaHasta ? 'calendario-dia-seleccionado' : ''}`}
+                            es-otro-mes={dia.mismo_mes ? "no" : "si"}
+                            onClick={() => {
+                                if (!dia.fecha || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades || (dia.fecha < fechaActual && !infoUsuario.puede_corregir_el_pasado)) return;
+                                const selectedDate = dia.fecha as RealDate;
+                                if (!fechaHasta || selectedDate <= fechaHasta || fechaHasta.getFullYear() != selectedDate.getFullYear()) {
+                                    props.onFecha(selectedDate);
+                                    props.onFechaHasta(selectedDate);
+                                } 
+                                else {
+                                    props.onFechaHasta(selectedDate);
+                                }
+                                if (dia.fecha.getMonth() + 1 !== periodo.mes) {
+                                    setPeriodo({mes: dia.fecha.getMonth() + 1, annio: dia.fecha.getFullYear()});
+                                }
+                            }}
+                        >
+                            <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
+                            {(mostrarDiaConsolidado || diaEsHoyConFichada) && dia.entrada ? (
+                                <span className="calendario-dia-fichada-entrada">
+                                    {dia.entrada}
+                                </span>
+                            ) : null}
+                            <span className={`calendario-dia-contenido ${dia ? 'con_novedad_si' : 'con_novedad_no' } ${diaEsHoyConFichada ? 'calendario-dia-con-fichada' : ''}`}>{dia.cod_nov ?? ''}</span>
+                            {(mostrarDiaConsolidado || diaEsHoyConFichada) && dia.salida ? (
+                                <span className="calendario-dia-fichada-salida">
+                                    {dia.salida}
+                                </span>
+                            ) : null}
+                        </div>
+                    </Tooltip>
+                })}
             </Box>)}
             <Box>
                 {fecha && fechaHasta && (fecha.valueOf() !== fechaHasta.valueOf() ?
