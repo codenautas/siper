@@ -15,7 +15,7 @@
     "npm": ">=10.9"
   },
   "dependencies": {
-    "backend-plus": "^2.5.2-betha.40",
+    "backend-plus": "^2.5.3",
     "best-globals": "^2.0.2",
     "frontend-plus": "^0.0.17",
     "guarantee-type": "^0.2.2",
