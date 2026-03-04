@@ -970,6 +970,7 @@ export interface RegistroFichadaResponse {
   status: 'OK' | 'ERROR' ;
   code: 200 | 400 | 403 | 500;
   message: string;
+  data?: FichadaData
 }
 
 //fin para app de fichadas

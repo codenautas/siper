@@ -624,18 +624,33 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         policy:'fichadas',
         coreFunction: async function (context: ProcedureContext, params:{fichada:Partial<FichadaData>}):Promise<ctts.RegistroFichadaResponse>{
             const {fichada} = params;
-            //TODO validar fecha, hora y usuario
+            const AHORA = datetime.now();
             try{
-                await context.client.query(`
+                const row = (await context.client.query(`
                     insert into fichadas_recibidas (fichador, fecha, hora, tipo, texto, punto_gps) 
                         values ($1,$2,$3,$4,$5,$6) returning *
                     ;`
-                , [fichada.fichador, fichada.fecha, fichada.hora, fichada.tipo_fichada, fichada.observaciones, fichada.punto]).fetchUniqueRow();
+                , [context.user.usuario, AHORA.toYmd(), AHORA.toHms(), fichada.tipo_fichada, fichada.observaciones, fichada.punto]).fetchUniqueRow()).row;
+                const infoUsuario = await context.be.procedure.info_usuario.coreFunction(context,{});
+                
+                const data:FichadaData = {
+                    apellido: infoUsuario.apellido,
+                    nombres:infoUsuario.nombres,
+                    fecha:row.fecha.toDmy(),
+                    hora: row.hora,
+                    fichador: row.fichador,
+                    tipo_fichada:row.tipo,
+                    observaciones:row.texto,
+                    punto: row.punto_gps,
+                    id_original:null,
+                    tipo_dispositivo:null
+                }
+                return {status:'OK', code:200, message:'fichada registrada correctamente', data}
             }catch(err){
                 //@ts-ignore err es error
                 return {status:'ERROR', code:err.code, message:err.message}
             }
-            return {status:'OK', code:200, message:'fichada registrada correctamente'}
+            
         }
     },
     {   

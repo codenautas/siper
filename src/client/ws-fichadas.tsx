@@ -79,7 +79,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
         hora: currentDateTime.horaISO,
         observaciones: null,
         punto: null,
-        tipo_dispositivo: 'WEB',
+        tipo_dispositivo: null,
         id_original: null,
     };
 
@@ -97,6 +97,10 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
             hora: currentDateTime.horaISO,
         }));
     }, [currentDateTime]);
+
+    useEffect(() => {
+        getGeolocation();
+    }, []);
 
     const [geolocationStatus, setGeolocationStatus] = useState<string>('GPS no capturado.');
     const [isGpsLoading, setIsGpsLoading] = useState<boolean>(false);
@@ -228,7 +232,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
             setModalResponse({
                 severity: 'success',
                 message: `La fichada ha sido registrada.`,
-                data: formDataEnviada
+                data: result.data
             });
             setOpenResponseModal(true);
 
@@ -260,17 +264,6 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
     const getTipoFichadaNombre = (tipoFichadaId: string | number | null | undefined): string => {
         if (!tipoFichadaId) return 'N/A';
         return tiposFichada.find(tf => tf.tipo_fichada === tipoFichadaId)?.nombre || `ID: ${tipoFichadaId}`;
-    };
-
-    // Función auxiliar para formatear fecha de ISO (YYYY-MM-DD) a DD/MM/YYYY
-    const formatDateToDDMMYYYY = (isoDate: string): string => {
-        if (!isoDate) return 'N/A';
-        const parts = isoDate.split('-');
-        if (parts.length === 3) {
-            // Asume que parts es [YYYY, MM, DD]
-            return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-        return isoDate;
     };
 
     return (
@@ -363,7 +356,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                     name="observaciones"
                     multiline
                     rows={2}
-                    value={formData.observaciones}
+                    value={formData.observaciones || ''}
                     onChange={handleChange}
                     size="small"
                 />
@@ -386,7 +379,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                     id="punto"
                     label={formData.punto ? "Coordenadas GPS (Latitud, Longitud)" : "Sin punto GPS"}
                     name="punto"
-                    value={formData.punto}
+                    value={formData.punto || ''}
                     InputLabelProps={{ shrink: true }}
                     inputProps={{ readOnly: true }}
                     color={errorEnPuntoGps() ? 'warning' : undefined}
@@ -458,7 +451,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                                     <span style={{ fontWeight: 'bold' }}>Nombre:</span> {modalResponse.data.nombres}
                                 </Typography>
                                 <Typography variant="body2">
-                                    <span style={{ fontWeight: 'bold' }}>Fecha:</span> {formatDateToDDMMYYYY(modalResponse.data.fecha)}
+                                    <span style={{ fontWeight: 'bold' }}>Fecha:</span> {modalResponse.data.fecha}
                                 </Typography>
                                 <Typography variant="body2" sx={{ mb: 1 }}>
                                     <span style={{ fontWeight: 'bold' }}>Hora:</span> {modalResponse.data.hora}
