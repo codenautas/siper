@@ -734,7 +734,7 @@ declare module "frontend-plus" {
         }) => Promise<void>;
         parametros: (params:object) => Promise<ParametrosResult>;
         registrar_novedad: (params:NovedadRegistrada) => Promise<NovedadRegistrada & { idr: number }>;
-        fichadas_registrar:(params:{fichadas:FichadaData}) => Promise<RegistroFichadaResponse>
+        fichada_registrar:(params:{fichada:FichadaData}) => Promise<RegistroFichadaResponse>
         per_cant_multiorigen: (params: {annio: number,idper: string}) => Promise<ProvisorioDetalleNovPer>
     }
     interface Connector {
