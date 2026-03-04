@@ -954,7 +954,7 @@ export type Fichada = DefinedType<typeof fichadas.description>
 
 //para app de fichadas
 export interface FichadaData { 
-    idper: string;
+    fichador: string;
     nombres: string;
     apellido: string;
     tipo_fichada: 'E' | 'S' | 'O' | null;
@@ -966,21 +966,10 @@ export interface FichadaData {
     id_original: string | null;
 }
 
-interface FichadaFallida {
-  index: number;
-  error_code: string;
-  error_message: string;
-  fichada_data: FichadaData
-}
-
-export interface RegistroFichadasResponse {
-  status: 'OK' | 'ERROR' | 'SUCCESS_PARTIAL';
-  code: 200 | 207 | 400 | 403 | 500;
+export interface RegistroFichadaResponse {
+  status: 'OK' | 'ERROR' ;
+  code: 200 | 400 | 403 | 500;
   message: string;
-  cant_procesadas: number;
-  cant_insertadas: number;
-  cant_fallidas: number;
-  fallidas: FichadaFallida[];
 }
 
 //fin para app de fichadas

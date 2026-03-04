@@ -617,16 +617,25 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         }
     },
     {
-        action: 'fichadas_registrar',
+        action: 'fichada_registrar',
         parameters: [
-            {name:'fichadas', typeName:'jsonb'}
+            {name:'fichada', typeName:'jsonb'}
         ],
         policy:'fichadas',
-        coreFunction: async function (context: ProcedureContext, params:{fichadas:Partial<FichadaData>[]}) {
-            const {fichadas} = params;
-            const fichadasString = json4all.stringify(fichadas);
-            const result = await context.client.query(`SELECT registrar_fichadas($1) AS resultado;`, [fichadasString]).fetchUniqueRow();
-            return result.row.resultado;
+        coreFunction: async function (context: ProcedureContext, params:{fichada:Partial<FichadaData>}):Promise<ctts.RegistroFichadaResponse>{
+            const {fichada} = params;
+            //TODO validar fecha, hora y usuario
+            try{
+                await context.client.query(`
+                    insert into fichadas_recibidas (fichador, fecha, hora, tipo, texto, punto_gps) 
+                        values ($1,$2,$3,$4,$5,$6) returning *
+                    ;`
+                , [fichada.fichador, fichada.fecha, fichada.hora, fichada.tipo_fichada, fichada.observaciones, fichada.punto]).fetchUniqueRow();
+            }catch(err){
+                //@ts-ignore err es error
+                return {status:'ERROR', code:err.code, message:err.message}
+            }
+            return {status:'OK', code:200, message:'fichada registrada correctamente'}
         }
     },
     {   

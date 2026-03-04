@@ -34,7 +34,7 @@ import { date, RealDate, compareForOrder, sameValue } from "best-globals";
 import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, NovedadRegistrada, ParametrosResult,
     InfoUsuario,
     FichadaData,
-    RegistroFichadasResponse
+    RegistroFichadaResponse
 } from "../common/contracts"
 import * as ctts from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
@@ -732,7 +732,7 @@ declare module "frontend-plus" {
         }) => Promise<void>;
         parametros: (params:object) => Promise<ParametrosResult>;
         registrar_novedad: (params:NovedadRegistrada) => Promise<NovedadRegistrada & { idr: number }>;
-        fichadas_registrar:(params:{fichadas:FichadaData[]}) => Promise<RegistroFichadasResponse>
+        fichadas_registrar:(params:{fichadas:FichadaData}) => Promise<RegistroFichadaResponse>
         per_cant_multiorigen: (params: {annio: number,idper: string}) => Promise<ProvisorioDetalleNovPer>
     }
     interface Connector {

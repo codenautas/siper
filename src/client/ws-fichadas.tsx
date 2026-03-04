@@ -71,7 +71,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
     }, []);
 
     const initialFormData: FichadaData = {
-        idper: infoUsuario.idper,
+        fichador: infoUsuario.usuario,
         nombres: infoUsuario.nombres,
         apellido: infoUsuario.apellido,
         tipo_fichada: null,
@@ -201,8 +201,8 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
         try {
             setIsWaitingForBackendResponse(true);
             const formDataEnviada = {...formData}
-            const result = await conn.ajax.fichadas_registrar({
-                fichadas: [formDataEnviada]
+            const result = await conn.ajax.fichada_registrar({
+                fichada: formDataEnviada
             })
 
             if (result.code != 200) {
@@ -290,10 +290,10 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
             <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%'}}>
                 <Box sx={{ display: 'flex', gap: 2, mt: 1, mb: 1 }}>
                     <TextField 
-                        id="idper" 
-                        label="ID Persona" 
-                        name="idper" 
-                        value={formData.idper} 
+                        id="fichador"
+                        label="Fichador"
+                        name="fichador"
+                        value={formData.fichador} 
                         disabled={true} 
                         size="small" 
                         sx={{ flex: '0 0 15%' }}
@@ -449,7 +449,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
                                     Detalle de Fichada:
                                 </Typography>
                                 <Typography variant="body2">
-                                    <span style={{ fontWeight: 'bold' }}>ID Persona:</span> {modalResponse.data.idper}
+                                    <span style={{ fontWeight: 'bold' }}>Fichador:</span> {modalResponse.data.fichador}
                                 </Typography>
                                 <Typography variant="body2">
                                     <span style={{ fontWeight: 'bold' }}>Apellido:</span> {modalResponse.data.apellido}
