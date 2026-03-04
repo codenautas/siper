@@ -594,10 +594,12 @@ function NovedadesRegistradas(props:{conn: Connector, idper:string, annio:number
                             table: 'novedades_registradas',
                             primaryKeyValues: [quiereBorrar!.idper, quiereBorrar!.desde, quiereBorrar!.idr]
                         }).then(()=>{
+                            props.onBorrado();
+                        }).catch(logError)
+                        .finally(()=>{
                             setQuiereBorrar(null);
                             setEliminando(false);
-                            props.onBorrado();
-                        }).catch(logError);
+                        })
                     }}>Eliminar</Button>
                     </div>
                 </div>
