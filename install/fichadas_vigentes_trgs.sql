@@ -109,6 +109,8 @@ DECLARE
   v_annio integer := EXTRACT(YEAR FROM new.fecha);
   v_annio_abierto boolean;
   v_regla RECORD;
+  v_duracion interval;
+  v_minimo interval;
 BEGIN
   SELECT a.abierto
     INTO v_annio_abierto
@@ -124,7 +126,14 @@ BEGIN
     ELSIF lower(new.fichadas) IS NULL OR upper(new.fichadas) IS NULL THEN
       NEW.cod_nov := v_regla.codnov_unica_fichada;
     ELSE
-      NEW.cod_nov := NULL;
+      v_duracion := upper(new.fichadas) - lower(new.fichadas);
+      v_minimo   := v_regla.minimas_horas_diarias_declaradas * interval '1 hour';
+
+      IF v_duracion < v_minimo THEN
+        NEW.cod_nov := v_regla.codnov_unica_fichada;
+      ELSE
+        NEW.cod_nov := NULL;
+      END IF;
     END IF;
   END IF;
   IF tg_op = 'INSERT' THEN
