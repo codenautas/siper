@@ -15,7 +15,7 @@
     "npm": ">=10.9"
   },
   "dependencies": {
-    "backend-plus": "^2.5.4",
+    "backend-plus": "^2.5.7",
     "best-globals": "^2.0.2",
     "frontend-plus": "^0.0.17",
     "guarantee-type": "^0.2.2",
