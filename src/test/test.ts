@@ -300,7 +300,7 @@ describe("SiPer: " + testConfig.name, function(){
             registra_novedades_desde: opts.registra_novedades_desde ?? date.iso(`${DESDE_AÑO}-01-01`),
             para_antiguedad_relativa: opts.para_antiguedad_relativa ?? date.iso(`${DESDE_AÑO}-01-01`),
             sector: SECTOR,
-            banda_horaria: 'NORMAL'
+            banda_horaria: 'GENERAL'
         } satisfies Partial<ctts.Persona>;
         var personaGrabada = await rrhhSession.saveRecord(
             ctts.personas,
