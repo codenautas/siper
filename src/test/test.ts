@@ -75,6 +75,7 @@ const COD_MUDANZA = "124";
 const COD_COMISION = "10";
 const COD_NO_FICHAR = "85";
 const COD_SALIDA_ANTI = "55";
+const COD_LACTANCIA = "82";
 const COD_PRED_PAS: string|null = '999'; // es el código predeterminado para un día laborable en el pasado y presente
 const COD_PRED_FUT: string|null = null; // es el código predeterminado para un día laborable en el futuro, por ahora null
 
@@ -976,6 +977,43 @@ describe("connected", function(){
                         {fecha:date.iso('2000-01-05'), cod_nov:COD_PRED_PAS  , idper},
                     ], 'all', {fixedFields:{idper, fecha:['2000-01-03','2000-01-05']}})
                 });
+            })
+            it("bug-prod-gi11", async function(){
+                // ACÁ !!!
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                    await registrarNovedad(rrhhSession,
+                        {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-29'), idper, cod_nov: COD_LACTANCIA}
+                    );
+                    // await rrhhSession.tableDataTest('novedades_vigentes', [
+                    //     {fecha:date.iso('2000-01-31'), cod_nov:COD_PRED_PAS  , idper},
+                    //     {fecha:date.iso('2000-02-01'), cod_nov:COD_LACTANCIA , idper},
+                    //     {fecha:date.iso('2000-02-02'), cod_nov:COD_LACTANCIA , idper},
+                    // ], 'all', {fixedFields:{idper, fecha:['2000-01-31','2000-02-02']}})
+                    await registrarNovedad(rrhhSession,
+                        {desde:date.iso('2000-01-31'), hasta:date.iso('2000-02-29'), idper, cod_nov: COD_DIAGRAMADO,
+                            dds1:true, dds3:true, dds5:true
+                        }
+                    );
+                    await rrhhSession.tableDataTest('novedades_vigentes', [
+                        {fecha:date.iso('2000-01-31'), cod_nov:COD_DIAGRAMADO, idper},
+                        {fecha:date.iso('2000-02-01'), cod_nov:COD_LACTANCIA , idper},
+                        {fecha:date.iso('2000-02-02'), cod_nov:COD_DIAGRAMADO, idper},
+                    ], 'all', {fixedFields:{idper, fecha:['2000-01-31','2000-02-02']}})
+                    /*
+                    await server.inDbClient(ADMIN_REQ, async client =>{
+                        try {
+                            await client.query("update parametros set fecha_hora_para_test = $1::date + $2::time", ['2000-02-02', '14:00']).execute();
+                            await rrhhSession.tableDataTest('novedades_vigentes', [
+                                {fecha:date.iso('2000-01-31'), cod_nov:COD_DIAGRAMADO, idper},
+                                {fecha:date.iso('2000-02-01'), cod_nov:null          , idper},
+                                {fecha:date.iso('2000-02-02'), cod_nov:null          , idper},
+                            ], 'all', {fixedFields:{idper, fecha:['2000-01-31','2000-02-02']}})
+                        } finally {
+                            await client.query("update parametros set fecha_hora_para_test = $1::date + $2::time", [FECHA_ACTUAL, HORA_ACTUAL]).execute();
+                        }
+                    });
+                    */
+                })
             })
         })
         describe("inconsistencias de personas", function(){
