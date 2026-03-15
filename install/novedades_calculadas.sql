@@ -32,7 +32,7 @@ $BODY$
               FROM novedades_registradas nr LEFT JOIN cod_novedades cn ON nr.cod_nov = cn.cod_nov
               LEFT JOIN tipos_novedad tn USING (tipo_novedad)
               WHERE f.fecha BETWEEN nr.desde AND nr.hasta
-                AND (cn.c_dds IS NOT TRUE OR CASE extract(DOW from f.fecha) WHEN 0 THEN nr.dds0 WHEN 1 THEN nr.dds1 WHEN 2 THEN nr.dds2 WHEN 3 THEN nr.dds3 WHEN 4 THEN nr.dds4 WHEN 5 THEN nr.dds5 WHEN 6 THEN nr.dds6 END)
+                -- AND (cn.c_dds IS NOT TRUE OR CASE extract(DOW from f.fecha) WHEN 0 THEN nr.dds0 WHEN 1 THEN nr.dds1 WHEN 2 THEN nr.dds2 WHEN 3 THEN nr.dds3 WHEN 4 THEN nr.dds4 WHEN 5 THEN nr.dds5 WHEN 6 THEN nr.dds6 END)
                 AND p.idper = nr.idper                
               ORDER BY tn.orden, nr.idr DESC LIMIT 1
           ) nr ON true
@@ -41,7 +41,7 @@ $BODY$
                 dds0, dds1, dds2, dds3, dds4, dds5, dds6, cn.c_dds
               FROM novedades_registradas nr LEFT JOIN cod_novedades cn ON nr.cod_nov = cn.cod_nov
               WHERE f.fecha BETWEEN nr.desde AND nr.hasta
-                AND (cn.c_dds IS NOT TRUE OR CASE extract(DOW from f.fecha) WHEN 0 THEN nr.dds0 WHEN 1 THEN nr.dds1 WHEN 2 THEN nr.dds2 WHEN 3 THEN nr.dds3 WHEN 4 THEN nr.dds4 WHEN 5 THEN nr.dds5 WHEN 6 THEN nr.dds6 END)
+                -- AND (cn.c_dds IS NOT TRUE OR CASE extract(DOW from f.fecha) WHEN 0 THEN nr.dds0 WHEN 1 THEN nr.dds1 WHEN 2 THEN nr.dds2 WHEN 3 THEN nr.dds3 WHEN 4 THEN nr.dds4 WHEN 5 THEN nr.dds5 WHEN 6 THEN nr.dds6 END)
                 AND p.idper = nr.idper
                 AND nr.tipo_novedad = 'I'
               ORDER BY nr.idr DESC LIMIT 1
