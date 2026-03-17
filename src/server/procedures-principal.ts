@@ -474,6 +474,36 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         }
     },
     {
+        action: 'cumplimiento_presentismo',
+        parameters: [
+            {name:'mes', typeName:'date', label:'mes', specialDefaultValue: 'current_date'},
+            {name:'idper', typeName:'text', label:'persona', references: 'personas', defaultValue:null}
+        ],
+        resultOk:'showGrid',
+        coreFunction: async function(context: ProcedureContext, params:any){
+            const mesInicio = date.ymd(
+                params.mes.getFullYear(),
+                (params.mes.getMonth() + 1) as 1|2|3|4|5|6|7|8|9|10|11|12,
+                1
+            );
+            const grilla = {
+                tableName:'presentismo',
+                fixedFields:[{fieldName:'mes_inicio', value:mesInicio}] as FixedFields,
+                tableDef:{title:'control de presentismo del '+mesInicio.toDmy(), hiddenColumns:[] as string[]}
+            };
+            if (params.idper != null) {
+                const apeynom = await context.client.query(
+                    `select concat_ws(', ', apellido, nombres) from personas where idper = $1`,
+                    [params.idper]
+                ).fetchUniqueValue();
+                grilla.fixedFields.push({fieldName:'idper', value:params.idper});
+                grilla.tableDef.title += ' de '+apeynom.value;
+                grilla.tableDef.hiddenColumns.push('sector', 'sectores__nombre_sector');
+            }
+            return grilla;
+        }
+    },
+    {
         action: 'visor_de_fichadas',
         parameters: [
             {name:'fecha'  , typeName:'date', specialDefaultValue: 'current_date'},
