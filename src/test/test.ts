@@ -18,6 +18,7 @@ import { date, datetime, timeInterval } from "best-globals";
 import { guarantee, DefinedType } from "guarantee-type"
 
 import { tipo_novedad, tipo_novedad_inicial, tipo_novedad_verificado } from "../server/table-tipos_novedad"
+import { sqlCumplimientoHorasMensual } from "../server/table-presentismo"
 
 import * as discrepances from 'discrepances';
 import { Time } from "../server/types-principal";
@@ -81,7 +82,7 @@ const COD_MUDANZA = "124";
 const COD_COMISION = "10";
 const COD_NO_FICHAR = "85";
 const COD_SALIDA_ANTI = "55";
-const COD_AUSENTE = "7";
+const COD_AUSENTE = "102";
 const COD_ABANDONO = "59";
 const COD_PRED_PAS: string|null = '999'; // es el código predeterminado para un día laborable en el pasado y presente
 const COD_PRED_FUT: string|null = null; // es el código predeterminado para un día laborable en el futuro, por ahora null
@@ -1038,6 +1039,33 @@ describe("SiPer: " + testConfig.name, function(){
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(null, null)})
                 })
             })
+            async function consolidarJornada(idper:string, fecha:Date, entrada:TIME|null, salida:TIME|null){
+                if (entrada != null) {
+                    await registrarFichada(server, {idper, fecha, hora: entrada, tipo_fichada:'E'});
+                }
+                if (salida != null) {
+                    await registrarFichada(server, {idper, fecha, hora: salida, tipo_fichada:'S'});
+                }
+                await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper, fecha});
+            }
+            async function traerPresentismo(idper:string, mes_inicio:Date){
+                return server.inDbClient(ADMIN_REQ, async client => {
+                    const result = await client.query(`
+                        SELECT
+                            idper,
+                            mes_inicio,
+                            ausentes_injustificados,
+                            horas_adeudadas_mes,
+                            pierde_por_ausente_injustificado,
+                            pierde_por_horas,
+                            pierde_presentismo
+                        FROM (${sqlCumplimientoHorasMensual}) p
+                        WHERE p.idper = $1
+                          AND p.mes_inicio = $2
+                    `, [idper, mes_inicio]).fetchUniqueRow();
+                    return result.row;
+                });
+            }
             it("solo tiene horario de entrada", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = FECHA_ACTUAL;
@@ -1128,6 +1156,53 @@ describe("SiPer: " + testConfig.name, function(){
                     const salida  = '16:00:00';
                     await registrarFichada(server, {idper, fecha, hora: salida , tipo_fichada:'S'});
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov: null, cod_nov_final: null})
+                })
+            })
+            describe("presentismo", function(){
+                const mesInicio = date.iso('2000-01-01');
+                const fechas = [
+                    date.iso('2000-01-27'),
+                    date.iso('2000-01-28'),
+                    date.iso('2000-01-31'),
+                ];
+                it("cumple cuando completa las horas del mes", async function(){
+                    await enNuevaPersona(this.test?.title!, {registra_novedades_desde: fechas[0]}, async ({idper}) => {
+                        for (const fecha of fechas) {
+                            await consolidarJornada(idper, fecha, '09:00:00', '16:00:00');
+                        }
+                        const presentismo = await traerPresentismo(idper, mesInicio);
+                        assert.equal(presentismo.ausentes_injustificados, 0);
+                        assert.equal(presentismo.horas_adeudadas_mes, '0:00');
+                        assert.equal(presentismo.pierde_por_ausente_injustificado, false);
+                        assert.equal(presentismo.pierde_por_horas, false);
+                        assert.equal(presentismo.pierde_presentismo, false);
+                    })
+                })
+                it("no cumple por horas cuando adeuda mas de lo permitido", async function(){
+                    await enNuevaPersona(this.test?.title!, {registra_novedades_desde: fechas[0]}, async ({idper}) => {
+                        for (const fecha of fechas) {
+                            await consolidarJornada(idper, fecha, '09:00:00', '13:00:00');
+                        }
+                        const presentismo = await traerPresentismo(idper, mesInicio);
+                        assert.equal(presentismo.ausentes_injustificados, 0);
+                        assert.equal(presentismo.horas_adeudadas_mes, '9:00');
+                        assert.equal(presentismo.pierde_por_ausente_injustificado, false);
+                        assert.equal(presentismo.pierde_por_horas, true);
+                        assert.equal(presentismo.pierde_presentismo, true);
+                    })
+                })
+                it("no cumple por ausente injustificado aunque no exceda las horas adeudadas", async function(){
+                    await enNuevaPersona(this.test?.title!, {registra_novedades_desde: fechas[0]}, async ({idper}) => {
+                        await consolidarJornada(idper, fechas[0], '09:00:00', '16:00:00');
+                        await consolidarJornada(idper, fechas[1], '09:00:00', '16:00:00');
+                        await consolidarJornada(idper, fechas[2], null, null);
+                        const presentismo = await traerPresentismo(idper, mesInicio);
+                        assert.equal(presentismo.ausentes_injustificados, 1);
+                        assert.equal(presentismo.horas_adeudadas_mes, '7:00');
+                        assert.equal(presentismo.pierde_por_ausente_injustificado, true);
+                        assert.equal(presentismo.pierde_por_horas, false);
+                        assert.equal(presentismo.pierde_presentismo, true);
+                    })
                 })
             })
         })
