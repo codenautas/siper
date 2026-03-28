@@ -81,7 +81,7 @@ const COD_MUDANZA = "124";
 const COD_COMISION = "10";
 const COD_NO_FICHAR = "85";
 const COD_SALIDA_ANTI = "55";
-const COD_AUSENTE = "7";
+const COD_AUSENTE = "102";
 const COD_ABANDONO = "59";
 const COD_PRED_PAS: string|null = '999'; // es el código predeterminado para un día laborable en el pasado y presente
 const COD_PRED_FUT: string|null = null; // es el código predeterminado para un día laborable en el futuro, por ahora null
@@ -479,7 +479,7 @@ describe("SiPer: " + testConfig.name, function(){
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-03-06'), hasta:date.iso('2000-03-12'), cod_nov:COD_VACACIONES, idper: persona.idper}
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 discrepances.showAndThrow(informe, {dias_corridos:7, dias_habiles:3, dias_coincidentes:0, con_detalles:null, c_dds:null,
-                    mensaje: discrepances.test((x:string) => /confirma/.test(x)) as string, saldo: 12, falta_entrada: null
+                    mensaje: discrepances.test((x:string) => /confirma/.test(x)) as string, saldo: 12, falta_entrada: false
                 })
                 await registrarNovedad(rrhhSession, novedadRegistradaPorCargar);
                 await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
@@ -505,7 +505,7 @@ describe("SiPer: " + testConfig.name, function(){
                 var novedadRegistradaPorCargar = {desde:date.iso('2000-05-08'), hasta:date.iso('2000-05-12'), cancela:true, idper}
                 var informe = await rrhhSession.callProcedure(ctts.si_cargara_novedad, novedadRegistradaPorCargar);
                 discrepances.showAndThrow(informe, {dias_corridos:5, dias_habiles:5, dias_coincidentes:5, con_detalles: null, c_dds: null,
-                    mensaje: discrepances.test((x:string) => /confirma/.test(x)) as string, saldo: null, falta_entrada: null
+                    mensaje: discrepances.test((x:string) => /confirma/.test(x)) as string, saldo: null, falta_entrada: false
                 })
                 await registrarNovedad(rrhhSession,
                     novedadRegistradaPorCargar
