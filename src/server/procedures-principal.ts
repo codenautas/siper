@@ -770,23 +770,32 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         parameters: [
             {name: 'fecha'         , typeName: 'date'   },
             {name: 'idper'         , typeName: 'text'   , references: 'personas', defaultValue: null},
+            {name: 'consolidar'    , typeName: 'boolean', defaultValue: true},
         ],
         coreFunction:  async function (context:ProcedureContext, parameters:any) {
-            const {fecha, idper} = parameters;
-            await context.client.query(
-                `update fechas set fichadas_consolidadas = true where fecha = $1`,
+            const {fecha, idper, consolidar} = parameters;
+            var necesitaCambio = (await context.client.query(
+                `select fichadas_consolidadas from fechas where fecha = $1`,
                 [fecha]
-            ).execute();
-            if (idper) {
+            ).fetchUniqueValue()).value as boolean != consolidar;
+            if (necesitaCambio) {
                 await context.client.query(
-                    `call actualizar_novedades_vigentes_idper($1::date, $1::date, $2::text)`,
-                    [fecha, idper]
+                    `update fechas set fichadas_consolidadas = $2 where fecha = $1`,
+                    [fecha, consolidar]
                 ).execute();
-            } else {
-                await context.client.query(
-                    `call actualizar_novedades_vigentes($1::date, $1::date)`,
-                    [fecha]
-                ).execute();
+            }
+            if (necesitaCambio || idper != null) {
+                if (idper) {
+                    await context.client.query(
+                        `call actualizar_novedades_vigentes_idper($1::date, $1::date, $2::text)`,
+                        [fecha, idper]
+                    ).execute();
+                } else {
+                    await context.client.query(
+                        `call actualizar_novedades_vigentes($1::date, $1::date)`,
+                        [fecha]
+                    ).execute();
+                }
             }
             return true;
         }

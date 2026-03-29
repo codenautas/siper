@@ -542,7 +542,8 @@ export const consolidar_fichadas = {
     procedure: 'consolidar_fichadas',
     parameters: is.object({
         idper: is.string,
-        fecha: is.Date
+        fecha: is.Date,
+        consolidar: is.optional.boolean
     }),
     result: is.boolean
 }

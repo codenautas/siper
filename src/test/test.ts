@@ -991,6 +991,10 @@ describe("SiPer: " + testConfig.name, function(){
             })
         });
         describe("fichadas", function(){
+            after(async function(){
+                var fecha = FECHA_ACTUAL;
+                await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:false})
+            })
             it("detecta error por falta de fichada", async function(){
                 await enNuevaPersona(this.test?.title!, {vacaciones: 5}, async (persona, {}) => {
                     await expectError( async () => {
@@ -1022,7 +1026,7 @@ describe("SiPer: " + testConfig.name, function(){
                     registroFichadasEsperado.cod_nov = cod_nov_final;
                 }
                 if (cod_nov !== undefined) {
-                    await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper, fecha})
+                    await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper, fecha, consolidar: true})
                     await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         registroFichadasEsperado
                     ], 'all', {fixedFields:{idper, fecha}})

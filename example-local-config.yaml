@@ -18,7 +18,6 @@ modulo-fichadas-db:
   options:
     encrypt: false
     trustServerCertificate: true
-    
 install:
   dump:
     drop-his: false # poner en true en desarrollo
