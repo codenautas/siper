@@ -1095,7 +1095,7 @@ fecha|laborable|leyenda|repite|inamovible
 2025-12-29||||
 2025-12-30||||
 2025-12-31||||
-2026-01-01||||
+2026-01-01|false|Año nuevo|true|true
 2026-01-02||||
 2026-01-03||||
 2026-01-04||||
@@ -1141,8 +1141,8 @@ fecha|laborable|leyenda|repite|inamovible
 2026-02-13||||
 2026-02-14||||
 2026-02-15||||
-2026-02-16||||
-2026-02-17||||
+2026-02-16|false|Lunes de carnaval|true|false
+2026-02-17|false|Martes de carnaval|true|false
 2026-02-18||||
 2026-02-19||||
 2026-02-20||||
@@ -1177,7 +1177,7 @@ fecha|laborable|leyenda|repite|inamovible
 2026-03-21||||
 2026-03-22||||
 2026-03-23||||
-2026-03-24||||
+2026-03-24|false|Día de la memoria|true|true
 2026-03-25||||
 2026-03-26||||
 2026-03-27||||
@@ -1186,8 +1186,8 @@ fecha|laborable|leyenda|repite|inamovible
 2026-03-30||||
 2026-03-31||||
 2026-04-01||||
-2026-04-02||||
-2026-04-03||||
+2026-04-02|false|Día del veterano|true|true
+2026-04-03|false|Viernes santo|true|false
 2026-04-04||||
 2026-04-05||||
 2026-04-06||||
@@ -1215,7 +1215,7 @@ fecha|laborable|leyenda|repite|inamovible
 2026-04-28||||
 2026-04-29||||
 2026-04-30||||
-2026-05-01||||
+2026-05-01|false|Día del trabajador|true|true
 2026-05-02||||
 2026-05-03||||
 2026-05-04||||
@@ -1239,7 +1239,7 @@ fecha|laborable|leyenda|repite|inamovible
 2026-05-22||||
 2026-05-23||||
 2026-05-24||||
-2026-05-25||||
+2026-05-25|false|Revolución de mayo|true|true
 2026-05-26||||
 2026-05-27||||
 2026-05-28||||
@@ -1265,7 +1265,7 @@ fecha|laborable|leyenda|repite|inamovible
 2026-06-17||||
 2026-06-18||||
 2026-06-19||||
-2026-06-20||||
+2026-06-20|false|Belgrano|true|false
 2026-06-21||||
 2026-06-22||||
 2026-06-23||||
@@ -1284,7 +1284,7 @@ fecha|laborable|leyenda|repite|inamovible
 2026-07-06||||
 2026-07-07||||
 2026-07-08||||
-2026-07-09||||
+2026-07-09|false|Independencia|true|true
 2026-07-10||||
 2026-07-11||||
 2026-07-12||||
@@ -1323,7 +1323,7 @@ fecha|laborable|leyenda|repite|inamovible
 2026-08-14||||
 2026-08-15||||
 2026-08-16||||
-2026-08-17||||
+2026-08-17|false|San Martín|true|false
 2026-08-18||||
 2026-08-19||||
 2026-08-20||||
@@ -1379,7 +1379,7 @@ fecha|laborable|leyenda|repite|inamovible
 2026-10-09||||
 2026-10-10||||
 2026-10-11||||
-2026-10-12||||
+2026-10-12|false|Respeto a la Diversidad Cultural|true|false
 2026-10-13||||
 2026-10-14||||
 2026-10-15||||
@@ -1409,7 +1409,7 @@ fecha|laborable|leyenda|repite|inamovible
 2026-11-08||||
 2026-11-09||||
 2026-11-10||||
-2026-11-11||||
+2026-11-11|false|Día del trabajador municipal|true|false
 2026-11-12||||
 2026-11-13||||
 2026-11-14||||
@@ -1418,7 +1418,7 @@ fecha|laborable|leyenda|repite|inamovible
 2026-11-17||||
 2026-11-18||||
 2026-11-19||||
-2026-11-20||||
+2026-11-20|false|Soberanía|true|false
 2026-11-21||||
 2026-11-22||||
 2026-11-23||||
@@ -1436,7 +1436,7 @@ fecha|laborable|leyenda|repite|inamovible
 2026-12-05||||
 2026-12-06||||
 2026-12-07||||
-2026-12-08||||
+2026-12-08|false|Inmaculada concepción|true|true
 2026-12-09||||
 2026-12-10||||
 2026-12-11||||
@@ -1453,7 +1453,7 @@ fecha|laborable|leyenda|repite|inamovible
 2026-12-22||||
 2026-12-23||||
 2026-12-24||||
-2026-12-25||||
+2026-12-25|false|Navidad|true|true
 2026-12-26||||
 2026-12-27||||
 2026-12-28||||
