@@ -15,13 +15,13 @@
     "npm": ">=10.9"
   },
   "dependencies": {
-    "backend-plus": "^2.5.7",
-    "best-globals": "^2.0.2",
+    "backend-plus": "^2.6.0",
+    "best-globals": "^2.0.7",
     "frontend-plus": "^0.0.17",
     "guarantee-type": "^0.2.2",
-    "json4all": "^1.4.0",
-    "mssql": "^12.2.0",
-    "pg-triggers": "^0.4.3",
+    "json4all": "^1.4.2",
+    "mssql": "^12.2.1",
+    "pg-triggers": "^0.4.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -29,22 +29,22 @@
     "@eslint/js": "^9.39.2",
     "@types/fs-extra": "^11.0.4",
     "@types/mocha": "^10.0.10",
-    "@types/mssql": "^9.1.8",
-    "@types/node": "^25.0.6",
+    "@types/mssql": "^9.1.11",
+    "@types/node": "^25.5.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "eslint": "^9.39.2",
     "eslint-plugin-react": "^7.37.5",
-    "globals": "^17.0.0",
+    "globals": "^17.4.0",
     "jiti": "^2.6.1",
     "mixin-patch": "^0.5.0",
     "mocha": "^11.7.5",
     "serial-tester": "^0.3.0-rc.2",
     "source-map-support": "^0.5.21",
-    "type-fest": "5.3.1",
+    "type-fest": "5.5.0",
     "types.d.ts": "^0.6.22",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.52.0"
+    "typescript-eslint": "^8.57.2"
   },
   "mixin-patch": {
     "patch": false
