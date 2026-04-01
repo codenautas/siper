@@ -97,6 +97,7 @@ El trigger evalúa únicamente modificaciones en los campos considerados **crít
 - `activo`
 - `hashpass`
 - `idper`
+- `modalidad_trabajo`
 
 Cambios en otros campos (por ejemplo `email` u otros datos secundarios) **no generan eventos en la cola de sincronización**.
 
