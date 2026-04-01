@@ -78,7 +78,7 @@ $$;
 DROP TRIGGER IF EXISTS tr_sincro_usuarios_modulo_global ON "usuarios";
 
 CREATE TRIGGER tr_sincro_usuarios_modulo_global
-    AFTER INSERT OR DELETE OR UPDATE OF usuario, activo, hashpass, idper
+    AFTER INSERT OR DELETE OR UPDATE OF usuario, activo, hashpass, idper, modalidad_trabajo
     ON "usuarios"
     FOR EACH ROW
     EXECUTE FUNCTION siper.fn_trigger_sincro_usuarios_modulo();

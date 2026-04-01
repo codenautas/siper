@@ -32,12 +32,14 @@ export function usuarios(context: TableContext): TableDefinition{
             {name:'sector', typeName:'text', editable:false, serverSide:true, inTable:false},
             {name:'nombre_sector', typeName:'text', editable:false, serverSide:true, inTable:false},
             {name:'algoritmo_pass'                , typeName:'text'     , editable:false },
+            {name:'modalidad_trabajo'             , typeName:'text'  },
             
         ],
         primaryKey: ['usuario'],
         foreignKeys: [
             {references: 'personas', fields:[idper.name]},
             {references: 'roles'   , fields:[rol.name  ], onUpdate: 'no action'},
+            {references: 'modalidades_trabajo', fields: [{source:'modalidad_trabajo', target:'modalidad'}]},
         ],
         hiddenColumns:['algoritmo_pass'],
         constraints: [

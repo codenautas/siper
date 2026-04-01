@@ -43,6 +43,7 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {name: 'eximido_fichar',               typeName: 'boolean' },
             {name: 'inicializacion'              , typeName: 'text'    , description:'una lista de algoritmos para inicializar'},
             {name: 'inicializacion_limite'       , typeName: 'integer' , description:'la cantidad con que se inicializa' },
+            {name: 'modalidad_trabajo'           , typeName: 'text'    },
         ],
         primaryKey:[cod_nov.name],
         constraints:[
@@ -52,7 +53,8 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {constraintType:'check' , expr:`inicializacion in ('LICORD', 'LICMAT', 'CONST')`, consName:'inicializacion lista de metodos'},
         ],
         foreignKeys:[
-            {references: 'clases', fields:[clase.name]}
+            {references: 'clases', fields:[clase.name]},
+            {references: 'modalidades_trabajo', fields: [{source:'modalidad_trabajo', target:'modalidad'}]},
         ],
         detailTables:[
             {table:'novedades_vigentes'   , fields:[cod_nov.name], abr:'N'},
