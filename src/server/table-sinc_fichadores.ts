@@ -23,7 +23,7 @@ export function sinc_fichadores(context: TableContext): TableDefinition{
         editable: context.forDump,
         fields:[
             {name: 'num_sincro'       , typeName: 'bigint' , nullable: false, sequence:{firstValue:1, name:'sinc_usuarios_seq'}},
-            {name: 'usuario'          , typeName: 'text'   , nullable: false},
+            {name: 'usuario'          , typeName: 'text'   , nullable: false, allowEmptyText: true},
             {name: 'accion'           , typeName: 'text'   , nullable: false},
             {name: 'estado'           , typeName: 'text'   , nullable: false},
             {name: 'intentos'         , typeName: 'integer', nullable: false, defaultValue:0},
@@ -39,5 +39,8 @@ export function sinc_fichadores(context: TableContext): TableDefinition{
             {constraintType: 'check', consName: 'estados_cola', expr: `estado IN ('${ESTADOS.PENDIENTE}', '${ESTADOS.EN_PROCESO}', '${ESTADOS.PROCESADO}', '${ESTADOS.ERROR}', '${ESTADOS.AGOTADO}')`},
             {constraintType: 'check', consName: 'acciones_cola', expr: `accion IN ('${ACCIONES.DESACTIVAR}', '${ACCIONES.ACTUALIZAR}')`},
         ],
+        sql:{
+            skipEnance: true
+        }
     };
 }

@@ -18,7 +18,8 @@ export function fichadas_recibidas(context: TableContext): TableDefinition{
         editable: context.forDump,
         fields:[
             {...id_fichada            , sequence:{name: 'id_fichada', firstValue: 100}},
-            {name: 'fichador'         , typeName: 'text'     , nullable: false        },
+            {name: 'fichador'         , typeName: 'text'     , nullable: false, allowEmptyText: true},
+            {name: 'ficha'            , typeName: 'text'     , nullable: false        },
             {name: 'fecha'            , typeName: 'date'     , nullable: false        },
             {name: 'hora'             , typeName: 'time'     , nullable: false        },
             {name: 'tipo'             , typeName: 'text'     , nullable: false        },
@@ -27,8 +28,8 @@ export function fichadas_recibidas(context: TableContext): TableDefinition{
             {name: 'punto_gps'        , typeName: 'text'     , allowEmptyText: true   },
             {name: 'id_origen'        , typeName: 'text'     , allowEmptyText: true   },
             {name: 'recepcion'        , typeName: 'timestamp', defaultDbValue: 'current_timestamp'},
-            {name: 'migrado_estado'   , typeName: 'text'     , nullable: false, defaultDbValue: "'ANTERIOR_A_TRIGGER'"},
-            {name: 'migrado_log'      , typeName: 'text'     }
+            {name: 'migrado_estado'   , typeName: 'text'     , nullable: false, allowEmptyText: true, defaultDbValue: "'ANTERIOR_A_TRIGGER'"},
+            {name: 'migrado_log'      , typeName: 'text'     , allowEmptyText: true}
         ],         
         primaryKey: [id_fichada.name],
         sql:{
