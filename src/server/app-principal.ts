@@ -133,18 +133,30 @@ const cronMantenimiento = (be:AppBackend) => {
 
 export const MAX_INTENTOS = 5;
 
+type ConfigFichadasDb = {database?:null}|{
+    user: string,
+    password: string,
+    server: string
+    database: string
+    port: number
+    options: {
+        encrypt: boolean
+        trustServerCertificate: boolean
+    }
+}
+
 export const getConfigFichadasDb = (be:AppBackend)=> ({
     ...be.getContextForDump().be.config['modulo-fichadas-db'],
     connectionTimeout: 5000,
     requestTimeout: 5000
-});
+} as ConfigFichadasDb);
 
 const cronSincroUsuarios = async (be: AppBackend) => {
     // Intervalo de 60 segundos
     const interval = setInterval(async () => {
         let filas: any[] = [];
         const configFichadasDb = getConfigFichadasDb(be);
-        try {
+        if (configFichadasDb.database) try {
             await be.inTransaction(null, async (client) => {
                 filas = (await client.query(`
                     SELECT num_sincro FROM sinc_fichadores

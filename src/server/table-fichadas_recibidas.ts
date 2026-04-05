@@ -19,7 +19,6 @@ export function fichadas_recibidas(context: TableContext): TableDefinition{
         fields:[
             {...id_fichada            , sequence:{name: 'id_fichada', firstValue: 100}},
             {name: 'fichador'         , typeName: 'text'     , nullable: false, allowEmptyText: true},
-            {name: 'ficha'            , typeName: 'text'     , nullable: false        },
             {name: 'fecha'            , typeName: 'date'     , nullable: false        },
             {name: 'hora'             , typeName: 'time'     , nullable: false        },
             {name: 'tipo'             , typeName: 'text'     , nullable: false        },
