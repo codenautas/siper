@@ -745,8 +745,11 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         coreFunction: async function (context:ProcedureContext, parameters:any) {
             let pool: sql.ConnectionPool | null = null;
             try{
-                pool = await new sql.ConnectionPool(getConfigFichadasDb(context.be)).connect();
-                await ejecutarSP(parameters, context.client, pool!);
+                var config = getConfigFichadasDb(context.be);
+                if (config.database != null) {
+                    pool = await new sql.ConnectionPool(config).connect();
+                    await ejecutarSP(parameters, context.client, pool!);
+                }
             }catch(err){
                 await context.client.query(`
                     update sinc_fichadores
