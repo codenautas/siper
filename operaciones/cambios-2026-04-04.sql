@@ -1,8 +1,72 @@
 set role to postgres;
-ALTER SEQUENCE siper.id_fichada OWNER TO siper_muleto_owner;
+ALTER TABLE public.backend_plus OWNER TO postgres;
 
-set search_path = siper;
 set role to siper_muleto_owner;
+set search_path = siper;
+
+CREATE SEQUENCE siper.sinc_usuarios_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE siper.sinc_usuarios_seq OWNER TO siper_muleto_owner;
+
+CREATE SEQUENCE siper.id_fichada
+    START WITH 100
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+CREATE TABLE siper.fichadas_recibidas (
+    dispositivo text,
+    fecha date NOT NULL,
+    fichador text NOT NULL,
+    hora time without time zone NOT NULL,
+    id_fichada bigint DEFAULT nextval('siper.id_fichada'::regclass) NOT NULL,
+    id_origen text,
+    migrado_estado text DEFAULT 'ANTERIOR_A_TRIGGER'::text NOT NULL,
+    migrado_log text,
+    punto_gps text,
+    recepcion timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    texto text,
+    tipo text NOT NULL,
+    CONSTRAINT "tipo<>''" CHECK ((tipo <> ''::text))
+);
+
+
+CREATE TABLE siper.fichadas_vigentes (
+    annio integer GENERATED ALWAYS AS (EXTRACT(year FROM fecha)) STORED,
+    cod_nov text,
+    fecha date NOT NULL,
+    fichadas siper.time_range DEFAULT '(,)'::siper.time_range NOT NULL,
+    horario_entrada time without time zone,
+    horario_salida time without time zone,
+    idper text NOT NULL,
+    CONSTRAINT "cod_nov<>''" CHECK ((cod_nov <> ''::text)),
+    CONSTRAINT "idper<>''" CHECK ((idper <> ''::text))
+);
+
+CREATE TABLE siper.sinc_fichadores (
+    accion text NOT NULL,
+    actualizado_en timestamp without time zone,
+    creado_en timestamp without time zone,
+    estado text NOT NULL,
+    intentos integer DEFAULT 0 NOT NULL,
+    num_sincro bigint DEFAULT nextval('siper.sinc_usuarios_seq'::regclass) NOT NULL,
+    parametros text,
+    respuesta_sp text,
+    usuario text NOT NULL,
+    CONSTRAINT "accion<>''" CHECK ((accion <> ''::text)),
+    CONSTRAINT acciones_cola CHECK ((accion = ANY (ARRAY['DESACTIVAR'::text, 'ACTUALIZAR'::text]))),
+    CONSTRAINT "estado<>''" CHECK ((estado <> ''::text)),
+    CONSTRAINT estados_cola CHECK ((estado = ANY (ARRAY['PENDIENTE'::text, 'EN_PROCESO'::text, 'PROCESADO'::text, 'ERROR'::text, 'AGOTADO'::text]))),
+    CONSTRAINT "parametros<>''" CHECK ((parametros <> ''::text)),
+    CONSTRAINT "respuesta_sp<>''" CHECK ((respuesta_sp <> ''::text))
+);
 
 CREATE TYPE siper.novedades_calculadas_return AS (
 	idper text,
@@ -16,6 +80,23 @@ CREATE TYPE siper.novedades_calculadas_return AS (
 	detalles text,
 	cod_nov_ini text
 );
+
+DROP FUNCTION public.get_app_user(text);
+
+CREATE OR REPLACE FUNCTION siper.annio_preparar(p_annio integer) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS 
+$$
+BEGIN
+  INSERT INTO annios (annio, abierto, anterior) VALUES (p_annio, false, (SELECT annio FROM annios WHERE annio = p_annio - 1 ));
+  INSERT INTO fechas (fecha) 
+    SELECT d FROM generate_series(make_date(p_annio,1,1), make_date(p_annio,12,31), '1 day'::INTERVAL) d;
+END;
+$$;
+
+ALTER TYPE siper.novedades_calculadas_return OWNER TO siper_muleto_owner;
+
+ALTER TABLE siper.fechas ADD COLUMN fichadas_consolidadas boolean DEFAULT false;
 
 CREATE OR REPLACE FUNCTION personas_fichadas_vigentes_trg()
   RETURNS TRIGGER
@@ -252,7 +333,6 @@ $$);
 END;
 $CREATOR$;
 
-
 ALTER TABLE siper.fichadas_recibidas DROP CONSTRAINT IF EXISTS "ficha<>''";
 ALTER TABLE siper.fichadas_recibidas DROP CONSTRAINT IF EXISTS "idper<>''";
 ALTER TABLE siper.fichadas_recibidas DROP COLUMN IF EXISTS ficha;
@@ -262,8 +342,20 @@ ALTER TABLE siper.novedades_vigentes DROP CONSTRAINT "sal_fich<>''";
 ALTER TABLE siper.novedades_vigentes DROP COLUMN ent_fich;
 ALTER TABLE siper.novedades_vigentes DROP COLUMN sal_fich;
 
+CREATE VIEW siper.personal_con_fichada AS
+ SELECT p.idper,
+    p.apellido,
+    p.nombres,
+    p.documento,
+    u.hashpass
+   FROM (siper.personas p
+     JOIN siper.usuarios u USING (idper))
+  WHERE ((u.algoritmo_pass = 'PG-SHA256'::text) AND u.activo AND p.activo);
 
-ALTER TABLE ONLY siper.sinc_fichadores DROP CONSTRAINT cola_sincronizacion_usuarios_modulo_pkey;
+
+ALTER VIEW siper.personal_con_fichada OWNER TO siper_muleto_owner;
+
+
 ALTER TABLE ONLY siper.sinc_fichadores ADD CONSTRAINT sinc_fichadores_pkey PRIMARY KEY (num_sincro);
 
 create or replace procedure avance_de_dia_proc()
@@ -297,4 +389,294 @@ CREATE TRIGGER parametros_avance_dia_trg
   FOR EACH ROW
   EXECUTE PROCEDURE parametros_avance_dia_trg();
 
-ALTER VIEW siper.personal_con_fichada OWNER TO siper_muleto_owner;
+-- ALTER VIEW siper.personal_con_fichada OWNER TO siper_muleto_owner;
+
+CREATE FUNCTION siper.fn_trigger_sincro_usuarios_modulo() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+    -- Banderas de decisión
+    v_debe_desactivar_previo   BOOLEAN := false;
+    v_debe_procesar_actual     BOOLEAN := false;
+    v_accion_actual            TEXT; -- 'ACTUALIZAR' o 'DESACTIVAR'
+    
+    -- Variables auxiliares
+    v_algoritmo_actual         TEXT;
+BEGIN
+    -- 1. Determinar algoritmo del registro que disparó el trigger
+    v_algoritmo_actual := CASE WHEN TG_OP = 'DELETE' THEN OLD.algoritmo_pass ELSE NEW.algoritmo_pass END;
+
+    -- Guard: Si no es el algoritmo requerido, ignoramos
+    IF (COALESCE(v_algoritmo_actual, '') != 'PG-SHA256') THEN
+        RETURN NULL;
+    END IF;
+
+    -- 2. LÓGICA DE DECISIÓN
+    
+    -- Caso A: Cambio de nombre (Renombre)
+    -- Si es un UPDATE y el nombre de usuario cambió, hay que "apagar" el nombre anterior.
+    IF (TG_OP = 'UPDATE' AND OLD.usuario IS DISTINCT FROM NEW.usuario) THEN
+        v_debe_desactivar_previo := true;
+    END IF;
+
+    -- Caso B: Determinar qué hacer con el usuario "actual"
+    IF (TG_OP = 'DELETE') THEN
+        v_debe_procesar_actual := true;
+        v_accion_actual        := 'DESACTIVAR';
+
+    ELSIF (NEW.idper IS NULL) THEN
+        -- Si el registro actual no tiene persona, solo nos interesa si antes SÍ tenía (Desvínculo)
+        IF (TG_OP = 'UPDATE' AND OLD.idper IS NOT NULL) THEN
+            v_debe_procesar_actual := true;
+            v_accion_actual        := 'DESACTIVAR';
+        END IF;
+    
+    ELSE 
+        -- El registro tiene idper (está vinculado)
+        -- Sincronizamos si es nuevo o si cambiaron datos relevantes
+        IF (TG_OP = 'INSERT' OR OLD.* IS DISTINCT FROM NEW.*) THEN
+            v_debe_procesar_actual := true;
+            v_accion_actual        := 'ACTUALIZAR';
+        END IF;
+    END IF;
+
+    -- 3. EJECUCIÓN DE ACCIONES EN LA COLA
+
+    -- Acción para el usuario PREVIO (solo en renombres)
+    IF (v_debe_desactivar_previo) THEN
+        INSERT INTO siper.sinc_fichadores (usuario, accion, estado, creado_en, actualizado_en)
+        VALUES (OLD.usuario, 'DESACTIVAR', 'PENDIENTE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)
+        ON CONFLICT (usuario) WHERE (estado != 'PROCESADO')
+        DO UPDATE SET accion = 'DESACTIVAR', estado = 'PENDIENTE', actualizado_en = NOW(), intentos = 0, respuesta_sp = null;
+    END IF;
+
+    -- Acción para el usuario ACTUAL (Alta, Modificación, Baja o Desvínculo)
+    IF (v_debe_procesar_actual) THEN
+        INSERT INTO siper.sinc_fichadores (usuario, accion, estado, creado_en, actualizado_en)
+        VALUES (CASE WHEN TG_OP = 'DELETE' THEN OLD.usuario ELSE NEW.usuario END, v_accion_actual, 'PENDIENTE',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)
+        ON CONFLICT (usuario) WHERE (estado != 'PROCESADO')
+        DO UPDATE SET accion = v_accion_actual, estado = 'PENDIENTE', actualizado_en = NOW(), intentos = 0, respuesta_sp = null;
+    END IF;
+
+    RETURN NULL;
+END;
+$$;
+
+
+
+CREATE FUNCTION siper.procesar_fichada_recibida_trg() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'siper'
+    AS $$
+DECLARE
+    v_idper text;
+    v_tipo_mapeado text;
+    v_hora_redondeada time;
+BEGIN
+    BEGIN
+        SELECT idper INTO v_idper 
+        FROM usuarios 
+        WHERE usuario = NEW.fichador;
+
+        IF v_idper IS NULL THEN
+            RAISE EXCEPTION 'Usuario "%" no encontrado en la tabla usuarios', NEW.fichador;
+        END IF;
+        
+        v_tipo_mapeado := CASE 
+            WHEN lower(NEW.tipo) IN ('e', 'entrada') THEN 'E'
+            WHEN lower(NEW.tipo) IN ('s', 'salida' ) THEN 'S'
+            ELSE 'O'
+        END CASE;
+
+        v_hora_redondeada := date_trunc('minute', 
+            new.hora + CASE v_tipo_mapeado WHEN 'E' THEN '0'::interval WHEN 'S' THEN '59 seconds'::interval ELSE '30 seconds'::interval END
+        );
+
+        INSERT INTO fichadas (
+            idper, fecha, hora, tipo_fichada, 
+            observaciones, punto, tipo_dispositivo
+        ) VALUES (
+            v_idper, NEW.fecha, v_hora_redondeada, v_tipo_mapeado,
+            NEW.texto, NEW.punto_gps, NEW.dispositivo
+        );
+
+        NEW.migrado_estado := 'OK';
+        NEW.migrado_log := 'Migrado exitosamente';
+
+    EXCEPTION WHEN OTHERS THEN
+        NEW.migrado_estado := 'ERROR';
+        NEW.migrado_log := SQLERRM; 
+    END;
+
+    RETURN NEW;
+END;
+$$;
+
+
+CREATE OR REPLACE PROCEDURE siper.actualizar_novedades_vigentes_idper(IN p_desde date, IN p_hasta date, IN p_idper text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+-- ¡ATENCIÓN! NO MODIFICAR MANUALMENTE ESTA FUNCIÓN FUE GENERADA CON EL SCRIPT actualizar_novedades_vigentes.sql
+-- Otras funciones que comienzan con el nombre actualizar_novedades_vigentes se generaron junto a esta!
+MERGE INTO novedades_vigentes nv 
+  USING novedades_calculadas_idper(p_desde, p_hasta, p_idper) q
+    ON nv.idper = q.idper AND nv.fecha = q.fecha
+  WHEN MATCHED AND 
+      (nv.ficha IS DISTINCT FROM q.ficha 
+      OR nv.cod_nov IS DISTINCT FROM q.cod_nov 
+      OR nv.fichadas IS DISTINCT FROM q.fichadas
+      OR nv.sector IS DISTINCT FROM q.sector
+      OR nv.detalles IS DISTINCT FROM q.detalles
+      OR nv.trabajable IS DISTINCT FROM q.trabajable
+      OR nv.cod_nov_ini IS DISTINCT FROM q.cod_nov_ini
+      ) THEN
+    UPDATE SET ficha = q.ficha, cod_nov = q.cod_nov, fichadas = q.fichadas, sector = q.sector, detalles = q.detalles,
+      trabajable = q.trabajable, cod_nov_ini = q.cod_nov_ini
+  WHEN NOT MATCHED THEN
+    INSERT   (  idper,   ficha,   fecha,   cod_nov,   fichadas,   sector,   detalles,   trabajable,   cod_nov_ini)
+      VALUES (q.idper, q.ficha, q.fecha, q.cod_nov, q.fichadas, q.sector, q.detalles, q.trabajable, q.cod_nov_ini)
+  WHEN NOT MATCHED BY SOURCE AND nv.fecha BETWEEN p_desde AND p_hasta AND nv.idper = p_idper THEN DELETE;
+END;
+$$;
+
+ALTER TABLE siper.novedades_vigentes ADD COLUMN fichadas siper.time_range;
+
+ALTER TABLE siper.usaurios ADD COLUMN boolean DEFAULT true;
+
+
+
+ALTER TABLE ONLY siper.fichadas_recibidas
+    ADD CONSTRAINT fichadas_recibidas_pkey PRIMARY KEY (id_fichada);
+
+
+ALTER TABLE ONLY siper.fichadas_vigentes
+    ADD CONSTRAINT fichadas_vigentes_pkey PRIMARY KEY (idper, fecha);
+
+ALTER TABLE ONLY siper.fichadas_vigentes
+    ADD CONSTRAINT "fichadas_vigentes cod_novedades REL" FOREIGN KEY (cod_nov) REFERENCES siper.cod_novedades(cod_nov) ON UPDATE CASCADE;
+
+
+ALTER TABLE ONLY siper.fichadas_vigentes
+    ADD CONSTRAINT "fichadas_vigentes personas REL" FOREIGN KEY (idper) REFERENCES siper.personas(idper) ON UPDATE CASCADE;
+CREATE INDEX "cod_nov 4 fichadas_vigentes IDX" ON siper.fichadas_vigentes USING btree (cod_nov);
+
+CREATE INDEX "idper 4 fichadas_vigentes IDX" ON siper.fichadas_vigentes USING btree (idper);
+CREATE UNIQUE INDEX idx_usuario_activo_sincro ON siper.sinc_fichadores USING btree (usuario) WHERE (estado <> 'PROCESADO'::text);
+CREATE TRIGGER annios_fichadas_vigentes_trg AFTER INSERT OR UPDATE OF abierto ON siper.annios FOR EACH ROW EXECUTE FUNCTION siper.annios_fichadas_vigentes_trg();
+CREATE TRIGGER fechas_fichadas_vigentes_trg AFTER INSERT OR UPDATE OF laborable ON siper.fechas FOR EACH ROW EXECUTE FUNCTION siper.fechas_fichadas_vigentes_trg();
+
+CREATE TRIGGER procesar_fichada_recibida_trg BEFORE INSERT ON siper.fichadas_recibidas FOR EACH ROW EXECUTE FUNCTION siper.procesar_fichada_recibida_trg();
+
+
+CREATE TRIGGER fichadas_vigentes_cod_nov_trg BEFORE INSERT OR UPDATE OF fichadas ON siper.fichadas_vigentes FOR EACH ROW EXECUTE FUNCTION siper.fichadas_vigentes_cod_nov_trg();
+CREATE TRIGGER fichadas_fichadas_vigentes_trg AFTER INSERT OR UPDATE ON siper.fichadas FOR EACH ROW EXECUTE FUNCTION siper.fichadas_fichadas_vigentes_trg();
+CREATE TRIGGER personas_fichadas_vigentes_trg AFTER INSERT OR UPDATE OF activo ON siper.personas FOR EACH ROW EXECUTE FUNCTION siper.personas_fichadas_vigentes_trg();
+CREATE TRIGGER tr_sincro_usuarios_modulo_global AFTER INSERT OR DELETE OR UPDATE OF usuario, activo, hashpass, idper ON siper.usuarios FOR EACH ROW EXECUTE FUNCTION siper.fn_trigger_sincro_usuarios_modulo();
+
+GRANT USAGE ON SCHEMA siper TO siper_modulo_fichador;
+
+
+GRANT DELETE ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE siper.fichadas_recibidas TO siper_muleto_admin;
+
+GRANT SELECT(id_fichada) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
+
+
+GRANT SELECT(fichador),INSERT(fichador),UPDATE(fichador) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
+
+
+GRANT SELECT(fecha),INSERT(fecha),UPDATE(fecha) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
+
+
+GRANT SELECT(hora),INSERT(hora),UPDATE(hora) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
+
+
+GRANT SELECT(tipo),INSERT(tipo),UPDATE(tipo) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
+
+
+GRANT SELECT(texto),INSERT(texto),UPDATE(texto) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
+
+
+GRANT SELECT(dispositivo),INSERT(dispositivo),UPDATE(dispositivo) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
+
+
+GRANT SELECT(punto_gps),INSERT(punto_gps),UPDATE(punto_gps) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
+
+
+GRANT SELECT(id_origen),INSERT(id_origen),UPDATE(id_origen) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
+
+
+GRANT SELECT(recepcion) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
+
+
+GRANT SELECT ON TABLE siper.fichadas_vigentes TO siper_muleto_admin;
+
+GRANT SELECT,USAGE ON SEQUENCE siper.id_fichada TO siper_muleto_admin;
+GRANT SELECT,USAGE ON SEQUENCE siper.id_fichada TO siper_modulo_fichador;
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE siper.personal_con_fichada TO siper_modulo_fichador;
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE siper.sinc_fichadores TO siper_muleto_admin;
+
+
+GRANT SELECT,USAGE ON SEQUENCE siper.sinc_usuarios_seq TO siper_muleto_admin;
+
+CREATE OR REPLACE PROCEDURE siper.actualizar_novedades_vigentes(IN p_desde date, IN p_hasta date)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+-- ¡ATENCIÓN! NO MODIFICAR MANUALMENTE ESTA FUNCIÓN FUE GENERADA CON EL SCRIPT actualizar_novedades_vigentes.sql
+-- Otras funciones que comienzan con el nombre actualizar_novedades_vigentes se generaron junto a esta!
+MERGE INTO novedades_vigentes nv 
+  USING novedades_calculadas/*idper**_idper**idper*/(p_desde, p_hasta/*idper**, p_idper**idper*/) q
+    ON nv.idper = q.idper AND nv.fecha = q.fecha
+  WHEN MATCHED AND 
+      (nv.ficha IS DISTINCT FROM q.ficha 
+      OR nv.cod_nov IS DISTINCT FROM q.cod_nov 
+      OR nv.fichadas IS DISTINCT FROM q.fichadas
+      OR nv.sector IS DISTINCT FROM q.sector
+      OR nv.detalles IS DISTINCT FROM q.detalles
+      OR nv.trabajable IS DISTINCT FROM q.trabajable
+      OR nv.cod_nov_ini IS DISTINCT FROM q.cod_nov_ini
+      ) THEN
+    UPDATE SET ficha = q.ficha, cod_nov = q.cod_nov, fichadas = q.fichadas, sector = q.sector, detalles = q.detalles,
+      trabajable = q.trabajable, cod_nov_ini = q.cod_nov_ini
+  WHEN NOT MATCHED THEN
+    INSERT   (  idper,   ficha,   fecha,   cod_nov,   fichadas,   sector,   detalles,   trabajable,   cod_nov_ini)
+      VALUES (q.idper, q.ficha, q.fecha, q.cod_nov, q.fichadas, q.sector, q.detalles, q.trabajable, q.cod_nov_ini)
+  WHEN NOT MATCHED BY SOURCE AND nv.fecha BETWEEN p_desde AND p_hasta/*idper** AND nv.idper = p_idper**idper*/ THEN DELETE;
+END;
+$$;
+
+CREATE OR REPLACE PROCEDURE siper.actualizar_novedades_vigentes_idper(IN p_desde date, IN p_hasta date, IN p_idper text)
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+-- ¡ATENCIÓN! NO MODIFICAR MANUALMENTE ESTA FUNCIÓN FUE GENERADA CON EL SCRIPT actualizar_novedades_vigentes.sql
+-- Otras funciones que comienzan con el nombre actualizar_novedades_vigentes se generaron junto a esta!
+MERGE INTO novedades_vigentes nv 
+  USING novedades_calculadas_idper(p_desde, p_hasta, p_idper) q
+    ON nv.idper = q.idper AND nv.fecha = q.fecha
+  WHEN MATCHED AND 
+      (nv.ficha IS DISTINCT FROM q.ficha 
+      OR nv.cod_nov IS DISTINCT FROM q.cod_nov 
+      OR nv.fichadas IS DISTINCT FROM q.fichadas
+      OR nv.sector IS DISTINCT FROM q.sector
+      OR nv.detalles IS DISTINCT FROM q.detalles
+      OR nv.trabajable IS DISTINCT FROM q.trabajable
+      OR nv.cod_nov_ini IS DISTINCT FROM q.cod_nov_ini
+      ) THEN
+    UPDATE SET ficha = q.ficha, cod_nov = q.cod_nov, fichadas = q.fichadas, sector = q.sector, detalles = q.detalles,
+      trabajable = q.trabajable, cod_nov_ini = q.cod_nov_ini
+  WHEN NOT MATCHED THEN
+    INSERT   (  idper,   ficha,   fecha,   cod_nov,   fichadas,   sector,   detalles,   trabajable,   cod_nov_ini)
+      VALUES (q.idper, q.ficha, q.fecha, q.cod_nov, q.fichadas, q.sector, q.detalles, q.trabajable, q.cod_nov_ini)
+  WHEN NOT MATCHED BY SOURCE AND nv.fecha BETWEEN p_desde AND p_hasta AND nv.idper = p_idper THEN DELETE;
+END;
+$$;
+
+
+ALTER TABLE usuarios ADD COLUMN principal boolean DEFAULT true;
+
+GRANT SELECT(id_fichada) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
