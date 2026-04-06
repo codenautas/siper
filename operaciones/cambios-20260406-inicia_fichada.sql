@@ -1,18 +1,17 @@
+set search_path=siper;
+SET ROLE siper_muleto_owner;
+--SET ROLE siper_owner;
+
+ALTER TABLE "personas" 
+ADD COLUMN "inicia_fichada" date;
+
+-- CORRER SEPARADAS DE NOVEDADES_CALCULADAS
+
+DROP FUNCTION IF EXISTS novedades_calculadas(date, date);
+DROP FUNCTION IF EXISTS novedades_calculadas_idper(date, date, text);
+
 -- EJECUTAR LOCALMENTE, NO DESCOMENTAR Y COMMITEAR:
 -- SET search_path = siper; SET ROLE siper_owner;
-
-CREATE TYPE novedades_calculadas_return AS (
-  idper text,
-  fecha date,
-  cod_nov text,
-  ficha text,
-  fichadas time_range,
-  sector text,
-  annio integer,
-  trabajable boolean,
-  detalles text,
-  cod_nov_ini text
-);
 
 DO
 $CREATOR$
@@ -87,14 +86,3 @@ $$);
   execute replace(replace(v_sql,'/*idper**',''),'**idper*/','');
 END;
 $CREATOR$;
-
-/*
-select * from novedades_registradas;
-select * from personas;
-select * from HORARIOS;
-SELECT * FROM FECHAS ORDER BY FECHA ASC;
-insert into fechas (fecha) select date_trunc('day', d) from generate_series(cast('2000-01-01' as timestamp), cast('2000-12-31' as timestamp), cast('1 day' as interval)) d
-insert into novedades_registradas (idper, cod_nov, desde, hasta)  values ('AR8', '121', '2000-01-01', '2000-01-04');
-select * from novedades_calculadas_idper('2000-01-01'::date, '2000-01-11'::date, 'AR8'::text);
-select * from novedades_vigentes WHERE idper = 'AR8';
-*/
