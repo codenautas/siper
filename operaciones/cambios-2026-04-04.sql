@@ -1,6 +1,3 @@
-set role to postgres;
-ALTER TABLE public.backend_plus OWNER TO postgres;
-
 set role to siper_muleto_owner;
 set search_path = siper;
 
@@ -80,8 +77,6 @@ CREATE TYPE siper.novedades_calculadas_return AS (
 	detalles text,
 	cod_nov_ini text
 );
-
-DROP FUNCTION public.get_app_user(text);
 
 CREATE OR REPLACE FUNCTION siper.annio_preparar(p_annio integer) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -542,9 +537,6 @@ $$;
 
 ALTER TABLE siper.novedades_vigentes ADD COLUMN fichadas siper.time_range;
 
-ALTER TABLE siper.usaurios ADD COLUMN boolean DEFAULT true;
-
-
 
 ALTER TABLE ONLY siper.fichadas_recibidas
     ADD CONSTRAINT fichadas_recibidas_pkey PRIMARY KEY (id_fichada);
@@ -675,7 +667,6 @@ MERGE INTO novedades_vigentes nv
   WHEN NOT MATCHED BY SOURCE AND nv.fecha BETWEEN p_desde AND p_hasta AND nv.idper = p_idper THEN DELETE;
 END;
 $$;
-
 
 ALTER TABLE usuarios ADD COLUMN principal boolean DEFAULT true;
 
