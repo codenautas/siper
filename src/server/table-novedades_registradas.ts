@@ -72,6 +72,9 @@ export function novedades_registradas(context: TableContext): TableDefinition{
         name: 'novedades_registradas',
         elementName: 'novedad registrada',
         editable: context.forDump,
+        allow: {
+            delete: context.es.rrhh
+        },
         fields:[
             idper,
             {name: 'desde'    , typeName: 'date'   ,                                    },
