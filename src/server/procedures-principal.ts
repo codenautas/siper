@@ -16,7 +16,7 @@ import * as fs from 'fs/promises';
 import * as ctts from "../common/contracts.js"
 import * as sql from 'mssql';
 import { ACCIONES, ESTADOS } from './table-sinc_fichadores';
-import { getConfigFichadasDb, MAX_INTENTOS } from './app-principal';
+import { ConfigFichadasDb, getConfigFichadasDb, MAX_INTENTOS } from './app-principal';
 
 async function prevalidarCargaDeNovedades(context: ProcedureContext, params:Partial<NovedadRegistrada>){
     var diaActualPeroTarde = (await context.client.query(
@@ -747,7 +747,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             try{
                 var config = getConfigFichadasDb(context.be);
                 if (config.database != null) {
-                    pool = await new sql.ConnectionPool(config).connect();
+                    pool = await new sql.ConnectionPool(config as ConfigFichadasDb).connect();
                     await ejecutarSP(parameters, context.client, pool!);
                 }
             }catch(err){

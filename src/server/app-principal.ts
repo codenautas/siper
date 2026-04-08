@@ -133,7 +133,7 @@ const cronMantenimiento = (be:AppBackend) => {
 
 export const MAX_INTENTOS = 5;
 
-type ConfigFichadasDb = {
+export type ConfigFichadasDb = {
     user: string,
     password: string,
     server: string
@@ -170,7 +170,7 @@ const cronSincroUsuarios = async (be: AppBackend) => {
             let pool: sql.ConnectionPool | null = null;
             try {
                 pool = await new sql.ConnectionPool({
-                    ...configFichadasDb,
+                    ...configFichadasDb as ConfigFichadasDb,
                     connectionTimeout: 10000,
                     requestTimeout: 15000
                 }).connect();
