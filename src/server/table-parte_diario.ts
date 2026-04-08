@@ -33,6 +33,14 @@ select
         nv.hasta,
         nv.habiles,
         nv.corridos,
+        CASE 
+            -- si es es NULL o si ambos extremos son vacíos '(,)'
+            WHEN nv.fichadas IS NULL OR (lower(nv.fichadas) IS NULL AND upper(nv.fichadas) IS NULL) 
+                THEN null            
+            ELSE 
+                to_char(lower(nv.fichadas), 'HH24:MI') || ' - ' || 
+                COALESCE(to_char(upper(nv.fichadas), 'HH24:MI'), '')
+        END AS fichadas,
         p.banda_horaria,
         bh.descripcion as bh_descripcion
     from
@@ -64,7 +72,8 @@ export function parte_diario(_context: TableContext): TableDefinition {
             { name: 'sector_nombre', typeName: 'text', title: 'sector departamento área' },        // <-- AGREGADO
             cod_nov,
             { name: 'novedad', typeName: 'text'},
-            { name: 'fichada', typeName: 'text' },
+            //{ name: 'fichada', typeName: 'text' },
+            { name: 'fichadas', typeName: 'text' },
             { name: 'horario', typeName: 'text' },
             { name: 'desde', typeName: 'date' },
             { name: 'hasta', typeName: 'date' },
