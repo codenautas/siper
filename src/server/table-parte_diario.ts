@@ -74,7 +74,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
             { name: 'bh_descripcion', typeName: 'text', title: 'descripción' },
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],
-        hiddenColumns: ['fichada'],
+        hiddenColumns: [],
         constraints: [
         ],
         sql:{
