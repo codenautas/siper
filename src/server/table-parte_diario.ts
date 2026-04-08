@@ -38,8 +38,11 @@ select
             WHEN nv.fichadas IS NULL OR (lower(nv.fichadas) IS NULL AND upper(nv.fichadas) IS NULL) 
                 THEN null            
             ELSE 
-                to_char(lower(nv.fichadas), 'HH24:MI') || ' - ' || 
-                COALESCE(to_char(upper(nv.fichadas), 'HH24:MI'), '')
+                CONCAT(
+                    to_char(lower(nv.fichadas), 'HH24:MI'), 
+                    ' - ', 
+                    to_char(upper(nv.fichadas), 'HH24:MI')
+                )
         END AS fichadas,
         p.banda_horaria,
         bh.descripcion as bh_descripcion
