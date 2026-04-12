@@ -1,4 +1,4 @@
-set role to siper_muleto_owner;
+set role to siper_muleto_owner; -- set role to siper_owner;
 set search_path = siper;
 
 CREATE SEQUENCE siper.sinc_usuarios_seq
@@ -8,8 +8,6 @@ CREATE SEQUENCE siper.sinc_usuarios_seq
     NO MAXVALUE
     CACHE 1;
 
-
-ALTER SEQUENCE siper.sinc_usuarios_seq OWNER TO siper_muleto_owner;
 
 CREATE SEQUENCE siper.id_fichada
     START WITH 100
@@ -88,8 +86,6 @@ BEGIN
     SELECT d FROM generate_series(make_date(p_annio,1,1), make_date(p_annio,12,31), '1 day'::INTERVAL) d;
 END;
 $$;
-
-ALTER TYPE siper.novedades_calculadas_return OWNER TO siper_muleto_owner;
 
 ALTER TABLE siper.fechas ADD COLUMN fichadas_consolidadas boolean DEFAULT false;
 
@@ -351,8 +347,6 @@ CREATE VIEW siper.personal_con_fichada AS
   WHERE ((u.algoritmo_pass = 'PG-SHA256'::text) AND u.activo AND p.activo);
 
 
-ALTER VIEW siper.personal_con_fichada OWNER TO siper_muleto_owner;
-
 
 ALTER TABLE ONLY siper.sinc_fichadores ADD CONSTRAINT sinc_fichadores_pkey PRIMARY KEY (num_sincro);
 
@@ -386,8 +380,6 @@ CREATE TRIGGER parametros_avance_dia_trg
   ON parametros
   FOR EACH ROW
   EXECUTE PROCEDURE parametros_avance_dia_trg();
-
--- ALTER VIEW siper.personal_con_fichada OWNER TO siper_muleto_owner;
 
 CREATE FUNCTION siper.fn_trigger_sincro_usuarios_modulo() RETURNS trigger
     LANGUAGE plpgsql SECURITY DEFINER
