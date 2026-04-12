@@ -93,6 +93,8 @@ ALTER TYPE siper.novedades_calculadas_return OWNER TO siper_muleto_owner;
 
 ALTER TABLE siper.fechas ADD COLUMN fichadas_consolidadas boolean DEFAULT false;
 
+ALTER TABLE siper.personas ADD COLUMN inicia_fichada date;
+
 CREATE OR REPLACE FUNCTION personas_fichadas_vigentes_trg()
   RETURNS TRIGGER
   SECURITY DEFINER
@@ -267,7 +269,7 @@ $BODY$
   SELECT
       idper, fecha, 
       CASE WHEN trabajable OR nr_corridos THEN 
-        coalesce(CASE WHEN fichadas_consolidadas AND nr_requiere_fichadas THEN fv_cod_nov ELSE null END, nr_cod_nov, cod_nov_pred_fecha) 
+        coalesce(CASE WHEN fichadas_consolidadas AND nr_requiere_fichadas AND fecha >= fecha_inicio_fichada THEN fv_cod_nov ELSE null END, nr_cod_nov, cod_nov_pred_fecha) 
       ELSE null END as cod_nov, 
       ficha, fichadas, sector, annio,
       trabajable, detalles, cod_nov_ini
@@ -283,7 +285,8 @@ $BODY$
           cod_nov_pred_fecha, 
           ni.cod_nov as cod_nov_ini,
           fv.fichadas,
-          fv.cod_nov as fv_cod_nov
+          fv.cod_nov as fv_cod_nov,
+          COALESCE(p.inicia_fichada, p.registra_novedades_desde) as fecha_inicio_fichada
         FROM fechas f INNER JOIN annios a USING (annio) CROSS JOIN personas p
           LEFT JOIN fichadas_vigentes fv USING (idper, fecha)
           LEFT JOIN LATERAL (
@@ -673,5 +676,6 @@ ALTER TABLE usuarios ADD COLUMN principal boolean DEFAULT true;
 GRANT SELECT(id_fichada) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
 
 INSERT INTO siper.tipos_fichada(tipo_fichada, nombre, orden)
+
 VALUES ('E', 'entrada', 10), ('S', 'salida', 20), ('O', 'otros', 30)
 ON CONFLICT (tipo_fichada) DO NOTHING;

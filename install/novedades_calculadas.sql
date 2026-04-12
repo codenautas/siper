@@ -26,7 +26,7 @@ $BODY$
   SELECT
       idper, fecha, 
       CASE WHEN trabajable OR nr_corridos THEN 
-        coalesce(CASE WHEN fichadas_consolidadas AND nr_requiere_fichadas THEN fv_cod_nov ELSE null END, nr_cod_nov, cod_nov_pred_fecha) 
+        coalesce(CASE WHEN fichadas_consolidadas AND nr_requiere_fichadas AND fecha >= fecha_inicio_fichada THEN fv_cod_nov ELSE null END, nr_cod_nov, cod_nov_pred_fecha) 
       ELSE null END as cod_nov, 
       ficha, fichadas, sector, annio,
       trabajable, detalles, cod_nov_ini
@@ -42,7 +42,8 @@ $BODY$
           cod_nov_pred_fecha, 
           ni.cod_nov as cod_nov_ini,
           fv.fichadas,
-          fv.cod_nov as fv_cod_nov
+          fv.cod_nov as fv_cod_nov,
+          COALESCE(p.inicia_fichada, p.registra_novedades_desde) as fecha_inicio_fichada
         FROM fechas f INNER JOIN annios a USING (annio) CROSS JOIN personas p
           LEFT JOIN fichadas_vigentes fv USING (idper, fecha)
           LEFT JOIN LATERAL (
