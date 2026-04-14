@@ -776,37 +776,41 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name: 'consolidar'    , typeName: 'boolean', defaultValue: true},
         ],
         coreFunction:  async function (context:ProcedureContext, parameters:any) {
-            const {fecha, idper, consolidar} = parameters;
-            const inicioAnnio = (await context.client.query(
+            return await consolidarFichadas(parameters, context.client);
+        }
+    }
+];
+
+export async function consolidarFichadas(parameters: any, client: Client) {
+    const { fecha, idper, consolidar } = parameters;
+    const inicioAnnio = (await client.query(
                 `select make_date(min(annio), 1, 1) as inicio_annio from annios where abierto = true`
             ).fetchUniqueValue()).value;
-            const necesitaCambio = (await context.client.query(
+            const necesitaCambio = (await client.query(
                 `select count(*) from fechas where fecha between $1 and $2 and fichadas_consolidadas != $3`,
                 [inicioAnnio, fecha, consolidar]
             ).fetchUniqueValue()).value > 0;
             if (necesitaCambio) {
-                await context.client.query(
+                await client.query(
                     `update fechas set fichadas_consolidadas = $3 where fecha between $1 and $2 and fichadas_consolidadas != $3`,
                     [inicioAnnio, fecha, consolidar]
                 ).execute();
             }
             if (necesitaCambio || idper != null) {
                 if (idper) {
-                    await context.client.query(
+                    await client.query(
                         `call actualizar_novedades_vigentes_idper($1::date, $2::date, $3::text)`,
                         [inicioAnnio, fecha, idper]
                     ).execute();
                 } else {
-                    await context.client.query(
+                    await client.query(
                         `call actualizar_novedades_vigentes($1::date, $2::date)`,
                         [inicioAnnio, fecha]
                     ).execute();
                 }
-            }
-            return true;
         }
-    }
-];
+        return true;
+}
 
 export async function ejecutarSP(parameters: any, client: Client, pool: sql.ConnectionPool) {
     const { num_sincro } = parameters;

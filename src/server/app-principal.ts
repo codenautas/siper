@@ -1,7 +1,7 @@
 "use strict";
 
 import { AppBackend, Context, Request, ClientSetup,
-    ClientModuleDefinition, OptsClientPage, MenuDefinition, MenuInfoBase, ProcedureDef
+    ClientModuleDefinition, OptsClientPage, MenuDefinition, MenuInfoBase
 } from "./types-principal";
 
 import { date } from 'best-globals'
@@ -78,7 +78,7 @@ import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
 import {sinc_fichadores, ESTADOS} from "./table-sinc_fichadores"
 
-import { ejecutarSP, ProceduresPrincipal } from './procedures-principal'
+import { consolidarFichadas, ejecutarSP, ProceduresPrincipal } from './procedures-principal'
 import * as sql from 'mssql';
 
 import {staticConfigYaml} from './def-config';
@@ -97,9 +97,6 @@ console.log(persona)
 
 const cronConsolidarFichadas = async (be:AppBackend) => {
     let horaConsolidacion: {hours: number, minutes: number} | null = null;
-    var procedures = await be.getProcedures();
-    var procConsolidar = procedures.find((proc:ProcedureDef)=>proc.action == 'consolidar_fichadas');
-    var context = be.getContextForDump();
     const interval = setInterval(async ()=>{
         try{
             const d = new Date();
@@ -120,13 +117,7 @@ const cronConsolidarFichadas = async (be:AppBackend) => {
             }
             if (horaConsolidacion && d.getHours() == horaConsolidacion.hours && d.getMinutes() == horaConsolidacion.minutes) {
                 var result = await be.inTransaction(null, async (client)=>{
-                    //@ts-ignore
-                    context.client = client;
-                    //@ts-ignore
-                    return await procConsolidar.coreFunction(context, {
-                        fecha: date.today(),
-                        consolidar: true
-                    });
+                    return await consolidarFichadas({fecha: date.today(), consolidar: true}, client);
                 });
                 console.info("Cron consolidar fichadas ejecutado correctamente", result);
             }
