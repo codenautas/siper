@@ -777,26 +777,29 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         ],
         coreFunction:  async function (context:ProcedureContext, parameters:any) {
             const {fecha, idper, consolidar} = parameters;
-            var necesitaCambio = (await context.client.query(
-                `select fichadas_consolidadas from fechas where fecha = $1`,
-                [fecha]
-            ).fetchUniqueValue()).value as boolean != consolidar;
+            const inicioAnnio = (await context.client.query(
+                `select make_date(min(annio), 1, 1) as inicio_annio from annios where abierto = true`
+            ).fetchUniqueValue()).value;
+            const necesitaCambio = (await context.client.query(
+                `select count(*) from fechas where fecha between $1 and $2 and fichadas_consolidadas != $3`,
+                [inicioAnnio, fecha, consolidar]
+            ).fetchUniqueValue()).value > 0;
             if (necesitaCambio) {
                 await context.client.query(
-                    `update fechas set fichadas_consolidadas = $2 where fecha = $1`,
-                    [fecha, consolidar]
+                    `update fechas set fichadas_consolidadas = $3 where fecha between $1 and $2 and fichadas_consolidadas != $3`,
+                    [inicioAnnio, fecha, consolidar]
                 ).execute();
             }
             if (necesitaCambio || idper != null) {
                 if (idper) {
                     await context.client.query(
-                        `call actualizar_novedades_vigentes_idper($1::date, $1::date, $2::text)`,
-                        [fecha, idper]
+                        `call actualizar_novedades_vigentes_idper($1::date, $2::date, $3::text)`,
+                        [inicioAnnio, fecha, idper]
                     ).execute();
                 } else {
                     await context.client.query(
-                        `call actualizar_novedades_vigentes($1::date, $1::date)`,
-                        [fecha]
+                        `call actualizar_novedades_vigentes($1::date, $2::date)`,
+                        [inicioAnnio, fecha]
                     ).execute();
                 }
             }
