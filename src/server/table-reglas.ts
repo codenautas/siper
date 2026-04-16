@@ -20,6 +20,7 @@ export function reglas(_context: TableContext): TableDefinition{
             {name: 'horario_consolidado',               typeName: 'time'    },
             {name: 'minimas_horas_diarias_declaradas',  typeName: 'integer' },
             {name: 'maximas_horas_diarias_declaradas',  typeName: 'integer' },
+            {name: 'tolerancia_consolidacion',          typeName: 'integer' },
         ],         
         primaryKey: [annio.name],
         foreignKeys: [],

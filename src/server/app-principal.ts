@@ -78,7 +78,7 @@ import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
 import {sinc_fichadores, ESTADOS} from "./table-sinc_fichadores"
 
-import { ejecutarSP, ProceduresPrincipal } from './procedures-principal'
+import { consolidarFichadas, ejecutarSP, ProceduresPrincipal } from './procedures-principal'
 import * as sql from 'mssql';
 
 import {staticConfigYaml} from './def-config';
@@ -94,6 +94,45 @@ import * as Path from 'path';
 /* Dos líneas para incluir contracts: */
 var persona: Persona | null = null;
 console.log(persona)
+
+const cronConsolidarFichadas = async (be:AppBackend) => {
+    let horaConsolidacion: {hours: number, minutes: number} | null = null;
+    const interval = setInterval(async ()=>{
+        try{
+            const d = new Date();
+            if (horaConsolidacion == null) {
+                await be.inDbClient(null, async (client) => {
+                    const result = await client.query(
+                        `select (select max(hora_hasta) from bandas_horarias) as hora_limite,
+                                r.tolerancia_consolidacion as tolerancia
+                            from reglas r join annios a on r.annio = a.annio and a.abierto = true
+                            order by r.annio desc limit 1`
+                    ).fetchUniqueRow();
+                    const horaLimite = String(result.row.hora_limite);
+                    const tolerancia = Number(result.row.tolerancia) || 0;
+                    const parts = horaLimite.split(':');
+                    const totalMinutes = parseInt(parts[0]) * 60 + parseInt(parts[1]) + tolerancia;
+                    horaConsolidacion = {hours: Math.floor(totalMinutes / 60) % 24, minutes: totalMinutes % 60};
+                });
+            }
+            if (horaConsolidacion && d.getHours() == horaConsolidacion.hours && d.getMinutes() == horaConsolidacion.minutes) {
+                var result = await be.inTransaction(null, async (client)=>{
+                    return await consolidarFichadas({fecha: date.today(), consolidar: true}, client);
+                });
+                console.info("Cron consolidar fichadas ejecutado correctamente", result);
+            }
+        }catch(err){
+            console.error(`Error en cron consolidar fichadas. ${err}`);
+        }
+    },60000);
+    be.shutdownCallbackListAdd({
+        message:'cron Consolidar Fichadas',
+        fun:async function(){
+            clearInterval(interval);
+            return Promise.resolve();
+        }
+    });
+}
 
 const cronMantenimiento = (be:AppBackend) => {
     const interval = setInterval(async ()=>{
@@ -298,6 +337,7 @@ export class AppSiper extends AppBackend{
         const be = this;
         await super.postConfig();
         cronMantenimiento(be);
+        await cronConsolidarFichadas(be);
         await be.inCron('avance_de_dia_proc', {vecesPorDia:24*6});
         cronSincroUsuarios(be);
     }
