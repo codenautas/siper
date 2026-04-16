@@ -671,3 +671,7 @@ INSERT INTO siper.tipos_fichada(tipo_fichada, nombre, orden)
 
 VALUES ('E', 'entrada', 10), ('S', 'salida', 20), ('O', 'otros', 30)
 ON CONFLICT (tipo_fichada) DO NOTHING;
+
+ALTER TABLE reglas ADD COLUMN tolerancia_consolidacion integer;
+
+UPDATE reglas SET tolerancia_consolidacion = 15
