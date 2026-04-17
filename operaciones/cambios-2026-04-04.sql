@@ -675,3 +675,7 @@ ON CONFLICT (tipo_fichada) DO NOTHING;
 ALTER TABLE reglas ADD COLUMN tolerancia_consolidacion integer;
 
 UPDATE reglas SET tolerancia_consolidacion = 15
+
+insert into "reglas" ("annio", "codnov_unica_fichada", "codnov_sin_fichadas", "umbral_horas_mensuales", "umbral_horas_diarias", "umbral_horas_semanales", "umbral_horas_personales", "horario_consolidado", "minimas_horas_diarias_declaradas", "maximas_horas_diarias_declaradas", "tolerancia_consolidacion") values
+('2025', '59', '102', null, '2', '0', '7', null, '5', null, '15'),
+('2026', '59', '102', null, '2', '0', '7', null, '5', null, '15');
