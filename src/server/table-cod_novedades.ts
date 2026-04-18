@@ -30,7 +30,7 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {name: 'corridos'    , typeName: 'boolean', description:'días corridos (incluye feriados y fines de semana)'},
             {name: 'registra'    , typeName: 'boolean', description:'novedades que pueden ser registradas por los registras'},
             {name: 'prioritario' , typeName: 'boolean', description:'aparecen en la lista reducida'},
-            {name: 'comun'       , typeName: 'boolean', description:'aparecen en la lista del usuario básico'},
+            {name: 'comun'       , typeName: 'boolean', description:'aparecen en la lista del usuario básico (aparecen las novedades que se hayan usado en el año o las que tengan límites salvo comun = no)'},
             {name: 'es_inicial'  , typeName: 'boolean', description:'si puede usarse como novedad inicial'},
             {name: 'pierde_presentismo',           typeName: 'boolean' },
             {name: 'cuenta_horas',                 typeName: 'boolean' },

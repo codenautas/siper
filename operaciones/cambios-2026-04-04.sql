@@ -667,15 +667,4 @@ ALTER TABLE usuarios ADD COLUMN principal boolean DEFAULT true;
 
 GRANT SELECT(id_fichada) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
 
-INSERT INTO siper.tipos_fichada(tipo_fichada, nombre, orden)
-
-VALUES ('E', 'entrada', 10), ('S', 'salida', 20), ('O', 'otros', 30)
-ON CONFLICT (tipo_fichada) DO NOTHING;
-
 ALTER TABLE reglas ADD COLUMN tolerancia_consolidacion integer;
-
-UPDATE reglas SET tolerancia_consolidacion = 15
-
-insert into "reglas" ("annio", "codnov_unica_fichada", "codnov_sin_fichadas", "umbral_horas_mensuales", "umbral_horas_diarias", "umbral_horas_semanales", "umbral_horas_personales", "horario_consolidado", "minimas_horas_diarias_declaradas", "maximas_horas_diarias_declaradas", "tolerancia_consolidacion") values
-('2025', '59', '102', null, '2', '0', '7', null, '5', null, '15'),
-('2026', '59', '102', null, '2', '0', '7', null, '5', null, '15');
