@@ -10,8 +10,8 @@ Versión actual: **0.7.0-rc** .
 Las tablas están definidas siguiendo la convención de `backend-plus`: cada tabla tiene su propio archivo con el prefijo `tabla-`, ubicado en `src/server/`. El frontend en `src/client` y en `src/common` lo que sea común a ambos.
 
 Ejemplos:
-- `src/server/tabla-cod_novedades.ts` — definición de `cod_novedades`
-- `src/server/tabla-novedades_registradas.ts` — definición de `novedades_registradas`
+- `src/server/table-cod_novedades.ts` — definición de `cod_novedades`
+- `src/server/table-novedades_registradas.ts` — definición de `novedades_registradas`
 - etc.
 
 > 📝 Antes de trabajar con cualquier tabla, leer su archivo `tabla-*.ts` correspondiente. Ahí están los nombres exactos de columnas, labels, descripciones y cualquier lógica de validación definida a nivel de tabla.
@@ -89,7 +89,7 @@ Ejemplo de campos booleanos conocidos:
 
 | Campo | Descripción |
 |---|---|
-| `requiere_fichada` | La novedad es válida solo si existe fichada de entrada y salida |
+| `requiere_fichadas` | La novedad es válida solo si existe fichada de entrada y salida |
 | `pierde_presentismo` | La persona pierde el presentismo cuando tiene esta novedad |
 
 > 📝 Esta tabla es de configuración. No se debeescribir lógica que dependa del código de la novedad `cod_nov` siempre hay que depender de los campos booleanos de `cod_novedades`. O sea no hardcodear reglas por código de novedad. En los casos de prueba sí se pueden utilizar códigos en base a un ejemplo de posible configuración de `cod_novedades` que está en `install/cod_novedades.tab`
@@ -129,6 +129,8 @@ Los tests usan helpers dedicados para evitar boilerplate. Antes de escribir un t
 | `registrarNovedad(...)` | Inserta una novedad en `novedades_registradas` con los parámetros habituales, sin repetir boilerplate. |
 | `registrarFichada(...)` | Inserta una fichada en `fichadas_recibidas` con los parámetros habituales, sin repetir boilerplate. |
 
+Para mockear la fecha actual en un test, actualizar directamente el campo `fecha_hora_para_test` de la tabla `parametros` vía SQL (no existe un helper dedicado para esto).
+
 > 📝 Si un test nuevo necesita una operación repetitiva que no tiene helper, agregar el helper en `test.ts` antes de usarlo — no inline en el caso de prueba.
 
 ### Lógica de negocio en PostgreSQL
@@ -142,7 +144,7 @@ Ejemplos de lógica que vive en la base de datos:
 
 > ⚠️ Si Claude Code necesita entender o modificar una regla de negocio importante, debe buscar primero si existe una función o trigger en PostgreSQL que la implemente — no asumir que toda la lógica está en TypeScript. Reimplementar en el backend lógica que ya existe en la base de datos introduce duplicación y riesgo de inconsistencia.
 
-: usar `enNuevaPersona` para aislar el estado.
+> 📝 Reglas generales para tests: usar `enNuevaPersona` para aislar el estado.
 - No modificar helpers existentes sin revisar el impacto en los tests que los usan.
 - Los helpers adicionales específicos de una sección pueden definirse localmente dentro de esa sección en `test.ts`.
 
