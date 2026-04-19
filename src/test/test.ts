@@ -1134,6 +1134,28 @@ describe("SiPer: " + testConfig.name, function(){
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov: null, cod_nov_final: null})
                 })
             })
+            it("novedad que requiere fichadas mantiene su código al consolidar con ambas fichadas", async function(){
+                const cod_nov_req_fichadas = '10001';
+                await server.inDbClient(ADMIN_REQ, async client => client.query(
+                    `insert into cod_novedades (cod_nov, novedad, registra, requiere_fichadas) values ($1, 'PRUEBA AUTOM_TICA req. fichadas', true, true)`,
+                    [cod_nov_req_fichadas]
+                ).execute());
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                    const fecha = FECHA_ACTUAL;
+                    await registrarNovedad(rrhhSession, {desde: fecha, hasta: fecha, cod_nov: cod_nov_req_fichadas, idper});
+                    // antes de consolidar, la novedad vigente debe mostrar el código registrado
+                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
+                        {idper, fecha, cod_nov: cod_nov_req_fichadas}
+                    ], 'all', {fixedFields:{idper, fecha}});
+                    // con ambas fichadas presentes, al consolidar debe mantener el código registrado
+                    // BUG: muestra el predeterminado (COD_PRED_PAS) en vez del código registrado
+                    const entrada = '09:00:00';
+                    const salida  = '17:00:00';
+                    await registrarFichada(server, {idper, fecha, hora: entrada, tipo_fichada: 'E'});
+                    await registrarFichada(server, {idper, fecha, hora: salida,  tipo_fichada: 'S'});
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov: null, cod_nov_final: cod_nov_req_fichadas});
+                });
+            })
         })
         describe("cod_nov_pred_fecha", function(){
             it("sin nada cargado está la novedad predeterminada pasada", async function(){
