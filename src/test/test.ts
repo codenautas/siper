@@ -60,6 +60,7 @@ import * as FormData from "form-data";
 */
 
 const FECHA_ACTUAL = date.iso('2000-01-31');
+const inicia_fichada = FECHA_ACTUAL;
 const HORA_ACTUAL = '10:00';
 const PRE_AÑO = `1999`;
 const DESDE_AÑO = `2000`;
@@ -290,7 +291,12 @@ describe("SiPer: " + testConfig.name, function(){
             discrepances.showAndThrow(rrhhSession.config.config.es, {admin:false, superior:false, rrhh:true, registra:true});
         })
     })
-    async function crearNuevaPersona(nombre:string, opts:{registra_novedades_desde?:Date, para_antiguedad_relativa?:Date, situacion_revista?:string}): Promise<ctts.Persona>{
+    async function crearNuevaPersona(nombre:string, opts:{
+        registra_novedades_desde?:Date, 
+        para_antiguedad_relativa?:Date, 
+        situacion_revista?:string
+        inicia_fichada?: Date
+    }): Promise<ctts.Persona>{
         var numero = autoNumero++;
         var persona = {
             cuil: (10330010005 + numero*11).toString(),
@@ -300,7 +306,8 @@ describe("SiPer: " + testConfig.name, function(){
             registra_novedades_desde: opts.registra_novedades_desde ?? date.iso(`${DESDE_AÑO}-01-01`),
             para_antiguedad_relativa: opts.para_antiguedad_relativa ?? date.iso(`${DESDE_AÑO}-01-01`),
             sector: SECTOR,
-            banda_horaria: 'GENERAL'
+            banda_horaria: 'GENERAL',
+            inicia_fichada: opts.inicia_fichada
         } satisfies Partial<ctts.Persona>;
         var personaGrabada = await rrhhSession.saveRecord(
             ctts.personas,
@@ -336,6 +343,7 @@ describe("SiPer: " + testConfig.name, function(){
             vacaciones?: EsquemaPerNov, 
             tramites?: EsquemaPerNov, usuario?:{rol?:string, sector?:string, sesion?:boolean}, hoy?:Date, ahora?:Time,
             registra_novedades_desde?:Date, para_antiguedad_relativa?:Date,
+            inicia_fichada?: Date,
             situacion_revista?: typeof SITUACION_REVISTA_PLANTA | typeof SITUACION_REVISTA_TERCER
         },
         probar: (persona: ctts.Persona, mas:{usuario: UsuarioConCredenciales, sesion:SesionEmuladaSiper}) => Promise<void>
@@ -1135,17 +1143,17 @@ describe("SiPer: " + testConfig.name, function(){
                 })
             })
             it("novedad que requiere fichadas mantiene su código al consolidar con ambas fichadas", async function(){
-                const cod_nov_req_fichadas = '10001';
-                await server.inDbClient(ADMIN_REQ, async client => client.query(
-                    `insert into cod_novedades (cod_nov, novedad, registra, requiere_fichadas) values ($1, 'PRUEBA AUTOM_TICA req. fichadas', true, true)`,
-                    [cod_nov_req_fichadas]
-                ).execute());
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                    const cod_nov = COD_DIAGRAMADO;
+                    if (cod_nov == COD_PRED_PAS) throw Error('este test tiene que usar un código distino para que tenga sentido')
+                    // const fecha = date.iso('2000-05-02');
                     const fecha = FECHA_ACTUAL;
-                    await registrarNovedad(rrhhSession, {desde: fecha, hasta: fecha, cod_nov: cod_nov_req_fichadas, idper});
+                    await registrarNovedad(rrhhSession, {desde: fecha, hasta: fecha, cod_nov: cod_nov, idper
+                        ,dds1:true, dds2:true, dds3:true, dds4:true, dds5:true
+                    });
                     // antes de consolidar, la novedad vigente debe mostrar el código registrado
                     await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
-                        {idper, fecha, cod_nov: cod_nov_req_fichadas}
+                        {idper, fecha, cod_nov}
                     ], 'all', {fixedFields:{idper, fecha}});
                     // con ambas fichadas presentes, al consolidar debe mantener el código registrado
                     // BUG: muestra el predeterminado (COD_PRED_PAS) en vez del código registrado
@@ -1153,13 +1161,13 @@ describe("SiPer: " + testConfig.name, function(){
                     const salida  = '17:00:00';
                     await registrarFichada(server, {idper, fecha, hora: entrada, tipo_fichada: 'E'});
                     await registrarFichada(server, {idper, fecha, hora: salida,  tipo_fichada: 'S'});
-                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov: null, cod_nov_final: cod_nov_req_fichadas});
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov: null, cod_nov_final: cod_nov});
                 });
             })
         })
         describe("cod_nov_pred_fecha", function(){
             it("sin nada cargado está la novedad predeterminada pasada", async function(){
-                await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                await enNuevaPersona(this.test?.title!, {inicia_fichada}, async ({idper}) => {
                     await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         {fecha:date.iso('2000-01-03'), cod_nov:COD_PRED_PAS  , idper},
                         {fecha:date.iso('2000-01-04'), cod_nov:COD_PRED_PAS  , idper},
@@ -1167,7 +1175,7 @@ describe("SiPer: " + testConfig.name, function(){
                 });
             })
             it("actualizo una fecha y se actualizan los predeterminados", async function(){
-                await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                await enNuevaPersona(this.test?.title!, {inicia_fichada}, async ({idper}) => {
                     await server.inDbClient(ADMIN_REQ, async client => client.query("update fechas set cod_nov_pred_fecha = '22' where fecha = '2000-01-04'").execute())
                     await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         {fecha:date.iso('2000-01-03'), cod_nov:COD_PRED_PAS  , idper},
@@ -1205,7 +1213,7 @@ describe("SiPer: " + testConfig.name, function(){
     })
     describe("códigos de novedades básicos", function(){
         it("cargo un día de trámite y cambio la novedad inicial", async function(){
-            await enNuevaPersona(this.test?.title!, {tramites: 4}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {tramites: 4, inicia_fichada}, async ({idper}) => {
                 await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-01-06'), cod_nov:COD_TRAMITE, idper}
                 );
@@ -1272,7 +1280,7 @@ describe("SiPer: " + testConfig.name, function(){
     })
     describe("parte diario", function(){
         it("toma en cuenta las vacaciones partidas", async function(){
-            await enNuevaPersona(this.test?.title!, {usuario:{sesion:false}}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {inicia_fichada, usuario:{sesion:false}}, async ({idper}) => {
                 await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-01-15'), hasta:date.iso('2000-02-04'), cod_nov: COD_VACACIONES, idper}
                 );
@@ -1286,7 +1294,7 @@ describe("SiPer: " + testConfig.name, function(){
         });
         it("también calcula si el año está cerrado", async function(){
             try{
-                await enNuevaPersona(this.test?.title!, {usuario:{sesion:false}}, async ({idper}) => {
+                await enNuevaPersona(this.test?.title!, {inicia_fichada, usuario:{sesion:false}}, async ({idper}) => {
                     await registrarNovedad(superiorSession,
                         {desde:date.iso('2000-01-15'), hasta:date.iso('2000-02-04'), cod_nov: COD_VACACIONES, idper}
                     );
@@ -1329,7 +1337,7 @@ describe("SiPer: " + testConfig.name, function(){
     })
     describe("mantemiento", function(){
         it("los usuarios admin no pueden tener idper", async function(){
-            await enNuevaPersona(this.test?.title!, {usuario:{sesion:false}}, async ({idper}, {usuario}) => {            
+            await enNuevaPersona(this.test?.title!, {usuario:{sesion:false}, inicia_fichada}, async ({idper}, {usuario}) => {            
                 await expectError(async ()=>{
                     await adminMetadatosSession.saveRecord(ctts.usuarios, {usuario: usuario.usuario, rol:'admin', idper}, 'update');
                 }, ctts.check_violation /* 'los usuarios de mantenimiento no pueden tener persona asociada'*/)
@@ -1342,7 +1350,7 @@ describe("SiPer: " + testConfig.name, function(){
     })
     describe("horarios", function(){
         it("al ingresar un horario se genera horarios y horarios_dds", async function(){
-            await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {inicia_fichada}, async ({idper}) => {
                 var horario_per = await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: 'LMV 8:13 XJ 9-16', desde:date.iso('2000-01-01'), hasta:date.iso('2000-12-31')}, 'new')
                 var horario = 'LMV8:13a15:13 XJ9a16'
                 discrepances.showAndThrow(horario_per.horario, horario)
@@ -1383,7 +1391,7 @@ describe("SiPer: " + testConfig.name, function(){
             await cerrarAño();
         })
         it("después de abrir el año siguiente se tienen ver las vacaciones pedidas en el cuadro final", async function(){
-            await enNuevaPersona(this.test?.title!, {vacaciones: 30}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {vacaciones: 30, inicia_fichada}, async ({idper}) => {
                 const desde0 = date.iso('2000-02-11');
                 const hasta0 = date.iso('2000-02-17');
                 const desde = date.iso('2001-03-11');
@@ -1410,7 +1418,7 @@ describe("SiPer: " + testConfig.name, function(){
         })
         it("rechaza vacaciones en el año sigiuente si se pasa del total", async function(){
             this.timeout(TIMEOUT_SPEED * 3);
-            await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {vacaciones: 20, inicia_fichada}, async ({idper}) => {
                 const desde0 = date.iso('2000-02-01');
                 const hasta0 = date.iso('2000-02-14'); // 10 días hábiles
                 const desde = date.iso('2001-02-01');
@@ -1426,7 +1434,7 @@ describe("SiPer: " + testConfig.name, function(){
         it("rechaza vacaciones tomadas en el año incorrecto las del 2000 están vencidas no pasan al 2001 (sí al revés)", async function(){
             fallaEnLaQueQuieroOmitirElBorrado = true;
             this.timeout(TIMEOUT_SPEED * 3);
-            await enNuevaPersona(this.test?.title!, {vacaciones: [
+            await enNuevaPersona(this.test?.title!, {inicia_fichada, vacaciones: [
                 {cantidad:10, origen:'2000', vencimiento:date.iso('2000-12-31')},
                 {cantidad:10, origen:'2001'}
             ]}, async ({idper}) => {
@@ -1444,7 +1452,7 @@ describe("SiPer: " + testConfig.name, function(){
             fallaEnLaQueQuieroOmitirElBorrado = false;
         })
         it("después de abrir el año siguiente se tienen que reiniciar los trámites pero no las vacaciones", async function(){
-            await enNuevaPersona(this.test?.title!, {vacaciones: 20, tramites: 4}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {inicia_fichada, vacaciones: 20, tramites: 4}, async ({idper}) => {
                 const desde = date.iso('2000-05-02');
                 const cod_nov = COD_TRAMITE
                 await registrarNovedad(rrhhSession, {desde, idper, cod_nov});
@@ -1462,7 +1470,7 @@ describe("SiPer: " + testConfig.name, function(){
             })
         })
         it("el cuadro final tiene que mostrar vacaciones del siguiente año", async function(){
-            await enNuevaPersona(this.test?.title!, {vacaciones: [
+            await enNuevaPersona(this.test?.title!, {inicia_fichada, vacaciones: [
                 {origen:'2000', cantidad:10, vencimiento:date.iso('2000-12-31')},
                 {origen:'2001', cantidad:20}
             ]}, async ({idper}) => {
@@ -1501,7 +1509,7 @@ describe("SiPer: " + testConfig.name, function(){
         })
         it("rechaza el año cerrado", async function(){
             await cerrarAño()
-            await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {inicia_fichada}, async ({idper}) => {
                 const desde = date.iso('2001-03-11');
                 const cod_nov = COD_TRAMITE
                 await expectError(async ()=>{
@@ -1516,7 +1524,7 @@ describe("SiPer: " + testConfig.name, function(){
         })
         it("tiene que ver un solo renglón de vacaciones", async function(){
             this.timeout(TIMEOUT_SPEED * 3);
-            await enNuevaPersona(this.test?.title!, {vacaciones: 20}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {inicia_fichada, vacaciones: 20}, async ({idper}) => {
                 await abrirAño(idper);
                 await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2000, origen:'1999', cod_nov: COD_VACACIONES, idper, cantidad: 1 }, 'new')
                 await superiorSession.saveRecord(ctts.per_nov_cant, {annio:2001, origen:'2000', cod_nov: COD_VACACIONES, idper, cantidad: 10 }, 'new')

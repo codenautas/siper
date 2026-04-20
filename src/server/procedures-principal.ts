@@ -783,33 +783,34 @@ export const ProceduresPrincipal:ProcedureDef[] = [
 
 export async function consolidarFichadas(parameters: any, client: Client) {
     const { fecha, idper, consolidar } = parameters;
-    const inicioAnnio = (await client.query(
-                `select make_date(min(annio), 1, 1) as inicio_annio from annios where abierto = true`
-            ).fetchUniqueValue()).value;
-            const necesitaCambio = (await client.query(
-                `select count(*) from fechas where fecha between $1 and $2 and fichadas_consolidadas != $3`,
-                [inicioAnnio, fecha, consolidar]
-            ).fetchUniqueValue()).value > 0;
-            if (necesitaCambio) {
-                await client.query(
-                    `update fechas set fichadas_consolidadas = $3 where fecha between $1 and $2 and fichadas_consolidadas != $3`,
-                    [inicioAnnio, fecha, consolidar]
-                ).execute();
-            }
-            if (necesitaCambio || idper != null) {
-                if (idper) {
-                    await client.query(
-                        `call actualizar_novedades_vigentes_idper($1::date, $2::date, $3::text)`,
-                        [inicioAnnio, fecha, idper]
-                    ).execute();
-                } else {
-                    await client.query(
-                        `call actualizar_novedades_vigentes($1::date, $2::date)`,
-                        [inicioAnnio, fecha]
-                    ).execute();
-                }
+    var annio = fecha.getFullYear();
+    var annioAbierto = await client.query(
+        `select true from annios where abierto = true and annio = $1`, 
+        [annio]
+    ).fetchUniqueValue(); 
+    if (!annioAbierto) throw new Error('año cerrado!');
+    const fechaDesde = consolidar ? date.ymd(annio, 1, 1) : fecha;
+    const fechaHasta = consolidar ? fecha : date.ymd(annio, 12, 31);
+    const cambios = (await client.query(
+        `update fechas 
+            set fichadas_consolidadas = $3 
+            where fecha between $1 and $2 and fichadas_consolidadas is distinct from $3`,
+        [fechaDesde, fechaHasta, consolidar]
+    ).fetchAll()).rows;
+    if (!cambios.length) {
+        if (idper) {
+            await client.query(
+                `call actualizar_novedades_vigentes_idper($1::date, $2::date, $3::text)`,
+                [fechaDesde, fechaHasta, idper]
+            ).execute();
+        } else {
+            // await client.query(
+            //     `call actualizar_novedades_vigentes($1::date, $2::date)`,
+            //     [fechaDesde, fechaHasta]
+            // ).execute();
         }
-        return true;
+    }
+    return true;
 }
 
 export async function ejecutarSP(parameters: any, client: Client, pool: sql.ConnectionPool) {

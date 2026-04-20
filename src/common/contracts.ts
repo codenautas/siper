@@ -181,6 +181,7 @@ export const personas = {
         es_jefe      : is.nullable.boolean,
         horario      : is.nullable.string,
         banda_horaria: is.nullable.string,
+        inicia_fichada: is.nullable.Date
     })
 } satisfies CommonEntityDefinition
 
