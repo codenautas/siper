@@ -1280,7 +1280,7 @@ describe("SiPer: " + testConfig.name, function(){
     })
     describe("parte diario", function(){
         it("toma en cuenta las vacaciones partidas", async function(){
-            await enNuevaPersona(this.test?.title!, {inicia_fichada, usuario:{sesion:false}}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {inicia_fichada: date.iso('2000-12-31'), usuario:{sesion:false}}, async ({idper}) => {
                 await registrarNovedad(superiorSession,
                     {desde:date.iso('2000-01-15'), hasta:date.iso('2000-02-04'), cod_nov: COD_VACACIONES, idper}
                 );
@@ -1294,7 +1294,7 @@ describe("SiPer: " + testConfig.name, function(){
         });
         it("también calcula si el año está cerrado", async function(){
             try{
-                await enNuevaPersona(this.test?.title!, {inicia_fichada, usuario:{sesion:false}}, async ({idper}) => {
+                await enNuevaPersona(this.test?.title!, {inicia_fichada: date.iso('2000-12-31'), usuario:{sesion:false}}, async ({idper}) => {
                     await registrarNovedad(superiorSession,
                         {desde:date.iso('2000-01-15'), hasta:date.iso('2000-02-04'), cod_nov: COD_VACACIONES, idper}
                     );
