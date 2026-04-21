@@ -83,7 +83,8 @@ install:
       - ../install/detalle_nov_multi_oirgen.sql
       - ../install/sinc_fichadores.sql
       - ../install/fichadas_vigentes_trgs.sql  
-      - ../install/post-modulo_fichador.sql  
+      - ../install/post-modulo_fichador.sql
+      - ../install/personas_iniciar_fichada_trg.sql
 logo: 
   path: client/img
 `;
