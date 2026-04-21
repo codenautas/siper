@@ -71,7 +71,7 @@ export function personas(context: TableContext): TableDefinition {
             max_nivel_ed,
             {...horario, inTable:false},
             {...banda_horaria                , title: 'banda horaria'},
-            {name: 'inicia_fichada'          , typeName: 'date', title: 'inicia fichada', editable:false, visible:false}
+            {name: 'inicia_fichada'          , typeName: 'date', title: 'inicia fichada'}
         ],
         primaryKey: [idper.name],
         foreignKeys: [
@@ -115,7 +115,26 @@ export function personas(context: TableContext): TableDefinition {
         ],
         sql: {
             isTable: true,
-            policies: politicaNovedades('personas', 'registra_novedades_desde'),
+            policies: (()=>{
+                var politicas = politicaNovedades('personas', 'registra_novedades_desde');
+                var checkIniciaFichada = `(
+                    inicia_fichada IS NULL
+                    OR (
+                        (SELECT puede_iniciar_fichada FROM roles WHERE rol = get_app_user('rol'))
+                        AND (
+                            inicia_fichada >= fecha_actual()
+                            OR (SELECT puede_corregir_el_pasado FROM roles WHERE rol = get_app_user('rol'))
+                        )
+                    )
+                )`;
+                return {
+                    ...politicas,
+                    update: {
+                        using: politicas.update!.using,
+                        check: `(${politicas.update!.using}) AND ${checkIniciaFichada}`
+                    }
+                };
+            })(),
             fields: {
                 cuil_valido:{ expr:`validar_cuit(cuil)` },
             },

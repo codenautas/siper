@@ -24,6 +24,7 @@ export function roles(context:TableContext):TableDefinition{
             {name: 'puede_cargar_propio'      , typeName: 'boolean'},
             {name: 'puede_ver_propio'         , typeName: 'boolean'},
             {name: 'puede_corregir_el_pasado' , typeName: 'boolean'},
+            {name: 'puede_iniciar_fichada'    , typeName: 'boolean'},
         ],
         primaryKey: [rol.name],
         constraints: [

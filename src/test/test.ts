@@ -775,6 +775,39 @@ describe("SiPer: " + testConfig.name, function(){
                 }, ctts.insufficient_privilege);
             })
         })
+        it("un rol sin puede_iniciar_fichada no puede setear inicia_fichada a una fecha futura", async function(){
+            const idper = await server.inDbClient(ADMIN_REQ, async client =>
+                (await client.query(`select idper from personas where activo limit 1`).fetchUniqueRow()).row.idper as string
+            );
+            await server.inDbClient(ADMIN_REQ, async client => {
+                await client.query(`update roles set puede_iniciar_fichada = false where rol = 'rrhh'`).execute();
+            });
+            try {
+                await expectError( async () => {
+                    await rrhhSession.saveRecord(
+                        ctts.personas,
+                        {idper, inicia_fichada: date.iso('2000-06-01')},
+                        'update'
+                    );
+                }, ctts.insufficient_privilege);
+            } finally {
+                await server.inDbClient(ADMIN_REQ, async client => {
+                    await client.query(`update roles set puede_iniciar_fichada = true where rol = 'rrhh'`).execute();
+                });
+            }
+        })
+        it("un rol sin puede_corregir_el_pasado no puede setear inicia_fichada a una fecha pasada", async function(){
+            const idper = await server.inDbClient(ADMIN_REQ, async client =>
+                (await client.query(`select idper from personas where activo limit 1`).fetchUniqueRow()).row.idper as string
+            );
+            await expectError( async () => {
+                await rrhhSession.saveRecord(
+                    ctts.personas,
+                    {idper, inicia_fichada: date.iso('2000-01-15')},
+                    'update'
+                );
+            }, ctts.insufficient_privilege);
+        })
         it("no puede cargarse una novedad horaria con superposición", async function(){
             await enNuevaPersona(this.test?.title!, {}, async (persona, {}) => {
                 await expectError( async () => {
