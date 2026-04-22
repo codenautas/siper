@@ -31,7 +31,7 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
             cn.novedad,
             cn.c_dds,
             cn.con_detalles,
-            cn.registra,
+            cn.rol_autorizado,
             cn.prioritario,
             nv.saldo < 0 as error_saldo_negativo,
             detalle_multiorigen,

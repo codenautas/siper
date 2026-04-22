@@ -1,15 +1,15 @@
-cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|prioritario|comun|requiere_entrada|inicializacion|inicializacion_limite
-1|Art. 18 Descanso anual remunerado|I|||true|||true|true|||LICORD|
+cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|rol_autorizado|prioritario|comun|requiere_entrada|inicializacion|inicializacion_limite
+1|Art. 18 Descanso anual remunerado|I|||true|||registra|true|||LICORD|
 2|Licencia ordinaria no controlada||||true||||true||||
 3|Accidente de trabajo||||true||||true||||
 4|Adscripcion||||true||||||||
 5|Licencia por afecciones comunes (Art. 19)||||true||true||true||||
 6|Licencia por afecciones comunes SIN haberes (Art. 19)||||true||true||||||
-7|Ausente||||true|||true|||||
-8|Cargo de mayor jerarquia||||true|||true|true||||
+7|Ausente||||true|||registra|||||
+8|Cargo de mayor jerarquia||||true|||registra|true||||
 9|Cesantia en tramite||||true||||||||
-10|Comision de servicios||||true|true||true|true||||
-11|Licencia por donacion de sangre (Art.30)||||true|||true|true|||CONST|2
+10|Comision de servicios||||true|true||registra|true||||
+11|Licencia por donacion de sangre (Art.30)||||true|||registra|true|||CONST|2
 12|Enfermedad familiar (Art. 20)|||true|true||true||||||
 13|Licencia por enfermedad largo tratamiento (Art. 21)||||true||true||true||||
 14|Licencia por enfermedad largo tratamiento (ART. 21 - 30%)||||true||true||true||||
@@ -19,21 +19,21 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|priorit
 18|Licencia por Adopcion hasta 3 años de edad||||true||||true||||
 19|Licencia por Maternidad|S|||true||||true|||LICMAT|
 20|Licencia por cargos electivos (Art. 29 )||||true||||||||
-21|Licencia por examen (Art. 25)||||true||true|true|true|||CONST|28
+21|Licencia por examen (Art. 25)||||true||true|registra|true|||CONST|28
 22|Licencia sin goce de sueldo||||true||||true||||
 23|Licencia por matrimonio (Art. 27)|C|||true||||true|||CONST|10
 24|Licencia por nacimiento de hijo (Art. 26)|U|||true||||||||
 25|Privado de libertad||||true||||||||
 26|Renuncia en tramite||||true||||||||
 27|Suspension||||true||||||||
-28|Comision por capacitacion||||true|||true|true||||
+28|Comision por capacitacion||||true|||registra|true||||
 30|Maternidad familia numerosa||||true||||||||
 31|Licencia por acto escolar de hijo/a||||true||||||||
 35|Afecciones comunes pendiente de justificar||||true||true||true||||
 36|Enfermedad familiar (Art. 20º) Pendiente de justif||||true||true||||||
 37|Llegada tarde hasta 15 minutos||||true||||||||
 38|Llegada tarde mas de 15 minutos||||true||||||||
-41|Feriado religioso||||true|||true|true||||
+41|Feriado religioso||||true|||registra|true||||
 42|Transferencia en tramite||||true||||true||||
 43|Licencia gremial||||true||||||||
 44|Licencia largo tratamiento (Art.21º - 0%)||||true||||||||
@@ -54,23 +54,23 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|priorit
 63|Justificacion entrada demorada comis.||||true||||||||
 64|Justificacion aut. salida anticipada comis.||||true||||||||
 73|Comision art.73 bis CCT||||true||||||||
-81|Jornada de 4 hs. Decreto 7170/90||||true|||true|||||
+81|Jornada de 4 hs. Decreto 7170/90||||true|||registra|||||
 82|Jornada de 5 hs. Lactancia||||true||||||||
-83|Inspector||||true|||true|||||
+83|Inspector||||true|||registra|||||
 84|Verificador||||true||||||||
-85|Autorizado a no fichar||||true|||true|true||||
+85|Autorizado a no fichar||||true|||registra|true||||
 86|Notificador||||true||||||||
-87|Censista||||true|||true|||||
+87|Censista||||true|||registra|||||
 88|Valuador||||true||||||||
-89|Encuestador y/o supervisor||||true|||true|true||||
+89|Encuestador y/o supervisor||||true|||registra|true||||
 99|Presente (justificado por personal)||||true||||true||||
 100|Aut. entrada demorada por razones personales||||true||||||||
-101|Teletrabajo Diagramado||true||true|||true|true||||
+101|Teletrabajo Diagramado||true||true|||registra|true||||
 102|AI Ausente injustificado||||true||||true||||
 103|Franco diagramado||true||true||||||||
 104|Relevamiento secretaria de seguridad GCBA||||true||||||||
 105|Permiso de Ausencia Extraordinario S/Dec. N° 147/AJG/2020 y Complementarias||||true||||||||
-106|Teletrabajo||||true|||true|||||
+106|Teletrabajo||||true|||registra|||||
 107|Aislamiento Social Preventivo y Obligatorio||||true||||||||
 108|Permiso de Ausencia Extraordinaria Obligatorio||||true||||||||
 109|Medico||||true||||||||
@@ -85,7 +85,7 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|priorit
 118|Permiso vacacional||||true||||||||
 119|Adopcion multiple||||true||||||||
 120|Franco compensatorio RRHH||||true||||||||
-121|CC 09/10 Art. 67 c  Tramites particulares|U|||true|||true|true|||CONST|4
+121|CC 09/10 Art. 67 c  Tramites particulares|U|||true|||registra|true|||CONST|4
 122|Duelo indirecto||||true||||||||
 123|Tramites Particulares- Modalidades||||true||||||||
 124|CC 09/10 Art. 67 d Mudanza||||true||||true|||CONST|1
@@ -104,7 +104,7 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|priorit
 137|Horas estadisticas||||true||||||||
 138|Horas tributarias||||true||||||||
 139|Horas tributarias RRHH||||true||||||||
-140|Autoridades superiores|P|||true|||true|true||||
+140|Autoridades superiores|P|||true|||registra|true||||
 146|Licencia por Adopcion de 3 a 6 años||||true||||true||||
 147|Licencia por Adopcion de 6 a 10 años||||true||||true||||
 148|Licencia por Adopcion de 10 a 18 años||||true||||true||||

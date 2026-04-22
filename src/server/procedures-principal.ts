@@ -290,12 +290,14 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         coalesce(v.cantidad, 0) + coalesce(v.usados, 0) + coalesce(v.pendientes, 0) + coalesce(v.saldo, 0) > 0 as con_info_nov, 
                         v.saldo, 
                         (coalesce(v.saldo, 0) > 0 or v.cantidad is null) as con_disponibilidad,
+                        -- TODO: cambiar el v.registra por una función que indique si corresponde por el rol
                         (v.registra and r.puede_cargar_dependientes or puede_cargar_todo) as puede_cargar,
                         c_dds,
                         prioritario
                     from usuarios u 
                         inner join roles r using (rol),
                         (${sqlNovPer({idper, annio:params.annio})}) v
+                        -- TODO: cambiar el v.registra por una función que indique si corresponde por el rol
                     where ((con_dato and (v.comun is null or v.comun)) or v.registra and r.puede_cargar_dependientes or puede_cargar_todo)
                         and u.usuario = $1
                     order by v.cod_nov`,
