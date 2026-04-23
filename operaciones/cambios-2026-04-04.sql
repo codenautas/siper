@@ -668,3 +668,5 @@ ALTER TABLE usuarios ADD COLUMN principal boolean DEFAULT true;
 GRANT SELECT(id_fichada) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
 
 ALTER TABLE reglas ADD COLUMN tolerancia_consolidacion integer;
+
+ALTER TABLE roles ADD COLUMN puede_iniciar_fichada boolean DEFAULT false;
