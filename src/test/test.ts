@@ -1024,17 +1024,28 @@ describe("SiPer: " + testConfig.name, function(){
                     assert.equal(novedad.cod_nov, cod_nov);
                 })
             })
-            async function verificaFichadas(args:{idper:string, fecha:Date, fichadas: TIME, cod_nov?:string, cod_nov_final?:string}){
+            async function verificaFichadas(args:{idper:string, fecha:Date, fichadas: TIME|null, cod_nov?:string, cod_nov_final?:string}){
                 const {cod_nov_final, ...registroFichadasEsperado} = args;
-                const {idper, fecha, cod_nov} = registroFichadasEsperado;
-                await rrhhSession.tableDataTest(ctts.fichadas_vigentes, [
-                    registroFichadasEsperado
-                ], 'all', {fixedFields:{idper, fecha}})
+                const {idper, fecha, cod_nov, fichadas} = registroFichadasEsperado;
+                if (fichadas != null) {
+                    console.log('FICHANDO')
+                    await rrhhSession.tableDataTest(ctts.fichadas_vigentes, [
+                        registroFichadasEsperado
+                    ], 'all', {fixedFields:{idper, fecha}})
+                }
+                console.log(
+                    'ZZZZZZZZZZZZZZZZZ',
+                    (await server.inDbClient(ADMIN_REQ, client=>client.query('select * from fichadas_vigentes where fecha=$1 and idper=$2', [fecha, idper]).fetchAll())).rows
+                );
                 if (cod_nov_final !== undefined) {
                     registroFichadasEsperado.cod_nov = cod_nov_final;
                 }
                 if (cod_nov !== undefined) {
                     await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper, fecha, consolidar: true})
+                    console.log(
+                        'xxxxxxxxxxxxxxxxxxxxxx',
+                        (await server.inDbClient(ADMIN_REQ, client=>client.query('select * from novedades_vigentes where fecha=$1 and idper=$2', [fecha, idper]).fetchAll())).rows
+                    );
                     await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         registroFichadasEsperado
                     ], 'all', {fixedFields:{idper, fecha}})
@@ -1090,8 +1101,17 @@ describe("SiPer: " + testConfig.name, function(){
             })
             it("sin fichada consolida como ausente", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    console.log('XXXXXXXXXXXXXXXXXX', idper);
                     const fecha = FECHA_ACTUAL;
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(null, null), cod_nov: COD_AUSENTE})
+                })
+            })
+            it("sin fichada ni nada consolida como ausente", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    const fecha = FECHA_ACTUAL;
+                    await registrarNovedad(rrhhSession,{idper, desde:fecha, hasta:fecha, cod_nov: COD_DIAGRAMADO, dds1: true, dds2: true, dds3: true, dds4: true, dds5: true})
+                    console.log('XXXXXXXXXXXXXXXXXX', idper);
+                    await verificaFichadas({idper, fecha, fichadas: null, cod_nov: COD_AUSENTE})
                 })
             })
             it("una sola fichada de entrada consolida como abandono", async function(){

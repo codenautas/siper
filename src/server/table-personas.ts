@@ -122,7 +122,7 @@ export function personas(context: TableContext): TableDefinition {
             // where: es.rrhh ? 'true' : es.registra ? `personas.activo AND sector_pertenece(personas.sector, ${quoteLiteral(user.sector)})` : `personas.idper = ${quoteLiteral(user.idper)}`
             from:`(${sqlPersonas})`
         },
-        hiddenColumns: ['cuil_valido'],
+        hiddenColumns: ['cuil_valido', 'inicia_fichada'],
         sortColumns: [{column: 'activo', order: -1}, {column: 'idper', order: 1}],
     };
 }

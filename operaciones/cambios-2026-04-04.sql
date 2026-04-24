@@ -668,3 +668,11 @@ ALTER TABLE usuarios ADD COLUMN principal boolean DEFAULT true;
 GRANT SELECT(id_fichada) ON TABLE siper.fichadas_recibidas TO siper_modulo_fichador;
 
 ALTER TABLE reglas ADD COLUMN tolerancia_consolidacion integer;
+
+INSERT INTO fichadas_vigentes (idper, fecha)
+  SELECT idper, fecha
+    FROM fechas, personas p
+    WHERE laborable is not false
+      AND p.activo
+      AND annio=2026
+    ON CONFLICT DO NOTHING;
