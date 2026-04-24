@@ -676,3 +676,10 @@ INSERT INTO fichadas_vigentes (idper, fecha)
       AND p.activo
       AND annio=2026
     ON CONFLICT DO NOTHING;
+
+DROP TRIGGER IF EXISTS personas_actualizar_novedades_trg on personas;
+CREATE TRIGGER personas_actualizar_novedades_trg
+  AFTER INSERT OR DELETE OR UPDATE OF activo, registra_novedades_desde, fecha_egreso, inicia_fichada
+  ON personas
+  FOR EACH ROW
+  EXECUTE PROCEDURE personas_actualizar_novedades_trg();
