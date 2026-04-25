@@ -444,6 +444,7 @@ export const calendario_persona = {
         entrada: is.nullable.string,
         salida: is.nullable.string,
         consolidada: is.boolean,
+        requiere_fichadas: is.boolean
     })
 }
 

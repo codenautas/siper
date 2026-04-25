@@ -230,7 +230,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             then upper(v.fichadas)
                             else upper(fv.fichadas)
                         end as salida,
-                        f.fichadas_consolidadas as consolidada
+                        f.fichadas_consolidadas as consolidada,
+                        cn.requiere_fichadas
                     from (
                         select  fecha - 2 - extract(dow from fecha - 2)::integer      as desde,
                                 fecha - 2 - extract(dow from fecha - 2)::integer + 41 as hasta,

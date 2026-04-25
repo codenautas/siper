@@ -264,7 +264,15 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                                     {dia.entrada}
                                 </span>
                             ) : null}
-                            <span className={`calendario-dia-contenido ${dia ? 'con_novedad_si' : 'con_novedad_no' } ${diaTieneFichada ? 'calendario-dia-con-fichada' : ''}`}>{dia.cod_nov ?? ''}</span>
+                            <span 
+                                className={`calendario-dia-contenido 
+                                    ${dia ? 'con_novedad_si' : 'con_novedad_no' } 
+                                    ${diaTieneFichada ? 'calendario-dia-con-fichada' : ''} 
+                                    ${dia.requiere_fichadas && !dia.consolidada ? 'calendario-requiere-fichada-no-consolidado' : ''}
+                                `}
+                            >
+                                {dia.cod_nov ?? ''}
+                            </span>
                             {mostrarFichadaEnDia && dia.salida ? (
                                 <span className="calendario-dia-fichada-salida">
                                     {dia.salida}
