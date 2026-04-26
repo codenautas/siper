@@ -1322,6 +1322,24 @@ describe("SiPer: " + testConfig.name, function(){
                 })
             }
         });
+        it("muestra fichadas", async function(){
+            await enNuevaPersona(this.test?.title!, {inicia_fichada, usuario:{sesion:false}}, async ({idper}) => {
+                var fecha = FECHA_ACTUAL;
+                const entrada = '09:00:00';
+                const salida  = '17:00:00';
+                await registrarFichada(server, {idper, fecha, hora: entrada,  tipo_fichada: 'E'});
+                await registrarFichada(server, {idper, fecha, hora: salida,  tipo_fichada: 'S'});
+                // sin consolidar
+                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                    {idper, cod_nov: COD_PRED_PAS, fichada: '09:00 - 17:00', horas: null},
+                ], 'all', {fixedFields:{idper, fecha}})
+                await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:true})
+                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                    {idper, cod_nov: COD_PRED_PAS, fichada: '09:00 - 17:00', horas:'08:00'},
+                ], 'all', {fixedFields:{idper, fecha}})
+                await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:false})
+            })
+        });
     });
     describe("reportes", function(){
         it("exporta las vacaciones de todos los otros tests", async function(){

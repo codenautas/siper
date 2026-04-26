@@ -213,6 +213,17 @@ BEGIN
       NEW.cod_nov := NULL;
     END IF;
   END IF;
+  RETURN NEW;
+END;
+$BODY$;
+
+CREATE OR REPLACE FUNCTION fichadas_vigentes_a_novedades_trg()
+  RETURNS TRIGGER
+  SECURITY DEFINER
+  LANGUAGE plpgsql
+AS
+$BODY$
+BEGIN
   IF tg_op = 'INSERT' THEN
     IF new.fichadas <> '(,)' THEN
       CALL actualizar_novedades_vigentes_idper(new.fecha, new.fecha, new.idper);
@@ -560,6 +571,13 @@ CREATE TRIGGER fichadas_vigentes_cod_nov_trg BEFORE INSERT OR UPDATE OF fichadas
 CREATE TRIGGER fichadas_fichadas_vigentes_trg AFTER INSERT OR UPDATE ON siper.fichadas FOR EACH ROW EXECUTE FUNCTION siper.fichadas_fichadas_vigentes_trg();
 CREATE TRIGGER personas_fichadas_vigentes_trg AFTER INSERT OR UPDATE OF activo ON siper.personas FOR EACH ROW EXECUTE FUNCTION siper.personas_fichadas_vigentes_trg();
 CREATE TRIGGER tr_sincro_usuarios_modulo_global AFTER INSERT OR DELETE OR UPDATE OF usuario, activo, hashpass, idper ON siper.usuarios FOR EACH ROW EXECUTE FUNCTION siper.fn_trigger_sincro_usuarios_modulo();
+
+CREATE TRIGGER fichadas_vigentes_a_novedades_trg
+  AFTER INSERT OR UPDATE OF fichadas
+  ON fichadas_vigentes
+  FOR EACH ROW
+  EXECUTE PROCEDURE fichadas_vigentes_a_novedades_trg();
+
 
 GRANT USAGE ON SCHEMA siper TO siper_modulo_fichador;
 
