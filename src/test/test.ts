@@ -1096,12 +1096,12 @@ describe("SiPer: " + testConfig.name, function(){
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(null, null), cod_nov: COD_AUSENTE})
                 })
             })
-            it.skip("sin fichada ni nada consolida como ausente", async function(){
+            it("sin fichada ni nada consolida como ausente", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = FECHA_ACTUAL;
                     await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper, fecha, consolidar:false})
                     await registrarNovedad(rrhhSession,{idper, desde:fecha, hasta:fecha, cod_nov: COD_DIAGRAMADO, dds1: true, dds2: true, dds3: true, dds4: true, dds5: true})
-                    await verificaFichadas({idper, fecha, fichadas: null, cod_nov: COD_AUSENTE})
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(null, null), cod_nov: COD_AUSENTE})
                 })
             })
             it("una sola fichada de entrada consolida como abandono", async function(){
