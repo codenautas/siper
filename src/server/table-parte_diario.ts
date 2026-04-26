@@ -66,7 +66,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
             cod_nov,
             { name: 'novedad', typeName: 'text'},
             { name: 'fichada', typeName: 'text'},
-            { name: 'horas', typeName: 'timestamp' },
+            { name: 'horas', typeName: 'text' },
             { name: 'horario', typeName: 'text' },
             { name: 'desde', typeName: 'date' },
             { name: 'hasta', typeName: 'date' },
