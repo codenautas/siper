@@ -230,20 +230,20 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             then upper(v.fichadas)
                             else upper(fv.fichadas)
                         end as salida,
-                        f.fichadas_consolidadas or fecha <= coalesce(p.inicia_fichada, p.registra_novedades_desde) as consolidada,
+                        f.fichadas_consolidadas or f.fecha <= coalesce(p.inicia_fichada, p.registra_novedades_desde) as consolidada,
                         cn.requiere_fichadas
                     from (
-                        select  fecha - 2 - extract(dow from fecha - 2)::integer      as desde,
-                                fecha - 2 - extract(dow from fecha - 2)::integer + 41 as hasta,
+                        select  fecha - 2 - extract(dow from f.fecha - 2)::integer      as desde,
+                                fecha - 2 - extract(dow from f.fecha - 2)::integer + 41 as hasta,
                                 -- (fecha + interval '1 month')::date - extract(dow from (fecha + interval '1 month'))::integer + 6 as hasta,
-                                extract(month from fecha) as mes,
-                                extract(year from fecha) as annio
+                                extract(month from f.fecha) as mes,
+                                extract(year from f.fecha) as annio
                             from fechas f
                             where fecha = $2::date
                         ) x, 
-                        lateral (select * from fechas where annio = x.annio) f,
-                        lateral personas p on v.idper = $1
-                        left join novedades_vigentes v on v.fecha = f.fecha and v.idper = p.idper
+                        lateral (select * from fechas where annio = x.annio) f
+                        left join novedades_vigentes v on v.fecha = f.fecha and v.idper = $1
+                        left join personas p on p.idper = v.idper
                         left join cod_novedades cn on cn.cod_nov = v.cod_nov
                         left join fichadas_vigentes fv on fv.fecha = f.fecha and fv.idper = p.idper
                     where f.fecha between desde and hasta
