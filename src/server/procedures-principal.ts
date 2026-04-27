@@ -775,7 +775,6 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         parameters: [
             {name: 'fecha'         , typeName: 'date'   },
             {name: 'idper'         , typeName: 'text'   , references: 'personas', defaultValue: null},
-            {name: 'consolidar'    , typeName: 'boolean', defaultValue: true},
         ],
         coreFunction:  async function (context:ProcedureContext, parameters:any) {
             return await consolidarFichadas(parameters, context.client);
@@ -803,20 +802,20 @@ export const ProceduresPrincipal:ProcedureDef[] = [
 ];
 
 export async function consolidarFichadas(parameters: any, client: Client) {
-    const { fecha, idper, consolidar } = parameters;
+    const { fecha, idper } = parameters;
     var annio = fecha.getFullYear();
     var annioAbierto = await client.query(
         `select true from annios where abierto = true and annio = $1`, 
         [annio]
     ).fetchUniqueValue(); 
     if (!annioAbierto) throw new Error('año cerrado!');
-    const fechaDesde = consolidar ? date.ymd(annio, 1, 1) : fecha;
-    const fechaHasta = consolidar ? fecha : date.ymd(annio, 12, 31);
+    const fechaDesde = date.ymd(annio, 1, 1);
+    const fechaHasta = fecha;
     const cambios = (await client.query(
-        `update fechas 
-            set fichadas_consolidadas = $3 
-            where fecha between $1 and $2 and fichadas_consolidadas is distinct from $3`,
-        [fechaDesde, fechaHasta, consolidar]
+        `update fechas
+            set fichadas_consolidadas = true
+            where fecha between $1 and $2 and fichadas_consolidadas is not true`,
+        [fechaDesde, fechaHasta]
     ).fetchAll()).rows;
     if (!cambios.length) {
         if (idper) {

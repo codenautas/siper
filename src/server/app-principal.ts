@@ -96,35 +96,35 @@ var persona: Persona | null = null;
 console.log(persona)
 
 const cronConsolidarFichadas = async (be:AppBackend) => {
-    let horaConsolidacion: {hours: number, minutes: number} | null = null;
     const interval = setInterval(async ()=>{
         try{
-            const d = new Date();
-            if (horaConsolidacion == null) {
-                await be.inDbClient(null, async (client) => {
-                    const result = await client.query(
-                        `select (select max(hora_hasta) from bandas_horarias) as hora_limite,
-                                r.tolerancia_consolidacion as tolerancia
-                            from reglas r join annios a on r.annio = a.annio and a.abierto = true
-                            order by r.annio desc limit 1`
-                    ).fetchUniqueRow();
-                    const horaLimite = String(result.row.hora_limite);
-                    const tolerancia = Number(result.row.tolerancia) || 0;
-                    const parts = horaLimite.split(':');
-                    const totalMinutes = parseInt(parts[0]) * 60 + parseInt(parts[1]) + tolerancia;
-                    horaConsolidacion = {hours: Math.floor(totalMinutes / 60) % 24, minutes: totalMinutes % 60};
-                });
-            }
-            if (horaConsolidacion && d.getHours() == horaConsolidacion.hours && d.getMinutes() == horaConsolidacion.minutes) {
-                var result = await be.inTransaction(null, async (client)=>{
-                    return await consolidarFichadas({fecha: date.today(), consolidar: true}, client);
-                });
-                console.info("Cron consolidar fichadas ejecutado correctamente", result);
-            }
+            await be.inTransaction(null, async (client) => {
+                const check = await client.query(
+                    `SELECT max(f.fecha) as fecha
+                        FROM fechas f
+                        JOIN annios a ON a.annio = f.annio AND a.abierto = true
+                        CROSS JOIN LATERAL (
+                            SELECT (SELECT max(hora_hasta) FROM bandas_horarias) AS hora_consolidacion,
+                                   r.tolerancia_consolidacion AS tolerancia
+                                FROM reglas r
+                                JOIN annios ra ON r.annio = ra.annio AND ra.abierto = true
+                                ORDER BY r.annio DESC LIMIT 1
+                        ) params
+                        WHERE f.fichadas_consolidadas IS NOT TRUE
+                          AND (
+                            f.fecha < fecha_hora_actual()::date
+                            OR (f.fecha = fecha_hora_actual()::date
+                                AND fecha_hora_actual()::time >= params.hora_consolidacion + (params.tolerancia || ' minutes')::interval)
+                          )`
+                ).fetchUniqueValue();
+                if (check.value != null) {
+                    await consolidarFichadas({fecha: check.value}, client);
+                }
+            });
         }catch(err){
             console.error(`Error en cron consolidar fichadas. ${err}`);
         }
-    },60000);
+    }, 15 * 60 * 1000);
     be.shutdownCallbackListAdd({
         message:'cron Consolidar Fichadas',
         fun:async function(){
