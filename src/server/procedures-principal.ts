@@ -241,7 +241,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             from fechas f
                             where fecha = $2::date
                         ) x, 
-                        lateral (select * from fechas where annio = x.annio) f
+                        lateral (select * from fechas where annio = x.annio) f,
                         lateral personas p on v.idper = $1
                         left join novedades_vigentes v on v.fecha = f.fecha and v.idper = p.idper
                         left join cod_novedades cn on cn.cod_nov = v.cod_nov
