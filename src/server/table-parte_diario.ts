@@ -20,8 +20,6 @@ select
         p.apellido,
         p.nombres,
         s.nombre_sector as sector_nombre,
-        fi.entrada as fichada_entrada,
-        fi.salida as fichada_salida,
         coalesce(hd.hora_desde, horario_habitual_desde) horario_entrada, 
         coalesce(hd.hora_hasta, horario_habitual_hasta) as horario_salida,
         cn.novedad,
@@ -33,19 +31,12 @@ select
         nv.hasta,
         nv.habiles,
         nv.corridos,
-        CASE 
-            -- si es es NULL o si ambos extremos son vacíos '(,)'
-            WHEN nv.fichadas IS NULL OR (lower(nv.fichadas) IS NULL AND upper(nv.fichadas) IS NULL) 
-                THEN null            
-            ELSE 
-                CONCAT(
-                    to_char(lower(nv.fichadas), 'HH24:MI'), 
-                    ' - ', 
-                    to_char(upper(nv.fichadas), 'HH24:MI')
-                )
-        END AS fichadas,
         p.banda_horaria,
-        bh.descripcion as bh_descripcion
+        bh.descripcion as bh_descripcion,
+        cn.requiere_fichadas,
+        cn.cuenta_horas,
+        nv.fichadas,
+        CASE WHEN f.fichadas_consolidadas AND cn.cuenta_horas THEN to_char(upper(fichadas) - lower(fichadas),'HH24:MI') ELSE null END as horas
     from
         (${sqlPersonas}) p
         inner join fechas f on f.fecha between p.registra_novedades_desde and coalesce(p.fecha_egreso, '3000-01-01'::date)
@@ -53,7 +44,6 @@ select
         left join sectores s on p.sector = s.sector
         left join (${sqlNovedadesVigentesConDesdeHastaHabiles}) nv using(idper, fecha)
         left join cod_novedades cn on nv.cod_nov = cn.cod_nov
-        left join lateral (select min(hora) as entrada, max(hora) as salida from fichadas where fecha = f.fecha and idper = p.idper) fi on true
         left join horarios_per h on h.idper = p.idper /*and f.dds = h.dds*/ and f.fecha between h.desde and h.hasta
         left join horarios_dds hd on p.horario = hd.horario and f.dds = hd.dds 
         left join bandas_horarias bh on p.banda_horaria = bh.banda_horaria
@@ -75,8 +65,8 @@ export function parte_diario(_context: TableContext): TableDefinition {
             { name: 'sector_nombre', typeName: 'text', title: 'sector departamento área' },        // <-- AGREGADO
             cod_nov,
             { name: 'novedad', typeName: 'text'},
-            //{ name: 'fichada', typeName: 'text' },
-            { name: 'fichadas', typeName: 'text' },
+            { name: 'fichada', typeName: 'text'},
+            { name: 'horas', typeName: 'text' },
             { name: 'horario', typeName: 'text' },
             { name: 'desde', typeName: 'date' },
             { name: 'hasta', typeName: 'date' },
@@ -92,7 +82,13 @@ export function parte_diario(_context: TableContext): TableDefinition {
         sql:{
             isTable: false,
             from:`(select x.*,
-                    hora_texto(fichada_entrada) || ' - ' || hora_texto(fichada_salida) as fichada,
+                    CASE WHEN NOT requiere_fichadas AND NOT cuenta_horas
+                        OR fichadas IS NULL OR fichadas = time_range(null,null) THEN null
+                        ELSE CONCAT(hora_texto(lower(fichadas)),
+                            ' - ',
+                            hora_texto(upper(fichadas)) 
+                        )
+                    END as fichada,
                     hora_texto(horario_entrada) || ' - ' || hora_texto(horario_Salida) as horario
                 from (${sqlParteDiario}) x
             )`,

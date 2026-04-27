@@ -71,7 +71,7 @@ export function personas(context: TableContext): TableDefinition {
             max_nivel_ed,
             {...horario, inTable:false},
             {...banda_horaria                , title: 'banda horaria'},
-            {name: 'inicia_fichada'          , typeName: 'date', title: 'inicia fichada'}
+            {name: 'inicia_fichada'          , typeName: 'date', title: 'inicia fichada', editable:es.admin}
         ],
         primaryKey: [idper.name],
         foreignKeys: [
@@ -122,7 +122,7 @@ export function personas(context: TableContext): TableDefinition {
             // where: es.rrhh ? 'true' : es.registra ? `personas.activo AND sector_pertenece(personas.sector, ${quoteLiteral(user.sector)})` : `personas.idper = ${quoteLiteral(user.idper)}`
             from:`(${sqlPersonas})`
         },
-        hiddenColumns: ['cuil_valido'],
+        hiddenColumns: ['cuil_valido', 'inicia_fichada'],
         sortColumns: [{column: 'activo', order: -1}, {column: 'idper', order: 1}],
     };
 }

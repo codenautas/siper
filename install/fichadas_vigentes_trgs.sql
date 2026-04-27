@@ -127,6 +127,17 @@ BEGIN
       NEW.cod_nov := NULL;
     END IF;
   END IF;
+  RETURN NEW;
+END;
+$BODY$;
+
+CREATE OR REPLACE FUNCTION fichadas_vigentes_a_novedades_trg()
+  RETURNS TRIGGER
+  SECURITY DEFINER
+  LANGUAGE plpgsql
+AS
+$BODY$
+BEGIN
   IF tg_op = 'INSERT' THEN
     IF new.fichadas <> '(,)' THEN
       CALL actualizar_novedades_vigentes_idper(new.fecha, new.fecha, new.idper);
@@ -185,6 +196,12 @@ CREATE TRIGGER fichadas_vigentes_cod_nov_trg
   ON fichadas_vigentes
   FOR EACH ROW
   EXECUTE PROCEDURE fichadas_vigentes_cod_nov_trg();
+
+CREATE TRIGGER fichadas_vigentes_a_novedades_trg
+  AFTER INSERT OR UPDATE OF fichadas
+  ON fichadas_vigentes
+  FOR EACH ROW
+  EXECUTE PROCEDURE fichadas_vigentes_a_novedades_trg();
 
 CREATE TRIGGER fichadas_fichadas_vigentes_trg 
   AFTER INSERT OR UPDATE

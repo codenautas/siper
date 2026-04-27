@@ -1057,12 +1057,14 @@ describe("SiPer: " + testConfig.name, function(){
                     assert.equal(novedad.cod_nov, cod_nov);
                 })
             })
-            async function verificaFichadas(args:{idper:string, fecha:Date, fichadas: TIME, cod_nov?:string, cod_nov_final?:string}){
+            async function verificaFichadas(args:{idper:string, fecha:Date, fichadas: TIME|null, cod_nov?:string, cod_nov_final?:string}){
                 const {cod_nov_final, ...registroFichadasEsperado} = args;
-                const {idper, fecha, cod_nov} = registroFichadasEsperado;
-                await rrhhSession.tableDataTest(ctts.fichadas_vigentes, [
-                    registroFichadasEsperado
-                ], 'all', {fixedFields:{idper, fecha}})
+                const {idper, fecha, cod_nov, fichadas} = registroFichadasEsperado;
+                if (fichadas != null) {
+                    await rrhhSession.tableDataTest(ctts.fichadas_vigentes, [
+                        registroFichadasEsperado
+                    ], 'all', {fixedFields:{idper, fecha}})
+                }
                 if (cod_nov_final !== undefined) {
                     registroFichadasEsperado.cod_nov = cod_nov_final;
                 }
@@ -1127,6 +1129,14 @@ describe("SiPer: " + testConfig.name, function(){
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(null, null), cod_nov: COD_AUSENTE})
                 })
             })
+            it("sin fichada ni nada consolida como ausente", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    const fecha = FECHA_ACTUAL;
+                    await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper, fecha, consolidar:false})
+                    await registrarNovedad(rrhhSession,{idper, desde:fecha, hasta:fecha, cod_nov: COD_DIAGRAMADO, dds1: true, dds2: true, dds3: true, dds4: true, dds5: true})
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(null, null), cod_nov: COD_AUSENTE})
+                })
+            })
             it("una sola fichada de entrada consolida como abandono", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = FECHA_ACTUAL;
@@ -1185,6 +1195,7 @@ describe("SiPer: " + testConfig.name, function(){
                         ,dds1:true, dds2:true, dds3:true, dds4:true, dds5:true
                     });
                     // antes de consolidar, la novedad vigente debe mostrar el código registrado
+                    await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper, fecha, consolidar:false})
                     await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         {idper, fecha, cod_nov}
                     ], 'all', {fixedFields:{idper, fecha}});
@@ -1343,6 +1354,24 @@ describe("SiPer: " + testConfig.name, function(){
                     client.query('UPDATE annios SET abierto = true');
                 })
             }
+        });
+        it("muestra fichadas", async function(){
+            await enNuevaPersona(this.test?.title!, {inicia_fichada, usuario:{sesion:false}}, async ({idper}) => {
+                var fecha = FECHA_ACTUAL;
+                const entrada = '09:00:00';
+                const salida  = '17:00:00';
+                await registrarFichada(server, {idper, fecha, hora: entrada,  tipo_fichada: 'E'});
+                await registrarFichada(server, {idper, fecha, hora: salida,  tipo_fichada: 'S'});
+                // sin consolidar
+                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                    {idper, cod_nov: COD_PRED_PAS, fichada: '09:00 - 17:00', horas: null},
+                ], 'all', {fixedFields:{idper, fecha}})
+                await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:true})
+                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                    {idper, cod_nov: COD_PRED_PAS, fichada: '09:00 - 17:00', horas:'08:00'},
+                ], 'all', {fixedFields:{idper, fecha}})
+                await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:false})
+            })
         });
     });
     describe("reportes", function(){
