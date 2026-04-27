@@ -20,9 +20,7 @@ BEGIN
     v_idper := new.idper;
     v_rangos := v_rangos + multirange(daterange(new.registra_novedades_desde, new.fecha_egreso));
   END IF;
-  RAISE NOTICE 'rango %', v_rangos;
   FOR v_rango IN SELECT * FROM UNNEST(v_rangos * v_abiertos) LOOP
-    RAISE NOTICE 'caluclar % % %', lower(v_rango), upper(v_rango), v_idper;
     CALL actualizar_novedades_vigentes_idper(lower(v_rango), upper(v_rango), v_idper);
   END LOOP;
   RETURN NEW;
