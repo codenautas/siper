@@ -4,6 +4,7 @@ import { TableDefinition, TableContext } from "./types-principal";
 
 import { idper, sqlPersonas } from "./table-personas";
 import { sector } from "./table-sectores";
+import { sqlExprHoras } from "./table-parte_diario";
 
 export const sqlCumplimientoHorasMensual = `
 WITH base AS (
@@ -12,7 +13,7 @@ WITH base AS (
         p.sector,
         date_trunc('month', n.fecha)::date AS mes_inicio,        
         n.cod_nov,
-        n.cod_nov = r.codnov_sin_fichadas AS es_ausente_injustificado,
+        coalesce(cn.pierde_presentismo, false) AS es_ausente_injustificado,
         NOT (
             n.fichadas IS NULL
             OR isempty(n.fichadas)
@@ -30,7 +31,7 @@ WITH base AS (
     FROM novedades_vigentes n
         JOIN (${sqlPersonas}) p ON p.idper = n.idper
         JOIN fechas f ON f.fecha = n.fecha
-        JOIN reglas r ON r.annio = extract(year from n.fecha)::integer
+        LEFT JOIN cod_novedades cn ON cn.cod_nov = n.cod_nov
     WHERE f.laborable IS DISTINCT FROM false
       AND f.dds NOT IN (0, 6)
       AND n.trabajable IS TRUE
@@ -71,23 +72,11 @@ SELECT
     p.sector,
     p.mes_inicio,
     p.ausentes_injustificados,
-    floor(extract(epoch from p.total_mes) / 3600)::text
-        || ':' ||
-        lpad(floor(mod(extract(epoch from p.total_mes) / 60, 60))::text, 2, '0') AS total_mes,
-    CASE WHEN p.promedio_diario IS NOT NULL THEN
-        floor(extract(epoch from p.promedio_diario) / 3600)::text
-        || ':' ||
-        lpad(floor(mod(extract(epoch from p.promedio_diario) / 60, 60))::text, 2, '0')
-    END AS promedio_diario,
-    floor(extract(epoch from p.horas_objetivo_mes) / 3600)::text
-        || ':' ||
-        lpad(floor(mod(extract(epoch from p.horas_objetivo_mes) / 60, 60))::text, 2, '0') AS horas_objetivo_mes,
-    floor(extract(epoch from p.horas_adeudadas_mes) / 3600)::text
-        || ':' ||
-        lpad(floor(mod(extract(epoch from p.horas_adeudadas_mes) / 60, 60))::text, 2, '0') AS horas_adeudadas_mes,
-    floor(extract(epoch from p.horas_maximas_adeudadas_mes) / 3600)::text
-        || ':' ||
-        lpad(floor(mod(extract(epoch from p.horas_maximas_adeudadas_mes) / 60, 60))::text, 2, '0') AS horas_maximas_adeudadas_mes,
+    ${sqlExprHoras('p.total_mes')} AS total_mes,
+    CASE WHEN p.promedio_diario IS NOT NULL THEN ${sqlExprHoras('p.promedio_diario')} END AS promedio_diario,
+    ${sqlExprHoras('p.horas_objetivo_mes')} AS horas_objetivo_mes,
+    ${sqlExprHoras('p.horas_adeudadas_mes')} AS horas_adeudadas_mes,
+    ${sqlExprHoras('p.horas_maximas_adeudadas_mes')} AS horas_maximas_adeudadas_mes,
     p.ausentes_injustificados >= 1 AS pierde_por_ausente_injustificado,
     p.horas_adeudadas_mes > p.horas_maximas_adeudadas_mes AS pierde_por_horas,
     (

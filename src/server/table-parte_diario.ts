@@ -9,6 +9,8 @@ import {sector} from "./table-sectores";
 import { sqlNovedadesVigentesConDesdeHastaHabiles } from "./table-novedades_vigentes";
 import { sqlPersonas } from "./table-personas";
 
+export const sqlExprHoras = (expr: string) => `to_char(${expr}, 'HH24:MI')`;
+
 export const sqlParteDiario= `
 select 
         p.idper, 
@@ -36,7 +38,7 @@ select
         cn.requiere_fichadas,
         cn.cuenta_horas,
         nv.fichadas,
-        CASE WHEN f.fichadas_consolidadas AND cn.cuenta_horas THEN to_char(upper(fichadas) - lower(fichadas),'HH24:MI') ELSE null END as horas
+        CASE WHEN f.fichadas_consolidadas AND cn.cuenta_horas THEN ${sqlExprHoras('upper(fichadas) - lower(fichadas)')} ELSE null END as horas
     from
         (${sqlPersonas}) p
         inner join fechas f on f.fecha between p.registra_novedades_desde and coalesce(p.fecha_egreso, '3000-01-01'::date)
