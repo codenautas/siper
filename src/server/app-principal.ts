@@ -76,6 +76,7 @@ import { niveles_educativos      } from "./table-niveles_educativos";
 import { tipos_novedad           } from "./table-tipos_novedad";
 import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
+import { presentismo } from "./table-presentismo";
 import {sinc_fichadores, ESTADOS} from "./table-sinc_fichadores"
 
 import { consolidarFichadas, ejecutarSP, ProceduresPrincipal } from './procedures-principal'
@@ -382,6 +383,7 @@ export class AppSiper extends AppBackend{
                     {menuType:'menu', name:'listados', menuContent:[
                         {menuType:'proc', name:'parte_diario'},
                         {menuType:'proc', name:'informe_mensual'},
+                        {menuType:'proc', name:'cumplimiento_presentismo', label:'presentismo'},
                         {menuType:'proc', name:'descanso_anual_remunerado'},
                         {menuType:'proc', name:'exportar_descanso_anual_remunerado'},
                         // {menuType:'proc', name:'visor_de_fichadas'},
@@ -605,6 +607,7 @@ export class AppSiper extends AppBackend{
             bandas_horarias      ,
             reglas               ,
             avisos_falta_fichada ,   
+            presentismo,
             sinc_fichadores,
         }
     }       
