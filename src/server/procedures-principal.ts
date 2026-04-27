@@ -780,6 +780,25 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         coreFunction:  async function (context:ProcedureContext, parameters:any) {
             return await consolidarFichadas(parameters, context.client);
         }
+    },
+    {
+        action: 'agregar_fichada',
+        parameters: [
+            {name: 'idper'        , typeName: 'text'   , references: 'personas'      },
+            {name: 'fecha'        , typeName: 'date'                                  },
+            {name: 'hora'         , typeName: 'time'                                  },
+            {name: 'tipo_fichada' , typeName: 'text'   , references: 'tipos_fichada' },
+        ],
+        coreFunction: async function (context: ProcedureContext, parameters: any) {
+            var {idper, fecha, hora, tipo_fichada} = parameters;
+            var result = await context.client.query(
+                `INSERT INTO fichadas (idper, fecha, hora, tipo_fichada)
+                    VALUES ($1, $2, $3, $4)
+                    RETURNING *`,
+                [idper, fecha, hora, tipo_fichada]
+            ).fetchUniqueRow();
+            return result.row;
+        }
     }
 ];
 
