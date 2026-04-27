@@ -52,6 +52,8 @@ resumen_presentismo AS (
         m.sector,
         m.mes_inicio,
         m.ausentes_injustificados,
+        coalesce(m.total_mes, interval '0') AS total_mes,
+        r.umbral_horas_personales * m.dias_laborables_mes::numeric * interval '1 hour' AS horas_objetivo_mes,
         greatest(
             r.umbral_horas_personales * m.dias_laborables_mes::numeric * interval '1 hour' - coalesce(m.total_mes, interval '0'),
             interval '0'
@@ -65,9 +67,18 @@ SELECT
     p.sector,
     p.mes_inicio,
     p.ausentes_injustificados,
+    floor(extract(epoch from p.total_mes) / 3600)::text
+        || ':' ||
+        lpad(floor(mod(extract(epoch from p.total_mes) / 60, 60))::text, 2, '0') AS total_mes,
+    floor(extract(epoch from p.horas_objetivo_mes) / 3600)::text
+        || ':' ||
+        lpad(floor(mod(extract(epoch from p.horas_objetivo_mes) / 60, 60))::text, 2, '0') AS horas_objetivo_mes,
     floor(extract(epoch from p.horas_adeudadas_mes) / 3600)::text
         || ':' ||
         lpad(floor(mod(extract(epoch from p.horas_adeudadas_mes) / 60, 60))::text, 2, '0') AS horas_adeudadas_mes,
+    floor(extract(epoch from p.horas_maximas_adeudadas_mes) / 3600)::text
+        || ':' ||
+        lpad(floor(mod(extract(epoch from p.horas_maximas_adeudadas_mes) / 60, 60))::text, 2, '0') AS horas_maximas_adeudadas_mes,
     p.ausentes_injustificados >= 1 AS pierde_por_ausente_injustificado,
     p.horas_adeudadas_mes > p.horas_maximas_adeudadas_mes AS pierde_por_horas,
     (
@@ -88,7 +99,10 @@ export function presentismo(_context: TableContext): TableDefinition {
             idper,
             sector,
             { name: "ausentes_injustificados", typeName: "integer", title: "aus. injust." },
+            { name: "total_mes", typeName: "text", title: "total mes" },
+            { name: "horas_objetivo_mes", typeName: "text", title: "objetivo mes" },
             { name: "horas_adeudadas_mes", typeName: "text", title: "adeuda mes" },
+            { name: "horas_maximas_adeudadas_mes", typeName: "text", title: "tolerancia mes" },
             { name: "pierde_por_ausente_injustificado", typeName: "boolean", title: "pierde por AI" },
             { name: "pierde_por_horas", typeName: "boolean", title: "pierde por horas" },
             { name: "pierde_presentismo", typeName: "boolean", title: "pierde presentismo" },
