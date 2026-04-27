@@ -42,6 +42,7 @@ resumen_mensual AS (
         b.mes_inicio,
         COUNT(*) AS dias_laborables_mes,
         COUNT(*) FILTER (WHERE b.es_ausente_injustificado) AS ausentes_injustificados,
+        COUNT(*) FILTER (WHERE b.dia_computable) AS dias_con_fichada,
         SUM(b.duracion) FILTER (WHERE b.dia_computable) AS total_mes
     FROM base b
     GROUP BY b.idper, b.mes_inicio
@@ -53,6 +54,9 @@ resumen_presentismo AS (
         m.mes_inicio,
         m.ausentes_injustificados,
         coalesce(m.total_mes, interval '0') AS total_mes,
+        CASE WHEN m.dias_con_fichada > 0
+            THEN coalesce(m.total_mes, interval '0') / m.dias_con_fichada
+        END AS promedio_diario,
         r.umbral_horas_personales * m.dias_laborables_mes::numeric * interval '1 hour' AS horas_objetivo_mes,
         greatest(
             r.umbral_horas_personales * m.dias_laborables_mes::numeric * interval '1 hour' - coalesce(m.total_mes, interval '0'),
@@ -70,6 +74,11 @@ SELECT
     floor(extract(epoch from p.total_mes) / 3600)::text
         || ':' ||
         lpad(floor(mod(extract(epoch from p.total_mes) / 60, 60))::text, 2, '0') AS total_mes,
+    CASE WHEN p.promedio_diario IS NOT NULL THEN
+        floor(extract(epoch from p.promedio_diario) / 3600)::text
+        || ':' ||
+        lpad(floor(mod(extract(epoch from p.promedio_diario) / 60, 60))::text, 2, '0')
+    END AS promedio_diario,
     floor(extract(epoch from p.horas_objetivo_mes) / 3600)::text
         || ':' ||
         lpad(floor(mod(extract(epoch from p.horas_objetivo_mes) / 60, 60))::text, 2, '0') AS horas_objetivo_mes,
@@ -100,6 +109,7 @@ export function presentismo(_context: TableContext): TableDefinition {
             sector,
             { name: "ausentes_injustificados", typeName: "integer", title: "aus. injust." },
             { name: "total_mes", typeName: "text", title: "total mes" },
+            { name: "promedio_diario", typeName: "text", title: "promedio diario" },
             { name: "horas_objetivo_mes", typeName: "text", title: "objetivo mes" },
             { name: "horas_adeudadas_mes", typeName: "text", title: "adeuda mes" },
             { name: "horas_maximas_adeudadas_mes", typeName: "text", title: "tolerancia mes" },

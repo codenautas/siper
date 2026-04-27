@@ -478,14 +478,15 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     {
         action: 'cumplimiento_presentismo',
         parameters: [
-            {name:'mes', typeName:'date', label:'mes', specialDefaultValue: 'current_date'},
-            {name:'idper', typeName:'text', label:'persona', references: 'personas', defaultValue:null}
+            {name:'annio', typeName:'integer', label:'año',  references:'annios',  defaultValue: date.today().getFullYear()},
+            {name:'mes',   typeName:'integer', label:'mes',                         defaultValue: date.today().getMonth() + 1},
+            {name:'idper', typeName:'text',    label:'persona', references: 'personas', defaultValue:null}
         ],
         resultOk:'showGrid',
         coreFunction: async function(context: ProcedureContext, params:any){
             const mesInicio = date.ymd(
-                params.mes.getFullYear(),
-                (params.mes.getMonth() + 1) as 1|2|3|4|5|6|7|8|9|10|11|12,
+                params.annio,
+                params.mes as 1|2|3|4|5|6|7|8|9|10|11|12,
                 1
             );
             const grilla = {
