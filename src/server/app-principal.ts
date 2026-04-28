@@ -379,7 +379,6 @@ export class AppSiper extends AppBackend{
         }else{
             menuContent.push(
                 {menuType:'principal', name:'principal'     },
-                {menuType:'fichar', name:'fichar'},
                 ...(es.registra ? [
                     {menuType:'menu', name:'listados', menuContent:[
                         {menuType:'proc', name:'parte_diario'},
