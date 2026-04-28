@@ -53,6 +53,7 @@ resumen_presentismo AS (
         m.idper,
         m.sector,
         m.mes_inicio,
+        m.dias_laborables_mes,
         m.novedades_injustificadas,
         coalesce(m.total_mes, interval '0') AS total_mes,
         CASE WHEN m.dias_con_fichada > 0
@@ -71,6 +72,7 @@ SELECT
     p.idper,
     p.sector,
     p.mes_inicio,
+    p.dias_laborables_mes,
     p.novedades_injustificadas,
     ${sqlExprHoras('p.total_mes')} AS total_mes,
     CASE WHEN p.promedio_diario IS NOT NULL THEN ${sqlExprHoras('p.promedio_diario')} END AS promedio_diario,
@@ -96,6 +98,7 @@ export function presentismo(_context: TableContext): TableDefinition {
             { name: "mes_inicio", typeName: "date", title: "mes" },
             idper,
             sector,
+            { name: "dias_laborables_mes", typeName: "integer", title: "días hábiles" },
             { name: "novedades_injustificadas", typeName: "integer", title: "nov. injust." },
             { name: "total_mes", typeName: "text", title: "total mes" },
             { name: "promedio_diario", typeName: "text", title: "promedio diario" },
