@@ -36,6 +36,9 @@ export function fichadas(context: TableContext): TableDefinition{
             {references: 'fechas'        , fields: [fecha.name]},
             {references: 'annios'        , fields: [añoEnBaseAFecha.name], onUpdate: 'no action'},
             {references: 'tipos_fichada'  , fields: [tipo_fichada.name]},
-        ]
+        ],
+        sql: {
+            skipEnance: true,
+        }
     };
 }

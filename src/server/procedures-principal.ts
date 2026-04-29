@@ -230,7 +230,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             then upper(v.fichadas)
                             else upper(fv.fichadas)
                         end as salida,
-                        f.fichadas_consolidadas or f.fecha <= coalesce(p.inicia_fichada, p.registra_novedades_desde) as consolidada,
+                        f.fichadas_consolidadas or f.fecha < coalesce(p.inicia_fichada, p.registra_novedades_desde) as consolidada,
                         cn.requiere_fichadas
                     from (
                         select  fecha - 2 - extract(dow from f.fecha - 2)::integer      as desde,
@@ -775,6 +775,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         parameters: [
             {name: 'fecha'         , typeName: 'date'   },
             {name: 'idper'         , typeName: 'text'   , references: 'personas', defaultValue: null},
+            {name: 'consolidar'    , typeName: 'boolean', defaultValue: true},
         ],
         coreFunction:  async function (context:ProcedureContext, parameters:any) {
             return await consolidarFichadas(parameters, context.client);
@@ -802,20 +803,20 @@ export const ProceduresPrincipal:ProcedureDef[] = [
 ];
 
 export async function consolidarFichadas(parameters: any, client: Client) {
-    const { fecha, idper } = parameters;
+    const { fecha, idper, consolidar } = parameters;
     var annio = fecha.getFullYear();
     var annioAbierto = await client.query(
         `select true from annios where abierto = true and annio = $1`, 
         [annio]
     ).fetchUniqueValue(); 
     if (!annioAbierto) throw new Error('año cerrado!');
-    const fechaDesde = date.ymd(annio, 1, 1);
-    const fechaHasta = fecha;
+    const fechaDesde = consolidar ? date.ymd(annio, 1, 1) : fecha;
+    const fechaHasta = consolidar ? fecha : date.ymd(annio, 12, 31);
     const cambios = (await client.query(
-        `update fechas
-            set fichadas_consolidadas = true
-            where fecha between $1 and $2 and fichadas_consolidadas is not true`,
-        [fechaDesde, fechaHasta]
+        `update fechas 
+            set fichadas_consolidadas = $3 
+            where fecha between $1 and $2 and fichadas_consolidadas is distinct from $3`,
+        [fechaDesde, fechaHasta, consolidar]
     ).fetchAll()).rows;
     if (!cambios.length) {
         if (idper) {
