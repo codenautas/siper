@@ -492,7 +492,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const grilla = {
                 tableName:'presentismo',
                 fixedFields:[{fieldName:'mes_inicio', value:mesInicio}] as FixedFields,
-                tableDef:{title:`control de presentismo ${params.mes}/${params.annio}`, hiddenColumns:[] as string[]}
+                tableDef:{title:'control de presentismo del '+mesInicio.toDmy(), hiddenColumns:[] as string[]}
             };
             if (params.idper != null) {
                 const apeynom = await context.client.query(
