@@ -1330,12 +1330,18 @@ describe("SiPer: " + testConfig.name, function(){
                 await registrarFichada(server, {idper, fecha, hora: entrada,  tipo_fichada: 'E'});
                 await registrarFichada(server, {idper, fecha, hora: salida,  tipo_fichada: 'S'});
                 // sin consolidar
+                var consolidadas = server.inDbClient(ADMIN_REQ, client =>
+                    client.query(`select fichadas_consolidadas from fechas where fecha = $1`, [fecha]).fetchUniqueValue()
+                )
+                if (consolidadas) {
+                    await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:false})
+                }
                 await rrhhSession.tableDataTest(ctts.parte_diario, [
                     {idper, cod_nov: COD_PRED_PAS, fichada: '09:00 - 17:00', horas: null},
                 ], 'all', {fixedFields:{idper, fecha}})
                 await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:true})
                 await rrhhSession.tableDataTest(ctts.parte_diario, [
-                    {idper, cod_nov: COD_PRED_PAS, fichada: '09:00 - 17:00', horas:'08:00'},
+                    {idper, cod_nov: COD_PRED_PAS, fichada: '09:00 - 17:00', horas: timeInterval({hours: 8})},
                 ], 'all', {fixedFields:{idper, fecha}})
                 await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:false})
             })

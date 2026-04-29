@@ -1,0 +1,1 @@
+-- Cambios desde la versión 0.7.1

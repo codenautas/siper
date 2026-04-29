@@ -36,7 +36,7 @@ select
         cn.requiere_fichadas,
         cn.cuenta_horas,
         nv.fichadas,
-        CASE WHEN f.fichadas_consolidadas AND cn.cuenta_horas THEN to_char(upper(fichadas) - lower(fichadas),'HH24:MI') ELSE null END as horas
+        CASE WHEN f.fichadas_consolidadas AND cn.cuenta_horas THEN upper(fichadas) - lower(fichadas) ELSE null END as horas
     from
         (${sqlPersonas}) p
         inner join fechas f on f.fecha between p.registra_novedades_desde and coalesce(p.fecha_egreso, '3000-01-01'::date)
@@ -66,7 +66,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
             cod_nov,
             { name: 'novedad', typeName: 'text'},
             { name: 'fichada', typeName: 'text'},
-            { name: 'horas', typeName: 'text' },
+            { name: 'horas', typeName: 'interval' },
             { name: 'horario', typeName: 'text' },
             { name: 'desde', typeName: 'date' },
             { name: 'hasta', typeName: 'date' },
