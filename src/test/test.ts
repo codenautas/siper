@@ -34,8 +34,8 @@ function TIME_RANGE(desde:TIME, hasta:TIME):string
 function TIME_RANGE(desde:TIME, hasta:TIME, desde2:TIME, hasta2:TIME):string
 function TIME_RANGE(desde?:TIME, hasta?:TIME, desde2?:TIME, hasta2?:TIME):string{
     var ranges:[TIME,TIME][] = [];
-    if (desde != null) ranges.push([desde, hasta]);
-    if (desde2 != null) ranges.push([desde2, hasta2]);
+    if (desde  != null || hasta  != null) ranges.push([desde, hasta]);
+    if (desde2 != null || hasta2 != null) ranges.push([desde2, hasta2]);
     return `{${ranges.map(([desde, hasta])=>TIME_SIMPLERANGE(desde, hasta)).join(',')}}`
 }
 
