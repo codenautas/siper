@@ -60,7 +60,7 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
             {name: 'ddsn'     , typeName: 'text'   , inTable:false, serverSide:true, editable:false },
             {name: 'cod_nov'  , typeName: 'text'   ,                                    },
             {name: 'ficha'    , typeName: 'text'   ,                                    },
-            {name: 'fichadas' , typeName: 'time_range', title:'hora de entrada y salida'},
+            {name: 'fichadas' , typeName: 'time_multirange', title:'hora de entrada y salida'},
             /* campos redundantes que reflejan el estado del personas al momento de obtener la novedad */
             {name: 'sector'   , typeName: 'text'   ,                                    },
             /* campos automáticos */

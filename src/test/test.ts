@@ -27,7 +27,17 @@ const VERBOSE = process.argv.includes('--verbose');
 
 type TIME = string;
 
-const TIME_RANGE = (desde:TIME, hasta:TIME) => `${desde == null ? '(' : '[' + desde},${hasta == null ? '' : hasta})`
+const TIME_SIMPLERANGE = (desde:TIME, hasta:TIME) => `${desde == null ? '(' : '[' + desde},${hasta == null ? '' : hasta})`
+
+function TIME_RANGE():string
+function TIME_RANGE(desde:TIME, hasta:TIME):string
+function TIME_RANGE(desde:TIME, hasta:TIME, desde2:TIME, hasta2:TIME):string
+function TIME_RANGE(desde?:TIME, hasta?:TIME, desde2?:TIME, hasta2?:TIME):string{
+    var ranges:[TIME,TIME][] = [];
+    if (desde != null) ranges.push([desde, hasta]);
+    if (desde2 != null) ranges.push([desde2, hasta2]);
+    return `{${ranges.map(([desde, hasta])=>TIME_SIMPLERANGE(desde, hasta)).join(',')}}`
+}
 
 /*
  * Para debuguear el servidor por separado hay abrir dos ventanas, en una corren los test (normalmente) 
@@ -1049,7 +1059,7 @@ describe("SiPer: " + testConfig.name, function(){
                     await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         novedadesVigentesAntesDeConsolidar
                     ], 'all', {fixedFields:{idper, fecha}})                    
-                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(null, null)})
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE()})
                 })
             })
             it("solo tiene horario de entrada", async function(){
@@ -1068,6 +1078,20 @@ describe("SiPer: " + testConfig.name, function(){
                     await registrarFichada(server, {idper, fecha, hora: desde, tipo_fichada:'E'});
                     await registrarFichada(server, {idper, fecha, hora: hasta, tipo_fichada:'S'});
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta)})
+                })
+            })
+            it("cuatro fichadas son dos tramos", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    const fecha = FECHA_ACTUAL;
+                    const desde = '08:00:00';
+                    const hasta = '13:00:00';
+                    const desde2 = '14:00:00';
+                    const hasta2 = '17:20:00';
+                    await registrarFichada(server, {idper, fecha, hora: desde, tipo_fichada:'E'});
+                    await registrarFichada(server, {idper, fecha, hora: hasta, tipo_fichada:'S'});
+                    await registrarFichada(server, {idper, fecha, hora: desde2, tipo_fichada:'E'});
+                    await registrarFichada(server, {idper, fecha, hora: hasta2, tipo_fichada:'S'});
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta, desde2, hasta2)})
                 })
             })
             it("las fichadas se redondean al minuto para arriba y para abajo", async function(){
@@ -1093,7 +1117,7 @@ describe("SiPer: " + testConfig.name, function(){
             it("sin fichada consolida como ausente", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = FECHA_ACTUAL;
-                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(null, null), cod_nov: COD_AUSENTE})
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(), cod_nov: COD_AUSENTE})
                 })
             })
             it("sin fichada ni nada consolida como ausente", async function(){
@@ -1101,7 +1125,7 @@ describe("SiPer: " + testConfig.name, function(){
                     const fecha = FECHA_ACTUAL;
                     await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper, fecha, consolidar:false})
                     await registrarNovedad(rrhhSession,{idper, desde:fecha, hasta:fecha, cod_nov: COD_DIAGRAMADO, dds1: true, dds2: true, dds3: true, dds4: true, dds5: true})
-                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(null, null), cod_nov: COD_AUSENTE})
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(), cod_nov: COD_AUSENTE})
                 })
             })
             it("una sola fichada de entrada consolida como abandono", async function(){

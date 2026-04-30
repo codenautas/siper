@@ -6,7 +6,7 @@ CREATE TYPE novedades_calculadas_return AS (
   fecha date,
   cod_nov text,
   ficha text,
-  fichadas time_range,
+  fichadas time_multirange,
   sector text,
   annio integer,
   trabajable boolean,

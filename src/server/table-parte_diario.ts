@@ -83,7 +83,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
             isTable: false,
             from:`(select x.*,
                     CASE WHEN NOT requiere_fichadas AND NOT cuenta_horas
-                        OR fichadas IS NULL OR fichadas = time_range(null,null) THEN null
+                        OR fichadas IS NULL OR fichadas = time_multirange() THEN null
                         ELSE CONCAT(hora_texto(lower(fichadas)),
                             ' - ',
                             hora_texto(upper(fichadas)) 

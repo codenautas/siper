@@ -134,6 +134,7 @@ export function novedades_registradas(context: TableContext): TableDefinition{
                     FROM dias
                 )`},
             },
+            skipEnance: true,
         }
     };
 }
