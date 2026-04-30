@@ -179,9 +179,11 @@ $sql$
   rangos AS (
     SELECT
       grupo,
-      MIN(CASE WHEN tipo_fichada = 'E' THEN hora END) AS entrada,
-      MAX(CASE WHEN tipo_fichada = 'S' THEN hora END) AS salida
-    FROM eventos
+      MIN(CASE WHEN tipo_fichada = 'E' THEN CASE WHEN hora < bh.hora_desde THEN bh.hora_desde ELSE hora END END) AS entrada,
+      MAX(CASE WHEN tipo_fichada = 'S' THEN CASE WHEN hora > bh.hora_hasta THEN bh.hora_hasta ELSE hora END END) AS salida
+    FROM eventos,
+        personas p INNER JOIN bandas_horarias bh USING (banda_horaria)
+      WHERE p.idper = p_idper
     GROUP BY grupo
   )
   SELECT coalesce(range_agg(time_range(entrada, salida)), time_multirange()) AS presencia
