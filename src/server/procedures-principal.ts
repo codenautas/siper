@@ -18,6 +18,10 @@ import * as sql from 'mssql';
 import { ACCIONES, ESTADOS } from './table-sinc_fichadores';
 import { ConfigFichadasDb, getConfigFichadasDb, MAX_INTENTOS } from './app-principal';
 
+import { sqlLeftJoinLateralTrayectoriaLaboral } from './table-personas';
+
+const sqlExprCondicionCodNovSitRevista = 'nov_grupo is null or nov_grupo is not distinct from sr_grupo'
+
 async function prevalidarCargaDeNovedades(context: ProcedureContext, params:Partial<NovedadRegistrada>){
     var diaActualPeroTarde = (await context.client.query(
         `select fecha_actual() = $1 and (fecha_hora_actual() - fecha_actual()) > carga_nov_hasta_hora
@@ -151,8 +155,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             }
             if (!params.cancela) {
                 const permitidoCodNovParaSitRevista = (await context.client.query(
-                    `select sr.nov_grupo is null or sr.nov_grupo is not distinct from cn.sr_grupo
-                        from (${sqlPersonas}) p inner join situacion_revista sr using (situacion_revista),
+                    `select ${sqlExprCondicionCodNovSitRevista}
+                        from (${sqlPersonas}) p,
                             cod_novedades cn
                         where p.idper = $1 and cn.cod_nov = $2`,
                     [params.idper, params.cod_nov]
@@ -311,9 +315,12 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         prioritario
                     from usuarios u 
                         inner join roles r using (rol),
-                        (${sqlNovPer({idper, annio:params.annio})}) v
+                        ( select * from (${sqlNovPer({idper, annio:params.annio})}) p
+                            ${sqlLeftJoinLateralTrayectoriaLaboral}
+                        ) v
                     where ((con_dato and (v.comun is null or v.comun)) or v.registra and r.puede_cargar_dependientes or puede_cargar_todo)
                         and u.usuario = $1
+                        and (${sqlExprCondicionCodNovSitRevista})
                     order by v.cod_nov`,
                 [context.username]
             ).fetchAll();

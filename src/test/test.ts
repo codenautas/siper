@@ -240,6 +240,7 @@ describe("SiPer: " + testConfig.name, function(){
                         `delete from annios where ${AÑOS_DE_PRUEBA}`,
                         `delete from cod_novedades where novedad like 'PRUEBA AUTOM_TICA%'`,
                         `delete from sectores where nombre_sector like 'PRUEBA AUTOM_TICA%'`,
+                        `update cod_novedades set sr_grupo = 'CONT' where cod_nov = '${COD_COMISION}'`,
                         `select annio_preparar(d) from generate_series(${PRE_AÑO}, ${HASTA_AÑO}) d`,
                         `update fechas set laborable = false, repite = false, inamovible = false, leyenda = 'feriado '||fecha where fecha in (
                             '2000-03-06', 
@@ -1675,6 +1676,15 @@ describe("SiPer: " + testConfig.name, function(){
                     {annio:2000, cod_nov:COD_VACACIONES, cantidad:21  , usados:0 , pendientes:3, saldo:18  },
                     {annio:2001, cod_nov:COD_VACACIONES, cantidad:10  , usados:0 , pendientes:5, saldo:5   },
                 ], 'all', {fixedFields:{idper, cod_nov:COD_VACACIONES}})
+            })
+        })
+        it("tiene que ver un solo las novedades de su situación de revista", async function(){
+            await enNuevaPersona(this.test?.title!, {inicia_fichada, vacaciones: 20, situacion_revista: SITUACION_REVISTA_TERCER}, async ({idper}) => {
+                var result = await rrhhSession.callProcedure(ctts.novedades_disponibles, {idper, annio: Number(DESDE_AÑO)})
+                discrepances.showAndThrow(
+                    result.map(({cod_nov}) => ({cod_nov})), 
+                    [{cod_nov: COD_COMISION}]
+                );
             })
         })
     })

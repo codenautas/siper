@@ -36,7 +36,8 @@ export const sqlNovPer = (params:{idper?:string, annio?:number, abierto?:boolean
             nv.saldo < 0 as error_saldo_negativo,
             detalle_multiorigen,
             fch.error_falta_entrada,
-            a.abierto as annio_abierto
+            a.abierto as annio_abierto,
+            cn.sr_grupo
     from cod_novedades cn
     left join lateral (
         select p.idper, cd.cod_nov, true as error_falta_entrada from novedades_vigentes nv
