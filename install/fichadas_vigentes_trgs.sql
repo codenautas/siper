@@ -121,7 +121,7 @@ BEGIN
       WHERE annio = v_annio;
     IF lower(new.fichadas) IS NULL AND upper(new.fichadas) IS NULL THEN
       NEW.cod_nov := v_regla.codnov_sin_fichadas;
-    ELSIF lower(new.fichadas) IS NULL OR upper(new.fichadas) IS NULL THEN
+    ELSIF lower(new.fichadas) IS NULL AND cardinality(new.fichadas) <= 1 OR upper(new.fichadas) IS NULL THEN
       NEW.cod_nov := v_regla.codnov_unica_fichada;
     ELSE
       NEW.cod_nov := NULL;

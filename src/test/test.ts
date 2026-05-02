@@ -14,13 +14,14 @@ import { AppBackendConstructor,
 
 import * as ctts from "../common/contracts"
 
-import { date, datetime, timeInterval } from "best-globals";
+import { date, datetime, timeInterval, TimeInterval } from "best-globals";
 import { guarantee, DefinedType } from "guarantee-type"
 
 import { tipo_novedad, tipo_novedad_inicial, tipo_novedad_verificado } from "../server/table-tipos_novedad"
 
 import * as discrepances from 'discrepances';
 import { Time } from "../server/types-principal";
+import { sqlExprHoras } from '../server/table-parte_diario'
 
 const TIMEOUT_SPEED_BE = 30000 * (process.env.BP_TIMEOUT_SPEED as unknown as number ?? 1);
 const VERBOSE = process.argv.includes('--verbose');
@@ -1034,8 +1035,8 @@ describe("SiPer: " + testConfig.name, function(){
                     assert.equal(novedad.cod_nov, cod_nov);
                 })
             })
-            async function verificaFichadas(args:{idper:string, fecha:Date, fichadas: TIME|null, cod_nov?:string, cod_nov_final?:string}){
-                const {cod_nov_final, ...registroFichadasEsperado} = args;
+            async function verificaFichadas(args:{idper:string, fecha:Date, fichadas: TIME|null, cod_nov?:string, cod_nov_final?:string, horas?:{crudas:TimeInterval|string, consolidadas?:TimeInterval|string}|string}){
+                let {cod_nov_final, horas, ...registroFichadasEsperado} = args;
                 const {idper, fecha, cod_nov, fichadas} = registroFichadasEsperado;
                 if (fichadas != null) {
                     await rrhhSession.tableDataTest(ctts.fichadas_vigentes, [
@@ -1050,6 +1051,29 @@ describe("SiPer: " + testConfig.name, function(){
                     await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
                         registroFichadasEsperado
                     ], 'all', {fixedFields:{idper, fecha}})
+                }
+                if (horas != null) {
+                    if (typeof horas === 'string') {
+                        horas = {crudas: horas, consolidadas: horas}
+                    }
+                    var expected = {
+                        crudas: typeof horas.crudas == 'string' ? timeInterval.iso(horas.crudas) : horas.crudas ?? null,
+                        consolidadas: typeof horas.consolidadas == 'string' ? timeInterval.iso(horas.consolidadas) : horas.consolidadas ?? null
+                    }
+                    var result = (await server.inDbClient(ADMIN_REQ, client => 
+                        client.query(
+                            `select ${sqlExprHoras} as consolidadas, duration(fichadas) as crudas
+                                from novedades_vigentes nv 
+                                    inner join cod_novedades cn using (cod_nov)
+                                    inner join fechas f using (fecha)
+                                where idper = $1 and fecha = $2`,
+                            [idper, fecha]
+                        ).fetchUniqueRow()
+                    )).row;
+                    if (horas.consolidadas === undefined) { 
+                        horas.consolidadas = null;
+                    }
+                    discrepances.showAndThrow(result, expected);
                 }
             }
             it("fichadas está vacío mañana", async function(){
@@ -1074,10 +1098,10 @@ describe("SiPer: " + testConfig.name, function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = FECHA_ACTUAL;
                     const desde = '08:00:00';
-                    const hasta = '15:00:00';
+                    const hasta = '15:10:00';
                     await registrarFichada(server, {idper, fecha, hora: desde, tipo_fichada:'E'});
                     await registrarFichada(server, {idper, fecha, hora: hasta, tipo_fichada:'S'});
-                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta)})
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta), horas: {crudas: '07:10:00'}})
                 })
             })
             it("cuatro fichadas son dos tramos", async function(){
@@ -1091,7 +1115,7 @@ describe("SiPer: " + testConfig.name, function(){
                     await registrarFichada(server, {idper, fecha, hora: hasta, tipo_fichada:'S'});
                     await registrarFichada(server, {idper, fecha, hora: desde2, tipo_fichada:'E'});
                     await registrarFichada(server, {idper, fecha, hora: hasta2, tipo_fichada:'S'});
-                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta, desde2, hasta2)})
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta, desde2, hasta2), horas: {crudas: '08:20:00'}})
                 })
             })
             it("las fichadas se redondean al minuto para arriba y para abajo", async function(){
@@ -1144,6 +1168,31 @@ describe("SiPer: " + testConfig.name, function(){
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(null, hora), cod_nov: COD_ABANDONO})
                 })
             })
+            it("dos tramos y el último sin salida consolida como abandono", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    const fecha = FECHA_ACTUAL;
+                    const entrada1 = '08:00:00';
+                    const salida1  = '12:00:00';
+                    const entrada2 = '16:00:00';
+                    await registrarFichada(server, {idper, fecha, hora: entrada1, tipo_fichada:'E'});
+                    await registrarFichada(server, {idper, fecha, hora: salida1 , tipo_fichada:'S'});
+                    await registrarFichada(server, {idper, fecha, hora: entrada2, tipo_fichada:'E'});
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada1, salida1, entrada2, null), cod_nov: COD_ABANDONO, horas:{crudas:'4H', consolidadas:null}})
+                })
+            })
+            it("dos tramos con el primero incompleto está ok", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    const fecha = FECHA_ACTUAL;
+                    const salida1  = '11:00:00';
+                    const entrada2 = '12:00:00';
+                    const salida2  = '17:00:00';
+                    // await registrarFichada(server, {idper, fecha, hora: '08:00:00' , tipo_fichada:'E'});
+                    await registrarFichada(server, {idper, fecha, hora: salida1 , tipo_fichada:'S'});
+                    await registrarFichada(server, {idper, fecha, hora: entrada2, tipo_fichada:'E'});
+                    await registrarFichada(server, {idper, fecha, hora: salida2 , tipo_fichada:'S'});
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(null, salida1, entrada2, salida2), cod_nov: null, cod_nov_final: COD_PRED_PAS, horas:'5H'})
+                })
+            })
             it("dos fichadas normales consecutivas consolidan con su código de presencialidad", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = FECHA_ACTUAL;
@@ -1151,7 +1200,7 @@ describe("SiPer: " + testConfig.name, function(){
                     const salida  = '16:00:00';
                     await registrarFichada(server, {idper, fecha, hora: entrada, tipo_fichada:'E'});
                     await registrarFichada(server, {idper, fecha, hora: salida , tipo_fichada:'S'});
-                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov: null, cod_nov_final: COD_PRED_PAS})
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov: null, cod_nov_final: COD_PRED_PAS, horas:'07:00:00'})
                 })
             })
             it("las fichadas en feriados no cambian el cod_nov", async function(){
