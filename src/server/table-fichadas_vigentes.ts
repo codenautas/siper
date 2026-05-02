@@ -7,9 +7,10 @@ import {cod_nov} from "./table-cod_novedades";
 import {añoEnBaseAFecha} from "./table-fechas";
 
 // visor de fichadas
-export function fichadas_vigentes(_context: TableContext): TableDefinition{
+export function fichadas_vigentes(context: TableContext): TableDefinition{
     return {
         name: 'fichadas_vigentes',
+        editable: context.forDump,
         elementName: 'fichadas_vigentes',
         title:'Visor de fichadas',
         fields:[

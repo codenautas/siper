@@ -1049,6 +1049,10 @@ export const ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES   = 'B9001';
 export const ERROR_FALTA_FICHADA                    = 'B9002';
 export const ERROR_BRECHA_EN_CANTIDAD_DE_NOVEDADES  = 'B9003';
 export const AÑO_CERRADO                            = 'B9004';
+export const COD_NOV_NO_PERMITIDO                   = 'B9005';
+
+//////////// ERRORES BACKEND-PLUS:
+export const SE_EXPERABA_UN_REGISTRO                = '54011!';
 
 //////////// ERRORES POSTGRES: https://www.postgresql.org/docs/current/errcodes-appendix.html
 export const insufficient_privilege = '42501';

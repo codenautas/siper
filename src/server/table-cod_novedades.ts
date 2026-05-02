@@ -43,6 +43,7 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {name: 'eximido_fichar',               typeName: 'boolean' },
             {name: 'inicializacion'              , typeName: 'text'    , description:'una lista de algoritmos para inicializar'},
             {name: 'inicializacion_limite'       , typeName: 'integer' , description:'la cantidad con que se inicializa' },
+            {name: 'sr_grupo'                    , typeName: 'text'    , description:'grupo de situaciones de revista para esta novedad'},
         ],
         primaryKey:[cod_nov.name],
         constraints:[

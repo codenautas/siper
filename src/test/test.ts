@@ -230,6 +230,7 @@ describe("SiPer: " + testConfig.name, function(){
                         `delete from horarios_cod where horario like '%:13'`,
                         `delete from novedades_registradas where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
                         `delete from novedades_horarias where ${IDPER_DE_PRUEBA}`,
+                        `delete from fichadas_vigentes where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
                         `delete from novedades_vigentes where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
                         `delete from usuarios where ${IDPER_DE_PRUEBA}`,
                         `delete from personas where ${IDPER_DE_PRUEBA}`,
@@ -258,14 +259,14 @@ describe("SiPer: " + testConfig.name, function(){
                         `insert into sectores (subsector, nombre_sector, pertenece_a, nivel, tipo_sec) values
                             ('Z', 'PRUEBA AUTOMATICA Z'      , null , 0, 'DE'),
                             ('${SECTOR}', 'PRUEBA AUTOMATICA ${SECTOR}', 'Z' , 1, 'DG'),
-                            ('P', 'PRUEBA AUTOMATICA P'      , 'Z' , 1, 'DG'),
+                            ('P', 'PRUEBA AUTOMATICA P'      , 'Z'  , 1, 'DG'),
                             ('1', 'PRUEBA AUTOMATICA P.1'    , 'P'  , 2, 'SDG'),
                             ('3', 'PRUEBA AUTOMATICA P.1.3'  , 'P1' , 3, 'DIR'),
                             ('1', 'PRUEBA AUTOMATICA P.1.3.1', 'P13', 4, 'DEP'),
                             ('2', 'PRUEBA AUTOMATICA P.2'    , 'P'  , 2, 'SDG');
                         `,
-                        `insert into situacion_revista (situacion_revista, con_novedad, ini_per_nov_cant) values ('${SITUACION_REVISTA_PLANTA}', true, true)`,
-                        `insert into situacion_revista (situacion_revista, con_novedad, ini_per_nov_cant) values ('${SITUACION_REVISTA_TERCER}', true, false)`,
+                        `insert into situacion_revista (situacion_revista, ini_per_nov_cant, nov_grupo) values ('${SITUACION_REVISTA_PLANTA}', true , null  )`,
+                        `insert into situacion_revista (situacion_revista, ini_per_nov_cant, nov_grupo) values ('${SITUACION_REVISTA_TERCER}', false, 'CONT')`,
                     ])
                 })
                 console.log("Borrado y listo!")
@@ -517,7 +518,7 @@ describe("SiPer: " + testConfig.name, function(){
         })
         it("pide dos semanas de vacaciones, luego las corta y después pide trámite", async function(){
             this.timeout(TIMEOUT_SPEED * 8);
-            await enNuevaPersona(this.test?.title!, {vacaciones: 20, tramites: 4}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {vacaciones: 20, tramites: 4, situacion_revista: SITUACION_REVISTA_PLANTA}, async ({idper}) => {
                 await registrarNovedad(rrhhSession,
                     {desde:date.iso('2000-05-01'), hasta:date.iso('2000-05-12'), cod_nov:COD_VACACIONES, idper}
                 );
@@ -597,12 +598,12 @@ describe("SiPer: " + testConfig.name, function(){
             fallaEnLaQueQuieroOmitirElBorrado = false;
         })
         it("intento de cargar novedades sin permiso", async function(){
-            await enNuevaPersona(this.test?.title!, {}, async (persona) => {
+            await enNuevaPersona(this.test?.title!, {situacion_revista: SITUACION_REVISTA_PLANTA}, async (persona) => {
                 await expectError( async () => {
                     await registrarNovedad(basicoSession,
                         {desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-07'), cod_nov:COD_VACACIONES, idper: persona.idper}
                     );
-                }, ctts.insufficient_privilege);
+                }, ctts.SE_EXPERABA_UN_REGISTRO) // era preferible: ctts.insufficient_privilege);
             })
         })
         it("intento de cargar novedades en el pasado", async function(){
@@ -691,7 +692,7 @@ describe("SiPer: " + testConfig.name, function(){
         })
         it("un jefe puede cargar a alguien de su equipo", async function(){
             this.timeout(TIMEOUT_SPEED * 10);
-            await enNuevaPersona(this.test?.title!, {usuario:{sector:'P1'}}, async ({idper}) => {
+            await enNuevaPersona(this.test?.title!, {usuario:{sector:'P1'}, situacion_revista: SITUACION_REVISTA_PLANTA}, async ({idper}) => {
                 await registrarNovedad(jefe11Session,
                     {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper},
                 );
@@ -720,7 +721,7 @@ describe("SiPer: " + testConfig.name, function(){
                     await registrarNovedad(jefe11Session,
                         {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-03'), cod_nov:COD_VACACIONES, idper: persona.idper}
                     );
-                }, ctts.insufficient_privilege);
+                }, ctts.SE_EXPERABA_UN_REGISTRO) // era preferible: ctts.insufficient_privilege);
             })
         })
         it("no puede cargarse una novedad sin detalles cuando el codigo de novedad indica con detalles", async function(){
@@ -1311,6 +1312,17 @@ describe("SiPer: " + testConfig.name, function(){
                 ], 'all', {fixedFields:{idper, fecha:['2000-01-05','2000-01-07']}})
             })
         })
+        it("rechaza un cod_nov si no es del grupo", async function(){
+            await enNuevaPersona(this.test?.title!, {tramites: 4, inicia_fichada, situacion_revista: SITUACION_REVISTA_TERCER}, 
+                async ({idper}) => {
+                    await expectError( async () => {
+                        const fecha = FECHA_ACTUAL;
+                        var cod_nov = COD_VACACIONES;
+                        await registrarNovedad(rrhhSession, {desde:fecha, hasta:fecha, idper, cod_nov})
+                    }, ctts.COD_NOV_NO_PERMITIDO)
+                }
+            );
+        }) // ACA
     })
     describe("jerarquía de sectores", function(){
         async function pertenceceSector(sector:string, perteneceA:string){

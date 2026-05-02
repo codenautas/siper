@@ -149,6 +149,20 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 error.code = "B9004";
                 throw error;
             }
+            if (!params.cancela) {
+                const permitidoCodNovParaSitRevista = (await context.client.query(
+                    `select sr.nov_grupo is null or sr.nov_grupo is not distinct from cn.sr_grupo
+                        from (${sqlPersonas}) p inner join situacion_revista sr using (situacion_revista),
+                            cod_novedades cn
+                        where p.idper = $1 and cn.cod_nov = $2`,
+                    [params.idper, params.cod_nov]
+                ).fetchUniqueValue()).value;
+                if (!permitidoCodNovParaSitRevista) {
+                    var error = expected(new Error("No se puede asignar ese codigo de novedad a una persona con esa situacion de revista"));
+                    error.code = "B9005";
+                    throw error;
+                }
+            }
             var {idper, cod_nov, desde, hasta, dds0, dds1, dds2, dds3, dds4, dds5, dds6, cancela, detalles, tipo_novedad} = params;
             var result = await context.client.query(`INSERT INTO novedades_registradas
                 (idper, cod_nov, desde, hasta, dds0, dds1, dds2, dds3, dds4, dds5, dds6, cancela, detalles, tipo_novedad, fecha, usuario)
