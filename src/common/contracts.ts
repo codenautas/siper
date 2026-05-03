@@ -1,3 +1,4 @@
+import { TimeInterval } from 'best-globals';
 import { DefinedType, Description, is } from 'guarantee-type'
 
 type ArrayElement<ArrayType extends readonly unknown[]> = 
@@ -441,8 +442,8 @@ export const calendario_persona = {
         tipo_dia: is.string,
         novedad: is.string,
         mismo_mes: is.boolean,
-        entrada: is.nullable.string,
-        salida: is.nullable.string,
+        fichadas: is.nullable.string,
+        horas: is.class(TimeInterval),
         consolidada: is.boolean,
         requiere_fichadas: is.boolean,
         injustificado: is.boolean,

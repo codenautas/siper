@@ -19,6 +19,7 @@ import { ACCIONES, ESTADOS } from './table-sinc_fichadores';
 import { ConfigFichadasDb, getConfigFichadasDb, MAX_INTENTOS } from './app-principal';
 
 import { sqlLeftJoinLateralTrayectoriaLaboral } from './table-personas';
+import { sqlExprHoras } from './table-parte_diario'
 
 const sqlExprCondicionCodNovSitRevista = 'nov_grupo is null or nov_grupo is not distinct from sr_grupo'
 
@@ -238,16 +239,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         end as tipo_dia,
                         cn.novedad,
                         extract(month from f.fecha) = mes as mismo_mes,
-                        case
-                        when f.fichadas_consolidadas
-                            then lower(v.fichadas)
-                            else lower(fv.fichadas)
-                        end as entrada,
-                        case
-                        when f.fichadas_consolidadas
-                            then upper(v.fichadas)
-                            else upper(fv.fichadas)
-                        end as salida,
+                        v.fichadas,
+                        ${sqlExprHoras} as horas,
                         f.fichadas_consolidadas or f.fecha < coalesce(p.inicia_fichada, p.registra_novedades_desde) as consolidada,
                         cn.requiere_fichadas,
                         cn.injustificado
@@ -264,7 +257,6 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         left join novedades_vigentes v on v.fecha = f.fecha and v.idper = $1
                         left join personas p on p.idper = v.idper
                         left join cod_novedades cn on cn.cod_nov = v.cod_nov
-                        left join fichadas_vigentes fv on fv.fecha = f.fecha and fv.idper = p.idper
                     where f.fecha between desde and hasta
                     order by f.fecha`,
                 [idper, desde]

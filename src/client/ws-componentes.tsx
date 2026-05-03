@@ -235,7 +235,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
             </Box>
             {calendario.map(semana => <Box key={semana[0].semana} className="calendario-semana">
                 {semana.map((dia, i) => {
-                    const diaTieneFichada = !!(dia.entrada || dia.salida);
+                    const diaTieneFichada = dia.fichadas != null;
                     const mostrarFichadaEnDia = diaTieneFichada && (!dia.consolidada || mostrarfichadasconsolidadas);
                     return <Tooltip key={dia.dia || "V" + i} title={dia.novedad || "Sin novedad"} arrow>
                         <div
@@ -260,9 +260,9 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                             }}
                         >
                             <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
-                            {mostrarFichadaEnDia && dia.entrada ? (
-                                <span className="calendario-dia-fichada-entrada">
-                                    {dia.entrada}
+                            {mostrarFichadaEnDia && dia.horas ? (
+                                <span className="calendario-dia-horas">
+                                    {dia.horas.toString().replace(/^(\d+):(\d+):\d+$/, (_, h, m) => `${+h}ₕ${m == '00' ? '' : m}`}
                                 </span>
                             ) : null}
                             <span 
@@ -275,11 +275,21 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                             >
                                 {dia.cod_nov ?? ''}
                             </span>
-                            {mostrarFichadaEnDia && dia.salida ? (
-                                <span className="calendario-dia-fichada-salida">
-                                    {dia.salida}
-                                </span>
-                            ) : null}
+                            <span className="calendario-dia-fichadas">
+                                {mostrarFichadaEnDia && dia.fichadas != null && dia.fichadas.slice(1, -1) != '' ? dia.fichadas.slice(1, -1) // saca las llaves externas
+                                    .match(/[(\[][^)\]]*[)\]]/g)! // captura cada rango
+                                    .map((range, i) => {
+                                        const inner = range.slice(1, -1); // saca los delimitadores del rango
+                                        const [from, to] = inner.split(',');
+                                        const fmt = (t: string) => 
+                                            t == null || t == '' ? <span>{`\u2007\u2007\u00A0\u2007\u2007`}</span> : 
+                                            <span> {t.replace(/^(\d+):(\d+):\d+$/, (_, h, m) => `${+h}:${m}`} </span>;
+                                        return <div key={i}>
+                                            {fmt(from)} {' 🢒 '} {fmt(to)}
+                                        </div>;
+                                    })
+                                : ''}
+                            </span>
                         </div>
                     </Tooltip>
                 })}
