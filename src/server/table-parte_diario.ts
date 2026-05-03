@@ -38,7 +38,8 @@ select
         cn.requiere_fichadas,
         cn.cuenta_horas,
         nv.fichadas,
-        ${sqlExprHoras}  as horas
+        ${sqlExprHoras} as horas,
+        cn.injustificado
     from
         (${sqlPersonas}) p
         inner join fechas f on f.fecha between p.registra_novedades_desde and coalesce(p.fecha_egreso, '3000-01-01'::date)
@@ -76,6 +77,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
             { name: 'corridos', typeName: 'integer' },
             { name: 'banda_horaria', typeName: 'text'},
             { name: 'bh_descripcion', typeName: 'text', title: 'descripción' },
+            { name: 'injustificado' , typeName: 'boolean'},
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],
         hiddenColumns: [],
