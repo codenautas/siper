@@ -90,7 +90,7 @@ Ejemplo de campos booleanos conocidos:
 | Campo | Descripción |
 |---|---|
 | `requiere_fichadas` | La novedad es válida solo si existe fichada de entrada y salida |
-| `pierde_presentismo` | La persona pierde el presentismo cuando tiene esta novedad |
+| `injustificado` | La persona podría perder el presentismo cuando tiene esta novedad |
 
 > 📝 Esta tabla es de configuración. No se debeescribir lógica que dependa del código de la novedad `cod_nov` siempre hay que depender de los campos booleanos de `cod_novedades`. O sea no hardcodear reglas por código de novedad. En los casos de prueba sí se pueden utilizar códigos en base a un ejemplo de posible configuración de `cod_novedades` que está en `install/cod_novedades.tab`
 

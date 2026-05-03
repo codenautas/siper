@@ -19,7 +19,7 @@ export const cod_nov = {
         total: is.nullable.boolean,
         parcial: is.nullable.boolean,
         comun: is.nullable.boolean,
-        pierde_presentismo: is.nullable.boolean,
+        injustificado: is.nullable.boolean,
         cuenta_horas: is.nullable.boolean,
         requiere_fichadas: is.nullable.boolean,
         requiere_entrada: is.nullable.boolean,
@@ -444,7 +444,8 @@ export const calendario_persona = {
         entrada: is.nullable.string,
         salida: is.nullable.string,
         consolidada: is.boolean,
-        requiere_fichadas: is.boolean
+        requiere_fichadas: is.boolean,
+        injustificado: is.boolean,
     })
 }
 

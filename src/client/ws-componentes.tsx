@@ -241,7 +241,8 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                         <div
                             className={`calendario-dia tipo-dia-${dia.tipo_dia} 
                                 ${fecha && sameValue(dia.fecha, fecha) ? 'calendario-dia-seleccionado' : ''}
-                                ${fechaHasta != null && fecha <= dia.fecha && dia.fecha <= fechaHasta ? 'calendario-dia-seleccionado' : ''}`}
+                                ${fechaHasta != null && fecha <= dia.fecha && dia.fecha <= fechaHasta ? 'calendario-dia-seleccionado' : ''}
+                            `}
                             es-otro-mes={dia.mismo_mes ? "no" : "si"}
                             onClick={() => {
                                 if (!dia.fecha || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades || (dia.fecha < fechaActual && !infoUsuario.puede_corregir_el_pasado)) return;
@@ -269,6 +270,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                                     ${dia ? 'con_novedad_si' : 'con_novedad_no' } 
                                     ${diaTieneFichada ? 'calendario-dia-con-fichada' : ''} 
                                     ${dia.requiere_fichadas && !dia.consolidada ? 'calendario-requiere-fichada-no-consolidado' : ''}
+                                    ${dia.injustificado ? 'injustificado' : ''}
                                 `}
                             >
                                 {dia.cod_nov ?? ''}

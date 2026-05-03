@@ -32,7 +32,7 @@ export function cod_novedades(context:TableContext):TableDefinition{
             {name: 'prioritario' , typeName: 'boolean', description:'aparecen en la lista reducida'},
             {name: 'comun'       , typeName: 'boolean', description:'aparecen en la lista del usuario básico (aparecen las novedades que se hayan usado en el año o las que tengan límites salvo comun = no)'},
             {name: 'es_inicial'  , typeName: 'boolean', description:'si puede usarse como novedad inicial'},
-            {name: 'pierde_presentismo',           typeName: 'boolean' },
+            {name: 'injustificado'               , typeName: 'boolean' },
             {name: 'cuenta_horas',                 typeName: 'boolean' },
             {name: 'requiere_fichadas',            typeName: 'boolean' },
             {name: 'requiere_entrada',             typeName: 'boolean' },
