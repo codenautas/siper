@@ -84,13 +84,18 @@ export function parte_diario(_context: TableContext): TableDefinition {
         sql:{
             isTable: false,
             from:`(select x.*,
-                    CASE WHEN NOT requiere_fichadas AND NOT cuenta_horas
-                        OR fichadas IS NULL OR fichadas = time_multirange() THEN null
-                        ELSE CONCAT(hora_texto(lower(fichadas)),
-                            ' - ',
-                            hora_texto(upper(fichadas)) 
-                        )
-                    END as fichada,
+                    (SELECT string_agg(
+                        CASE WHEN lower_inf(rng) THEN 'X' 
+                            ELSE to_char(lower(rng), 'FMHH24:MI') 
+                        END
+                        || ' - ' ||
+                        CASE WHEN upper_inf(rng) THEN 'X' 
+                            ELSE to_char(upper(rng), 'FMHH24:MI') 
+                        END,
+                        ' / '
+                        ORDER BY ord
+                    )
+                    FROM unnest(fichadas) WITH ORDINALITY AS t(rng, ord)) as fichada,
                     hora_texto(horario_entrada) || ' - ' || hora_texto(horario_Salida) as horario
                 from (${sqlParteDiario}) x
             )`,

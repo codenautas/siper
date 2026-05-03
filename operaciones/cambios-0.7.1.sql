@@ -52,6 +52,8 @@ ALTER TABLE siper.novedades_vigentes ALTER COLUMN "fichadas" TYPE siper.time_mul
     ELSE siper.time_multirange(fichadas)
   END;
 
+ALTER TABLE siper.novedades_vigentes ADD COLUMN horas interval;
+
 ALTER TABLE siper.situacion_revista ADD COLUMN nov_grupo text;
 ALTER TABLE siper.situacion_revista DROP COLUMN "con_novedad";
 ALTER TABLE siper.situacion_revista ADD CONSTRAINT "nov_grupo<>''" CHECK ((nov_grupo <> ''::text));
