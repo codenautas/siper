@@ -262,7 +262,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                             <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
                             {mostrarFichadaEnDia && dia.horas ? (
                                 <span className="calendario-dia-horas">
-                                    {dia.horas.toString().replace(/^(\d+):(\d+):\d+$/, (_, h, m) => `${+h}ₕ${m == '00' ? '' : m}`}
+                                    {dia.horas.toString().replace(/^(\d+):(\d+):\d+$/, (_, h, m) => `${+h}ₕ${m}`)}
                                 </span>
                             ) : null}
                             <span 
@@ -283,7 +283,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                                         const [from, to] = inner.split(',');
                                         const fmt = (t: string) => 
                                             t == null || t == '' ? <span>{`\u2007\u2007\u00A0\u2007\u2007`}</span> : 
-                                            <span> {t.replace(/^(\d+):(\d+):\d+$/, (_, h, m) => `${+h}:${m}`} </span>;
+                                            <span> {t.replace(/^(\d+):(\d+):\d+$/, (_, h, m) => `${+h}:${m}`)} </span>;
                                         return <div key={i}>
                                             {fmt(from)} {' 🢒 '} {fmt(to)}
                                         </div>;
