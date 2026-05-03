@@ -19,7 +19,6 @@ import { ACCIONES, ESTADOS } from './table-sinc_fichadores';
 import { ConfigFichadasDb, getConfigFichadasDb, MAX_INTENTOS } from './app-principal';
 
 import { sqlLeftJoinLateralTrayectoriaLaboral } from './table-personas';
-import { sqlExprHoras } from './table-parte_diario'
 
 const sqlExprCondicionCodNovSitRevista = 'nov_grupo is null or nov_grupo is not distinct from sr_grupo'
 
@@ -240,7 +239,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         cn.novedad,
                         extract(month from f.fecha) = mes as mismo_mes,
                         v.fichadas,
-                        ${sqlExprHoras} as horas,
+                        v.horas,
                         f.fichadas_consolidadas or f.fecha < coalesce(p.inicia_fichada, p.registra_novedades_desde) as consolidada,
                         cn.requiere_fichadas,
                         cn.injustificado

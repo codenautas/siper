@@ -21,7 +21,6 @@ import { tipo_novedad, tipo_novedad_inicial, tipo_novedad_verificado } from "../
 
 import * as discrepances from 'discrepances';
 import { Time } from "../server/types-principal";
-import { sqlExprHoras } from '../server/table-parte_diario'
 
 const TIMEOUT_SPEED_BE = 30000 * (process.env.BP_TIMEOUT_SPEED as unknown as number ?? 1);
 const VERBOSE = process.argv.includes('--verbose');
@@ -1064,7 +1063,7 @@ describe("SiPer: " + testConfig.name, function(){
                     }
                     var result = (await server.inDbClient(ADMIN_REQ, client => 
                         client.query(
-                            `select ${sqlExprHoras} as consolidadas, duration(fichadas) as crudas
+                            `select horas as consolidadas, duration(fichadas) as crudas
                                 from novedades_vigentes nv 
                                     inner join cod_novedades cn using (cod_nov)
                                     inner join fechas f using (fecha)
@@ -1170,7 +1169,7 @@ describe("SiPer: " + testConfig.name, function(){
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(null, hora), cod_nov: COD_ABANDONO})
                 })
             })
-            it("dos tramos y el último sin salida consolida como abandono", async function(){
+            it("dos tramos y el último sin salida consolida ok", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = FECHA_ACTUAL;
                     const entrada1 = '08:00:00';
@@ -1179,7 +1178,10 @@ describe("SiPer: " + testConfig.name, function(){
                     await registrarFichada(server, {idper, fecha, hora: entrada1, tipo_fichada:'E'});
                     await registrarFichada(server, {idper, fecha, hora: salida1 , tipo_fichada:'S'});
                     await registrarFichada(server, {idper, fecha, hora: entrada2, tipo_fichada:'E'});
-                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada1, salida1, entrada2, null), cod_nov: COD_ABANDONO, horas:{crudas:'4H', consolidadas:null}})
+                    // si fuera abandono sería lo siguiente. Dependerá del código de novedad que tenga u otros criterios futuros
+                    // await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada1, salida1, entrada2, null), cod_nov: COD_ABANDONO, horas:{crudas:'4H', consolidadas:null}})
+                    // pero como es ok
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada1, salida1, entrada2, null), cod_nov: null, cod_nov_final: COD_PRED_PAS, horas:'4H'})
                 })
             })
             it("dos tramos con el primero incompleto está ok", async function(){

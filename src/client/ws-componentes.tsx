@@ -285,7 +285,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                                             t == null || t == '' ? <span>{`\u2007\u2007\u00A0\u2007\u2007`}</span> : 
                                             <span> {t.replace(/^(\d+):(\d+):\d+$/, (_, h, m) => `${+h}:${m}`)} </span>;
                                         return <div key={i}>
-                                            {fmt(from)} {' 🢒 '} {fmt(to)}
+                                            {fmt(from)} {' \u00A0 '} {fmt(to)}
                                         </div>;
                                     })
                                 : ''}

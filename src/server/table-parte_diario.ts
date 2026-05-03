@@ -9,8 +9,6 @@ import {sector} from "./table-sectores";
 import { sqlNovedadesVigentesConDesdeHastaHabiles } from "./table-novedades_vigentes";
 import { sqlPersonas } from "./table-personas";
 
-export const sqlExprHoras = `CASE WHEN f.fichadas_consolidadas AND cn.cuenta_horas THEN duration(fichadas) ELSE null END`;
-
 export const sqlParteDiario= `
 select 
         p.idper, 
@@ -38,7 +36,7 @@ select
         cn.requiere_fichadas,
         cn.cuenta_horas,
         nv.fichadas,
-        ${sqlExprHoras} as horas,
+        nv.horas,
         cn.injustificado
     from
         (${sqlPersonas}) p

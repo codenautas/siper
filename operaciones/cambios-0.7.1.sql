@@ -31,7 +31,8 @@ CREATE TYPE siper.novedades_calculadas_return AS (
 	annio integer,
 	trabajable boolean,
 	detalles text,
-	cod_nov_ini text
+	cod_nov_ini text,
+    horas interval
 );
 
 ALTER TABLE cod_novedades RENAME COLUMN pierde_presentismo TO injustificado;
@@ -204,9 +205,9 @@ BEGIN
       INTO v_regla
       FROM reglas
       WHERE annio = v_annio;
-    IF lower(new.fichadas) IS NULL AND upper(new.fichadas) IS NULL THEN
+    IF cardinality(new.fichadas) <= 1 AND lower(new.fichadas) IS NULL AND upper(new.fichadas) IS NULL THEN
       NEW.cod_nov := v_regla.codnov_sin_fichadas;
-    ELSIF lower(new.fichadas) IS NULL AND cardinality(new.fichadas) <= 1 OR upper(new.fichadas) IS NULL THEN
+    ELSIF cardinality(new.fichadas) <= 1 AND (lower(new.fichadas) IS NULL OR upper(new.fichadas) IS NULL) THEN
       NEW.cod_nov := v_regla.codnov_unica_fichada;
     ELSE
       NEW.cod_nov := NULL;
@@ -253,7 +254,8 @@ $BODY$
         coalesce(CASE WHEN fichadas_consolidadas AND nr_requiere_fichadas AND fecha >= fecha_inicio_fichada THEN fv_cod_nov ELSE null END, nr_cod_nov, cod_nov_pred_fecha) 
       ELSE null END as cod_nov, 
       ficha, fichadas, sector, annio,
-      trabajable, detalles, cod_nov_ini
+      trabajable, detalles, cod_nov_ini,
+      CASE WHEN fichadas_consolidadas AND nr_cuenta_horas THEN duration(fichadas) ELSE null END as horas
     FROM (
       SELECT p.idper, p.ficha, f.fecha, f.fichadas_consolidadas,
           (f.dds BETWEEN 1 AND 5) AND (laborable is not false OR inamovible is not true AND f.dds NOT BETWEEN 1 AND 5) as trabajable,
@@ -261,18 +263,19 @@ $BODY$
           CASE WHEN (nr.c_dds IS NOT TRUE -- FILTRO PARA DIAGRAMADO POR DIA DE SEMANA:
             OR CASE extract(DOW from f.fecha) WHEN 0 THEN nr.dds0 WHEN 1 THEN nr.dds1 WHEN 2 THEN nr.dds2 WHEN 3 THEN nr.dds3 WHEN 4 THEN nr.dds4 WHEN 5 THEN nr.dds5 WHEN 6 THEN nr.dds6 END
           ) THEN nr.cod_nov ELSE null END as nr_cod_nov,
-          COALESCE(nr.requiere_fichadas, nr.cod_nov IS NULL) as nr_requiere_fichadas,
+          COALESCE(CASE WHEN nr.cod_nov IS NOT NULL THEN nr.requiere_fichadas ELSE ni.requiere_fichadas END, nr.cod_nov IS NULL) as nr_requiere_fichadas,
           nr.corridos as nr_corridos,
           cod_nov_pred_fecha, 
           ni.cod_nov as cod_nov_ini,
           fv.fichadas,
           fv.cod_nov as fv_cod_nov,
-          COALESCE(p.inicia_fichada, p.registra_novedades_desde) as fecha_inicio_fichada
+          COALESCE(p.inicia_fichada, p.registra_novedades_desde) as fecha_inicio_fichada,
+          COALESCE(CASE WHEN nr.cod_nov IS NOT NULL THEN nr.cuenta_horas ELSE ni.cuenta_horas END, nr.cod_nov IS NULL) as nr_cuenta_horas
         FROM fechas f INNER JOIN annios a USING (annio) CROSS JOIN personas p
           LEFT JOIN fichadas_vigentes fv USING (idper, fecha)
           LEFT JOIN LATERAL (
             SELECT nr.cod_nov, cn.corridos, nr.detalles, cn.requiere_fichadas, 
-                dds0, dds1, dds2, dds3, dds4, dds5, dds6, cn.c_dds
+                dds0, dds1, dds2, dds3, dds4, dds5, dds6, cn.c_dds, cn.cuenta_horas
               FROM novedades_registradas nr LEFT JOIN cod_novedades cn ON nr.cod_nov = cn.cod_nov
               LEFT JOIN tipos_novedad tn USING (tipo_novedad)
               WHERE f.fecha BETWEEN nr.desde AND nr.hasta
@@ -280,8 +283,8 @@ $BODY$
               ORDER BY tn.orden, nr.idr DESC LIMIT 1
           ) nr ON true
           LEFT JOIN LATERAL (
-            SELECT nr.cod_nov, cn.corridos, nr.detalles, 
-                dds0, dds1, dds2, dds3, dds4, dds5, dds6, cn.c_dds
+            SELECT nr.cod_nov, cn.corridos, nr.detalles, cn.requiere_fichadas,  
+                dds0, dds1, dds2, dds3, dds4, dds5, dds6, cn.c_dds, cn.cuenta_horas
               FROM novedades_registradas nr LEFT JOIN cod_novedades cn ON nr.cod_nov = cn.cod_nov
               WHERE f.fecha BETWEEN nr.desde AND nr.hasta
                 AND p.idper = nr.idper
@@ -335,12 +338,13 @@ MERGE INTO novedades_vigentes nv
       OR nv.detalles IS DISTINCT FROM q.detalles
       OR nv.trabajable IS DISTINCT FROM q.trabajable
       OR nv.cod_nov_ini IS DISTINCT FROM q.cod_nov_ini
+      OR nv.horas IS DISTINCT FROM q.horas
       ) THEN
     UPDATE SET ficha = q.ficha, cod_nov = q.cod_nov, fichadas = q.fichadas, sector = q.sector, detalles = q.detalles,
-      trabajable = q.trabajable, cod_nov_ini = q.cod_nov_ini
+      trabajable = q.trabajable, cod_nov_ini = q.cod_nov_ini, horas = q.horas
   WHEN NOT MATCHED THEN
-    INSERT   (  idper,   ficha,   fecha,   cod_nov,   fichadas,   sector,   detalles,   trabajable,   cod_nov_ini)
-      VALUES (q.idper, q.ficha, q.fecha, q.cod_nov, q.fichadas, q.sector, q.detalles, q.trabajable, q.cod_nov_ini)
+    INSERT   (  idper,   ficha,   fecha,   cod_nov,   fichadas,   sector,   detalles,   trabajable,   cod_nov_ini,   horas)
+      VALUES (q.idper, q.ficha, q.fecha, q.cod_nov, q.fichadas, q.sector, q.detalles, q.trabajable, q.cod_nov_ini, q.horas)
   WHEN NOT MATCHED BY SOURCE AND nv.fecha BETWEEN p_desde AND p_hasta/*idper** AND nv.idper = p_idper**idper*/ THEN DELETE;
 END;
 $BODY$;
