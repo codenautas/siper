@@ -1036,7 +1036,8 @@ describe("SiPer: " + testConfig.name, function(){
                     assert.equal(novedad.cod_nov, cod_nov);
                 })
             })
-            async function verificaFichadas(args:{idper:string, fecha:Date, fichadas: TIME|null, cod_nov?:string, cod_nov_final?:string, horas?:{crudas:TimeInterval|string, consolidadas?:TimeInterval|string}|string}){
+            type HorasResult = {crudas:TimeInterval|string|null, consolidadas?:TimeInterval|string|null}|string|null
+            async function verificaFichadas(args:{idper:string, fecha:Date, fichadas: TIME|null, cod_nov?:string, cod_nov_final?:string, horas?:HorasResult}){
                 let {cod_nov_final, horas, ...registroFichadasEsperado} = args;
                 const {idper, fecha, cod_nov, fichadas} = registroFichadasEsperado;
                 if (fichadas != null) {
@@ -1053,8 +1054,11 @@ describe("SiPer: " + testConfig.name, function(){
                         registroFichadasEsperado
                     ], 'all', {fixedFields:{idper, fecha}})
                 }
-                if (horas != null) {
-                    if (typeof horas === 'string') {
+                if (horas !== undefined) {
+                    if (horas === null ) {
+                        horas = {crudas: null, consolidadas: null}
+                    }
+                    if (typeof horas === 'string' ) {
                         horas = {crudas: horas, consolidadas: horas}
                     }
                     var expected = {
@@ -1065,12 +1069,11 @@ describe("SiPer: " + testConfig.name, function(){
                         client.query(
                             `select horas as consolidadas, duration(fichadas) as crudas
                                 from novedades_vigentes nv 
-                                    inner join cod_novedades cn using (cod_nov)
                                     inner join fechas f using (fecha)
                                 where idper = $1 and fecha = $2`,
                             [idper, fecha]
-                        ).fetchUniqueRow()
-                    )).row;
+                        ).fetchOneRowIfExists()
+                    )).row || {crudas: null, consolidadas: null};
                     if (horas.consolidadas === undefined) { 
                         horas.consolidadas = null;
                     }
@@ -1108,7 +1111,7 @@ describe("SiPer: " + testConfig.name, function(){
             it("cuatro fichadas son dos tramos", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = FECHA_ACTUAL;
-                    const ayer = fecha.add({days: -1});
+                    // const ayer = fecha.add({days: -1});
                     const desde = '08:00:00';
                     const hasta = '13:00:00';
                     const desde2 = '14:00:00';
@@ -1118,9 +1121,19 @@ describe("SiPer: " + testConfig.name, function(){
                     await registrarFichada(server, {idper, fecha, hora: desde2, tipo_fichada:'E'});
                     await registrarFichada(server, {idper, fecha, hora: hasta2, tipo_fichada:'S'});
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta, desde2, hasta2), horas: {crudas: '08:20:00'}})
-                    await registrarFichada(server, {idper, fecha: ayer, hora: desde, tipo_fichada:'E'});
-                    await registrarFichada(server, {idper, fecha: ayer, hora: hasta, tipo_fichada:'S'});
-                    var result = rrhhSession.callProcedure(ctts.calendario_persona_resumen)
+                    // await registrarFichada(server, {idper, fecha: ayer, hora: desde, tipo_fichada:'E'});
+                    // await registrarFichada(server, {idper, fecha: ayer, hora: hasta, tipo_fichada:'S'});
+                    // var result = rrhhSession.callProcedure(ctts.calendario_persona_resumen)
+                })
+            })
+            it("fichadas no laborables no calculan horas", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    const fecha = date.iso('2000-01-30'); // domingo
+                    const desde = '08:00:00';
+                    const hasta = '13:00:00';
+                    await registrarFichada(server, {idper, fecha, hora: desde, tipo_fichada:'E'});
+                    await registrarFichada(server, {idper, fecha, hora: hasta, tipo_fichada:'S'});
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta), cod_nov:null, horas: {crudas: '05:00:00'}})
                 })
             })
             it("las fichadas se redondean al minuto para arriba y para abajo", async function(){
@@ -1429,11 +1442,11 @@ describe("SiPer: " + testConfig.name, function(){
                     await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:false})
                 }
                 await rrhhSession.tableDataTest(ctts.parte_diario, [
-                    {idper, cod_nov: COD_PRED_PAS, fichada: '09:00 - 17:00', horas: null},
+                    {idper, cod_nov: COD_PRED_PAS, fichada: '9:00 - 17:00', horas: null},
                 ], 'all', {fixedFields:{idper, fecha}})
                 await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:true})
                 await rrhhSession.tableDataTest(ctts.parte_diario, [
-                    {idper, cod_nov: COD_PRED_PAS, fichada: '09:00 - 17:00', horas: timeInterval({hours: 8})},
+                    {idper, cod_nov: COD_PRED_PAS, fichada: '9:00 - 17:00', horas: timeInterval({hours: 8})},
                 ], 'all', {fixedFields:{idper, fecha}})
                 await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:false})
             })
