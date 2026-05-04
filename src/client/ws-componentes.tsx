@@ -29,7 +29,7 @@ import {
     Tooltip
 } from "@mui/material";
 
-import { date, RealDate, compareForOrder, sameValue } from "best-globals";
+import { date, RealDate, compareForOrder, TimeInterval, sameValue } from "best-globals";
 
 import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, NovedadRegistrada, ParametrosResult,
     InfoUsuario,
@@ -111,6 +111,24 @@ function puedeCargarNovedades(infoUsuario: InfoUsuario) {
     );
 }
 
+type Periodo = {mes:number, annio:number}
+
+function horasStr(horas:TimeInterval|any){
+    return (horas instanceof TimeInterval ? horas.toHm() : horas ?? '00:00').replace(/^(-?\d+):(\d+)(:\d+)?$/, (_:string, h:string, m:string) => `${+h}ₕ${m}`)
+}
+
+function CalendarioResumen(props:{conn:Connector, idper:string, periodo:Periodo}){
+    const {conn, idper, periodo} = props;
+    var [resumen, setResumen] = useState<ctts.CalendarioResumenResult>({} as ctts.CalendarioResumenResult);
+    useEffect(function(){
+        setEfimero(resumen);
+        conn.ajax.calendario_persona_resumen({idper, ...periodo}).then(result => {
+            setResumen(result);
+        }).catch(logError);
+    }, [conn, idper, periodo.annio, periodo.mes]);
+    return <Box>{`${horasStr(resumen.suma_horas)} − 7ₕ × ${resumen.dias_promediados??0}`}<small><small>d</small></small> = {horasStr(resumen.saldo_horas)}</Box>
+}
+
 function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, fechaActual: RealDate, 
     annio:number, infoUsuario:InfoUsuario
     onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, ultimaNovedad?: ULTIMA_NOVEDAD
@@ -118,7 +136,6 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 }){
     const {conn, fecha, fechaHasta, idper, ultimaNovedad, fechaActual, annio, infoUsuario} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
-    type Periodo = {mes:number, annio:number}
     const [mes, setMes] = useState(fecha.getMonth()+1);
     const [periodo, setPeriodo] = [{mes, annio}, (x:Periodo) => {setMes(x.mes); props.onAnnio?.(x.annio);}]
     const retrocederUnMes = ({mes: (mes == 1 ? 12 : mes - 1), annio: (annio - (mes == 1  ? 1 : 0 ))})
@@ -176,6 +193,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
     const isFutureMonth = periodo.mes > fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio > fechaActual.getFullYear();
 
     return <Componente componentType="calendario-mes" esEfimero={calendario}>
+        <CalendarioResumen conn={conn} idper={idper} periodo={periodo}/>
         <Box className="box-flex">
             <Box>
                 <Button onClick={_ => setPeriodo(retrocederUnMes)} disabled={!botonRetrocederHabilitado} className="siper-button" boton-negro="si" ><ICON.ChevronLeft/></Button>
@@ -731,6 +749,7 @@ declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: () => Promise<DefinedType<typeof ctts.info_usuario.result>>;
         calendario_persona: (params:DefinedType<typeof ctts.calendario_persona.parameters>) => Promise<CalendarioResult[]>;
+        calendario_persona_resumen: (params:DefinedType<typeof ctts.calendario_persona_resumen.parameters>) => Promise<ctts.CalendarioResumenResult>;
         novedades_disponibles: (params:{
             idper:string
             annio:number

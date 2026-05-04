@@ -452,6 +452,26 @@ export const calendario_persona = {
 
 export type CalendarioResult = DefinedType<typeof calendario_persona.result>
 
+export const calendario_persona_resumen = {
+    procedure: 'calendario_persona_resumen',
+    parameters: is.object({
+        idper: is.string,
+        annio: is.number,
+        mes: is.number
+    }),
+    result: is.object({
+        dias_mes: is.number,
+        laborables: is.number,
+        dias_promediados: is.number,
+        promedio_horas: is.class(TimeInterval),
+        suma_horas: is.class(TimeInterval),
+        saldo_horas: is.string,
+        // saldo_horas: is.class(TimeInterval),
+    })
+}
+
+export type CalendarioResumenResult = DefinedType<typeof calendario_persona_resumen.result>
+
 export const horario_semana_vigente = {
     procedure: 'horario_semana_vigente',
     parameters: is.object({

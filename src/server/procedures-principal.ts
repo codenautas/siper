@@ -264,6 +264,33 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         }
     },
     {
+        action: 'calendario_persona_resumen',
+        parameters: [
+            {name:'idper'     , typeName:'text'   },
+            {name:'annio'     , typeName:'integer'},
+            {name:'mes'       , typeName:'integer'},
+        ],
+        coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof calendario_persona.parameters>){
+            const {idper, annio, mes} = params;
+            const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
+            const info = await context.client.query(
+                `SELECT count(*) as dias_mes,
+                        count(*) FILTER (WHERE laborable is not false and dds between 1 and 5) as laborables,
+                        count(horas) as dias_promediados,
+                        avg(horas) as promedio_horas,
+                        sum(horas) as suma_horas,
+                        (sum(horas) - make_interval(hours => (count(horas) * 7)::int))::text as saldo_horas
+                    FROM novedades_vigentes nv INNER JOIN fechas USING (fecha)
+                        INNER JOIN personas p USING (idper)
+                        WHERE nv.fecha BETWEEN $2 AND $2::date + interval '1 month' - interval '1 day'
+                        AND nv.idper = $1
+                `,
+                [idper, desde]
+            ).fetchUniqueRow();
+            return info.row
+        }
+    },
+    {
         action: 'historico_persona',
         parameters: [
             {name:'idper'      , typeName:'text'   },

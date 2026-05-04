@@ -1108,6 +1108,7 @@ describe("SiPer: " + testConfig.name, function(){
             it("cuatro fichadas son dos tramos", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = FECHA_ACTUAL;
+                    const ayer = fecha.add({days: -1});
                     const desde = '08:00:00';
                     const hasta = '13:00:00';
                     const desde2 = '14:00:00';
@@ -1117,6 +1118,9 @@ describe("SiPer: " + testConfig.name, function(){
                     await registrarFichada(server, {idper, fecha, hora: desde2, tipo_fichada:'E'});
                     await registrarFichada(server, {idper, fecha, hora: hasta2, tipo_fichada:'S'});
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta, desde2, hasta2), horas: {crudas: '08:20:00'}})
+                    await registrarFichada(server, {idper, fecha: ayer, hora: desde, tipo_fichada:'E'});
+                    await registrarFichada(server, {idper, fecha: ayer, hora: hasta, tipo_fichada:'S'});
+                    var result = rrhhSession.callProcedure(ctts.calendario_persona_resumen)
                 })
             })
             it("las fichadas se redondean al minuto para arriba y para abajo", async function(){
