@@ -865,10 +865,10 @@ export async function consolidarFichadas(parameters: any, client: Client) {
                 [fechaDesde, fechaHasta, idper]
             ).execute();
         } else {
-            // await client.query(
-            //     `call actualizar_novedades_vigentes($1::date, $2::date)`,
-            //     [fechaDesde, fechaHasta]
-            // ).execute();
+            await client.query(
+                `call actualizar_novedades_vigentes($1::date, $2::date)`,
+                [fechaDesde, fechaHasta]
+            ).execute();
         }
     }
     return true;

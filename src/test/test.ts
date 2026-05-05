@@ -1127,7 +1127,7 @@ describe("SiPer: " + testConfig.name, function(){
                 })
             })
             it("fichadas no laborables no calculan horas", async function(){
-                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                await enNuevaPersona(this.test?.title!, {inicia_fichada: date.iso('2000-12-30')}, async ({idper}, {}) => {
                     const fecha = date.iso('2000-01-30'); // domingo
                     const desde = '08:00:00';
                     const hasta = '13:00:00';
