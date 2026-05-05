@@ -126,6 +126,7 @@ function CalendarioResumen(props:{conn:Connector, idper:string, periodo:Periodo}
             setResumen(result);
         }).catch(logError);
     }, [conn, idper, periodo.annio, periodo.mes]);
+    if(resumen.dias_promediados == 0) return null;
     return <Box>{`${horasStr(resumen.suma_horas)} − 7ₕ × ${resumen.dias_promediados??0}`}<small><small>d</small></small> = {horasStr(resumen.saldo_horas)}</Box>
 }
 
