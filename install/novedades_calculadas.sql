@@ -31,7 +31,7 @@ $BODY$
       ELSE null END as cod_nov, 
       ficha, fichadas, sector, annio,
       trabajable, detalles, cod_nov_ini,
-      CASE WHEN fichadas_consolidadas AND nr_cuenta_horas AND trabajable THEN duration(fichadas) ELSE null END as horas
+      CASE WHEN fichadas_consolidadas AND nr_cuenta_horas AND trabajable AND fecha >= fecha_inicio_fichada THEN duration(fichadas) ELSE null END as horas
     FROM (
       SELECT p.idper, p.ficha, f.fecha, f.fichadas_consolidadas,
           (f.dds BETWEEN 1 AND 5) AND (laborable is not false OR inamovible is not true AND f.dds NOT BETWEEN 1 AND 5) as trabajable,
