@@ -18,6 +18,10 @@ import * as sql from 'mssql';
 import { ACCIONES, ESTADOS } from './table-sinc_fichadores';
 import { ConfigFichadasDb, getConfigFichadasDb, MAX_INTENTOS } from './app-principal';
 
+import { sqlLeftJoinLateralTrayectoriaLaboral } from './table-personas';
+
+const sqlExprCondicionCodNovSitRevista = 'nov_grupo is null or nov_grupo is not distinct from sr_grupo'
+
 async function prevalidarCargaDeNovedades(context: ProcedureContext, params:Partial<NovedadRegistrada>){
     var diaActualPeroTarde = (await context.client.query(
         `select fecha_actual() = $1 and (fecha_hora_actual() - fecha_actual()) > carga_nov_hasta_hora
@@ -149,6 +153,20 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 error.code = "B9004";
                 throw error;
             }
+            if (!params.cancela) {
+                const permitidoCodNovParaSitRevista = (await context.client.query(
+                    `select ${sqlExprCondicionCodNovSitRevista}
+                        from (${sqlPersonas}) p,
+                            cod_novedades cn
+                        where p.idper = $1 and cn.cod_nov = $2`,
+                    [params.idper, params.cod_nov]
+                ).fetchUniqueValue()).value;
+                if (!permitidoCodNovParaSitRevista) {
+                    var error = expected(new Error("No se puede asignar ese codigo de novedad a una persona con esa situacion de revista"));
+                    error.code = "B9005";
+                    throw error;
+                }
+            }
             var {idper, cod_nov, desde, hasta, dds0, dds1, dds2, dds3, dds4, dds5, dds6, cancela, detalles, tipo_novedad} = params;
             var result = await context.client.query(`INSERT INTO novedades_registradas
                 (idper, cod_nov, desde, hasta, dds0, dds1, dds2, dds3, dds4, dds5, dds6, cancela, detalles, tipo_novedad, fecha, usuario)
@@ -220,18 +238,11 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         end as tipo_dia,
                         cn.novedad,
                         extract(month from f.fecha) = mes as mismo_mes,
-                        case
-                        when f.fichadas_consolidadas
-                            then lower(v.fichadas)
-                            else lower(fv.fichadas)
-                        end as entrada,
-                        case
-                        when f.fichadas_consolidadas
-                            then upper(v.fichadas)
-                            else upper(fv.fichadas)
-                        end as salida,
-                        f.fichadas_consolidadas or f.fecha <= coalesce(p.inicia_fichada, p.registra_novedades_desde) as consolidada,
-                        cn.requiere_fichadas
+                        v.fichadas,
+                        v.horas,
+                        f.fichadas_consolidadas or f.fecha < coalesce(p.inicia_fichada, p.registra_novedades_desde) as consolidada,
+                        cn.requiere_fichadas,
+                        cn.injustificado
                     from (
                         select  fecha - 2 - extract(dow from f.fecha - 2)::integer      as desde,
                                 fecha - 2 - extract(dow from f.fecha - 2)::integer + 41 as hasta,
@@ -245,12 +256,38 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         left join novedades_vigentes v on v.fecha = f.fecha and v.idper = $1
                         left join personas p on p.idper = v.idper
                         left join cod_novedades cn on cn.cod_nov = v.cod_nov
-                        left join fichadas_vigentes fv on fv.fecha = f.fecha and fv.idper = p.idper
                     where f.fecha between desde and hasta
                     order by f.fecha`,
                 [idper, desde]
             ).fetchAll();
             return info.rows
+        }
+    },
+    {
+        action: 'calendario_persona_resumen',
+        parameters: [
+            {name:'idper'     , typeName:'text'   },
+            {name:'annio'     , typeName:'integer'},
+            {name:'mes'       , typeName:'integer'},
+        ],
+        coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof calendario_persona.parameters>){
+            const {idper, annio, mes} = params;
+            const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
+            const info = await context.client.query(
+                `SELECT count(*) as dias_mes,
+                        count(*) FILTER (WHERE laborable is not false and dds between 1 and 5) as laborables,
+                        count(horas) as dias_promediados,
+                        avg(horas) as promedio_horas,
+                        sum(horas) as suma_horas,
+                        (sum(horas) - make_interval(hours => (count(horas) * 7)::int))::text as saldo_horas
+                    FROM novedades_vigentes nv INNER JOIN fechas USING (fecha)
+                        INNER JOIN personas p USING (idper)
+                        WHERE nv.fecha BETWEEN $2 AND $2::date + interval '1 month' - interval '1 day'
+                        AND nv.idper = $1
+                `,
+                [idper, desde]
+            ).fetchUniqueRow();
+            return info.row
         }
     },
     {
@@ -297,9 +334,12 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         prioritario
                     from usuarios u 
                         inner join roles r using (rol),
-                        (${sqlNovPer({idper, annio:params.annio})}) v
+                        ( select * from (${sqlNovPer({idper, annio:params.annio})}) p
+                            ${sqlLeftJoinLateralTrayectoriaLaboral}
+                        ) v
                     where ((con_dato and (v.comun is null or v.comun)) or v.registra and r.puede_cargar_dependientes or puede_cargar_todo)
                         and u.usuario = $1
+                        and (${sqlExprCondicionCodNovSitRevista})
                     order by v.cod_nov`,
                 [context.username]
             ).fetchAll();
@@ -806,6 +846,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         parameters: [
             {name: 'fecha'         , typeName: 'date'   },
             {name: 'idper'         , typeName: 'text'   , references: 'personas', defaultValue: null},
+            {name: 'consolidar'    , typeName: 'boolean', defaultValue: true},
         ],
         coreFunction:  async function (context:ProcedureContext, parameters:any) {
             return await consolidarFichadas(parameters, context.client);
@@ -833,20 +874,20 @@ export const ProceduresPrincipal:ProcedureDef[] = [
 ];
 
 export async function consolidarFichadas(parameters: any, client: Client) {
-    const { fecha, idper } = parameters;
+    const { fecha, idper, consolidar } = parameters;
     var annio = fecha.getFullYear();
     var annioAbierto = await client.query(
         `select true from annios where abierto = true and annio = $1`, 
         [annio]
     ).fetchUniqueValue(); 
     if (!annioAbierto) throw new Error('año cerrado!');
-    const fechaDesde = date.ymd(annio, 1, 1);
-    const fechaHasta = fecha;
+    const fechaDesde = consolidar ? date.ymd(annio, 1, 1) : fecha;
+    const fechaHasta = consolidar ? fecha : date.ymd(annio, 12, 31);
     const cambios = (await client.query(
-        `update fechas
-            set fichadas_consolidadas = true
-            where fecha between $1 and $2 and fichadas_consolidadas is not true`,
-        [fechaDesde, fechaHasta]
+        `update fechas 
+            set fichadas_consolidadas = $3 
+            where fecha between $1 and $2 and fichadas_consolidadas is distinct from $3`,
+        [fechaDesde, fechaHasta, consolidar]
     ).fetchAll()).rows;
     if (!cambios.length) {
         if (idper) {
@@ -855,10 +896,10 @@ export async function consolidarFichadas(parameters: any, client: Client) {
                 [fechaDesde, fechaHasta, idper]
             ).execute();
         } else {
-            // await client.query(
-            //     `call actualizar_novedades_vigentes($1::date, $2::date)`,
-            //     [fechaDesde, fechaHasta]
-            // ).execute();
+            await client.query(
+                `call actualizar_novedades_vigentes($1::date, $2::date)`,
+                [fechaDesde, fechaHasta]
+            ).execute();
         }
     }
     return true;

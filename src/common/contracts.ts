@@ -1,3 +1,4 @@
+import { TimeInterval } from 'best-globals';
 import { DefinedType, Description, is } from 'guarantee-type'
 
 type ArrayElement<ArrayType extends readonly unknown[]> = 
@@ -19,7 +20,7 @@ export const cod_nov = {
         total: is.nullable.boolean,
         parcial: is.nullable.boolean,
         comun: is.nullable.boolean,
-        pierde_presentismo: is.nullable.boolean,
+        injustificado: is.nullable.boolean,
         cuenta_horas: is.nullable.boolean,
         requiere_fichadas: is.nullable.boolean,
         requiere_entrada: is.nullable.boolean,
@@ -441,14 +442,35 @@ export const calendario_persona = {
         tipo_dia: is.string,
         novedad: is.string,
         mismo_mes: is.boolean,
-        entrada: is.nullable.string,
-        salida: is.nullable.string,
+        fichadas: is.nullable.string,
+        horas: is.class(TimeInterval),
         consolidada: is.boolean,
-        requiere_fichadas: is.boolean
+        requiere_fichadas: is.boolean,
+        injustificado: is.boolean,
     })
 }
 
 export type CalendarioResult = DefinedType<typeof calendario_persona.result>
+
+export const calendario_persona_resumen = {
+    procedure: 'calendario_persona_resumen',
+    parameters: is.object({
+        idper: is.string,
+        annio: is.number,
+        mes: is.number
+    }),
+    result: is.object({
+        dias_mes: is.number,
+        laborables: is.number,
+        dias_promediados: is.number,
+        promedio_horas: is.class(TimeInterval),
+        suma_horas: is.class(TimeInterval),
+        saldo_horas: is.string,
+        // saldo_horas: is.class(TimeInterval),
+    })
+}
+
+export type CalendarioResumenResult = DefinedType<typeof calendario_persona_resumen.result>
 
 export const horario_semana_vigente = {
     procedure: 'horario_semana_vigente',
@@ -1049,6 +1071,10 @@ export const ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES   = 'B9001';
 export const ERROR_FALTA_FICHADA                    = 'B9002';
 export const ERROR_BRECHA_EN_CANTIDAD_DE_NOVEDADES  = 'B9003';
 export const AÑO_CERRADO                            = 'B9004';
+export const COD_NOV_NO_PERMITIDO                   = 'B9005';
+
+//////////// ERRORES BACKEND-PLUS:
+export const SE_EXPERABA_UN_REGISTRO                = '54011!';
 
 //////////// ERRORES POSTGRES: https://www.postgresql.org/docs/current/errcodes-appendix.html
 export const insufficient_privilege = '42501';

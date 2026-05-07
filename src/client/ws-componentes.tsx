@@ -29,7 +29,7 @@ import {
     Tooltip
 } from "@mui/material";
 
-import { date, RealDate, compareForOrder, sameValue } from "best-globals";
+import { date, RealDate, compareForOrder, TimeInterval, sameValue } from "best-globals";
 
 import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNovedadActualResult, NovedadRegistrada, ParametrosResult,
     InfoUsuario,
@@ -111,6 +111,25 @@ function puedeCargarNovedades(infoUsuario: InfoUsuario) {
     );
 }
 
+type Periodo = {mes:number, annio:number}
+
+function horasStr(horas:TimeInterval|any){
+    return (horas instanceof TimeInterval ? horas.toHm() : horas ?? '00:00').replace(/^(-?\d+):(\d+)(:\d+)?$/, (_:string, h:string, m:string) => `${+h}ₕ${m}`)
+}
+
+function CalendarioResumen(props:{conn:Connector, idper:string, periodo:Periodo}){
+    const {conn, idper, periodo} = props;
+    var [resumen, setResumen] = useState<ctts.CalendarioResumenResult>({} as ctts.CalendarioResumenResult);
+    useEffect(function(){
+        setEfimero(resumen);
+        conn.ajax.calendario_persona_resumen({idper, ...periodo}).then(result => {
+            setResumen(result);
+        }).catch(logError);
+    }, [conn, idper, periodo.annio, periodo.mes]);
+    if(resumen.dias_promediados == 0) return null;
+    return <Box>{`${horasStr(resumen.suma_horas)} − 7ₕ × ${resumen.dias_promediados??0}`}<small><small>d</small></small> = {horasStr(resumen.saldo_horas)}</Box>
+}
+
 function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, fechaActual: RealDate, 
     annio:number, infoUsuario:InfoUsuario
     onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, ultimaNovedad?: ULTIMA_NOVEDAD
@@ -118,7 +137,6 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 }){
     const {conn, fecha, fechaHasta, idper, ultimaNovedad, fechaActual, annio, infoUsuario} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
-    type Periodo = {mes:number, annio:number}
     const [mes, setMes] = useState(fecha.getMonth()+1);
     const [periodo, setPeriodo] = [{mes, annio}, (x:Periodo) => {setMes(x.mes); props.onAnnio?.(x.annio);}]
     const retrocederUnMes = ({mes: (mes == 1 ? 12 : mes - 1), annio: (annio - (mes == 1  ? 1 : 0 ))})
@@ -176,6 +194,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
     const isFutureMonth = periodo.mes > fechaActual.getMonth() + 1 && periodo.annio === fechaActual.getFullYear() || periodo.annio > fechaActual.getFullYear();
 
     return <Componente componentType="calendario-mes" esEfimero={calendario}>
+        <CalendarioResumen conn={conn} idper={idper} periodo={periodo}/>
         <Box className="box-flex">
             <Box>
                 <Button onClick={_ => setPeriodo(retrocederUnMes)} disabled={!botonRetrocederHabilitado} className="siper-button" boton-negro="si" ><ICON.ChevronLeft/></Button>
@@ -235,13 +254,14 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
             </Box>
             {calendario.map(semana => <Box key={semana[0].semana} className="calendario-semana">
                 {semana.map((dia, i) => {
-                    const diaTieneFichada = !!(dia.entrada || dia.salida);
+                    const diaTieneFichada = dia.fichadas != null;
                     const mostrarFichadaEnDia = diaTieneFichada && (!dia.consolidada || mostrarfichadasconsolidadas);
                     return <Tooltip key={dia.dia || "V" + i} title={dia.novedad || "Sin novedad"} arrow>
                         <div
                             className={`calendario-dia tipo-dia-${dia.tipo_dia} 
                                 ${fecha && sameValue(dia.fecha, fecha) ? 'calendario-dia-seleccionado' : ''}
-                                ${fechaHasta != null && fecha <= dia.fecha && dia.fecha <= fechaHasta ? 'calendario-dia-seleccionado' : ''}`}
+                                ${fechaHasta != null && fecha <= dia.fecha && dia.fecha <= fechaHasta ? 'calendario-dia-seleccionado' : ''}
+                            `}
                             es-otro-mes={dia.mismo_mes ? "no" : "si"}
                             onClick={() => {
                                 if (!dia.fecha || !props.onFecha || !props.onFechaHasta || !puede_cargar_novedades || (dia.fecha < fechaActual && !infoUsuario.puede_corregir_el_pasado)) return;
@@ -259,9 +279,9 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                             }}
                         >
                             <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
-                            {mostrarFichadaEnDia && dia.entrada ? (
-                                <span className="calendario-dia-fichada-entrada">
-                                    {dia.entrada}
+                            {mostrarFichadaEnDia && dia.horas ? (
+                                <span className="calendario-dia-horas">
+                                    {dia.horas.toString().replace(/^(\d+):(\d+):\d+$/, (_, h, m) => `${+h}ₕ${m}`)}
                                 </span>
                             ) : null}
                             <span 
@@ -269,15 +289,26 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                                     ${dia ? 'con_novedad_si' : 'con_novedad_no' } 
                                     ${diaTieneFichada ? 'calendario-dia-con-fichada' : ''} 
                                     ${dia.requiere_fichadas && !dia.consolidada ? 'calendario-requiere-fichada-no-consolidado' : ''}
+                                    ${dia.injustificado ? 'injustificado' : ''}
                                 `}
                             >
                                 {dia.cod_nov ?? ''}
                             </span>
-                            {mostrarFichadaEnDia && dia.salida ? (
-                                <span className="calendario-dia-fichada-salida">
-                                    {dia.salida}
-                                </span>
-                            ) : null}
+                            <span className="calendario-dia-fichadas">
+                                {mostrarFichadaEnDia && dia.fichadas != null && dia.fichadas.slice(1, -1) != '' ? dia.fichadas.slice(1, -1) // saca las llaves externas
+                                    .match(/[(\[][^)\]]*[)\]]/g)! // captura cada rango
+                                    .map((range, i) => {
+                                        const inner = range.slice(1, -1); // saca los delimitadores del rango
+                                        const [from, to] = inner.split(',');
+                                        const fmt = (t: string) => 
+                                            t == null || t == '' ? <span>{`\u2007\u2007\u00A0\u2007\u2007`}</span> : 
+                                            <span> {t.replace(/^(\d+):(\d+):\d+$/, (_, h, m) => `${+h}:${m}`)} </span>;
+                                        return <div key={i}>
+                                            {fmt(from)} {' \u00A0 '} {fmt(to)}
+                                        </div>;
+                                    })
+                                : ''}
+                            </span>
                         </div>
                     </Tooltip>
                 })}
@@ -719,6 +750,7 @@ declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: () => Promise<DefinedType<typeof ctts.info_usuario.result>>;
         calendario_persona: (params:DefinedType<typeof ctts.calendario_persona.parameters>) => Promise<CalendarioResult[]>;
+        calendario_persona_resumen: (params:DefinedType<typeof ctts.calendario_persona_resumen.parameters>) => Promise<ctts.CalendarioResumenResult>;
         novedades_disponibles: (params:{
             idper:string
             annio:number

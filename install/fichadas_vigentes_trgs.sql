@@ -20,7 +20,7 @@ BEGIN
         WHERE a.abierto
       ON CONFLICT DO NOTHING;
     UPDATE fichadas_vigentes fv
-      SET fichadas = rango_simple_fichadas(fv.idper, fv.fecha)
+      SET fichadas = multirango_fichadas(fv.idper, fv.fecha)
       FROM annios a 
       WHERE fv.idper = new.idper
         AND fv.annio = a.annio
@@ -45,7 +45,7 @@ BEGIN
           AND p.activo
       ON CONFLICT DO NOTHING;
     UPDATE fichadas_vigentes fv
-      SET fichadas = rango_simple_fichadas(fv.idper, fv.fecha)
+      SET fichadas = multirango_fichadas(fv.idper, fv.fecha)
       FROM personas p
       WHERE fv.annio = new.annio
         AND fv.idper = p.idper
@@ -69,7 +69,7 @@ BEGIN
         WHERE p.activo
       ON CONFLICT DO NOTHING;
     UPDATE fichadas_vigentes fv
-      SET fichadas = rango_simple_fichadas(fv.idper, fv.fecha)
+      SET fichadas = multirango_fichadas(fv.idper, fv.fecha)
       FROM personas p, annios a
       WHERE fv.fecha = new.fecha
         AND fv.annio = a.annio
@@ -92,7 +92,7 @@ BEGIN
     VALUES (new.idper, new.fecha)
     ON CONFLICT DO NOTHING;
   UPDATE fichadas_vigentes
-    SET fichadas = rango_simple_fichadas(idper, fecha)
+    SET fichadas = multirango_fichadas(idper, fecha)
     WHERE idper = new.idper
       AND fecha = new.fecha;
   RETURN new;
@@ -119,9 +119,9 @@ BEGIN
       INTO v_regla
       FROM reglas
       WHERE annio = v_annio;
-    IF lower(new.fichadas) IS NULL AND upper(new.fichadas) IS NULL THEN
+    IF cardinality(new.fichadas) <= 1 AND lower(new.fichadas) IS NULL AND upper(new.fichadas) IS NULL THEN
       NEW.cod_nov := v_regla.codnov_sin_fichadas;
-    ELSIF lower(new.fichadas) IS NULL OR upper(new.fichadas) IS NULL THEN
+    ELSIF cardinality(new.fichadas) <= 1 AND (lower(new.fichadas) IS NULL OR upper(new.fichadas) IS NULL) THEN
       NEW.cod_nov := v_regla.codnov_unica_fichada;
     ELSE
       NEW.cod_nov := NULL;
@@ -139,7 +139,7 @@ AS
 $BODY$
 BEGIN
   IF tg_op = 'INSERT' THEN
-    IF new.fichadas <> '(,)' THEN
+    IF new.fichadas <> time_multirange() THEN
       CALL actualizar_novedades_vigentes_idper(new.fecha, new.fecha, new.idper);
     END IF;
   ELSE
@@ -151,26 +151,43 @@ BEGIN
 END;
 $BODY$;
 
-CREATE OR REPLACE FUNCTION rango_simple_fichadas(p_idper text, p_fecha date) 
-  RETURNS time_range 
+CREATE OR REPLACE FUNCTION multirango_fichadas(p_idper text, p_fecha date) 
+  RETURNS time_multirange 
   STABLE LANGUAGE SQL
 AS
 $sql$
-  WITH horas_entrada_salida as (
-    SELECT 
-        MIN(hora) FILTER (WHERE tipo_fichada = 'E') as hora_entrada,
-        MAX(hora) FILTER (WHERE tipo_fichada = 'S') as hora_salida
+  WITH eventos_raw(hora, tipo_fichada) AS (
+    SELECT hora, tipo_fichada
       FROM fichadas f 
-      WHERE f.fecha = p_fecha AND f.idper = p_idper
+      WHERE f.fecha = p_fecha AND f.idper = p_idper AND tipo_fichada in ('E', 'S')
+  ),
+  primeros AS (
+    SELECT hora, tipo_fichada
+    FROM (
+        SELECT hora, tipo_fichada, LAG(tipo_fichada) OVER (ORDER BY hora) AS tipo_anterior
+        FROM eventos_raw
+    ) t
+    WHERE tipo_fichada IS DISTINCT FROM tipo_anterior
+  ),
+  eventos AS (
+    SELECT
+      hora,
+      tipo_fichada,
+      SUM(CASE WHEN tipo_fichada = 'E' THEN 1 ELSE 0 END) OVER (ORDER BY hora ROWS UNBOUNDED PRECEDING) AS grupo
+    FROM primeros
+  ),
+  rangos AS (
+    SELECT
+      grupo,
+      MIN(CASE WHEN tipo_fichada = 'E' THEN CASE WHEN hora < bh.hora_desde THEN bh.hora_desde ELSE hora END END) AS entrada,
+      MAX(CASE WHEN tipo_fichada = 'S' THEN CASE WHEN hora > bh.hora_hasta THEN bh.hora_hasta ELSE hora END END) AS salida
+    FROM eventos,
+        personas p INNER JOIN bandas_horarias bh USING (banda_horaria)
+      WHERE p.idper = p_idper
+    GROUP BY grupo
   )
-  SELECT time_range(
-      CASE WHEN hora_entrada < bh.hora_desde THEN bh.hora_desde ELSE hora_entrada END,
-      CASE WHEN hora_salida  > bh.hora_hasta THEN bh.hora_hasta ELSE hora_salida  END
-    )
-    FROM horas_entrada_salida, 
-        personas p 
-          INNER JOIN bandas_horarias bh USING (banda_horaria)
-      WHERE p.idper = p_idper;
+  SELECT coalesce(range_agg(time_range(entrada, salida)), time_multirange()) AS presencia
+    FROM rangos;
 $sql$;
 
 CREATE TRIGGER personas_fichadas_vigentes_trg 
@@ -218,7 +235,7 @@ AS
 $BODY$
 BEGIN
   IF tg_op = 'INSERT' THEN
-    IF new.fichadas <> '(,)' THEN
+    IF new.fichadas <> time_multirange() THEN
       CALL actualizar_novedades_vigentes_idper(new.fecha, new.fecha, new.idper);
     END IF;
   ELSE

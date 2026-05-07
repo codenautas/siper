@@ -18,9 +18,9 @@ export function situacion_revista(context:TableContext):TableDefinition{
         editable:admin,
         fields:[
             s_revista,
-            {name: 'con_novedad', typeName: 'boolean', description: 'si permite registrar una novedad' }, /* NO SE USA PARA NADA, QUITAR */
-            {name: 'cod_2024'   , typeName: 'integer'},
-            {name: 'ini_per_nov_cant', typeName: 'boolean', description: 'si inicializa las cantidades de novedades a princpio de año'}
+            {name: 'cod_2024'        , typeName: 'integer'},
+            {name: 'ini_per_nov_cant', typeName: 'boolean', description: 'si inicializa las cantidades de novedades a princpio de año'}, 
+            {name: 'nov_grupo'       , typeName: 'text'   , description: 'si permite registrar una novedad' }, /* NO SE USA PARA NADA, QUITAR */
         ],
         primaryKey:[s_revista.name],
         constraints:[

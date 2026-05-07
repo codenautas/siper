@@ -12,7 +12,7 @@ import { politicaNovedades } from "./table-novedades_registradas";
 export const sqlNovedadesVigentesConDesdeHastaHabiles = `
 with novedades_fecha AS(
   SELECT 
-      p.idper, nv.ficha, nv.fichadas, nv.sector, nv.annio, nv.trabajable, nv.detalles, f.dds, f.laborable,
+      p.idper, nv.ficha, nv.fichadas, nv.sector, nv.annio, nv.trabajable, nv.detalles, f.dds, f.laborable, nv.horas,
     COALESCE(nv.fecha, f.fecha) as fecha,
     CASE
       WHEN cod_nov is null and (dds in (6,0) or laborable = false) then '¡FERIADO O FIN DE SEMANA!' --'888'
@@ -46,7 +46,7 @@ novedades_vigentes_con_marca_de_cambio_de_cod_nov AS(
     order by ncg.idper, ncg.numero_tira_cod_nov_iguales
   )
   select idper, fecha, cod_nov, ficha, fichadas, sector, annio, trabajable, detalles,
-         desde, hasta, habiles, hasta - desde + 1 as corridos
+         desde, hasta, habiles, hasta - desde + 1 as corridos, horas
     from novedades_vigentes_desde_hasta`
 
 export function novedades_vigentes(context: TableContext): TableDefinition {
@@ -60,14 +60,15 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
             {name: 'ddsn'     , typeName: 'text'   , inTable:false, serverSide:true, editable:false },
             {name: 'cod_nov'  , typeName: 'text'   ,                                    },
             {name: 'ficha'    , typeName: 'text'   ,                                    },
-            {name: 'fichadas' , typeName: 'time_range', title:'hora de entrada y salida'},
+            {name: 'fichadas' , typeName: 'time_multirange', title:'hora de entrada y salida'},
             /* campos redundantes que reflejan el estado del personas al momento de obtener la novedad */
             {name: 'sector'   , typeName: 'text'   ,                                    },
             /* campos automáticos */
             añoEnBaseAFecha                                                              ,
             {name: 'trabajable' , typeName: 'boolean', description: 'si es un día que debe trabajar según su horario (normalmente día hábil, no feriado)' },
             {name: 'detalles'   , typeName: 'text'   ,                                    },
-            {name: 'cod_nov_ini',typeName: 'text'   , description: 'código de novedad inicial obtenida por disposición, resolución o en función de las características de la persona'},
+            {name: 'cod_nov_ini', typeName: 'text'   , description: 'código de novedad inicial obtenida por disposición, resolución o en función de las características de la persona'},
+            {name: 'horas'      , typeName:'interval', description: 'cantidad de horas trabajadas calculadas por las fichadas (cuando corresponde)'},
         ],
         primaryKey: [idper.name, fecha.name],
         foreignKeys: [

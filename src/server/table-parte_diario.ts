@@ -38,7 +38,8 @@ select
         cn.requiere_fichadas,
         cn.cuenta_horas,
         nv.fichadas,
-        CASE WHEN f.fichadas_consolidadas AND cn.cuenta_horas THEN ${sqlExprHoras('upper(fichadas) - lower(fichadas)')} ELSE null END as horas
+        nv.horas,
+        cn.injustificado
     from
         (${sqlPersonas}) p
         inner join fechas f on f.fecha between p.registra_novedades_desde and coalesce(p.fecha_egreso, '3000-01-01'::date)
@@ -68,7 +69,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
             cod_nov,
             { name: 'novedad', typeName: 'text'},
             { name: 'fichada', typeName: 'text'},
-            { name: 'horas', typeName: 'text' },
+            { name: 'horas', typeName: 'interval' },
             { name: 'horario', typeName: 'text' },
             { name: 'desde', typeName: 'date' },
             { name: 'hasta', typeName: 'date' },
@@ -76,6 +77,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
             { name: 'corridos', typeName: 'integer' },
             { name: 'banda_horaria', typeName: 'text'},
             { name: 'bh_descripcion', typeName: 'text', title: 'descripción' },
+            { name: 'injustificado' , typeName: 'boolean'},
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],
         hiddenColumns: [],
@@ -84,13 +86,18 @@ export function parte_diario(_context: TableContext): TableDefinition {
         sql:{
             isTable: false,
             from:`(select x.*,
-                    CASE WHEN NOT requiere_fichadas AND NOT cuenta_horas
-                        OR fichadas IS NULL OR fichadas = time_range(null,null) THEN null
-                        ELSE CONCAT(hora_texto(lower(fichadas)),
-                            ' - ',
-                            hora_texto(upper(fichadas)) 
-                        )
-                    END as fichada,
+                    (SELECT string_agg(
+                        CASE WHEN lower_inf(rng) THEN 'X' 
+                            ELSE to_char(lower(rng), 'FMHH24:MI') 
+                        END
+                        || ' - ' ||
+                        CASE WHEN upper_inf(rng) THEN 'X' 
+                            ELSE to_char(upper(rng), 'FMHH24:MI') 
+                        END,
+                        ' / '
+                        ORDER BY ord
+                    )
+                    FROM unnest(fichadas) WITH ORDINALITY AS t(rng, ord)) as fichada,
                     hora_texto(horario_entrada) || ' - ' || hora_texto(horario_Salida) as horario
                 from (${sqlParteDiario}) x
             )`,
