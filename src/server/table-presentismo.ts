@@ -13,21 +13,8 @@ WITH base AS (
         p.sector,
         date_trunc('month', n.fecha)::date AS mes_inicio,        
         n.cod_nov,
-        coalesce(cn.pierde_presentismo, false) AS es_novedad_injustificada,
-        NOT (
-            n.fichadas IS NULL
-            OR isempty(n.fichadas)
-            OR lower_inf(n.fichadas)
-            OR upper_inf(n.fichadas)
-        ) AS dia_computable,
-        CASE
-            WHEN n.fichadas IS NULL
-              OR isempty(n.fichadas)
-              OR lower_inf(n.fichadas)
-              OR upper_inf(n.fichadas)
-            THEN interval '0'
-            ELSE upper(n.fichadas) - lower(n.fichadas)
-        END AS duracion
+        coalesce(cn.injustificado, false) AS es_novedad_injustificada,
+        n.horas
     FROM novedades_vigentes n
         JOIN (${sqlPersonas}) p ON p.idper = n.idper
         JOIN fechas f ON f.fecha = n.fecha
@@ -43,8 +30,8 @@ resumen_mensual AS (
         b.mes_inicio,
         COUNT(*) AS dias_laborables_mes,
         COUNT(*) FILTER (WHERE b.es_novedad_injustificada) AS novedades_injustificadas,
-        COUNT(*) FILTER (WHERE b.dia_computable) AS dias_con_fichada,
-        SUM(b.duracion) FILTER (WHERE b.dia_computable) AS total_mes
+        COUNT(b.horas) AS dias_con_fichada,
+        SUM(b.horas) AS total_mes
     FROM base b
     GROUP BY b.idper, b.mes_inicio
 ),
