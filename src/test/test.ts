@@ -138,6 +138,13 @@ async function registrarFichada(server: AppSiper, params: Partial<ctts.Fichada>,
     })
     return result;
 }
+
+async function registrarFichadas(server: AppSiper, params:{idper: string, fecha: Date, entrada: string, salida: string}, tabla?:'fichadas_recibidas'): Promise<ctts.FechaHora> {
+    var {idper, fecha, entrada, salida} = params;
+    await registrarFichada(server, {idper, fecha, hora: entrada, tipo_fichada: 'E'}, tabla);
+    await registrarFichada(server, {idper, fecha, hora: salida , tipo_fichada: 'S'}, tabla);
+}
+
 const TEST_BACKEND_VIA_API = {
     name: "via api",
     speed: 1,
@@ -1143,6 +1150,23 @@ describe("SiPer: " + testConfig.name, function(){
                     )
                 }
             })
+            it("fichar en días con distintas horas", async function(){
+                const fecha = date.iso('2000-01-28');
+                try {
+                    await enNuevaPersona(this.test?.title!, {inicia_fichada: date.iso('2000-01-01')}, async ({idper}, {}) => {
+                        await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:true});
+                        await registrarFichada(server, {idper, fecha, hora: '09:00:00', tipo_fichada:'E'});
+                        await registrarFichada(server, {idper, fecha, hora: '17:00:00', tipo_fichada:'S'});
+                        const resumen = await rrhhSession.callProcedure(ctts.calendario_persona_resumen, {idper, annio:2000, mes:1});
+                        assert.equal(resumen.dias_promediados, 1);
+                        discrepances.showAndThrow(resumen.suma_horas, timeInterval({hours:8}));
+                    })
+                } finally {
+                    await server.inDbClient(ADMIN_REQ, async client =>
+                        client.query(`update fechas set fichadas_consolidadas = false where fecha = $1`, [fecha]).execute()
+                    )
+                }
+            })
             it("recalcula las horas del mes al adelantar inicia_fichada", async function(){
                 try {
                     await enNuevaPersona(this.test?.title!, {inicia_fichada: FECHA_ACTUAL}, async ({idper}, {}) => {
@@ -1310,8 +1334,7 @@ describe("SiPer: " + testConfig.name, function(){
                     // BUG: muestra el predeterminado (COD_PRED_PAS) en vez del código registrado
                     const entrada = '09:00:00';
                     const salida  = '17:00:00';
-                    await registrarFichada(server, {idper, fecha, hora: entrada, tipo_fichada: 'E'});
-                    await registrarFichada(server, {idper, fecha, hora: salida,  tipo_fichada: 'S'});
+                    await registrarFichadas(server, {idper, fecha, entrada, salida});
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov: null, cod_nov_final: cod_nov});
                 });
             })
@@ -1478,8 +1501,7 @@ describe("SiPer: " + testConfig.name, function(){
                 var fecha = FECHA_ACTUAL;
                 const entrada = '09:00:00';
                 const salida  = '17:00:00';
-                await registrarFichada(server, {idper, fecha, hora: entrada,  tipo_fichada: 'E'});
-                await registrarFichada(server, {idper, fecha, hora: salida,  tipo_fichada: 'S'});
+                await registrarFichadas(server, {idper, fecha, entrada, salida});
                 // sin consolidar
                 var consolidadas = server.inDbClient(ADMIN_REQ, client =>
                     client.query(`select fichadas_consolidadas from fechas where fecha = $1`, [fecha]).fetchUniqueValue()
