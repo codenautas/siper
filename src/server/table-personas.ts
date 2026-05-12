@@ -23,7 +23,7 @@ export const idper: FieldDefinition = {
 export const sqlLeftJoinLateralTrayectoriaLaboral = `
         LEFT JOIN LATERAL (SELECT * 
                     FROM trayectoria_laboral tl left join situacion_revista sr using (situacion_revista)
-                    WHERE propio AND tl.idper = p.idper
+                    WHERE propio AND tl.idper = p.idper and (hasta is null or hasta >= fecha_actual())
                     ORDER BY desde DESC, idt DESC
                     LIMIT 1) t ON TRUE
 `
