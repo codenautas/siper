@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 // @ts-ignore 
 import * as assert from "assert";
@@ -1338,6 +1338,19 @@ describe("SiPer: " + testConfig.name, function(){
                     {idper, cod_nov: COD_PRED_PAS, fichada: '09:00 - 17:00', horas:'08:00'},
                 ], 'all', {fixedFields:{idper, fecha}})
                 await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:false})
+            })
+        });
+        it.skip("no muestra situacion_revista si no tiene trayecto actual", async function(){
+            await enNuevaPersona(this.test?.title!, {usuario:{sesion:false}}, async ({idper}) => {
+                await server.inDbClient(ADMIN_REQ, async client => {
+                    await client.query(
+                        `update trayectoria_laboral set hasta = $1 where idper = $2`,
+                        [date.iso('2000-01-15'), idper]
+                    ).execute();
+                });
+                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                    {idper, situacion_revista: null},
+                ], 'all', {fixedFields:[{fieldName:'idper', value: idper}, {fieldName:'fecha', value: FECHA_ACTUAL}]})
             })
         });
     });

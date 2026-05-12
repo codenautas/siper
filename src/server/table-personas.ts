@@ -27,7 +27,7 @@ SELECT p.*, t.categoria, t.situacion_revista,
     FROM personas p
         LEFT JOIN LATERAL (SELECT * 
                     FROM trayectoria_laboral tl
-                    WHERE propio AND tl.idper = p.idper
+                    WHERE propio AND tl.idper = p.idper and (hasta is null or hasta >= fecha_actual())
                     ORDER BY desde DESC, idt DESC
                     LIMIT 1) t ON TRUE
         LEFT JOIN LATERAL (SELECT horario FROM horarios_per hp WHERE hp.idper = p.idper AND hp.lapso_fechas @> /*incluye*/ fecha_actual()) h ON TRUE

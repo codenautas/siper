@@ -8,6 +8,7 @@ import {sector} from "./table-sectores";
 
 import { sqlNovedadesVigentesConDesdeHastaHabiles } from "./table-novedades_vigentes";
 import { sqlPersonas } from "./table-personas";
+import { s_revista } from "./table-situacion_revista";
 
 export const sqlParteDiario= `
 select 
@@ -37,6 +38,8 @@ select
         cn.cuenta_horas,
         nv.fichadas,
         CASE WHEN f.fichadas_consolidadas AND cn.cuenta_horas THEN to_char(upper(fichadas) - lower(fichadas),'HH24:MI') ELSE null END as horas
+        p.situacion_revista,
+        p.activo
     from
         (${sqlPersonas}) p
         inner join fechas f on f.fecha between p.registra_novedades_desde and coalesce(p.fecha_egreso, '3000-01-01'::date)
@@ -72,8 +75,10 @@ export function parte_diario(_context: TableContext): TableDefinition {
             { name: 'hasta', typeName: 'date' },
             { name: 'habiles', typeName: 'integer' },
             { name: 'corridos', typeName: 'integer' },
+            s_revista,
             { name: 'banda_horaria', typeName: 'text'},
             { name: 'bh_descripcion', typeName: 'text', title: 'descripción' },
+            { name: 'activo', typeName: 'boolean'},
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],
         hiddenColumns: [],

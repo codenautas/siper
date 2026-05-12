@@ -445,7 +445,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             ).execute();
             return {
                 tableName:'parte_diario', 
-                fixedFields:[{fieldName:'fecha', value:params.fecha}], 
+                fixedFields:[{fieldName:'fecha', value:params.fecha}, {fieldName:'activo', value:true}], 
                 tableDef:{title:'Parte diario del '+params.fecha.toDmy()+' - Generado con información hasta '+datetime.now().toLocaleString()}
             };
         }
