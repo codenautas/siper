@@ -37,7 +37,7 @@ select
         cn.requiere_fichadas,
         cn.cuenta_horas,
         nv.fichadas,
-        CASE WHEN f.fichadas_consolidadas AND cn.cuenta_horas THEN to_char(upper(fichadas) - lower(fichadas),'HH24:MI') ELSE null END as horas
+        CASE WHEN f.fichadas_consolidadas AND cn.cuenta_horas THEN to_char(upper(fichadas) - lower(fichadas),'HH24:MI') ELSE null END as horas,
         p.situacion_revista,
         p.activo
     from
