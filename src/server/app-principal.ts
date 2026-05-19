@@ -192,7 +192,7 @@ const recuperarFichada = async (be:AppSiper) => {
                         FROM tbMarcaciones m 
                             LEFT JOIN tbEmpleados e ON m.empCodigo = e.empCodigo
                             LEFT JOIN tbMarcaciones_Movil mm ON m.marcCodigo = mm.marcCodigo
-                        WHERE m.marcCodigo > ${value}
+                        WHERE m.marcCodigo > ${value ?? 0}
                         ORDER BY m.marcCodigo;
                 `);
                 var rows = result?.recordset
@@ -204,7 +204,7 @@ const recuperarFichada = async (be:AppSiper) => {
                                 FROM jsonb_to_recordset($1::jsonb)
                                     AS t(id_origen int, usuario text, momento timestamptz, tipo text, latitud numeric, longitud numeric)
                                     inner join usuarios using (usuario);
-                        `, [rows]).execute();
+                        `, [JSON.stringify(rows)]).execute();
                     console.log('Fichadas recuperadas:', result2.rowCount);
                 }
             });
