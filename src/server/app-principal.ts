@@ -209,7 +209,7 @@ const recuperarFichada = async (be:AppSiper) => {
                 }
             });
         }catch(err){
-            console.error(`Error en cron. ${err}`);
+            console.error(`Error en cron.`, err);
         }finally{
             timeOut = setTimeout(recuperador,60000);
         }

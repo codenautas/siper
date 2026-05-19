@@ -5,8 +5,8 @@
   "license": "MIT",
   "description": "Sistema Integral de Gestión de Agentes, Recursos, Personal y Actividades",
   "repository": "codenautas/siper",
-  "main": "dist/server/server/server-principal.js",
-  "types": "dist/server/server/server-principal.d.ts",
+  "main": "dist/server/server-principal.js",
+  "types": "dist/server/server-principal.d.ts",
   "files": [
     "dist",
     "install"
