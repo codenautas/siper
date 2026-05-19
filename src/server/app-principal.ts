@@ -176,30 +176,36 @@ const recuperarFichada = async (be:AppSiper) => {
         try{
             await be.inDbClient(null, async (client)=>{
                 const {value} = await client.query(`select max(id_origen) from fichadas_recibidas where dispositivo='${RECUPERACION_IW}'`).fetchUniqueValue();
-                if (value) {
-                    var result = await be.fichadasDbPool?.query(`
-                        SELECT
-                                m.marcCodigo as id_origen,
-                                -- e.empCodigo,
-                                e.empLegajo as usuario,
-                                m.marcFechaEfectiva as momento, 
-                                CASE 
-                                    WHEN m.marcSentido = 200 THEN 'Entrada' 
-                                    WHEN m.marcSentido = 201 THEN 'Salida' 
-                                    ELSE 'Otra' 
-                                END AS tipo, 
-                                marcmovLat as latitud,
-                                marcmovLon as longitud
-                            FROM tbMarcaciones m 
-                                LEFT JOIN tbEmpleados e ON m.empCodigo = e.empCodigo
-                                LEFT JOIN tbMarcaciones_Movil mm ON m.marcCodigo = mm.marcCodigo
-                            WHERE m.marcCodigo > ${value}
-                            ORDER BY m.marcCodigo;
-                    `);
-                    var rows = result?.recordset
-                    if (rows && rows.length > 0) {
-                        await fsNoPromises.promises.writeFile('local-fichadas-recibidas.json', JSON.stringify(rows), 'utf8');
-                    }
+                var result = await be.fichadasDbPool?.query(`
+                    SELECT
+                            m.marcCodigo as id_origen,
+                            -- e.empCodigo,
+                            e.empLegajo as usuario,
+                            m.marcFechaEfectiva as momento, 
+                            CASE 
+                                WHEN m.marcSentido = 200 THEN 'Entrada' 
+                                WHEN m.marcSentido = 201 THEN 'Salida' 
+                                ELSE 'Otra' 
+                            END AS tipo, 
+                            marcmovLat as latitud,
+                            marcmovLon as longitud
+                        FROM tbMarcaciones m 
+                            LEFT JOIN tbEmpleados e ON m.empCodigo = e.empCodigo
+                            LEFT JOIN tbMarcaciones_Movil mm ON m.marcCodigo = mm.marcCodigo
+                        WHERE m.marcCodigo > ${value}
+                        ORDER BY m.marcCodigo;
+                `);
+                var rows = result?.recordset
+                if (rows && rows.length > 0) {
+                    await fsNoPromises.promises.writeFile('local-fichadas-recibidas.json', JSON.stringify(rows), 'utf8');
+                    var result2 = await client.query(`
+                        insert into fichadas_recibidas(id_origen, fichador, dispositivo, fecha, hora, punto_gps,tipo)
+                            SELECT id_origen, usuario, 'RECUPERACION_IW', momento::date, momento::time, latitud||','||longitud, tipo
+                                FROM jsonb_to_recordset($1::jsonb)
+                                    AS t(id_origen int, usuario text, momento timestamptz, tipo text, latitud numeric, longitud numeric)
+                                    inner join usuarios using (usuario);
+                        `, [rows]).execute();
+                    console.log('Fichadas recuperadas:', result2.rowCount);
                 }
             });
         }catch(err){
