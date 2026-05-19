@@ -202,7 +202,7 @@ const recuperarFichada = async (be:AppSiper) => {
                         insert into fichadas_recibidas(id_origen, fichador, dispositivo, fecha, hora, punto_gps,tipo)
                             SELECT id_origen, usuario, 'RECUPERACION_IW', momento::date, momento::time, latitud||','||longitud, tipo
                                 FROM jsonb_to_recordset($1::jsonb)
-                                    AS t(id_origen int, usuario text, momento timestamptz, tipo text, latitud numeric, longitud numeric)
+                                    AS t(id_origen int, usuario text, momento timestamp, tipo text, latitud numeric, longitud numeric)
                                     inner join usuarios using (usuario);
                         `, [JSON.stringify(rows)]).execute();
                     console.log('Fichadas recuperadas:', result2.rowCount);
