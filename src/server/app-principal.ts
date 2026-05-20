@@ -175,7 +175,11 @@ const recuperarFichada = async (be:AppSiper) => {
     async function recuperador(){
         try{
             await be.inDbClient(null, async (client)=>{
-                const {value} = await client.query(`select max(id_origen) from fichadas_recibidas where dispositivo='${RECUPERACION_IW}'`).fetchUniqueValue();
+                const {value} = await client.query(`
+                    select max(id_origen::bigint) 
+                        from fichadas_recibidas 
+                        where dispositivo='${RECUPERACION_IW}' and id_origen ~ '[0-9]+'
+                `).fetchUniqueValue();
                 var result = await be.fichadasDbPool?.query(`
                     SELECT
                             m.marcCodigo as id_origen,
