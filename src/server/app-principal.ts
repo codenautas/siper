@@ -118,7 +118,7 @@ const cronConsolidarFichadas = async (be:AppBackend) => {
                           )`
                 ).fetchUniqueValue();
                 if (check.value != null) {
-                    await consolidarFichadas({fecha: check.value}, client);
+                    await consolidarFichadas({fecha: check.value, consolidar: true}, client);
                 }
             });
         }catch(err){
