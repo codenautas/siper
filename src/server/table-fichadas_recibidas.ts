@@ -32,7 +32,11 @@ export function fichadas_recibidas(context: TableContext): TableDefinition{
         ],         
         primaryKey: [id_fichada.name],
         sql:{
+            fields:{
+                hora:{ expr: "to_char(hora, 'HH24:MI:SS')"}
+            },
             skipEnance: true
-        }
+        },
+        sortColumns: [{column: 'id_fichada', order: -1}],
     };
 }
