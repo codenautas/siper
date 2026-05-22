@@ -204,7 +204,7 @@ const recuperarFichada = async (be:AppSiper) => {
                     await fsNoPromises.promises.writeFile('local-fichadas-recibidas.json', JSON.stringify(rows), 'utf8');
                     var result2 = await client.query(`
                         insert into fichadas_recibidas(id_origen, fichador, dispositivo, fecha, hora, punto_gps,tipo)
-                            SELECT id_origen, usuario, 'RECUPERACION_IW', momento::date, momento::time, latitud||','||longitud, tipo
+                            SELECT id_origen, usuario, 'RECUPERACION_IW', momento::date, date_trunc('second', momento::time)::time, latitud||','||longitud, tipo
                                 FROM jsonb_to_recordset($1::jsonb)
                                     AS t(id_origen int, usuario text, momento timestamp, tipo text, latitud numeric, longitud numeric)
                                     inner join usuarios using (usuario);
