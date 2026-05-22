@@ -46,11 +46,7 @@ resumen_presentismo AS (
         CASE WHEN m.dias_con_fichada > 0
             THEN coalesce(m.total_mes, interval '0') / m.dias_con_fichada
         END AS promedio_diario,
-        r.umbral_horas_personales * m.dias_laborables_mes::numeric * interval '1 hour' AS horas_objetivo_mes,
-        greatest(
-            r.umbral_horas_personales * m.dias_laborables_mes::numeric * interval '1 hour' - coalesce(m.total_mes, interval '0'),
-            interval '0'
-        ) AS horas_adeudadas_mes,
+        r.umbral_horas_personales * m.dias_laborables_mes::numeric * interval '1 hour' - coalesce(m.total_mes, interval '0') AS diferencia_horas_mes,
         r.umbral_horas_mensuales * interval '1 hour' AS horas_maximas_adeudadas_mes
     FROM resumen_mensual m
         JOIN reglas r ON r.annio = extract(year from m.mes_inicio)::integer
@@ -60,17 +56,15 @@ SELECT
     p.sector,
     p.mes_inicio,
     p.dias_laborables_mes,
-    p.novedades_injustificadas,
     ${sqlExprHoras('p.total_mes')} AS total_mes,
     CASE WHEN p.promedio_diario IS NOT NULL THEN ${sqlExprHoras('p.promedio_diario')} END AS promedio_diario,
-    ${sqlExprHoras('p.horas_objetivo_mes')} AS horas_objetivo_mes,
-    ${sqlExprHoras('p.horas_adeudadas_mes')} AS horas_adeudadas_mes,
-    ${sqlExprHoras('p.horas_maximas_adeudadas_mes')} AS horas_maximas_adeudadas_mes,
+    ${sqlExprHoras('p.diferencia_horas_mes')} AS diferencia_horas_mes,
+    p.novedades_injustificadas,
     p.novedades_injustificadas >= 1 AS pierde_por_novedad_injustificada,
-    p.horas_adeudadas_mes > p.horas_maximas_adeudadas_mes AS pierde_por_horas,
+    p.diferencia_horas_mes > p.horas_maximas_adeudadas_mes AS pierde_por_horas,
     (
         p.novedades_injustificadas >= 1
-        OR p.horas_adeudadas_mes > p.horas_maximas_adeudadas_mes
+        OR p.diferencia_horas_mes > p.horas_maximas_adeudadas_mes
     ) AS pierde_presentismo
 FROM resumen_presentismo p
 ORDER BY p.mes_inicio, p.idper
@@ -85,13 +79,11 @@ export function presentismo(_context: TableContext): TableDefinition {
             { name: "mes_inicio", typeName: "date", title: "mes" },
             idper,
             sector,
-            { name: "dias_laborables_mes", typeName: "integer", title: "días hábiles" },
-            { name: "novedades_injustificadas", typeName: "integer", title: "nov. injust." },
-            { name: "total_mes", typeName: "text", title: "total mes" },
-            { name: "promedio_diario", typeName: "text", title: "promedio diario" },
-            { name: "horas_objetivo_mes", typeName: "text", title: "objetivo mes" },
-            { name: "horas_adeudadas_mes", typeName: "text", title: "adeuda mes" },
-            { name: "horas_maximas_adeudadas_mes", typeName: "text", title: "tolerancia mes" },
+            { name: "dias_laborables_mes", typeName: "integer", title: "dias habiles" },
+            { name: "total_mes", typeName: "text", title: "cantidad de horas" },
+            { name: "promedio_diario", typeName: "text", title: "promedio horas trabajadas" },
+            { name: "diferencia_horas_mes", typeName: "text", title: "diferencia horas" },
+            { name: "novedades_injustificadas", typeName: "integer", title: "novedades injustificadas" },
             { name: "pierde_por_novedad_injustificada", typeName: "boolean", title: "pierde por NI" },
             { name: "pierde_por_horas", typeName: "boolean", title: "pierde por horas" },
             { name: "pierde_presentismo", typeName: "boolean", title: "pierde presentismo" },
