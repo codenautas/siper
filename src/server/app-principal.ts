@@ -118,7 +118,7 @@ const cronConsolidarFichadas = async (be:AppBackend) => {
                           )`
                 ).fetchUniqueValue();
                 if (check.value != null) {
-                    await consolidarFichadas({fecha: check.value}, client);
+                    await consolidarFichadas({fecha: check.value, consolidar: true}, client);
                 }
             });
         }catch(err){
@@ -140,7 +140,7 @@ const cronMantenimiento = (be:AppBackend) => {
             const d = new Date();
             const date = `${d.getDate()}/${d.getMonth()}/${d.getFullYear()}, ${d.getHours()}:${d.getMinutes()}`;
             if(d.getHours() == 23 && d.getMinutes() == 58){
-                const result = await be.inTransaction(null, async (client)=>{
+                await be.inTransaction(null, async (client)=>{
                     const {rows} = await client.query("select ruta_archivo from archivos_borrar").fetchAll();
                     if(rows.length>0){
                         for (const { ruta_archivo } of rows) {
@@ -154,16 +154,75 @@ const cronMantenimiento = (be:AppBackend) => {
                         return `No hay archivos adjuntos para borrar en la fecha y hora: ${date}`;
                     }
                 })
-                console.info("Resultado de cron: ", result);
             }
         }catch(err){
-            console.error(`Error en cron. ${err}`);
+            console.error(`Error en cron Mantenimiento. ${err}`);
         }
     },60000);
     be.shutdownCallbackListAdd({
         message:'cron Mantenimiento',
         fun:async function(){
             clearInterval(interval);
+            return Promise.resolve();
+        }
+    });
+}
+
+const RECUPERACION_IW = 'RECUPERACION_IW';
+
+const recuperarFichada = async (be:AppSiper) => {
+    var timeOut:NodeJS.Timeout;
+    async function recuperador(){
+        try{
+            await be.inDbClient(null, async (client)=>{
+                const {value} = await client.query(`
+                    select max(id_origen::bigint) 
+                        from fichadas_recibidas 
+                        where dispositivo='${RECUPERACION_IW}' and id_origen ~ '[0-9]+'
+                `).fetchUniqueValue();
+                var result = await be.fichadasDbPool?.query(`
+                    SELECT
+                            m.marcCodigo as id_origen,
+                            -- e.empCodigo,
+                            e.empLegajo as usuario,
+                            m.marcFechaEfectiva as momento, 
+                            CASE 
+                                WHEN m.marcSentido = 200 THEN 'Entrada' 
+                                WHEN m.marcSentido = 201 THEN 'Salida' 
+                                ELSE 'Otra' 
+                            END AS tipo, 
+                            marcmovLat as latitud,
+                            marcmovLon as longitud
+                        FROM tbMarcaciones m 
+                            LEFT JOIN tbEmpleados e ON m.empCodigo = e.empCodigo
+                            LEFT JOIN tbMarcaciones_Movil mm ON m.marcCodigo = mm.marcCodigo
+                        WHERE m.marcCodigo > ${value ?? 0}
+                        ORDER BY m.marcCodigo;
+                `);
+                var rows = result?.recordset
+                if (rows && rows.length > 0) {
+                    await fsNoPromises.promises.writeFile('local-fichadas-recibidas.json', JSON.stringify(rows), 'utf8');
+                    var result2 = await client.query(`
+                        insert into fichadas_recibidas(id_origen, fichador, dispositivo, fecha, hora, punto_gps,tipo)
+                            SELECT id_origen, usuario, 'RECUPERACION_IW', momento::date, date_trunc('second', momento::time)::time, latitud||','||longitud, tipo
+                                FROM jsonb_to_recordset($1::jsonb)
+                                    AS t(id_origen int, usuario text, momento timestamp, tipo text, latitud numeric, longitud numeric)
+                                    inner join usuarios using (usuario);
+                        `, [JSON.stringify(rows)]).execute();
+                    console.log('Fichadas recuperadas:', result2.rowCount);
+                }
+            });
+        }catch(err){
+            console.error(`Error en cron.`, err);
+        }finally{
+            timeOut = setTimeout(recuperador,60000);
+        }
+    }
+    await recuperador();
+    be.shutdownCallbackListAdd({
+        message:'cron Recuperador de fichadas',
+        fun:async function(){
+            clearTimeout(timeOut);
             return Promise.resolve();
         }
     });
@@ -213,7 +272,6 @@ const cronSincroUsuarios = async (be: AppBackend) => {
                     connectionTimeout: 10000,
                     requestTimeout: 15000
                 }).connect();
-
                 await be.inTransaction(null, async (client) => {
                     for (const fila of filas) {
                         await ejecutarSP({ num_sincro: fila.num_sincro }, client, pool!);
@@ -258,6 +316,7 @@ const cronSincroUsuarios = async (be: AppBackend) => {
 };
 
 export class AppSiper extends AppBackend{
+    public fichadasDbPool: sql.ConnectionPool | null = null;
     constructor(){
         super();
     }
@@ -273,7 +332,7 @@ export class AppSiper extends AppBackend{
         const action = typeof actionOrSqlProcedure == "string" ? 
             async ()=>{
                 await be.inDbClient(null, async client => {
-                    return client.query(`call ${actionOrSqlProcedure}()`).execute()
+                    return client.query(`call ${be.db.quoteIdent(actionOrSqlProcedure)}()`).execute()
                 });
             }
             : actionOrSqlProcedure;
@@ -336,10 +395,25 @@ export class AppSiper extends AppBackend{
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const be = this;
         await super.postConfig();
+        const configFichadasDb = getConfigFichadasDb(be);
+        if (configFichadasDb.database != null) {
+            be.fichadasDbPool = await new sql.ConnectionPool({
+                ...configFichadasDb as ConfigFichadasDb,
+                connectionTimeout: 10000,
+                requestTimeout: 15000
+            }).connect();
+            cronSincroUsuarios(be);
+            recuperarFichada(be);
+            be.shutdownCallbackListAdd({
+                message:'cerrando el pool de fichadas',
+                fun:async function(){
+                    await be.fichadasDbPool?.close();
+                }
+            });
+        }
         cronMantenimiento(be);
         await cronConsolidarFichadas(be);
         await be.inCron('avance_de_dia_proc', {vecesPorDia:24*6});
-        cronSincroUsuarios(be);
     }
     override async getProcedures(){
         // eslint-disable-next-line @typescript-eslint/no-this-alias
