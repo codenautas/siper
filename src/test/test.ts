@@ -139,7 +139,7 @@ async function registrarFichada(server: AppSiper, params: Partial<ctts.Fichada>,
     return result;
 }
 
-async function registrarFichadas(server: AppSiper, params:{idper: string, fecha: Date, entrada: string, salida: string}, tabla?:'fichadas_recibidas'): Promise<ctts.FechaHora> {
+async function registrarFichadas(server: AppSiper, params:{idper: string, fecha: Date, entrada: string, salida: string}, tabla?:'fichadas_recibidas'): Promise<void> {
     var {idper, fecha, entrada, salida} = params;
     await registrarFichada(server, {idper, fecha, hora: entrada, tipo_fichada: 'E'}, tabla);
     await registrarFichada(server, {idper, fecha, hora: salida , tipo_fichada: 'S'}, tabla);
