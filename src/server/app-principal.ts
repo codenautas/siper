@@ -77,6 +77,7 @@ import { tipos_novedad           } from "./table-tipos_novedad";
 import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
 import {sinc_fichadores, ESTADOS} from "./table-sinc_fichadores"
+import { partidos                } from "./table-partidos";
 
 import { consolidarFichadas, ejecutarSP, ProceduresPrincipal } from './procedures-principal'
 import * as sql from 'mssql';
@@ -655,6 +656,7 @@ export class AppSiper extends AppBackend{
             paises               ,
             provincias           ,
             barrios              ,
+            partidos             ,
             localidades          ,
             calles               ,
             tipos_domicilio      ,

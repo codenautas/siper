@@ -33,6 +33,7 @@ import {provincia} from "./table-provincias";
 import {localidad} from "./table-localidades";
 import {barrio} from "./table-barrios";
 import {calle} from "./table-calles";
+import { partido } from "./table-partidos";
 
 export const nro_item: FieldDefinition = {name: 'nro_item', typeName: 'bigint', description: 'identificador del domicilio para una persona'}
 
@@ -49,6 +50,7 @@ export function per_domicilios(context: TableContext): TableDefinition{
             //{...domicilio, sequence:{name:'domicilio_seq', firstValue:1}, nullable:true, editable:false },
             tipo_domicilio,
             provincia,
+            partido,
             localidad,
             barrio,
             {name: 'codigo_postal'    ,typeName:'text'   },
@@ -69,8 +71,9 @@ export function per_domicilios(context: TableContext): TableDefinition{
         primaryKey: [idper.name, 'nro_item'],
         foreignKeys: [
             {references: 'personas'   , fields: [idper.name]},
-            {references: 'provincias' , fields: [provincia.name]},
-            {references: 'localidades', fields: [provincia.name, localidad.name]},
+            // {references: 'provincias' , fields: [provincia.name]},
+            {references: 'partidos' , fields: [partido.name]},
+            {references: 'localidades', fields: [partido.name, localidad.name]},
             {references: 'barrios'    , fields: [provincia.name, barrio.name]},
             {references: 'calles'     , fields: [provincia.name, calle.name]},
             {references: 'tipos_domicilio', fields: [tipo_domicilio.name]},
