@@ -113,8 +113,15 @@ function puedeCargarNovedades(infoUsuario: InfoUsuario) {
 
 type Periodo = {mes:number, annio:number}
 
+function horassStr(horas:TimeInterval|any, separador:string){
+    return (horas instanceof TimeInterval ? horas.toHm() : horas ?? '00:00').replace(/^(-?)(0?)([1-9]\d*):(\d+):(\d+)(:\d+)?$/, (_:string, sign:string, zero:string, h:string, m:string) => `${zero.length?'\u00A0\u00A0':''}${sign}${h}${separador}${m}`)
+}
+
 function horasStr(horas:TimeInterval|any){
-    return (horas instanceof TimeInterval ? horas.toHm() : horas ?? '00:00').replace(/^(-?\d+):(\d+)(:\d+)?$/, (_:string, h:string, m:string) => `${+h}ₕ${m}`)
+    return horassStr(horas, 'ₕ')
+}
+function horaStr(horas:TimeInterval|any){
+    return horassStr(horas, ':')
 }
 
 function CalendarioResumen(props:{conn:Connector, idper:string, periodo:Periodo}){
@@ -281,7 +288,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                             <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
                             {mostrarFichadaEnDia && dia.horas ? (
                                 <span className="calendario-dia-horas">
-                                    {dia.horas.toString().replace(/^(\d+):(\d+):\d+$/, (_, h, m) => `${+h}ₕ${m}`)}
+                                    {horaStr(dia.horas.toString())}
                                 </span>
                             ) : null}
                             <span 
@@ -302,7 +309,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                                         const [from, to] = inner.split(',');
                                         const fmt = (t: string) => 
                                             t == null || t == '' ? <span>{`\u2007\u2007\u00A0\u2007\u2007`}</span> : 
-                                            <span> {t.replace(/^(\d+):(\d+):\d+$/, (_, h, m) => `${+h}:${m}`)} </span>;
+                                            <span> {horaStr(t)} </span>;
                                         return <div key={i}>
                                             {fmt(from)} {' \u00A0 '} {fmt(to)}
                                         </div>;
