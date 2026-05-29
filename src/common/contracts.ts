@@ -347,6 +347,14 @@ export const horarios_dds = {
     })
 } 
 
+export const horarios_cod = {
+    table: 'horarios_cod',
+    description: is.object({
+        hroario: is.string, 
+        cant_horas: is.number,
+    })
+} 
+
 export const fichadas_vigentes = {
     table: 'fichadas_vigentes',
     description: is.object({

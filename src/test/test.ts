@@ -1584,6 +1584,23 @@ describe("SiPer: " + testConfig.name, function(){
                 ], 'all', {fixedFields:{horario}})
             })
         });
+        it("un horario de 6 horas desde las 10", async function(){
+            await enNuevaPersona(this.test?.title!, {inicia_fichada}, async ({idper}) => {
+                var horario_per = await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: '6h10', desde:date.iso('2000-01-01'), hasta:date.iso('2000-12-31')}, 'new')
+                var horario = '6h 10a16'
+                discrepances.showAndThrow(horario_per.horario, horario)
+                await rrhhSession.tableDataTest(ctts.horarios_dds, [
+                    {dds: 1, hora_desde: '10:00', hora_hasta: '16:00', trabaja: true},
+                    {dds: 2, hora_desde: '10:00', hora_hasta: '16:00', trabaja: true},
+                    {dds: 3, hora_desde: '10:00', hora_hasta: '16:00', trabaja: true},
+                    {dds: 4, hora_desde: '10:00', hora_hasta: '16:00', trabaja: true},
+                    {dds: 5, hora_desde: '10:00', hora_hasta: '16:00', trabaja: true},
+                ], 'all', {fixedFields:{horario}})
+                await rrhhSession.tableDataTest(ctts.horarios_cod, [
+                    {horario, cant_horas:6},
+                ], 'all', {fixedFields:{horario}})
+            })
+        });
     });
     // const AÑO0 = DESDE_AÑO
     const AÑO1 = AÑO_SIGUIENTE

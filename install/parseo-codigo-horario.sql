@@ -114,9 +114,9 @@ DECLARE
   v_parseado jsonb;
 BEGIN
   if new.horario is not null then
-    v_parseado := parsear_horario(v_horario);
-    v_horario := horario_estandarizado(v_parseado);
-    v_cant_horas := case when v_parseado ->> 'h' <> 'null'::jsonb then (v_parseado ->> 'h')::integer else null end;
+    v_parseado := parsear_horario(new.horario);
+    v_horario := horario_estandarizado(new.horario);
+    v_cant_horas := case when v_parseado -> 'h' <> 'null'::jsonb then (v_parseado ->> 'h')::integer else null end;
     if v_horario is distinct from new.horario then
       new.horario := v_horario;
     end if;
