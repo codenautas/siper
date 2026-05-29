@@ -11,6 +11,7 @@ import { sqlPersonas } from "./table-personas";
 import { s_revista } from "./table-situacion_revista";
 
 export const sqlExprHoras = (expr: string) => `to_char(${expr}, 'HH24:MI')`;
+export const sqlExprHorasConSigno = (expr: string) => `CASE WHEN (${expr}) < interval '0' THEN '-' || to_char(-(${expr}), 'HH24:MI') ELSE to_char(${expr}, 'HH24:MI') END`;
 
 export const sqlParteDiario= `
 select 

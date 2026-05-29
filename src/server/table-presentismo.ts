@@ -4,7 +4,7 @@ import { TableDefinition, TableContext } from "./types-principal";
 
 import { idper, sqlPersonas } from "./table-personas";
 import { sector } from "./table-sectores";
-import { sqlExprHoras } from "./table-parte_diario";
+import { sqlExprHoras, sqlExprHorasConSigno } from "./table-parte_diario";
 
 export const sqlCumplimientoHorasMensual = `
 WITH base AS (
@@ -22,6 +22,7 @@ WITH base AS (
     WHERE f.laborable IS DISTINCT FROM false
       AND f.dds NOT IN (0, 6)
       AND n.trabajable IS TRUE
+      AND (p.inicia_fichada IS NULL OR n.fecha >= p.inicia_fichada)
 ),
 resumen_mensual AS (
     SELECT
@@ -58,7 +59,7 @@ SELECT
     p.dias_laborables_mes,
     ${sqlExprHoras('p.total_mes')} AS total_mes,
     CASE WHEN p.promedio_diario IS NOT NULL THEN ${sqlExprHoras('p.promedio_diario')} END AS promedio_diario,
-    ${sqlExprHoras('p.diferencia_horas_mes')} AS diferencia_horas_mes,
+    ${sqlExprHorasConSigno('p.diferencia_horas_mes')} AS diferencia_horas_mes,
     p.novedades_injustificadas,
     p.novedades_injustificadas >= 1 AS pierde_por_novedad_injustificada,
     p.diferencia_horas_mes > p.horas_maximas_adeudadas_mes AS pierde_por_horas,
