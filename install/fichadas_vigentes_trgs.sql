@@ -164,7 +164,7 @@ $sql$
   primeros AS (
     SELECT hora, tipo_fichada
     FROM (
-        SELECT hora, tipo_fichada, LAG(tipo_fichada) OVER (ORDER BY hora) AS tipo_anterior
+        SELECT hora, tipo_fichada, LAG(tipo_fichada) OVER (ORDER BY hora, tipo_fichada desc) AS tipo_anterior
         FROM eventos_raw
     ) t
     WHERE tipo_fichada IS DISTINCT FROM tipo_anterior

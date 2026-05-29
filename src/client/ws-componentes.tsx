@@ -113,8 +113,15 @@ function puedeCargarNovedades(infoUsuario: InfoUsuario) {
 
 type Periodo = {mes:number, annio:number}
 
+function horassStr(horas:TimeInterval|any, separador:string){
+    return (horas instanceof TimeInterval ? horas.toHm() : horas ?? '00:00').replace(/^(-?)(0?)([1-9]?\d):(\d+):(\d+)(:\d+)?$/, (_:string, sign:string, zero:string, h:string, m:string) => `${zero.length?'\u00A0\u00A0':''}${sign=='-'?'−':sign}${h}${separador}${m}`)
+}
+
 function horasStr(horas:TimeInterval|any){
-    return (horas instanceof TimeInterval ? horas.toHm() : horas ?? '00:00').replace(/^(-?\d+):(\d+)(:\d+)?$/, (_:string, h:string, m:string) => `${+h}ₕ${m}`)
+    return horassStr(horas, 'ₕ')
+}
+function horaStr(horas:TimeInterval|any){
+    return horassStr(horas, ':')
 }
 
 function CalendarioResumen(props:{conn:Connector, idper:string, periodo:Periodo}){
@@ -281,7 +288,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                             <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
                             {mostrarFichadaEnDia && dia.horas ? (
                                 <span className="calendario-dia-horas">
-                                    {dia.horas.toString().replace(/^(\d+):(\d+):\d+$/, (_, h, m) => `${+h}ₕ${m}`)}
+                                    {horaStr(dia.horas.toString())}
                                 </span>
                             ) : null}
                             <span 
@@ -302,7 +309,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                                         const [from, to] = inner.split(',');
                                         const fmt = (t: string) => 
                                             t == null || t == '' ? <span>{`\u2007\u2007\u00A0\u2007\u2007`}</span> : 
-                                            <span> {t.replace(/^(\d+):(\d+):\d+$/, (_, h, m) => `${+h}:${m}`)} </span>;
+                                            <span> {horaStr(t)} </span>;
                                         return <div key={i}>
                                             {fmt(from)} {' \u00A0 '} {fmt(to)}
                                         </div>;
@@ -332,7 +339,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean, 
     fecha_ingreso?:RealDate, fecha_egreso?:RealDate /*, activo?:boolean, fecha_nacimiento?:RealDate, nombre_sector?:string, jerarquia?:string, jerarquias__descripcion?:string, cargo_atgc?:string, agrupamiento?:string, tramo?:string, grado?:string, domicilio?:string, nacionalidad?:string, sectores__nombre_sector?:string*/};
 type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string, perfil_sgc:number, perfiles_sgc__nombre:string, banda_horaria:string, bandas_horarias__descripcion:string, sexo:string, sexos__descripcion:string, motivo_egreso?:string, motivos_egreso__descripcion?:string, cuil_valido?:boolean};
-type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__descripcion:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, nro_item:string, orden:number}
+type ProvisorioPersonaDomicilio = {idper:string, barrios__nombre_barrio:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__descripcion:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio:string, codigo_postal:string, localidad:string, localidades__nombre_localidad:string, nro_item:string, orden:number}
 type ProvisorioPersonaTelefono = {idper: string, tipo_telefono: string, tipos_telefono__descripcion?: string, telefono: string, observaciones?: string, nro_item?: number, orden?: number}
 type ProvisorioSectores = {pactivas: number, activo: boolean,sector:string, nombre_sector:string, pertenece_a:string, nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, hijos:ProvisorioSectoresAumentados[], profundidad:number}
@@ -966,6 +973,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                                 {domicilio.depto && ` depto ${domicilio.depto}`}
                                 {domicilio.codigo_postal && ` (${domicilio.codigo_postal})`}
                                 {domicilio.barrios__nombre_barrio && `, ${domicilio.barrios__nombre_barrio}`} 
+                                {domicilio.localidades__nombre_localidad && `, ${domicilio.localidades__nombre_localidad}`}
                                 {domicilio.provincias__nombre_provincia && ` \u2014 ${domicilio.provincias__nombre_provincia}`} 
                                 {domicilio.tipos_domicilio__descripcion && domicilio.tipos_domicilio__descripcion !== "PRINCIPAL" && ` (${domicilio.tipos_domicilio__descripcion})`}
                             </div>

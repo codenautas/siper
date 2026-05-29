@@ -33,6 +33,7 @@ export function fichadas_recibidas(context: TableContext): TableDefinition{
         primaryKey: [id_fichada.name],
         sql:{
             skipEnance: true
-        }
+        },
+        sortColumns: [{column: 'id_fichada', order: -1}],
     };
 }

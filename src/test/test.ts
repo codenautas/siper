@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 // @ts-ignore 
 import * as assert from "assert";
@@ -1187,6 +1187,52 @@ describe("SiPer: " + testConfig.name, function(){
                     // var result = rrhhSession.callProcedure(ctts.calendario_persona_resumen)
                 })
             })
+            it("fichar un dia consolidado cambian las horas", async function(){
+                const fecha = date.iso('2000-01-28');
+                try {
+                    await enNuevaPersona(this.test?.title!, {inicia_fichada: date.iso('2000-01-01')}, async ({idper}, {}) => {
+                        await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:true});
+                        await registrarFichada(server, {idper, fecha, hora: '09:00:00', tipo_fichada:'E'});
+                        await registrarFichada(server, {idper, fecha, hora: '17:00:00', tipo_fichada:'S'});
+                        const resumen = await rrhhSession.callProcedure(ctts.calendario_persona_resumen, {idper, annio:2000, mes:1});
+                        assert.equal(resumen.dias_promediados, 1);
+                        discrepances.showAndThrow(resumen.suma_horas, timeInterval({hours:8}));
+                    })
+                } finally {
+                    await server.inDbClient(ADMIN_REQ, async client =>
+                        client.query(`update fechas set fichadas_consolidadas = false where fecha = $1`, [fecha]).execute()
+                    )
+                }
+            })
+            it("recalcula las horas del mes al adelantar inicia_fichada", async function(){
+                try {
+                    await enNuevaPersona(this.test?.title!, {inicia_fichada: FECHA_ACTUAL}, async ({idper}, {}) => {
+                        const fechaAnterior = date.iso('2000-01-28');
+                        const entrada = '09:00:00';
+                        const salida  = '17:00:00';
+                        await registrarFichada(server, {idper, fecha:fechaAnterior, hora: entrada, tipo_fichada:'E'});
+                        await registrarFichada(server, {idper, fecha:fechaAnterior, hora: salida,  tipo_fichada:'S'});
+                        await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, hora: entrada, tipo_fichada:'E'});
+                        await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, hora: salida,  tipo_fichada:'S'});
+                        await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha:FECHA_ACTUAL, consolidar:true});
+
+                        var resumen = await rrhhSession.callProcedure(ctts.calendario_persona_resumen, {idper, annio:2000, mes:1});
+                        assert.equal(resumen.dias_promediados, 1);
+                        discrepances.showAndThrow(resumen.suma_horas, timeInterval({hours:8}));
+
+                        await adminMetadatosSession.saveRecord(ctts.personas, {idper, inicia_fichada:fechaAnterior}, 'update');
+
+                        resumen = await rrhhSession.callProcedure(ctts.calendario_persona_resumen, {idper, annio:2000, mes:1});
+                        assert.equal(resumen.dias_promediados, 2);
+                        discrepances.showAndThrow(resumen.suma_horas, timeInterval({hours:16}));
+                        await verificaFichadas({idper, fecha:fechaAnterior, fichadas: TIME_RANGE(entrada, salida), horas: '08:00:00'});
+                    })
+                } finally {
+                    await server.inDbClient(ADMIN_REQ, async client =>
+                        client.query(`update fechas set fichadas_consolidadas = false where fecha between '2000-01-01' and $1`, [FECHA_ACTUAL]).execute()
+                    )
+                }
+            })
             it("fichadas no laborables no calculan horas", async function(){
                 await enNuevaPersona(this.test?.title!, {inicia_fichada: date.iso('2000-12-30')}, async ({idper}, {}) => {
                     const fecha = date.iso('2000-01-30'); // domingo
@@ -1556,6 +1602,19 @@ describe("SiPer: " + testConfig.name, function(){
                     {idper, cod_nov: COD_PRED_PAS, fichada: '9:00 - 17:00', horas: timeInterval({hours: 8})},
                 ], 'all', {fixedFields:{idper, fecha}})
                 await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:false})
+            })
+        });
+        it.skip("no muestra situacion_revista si no tiene trayecto actual", async function(){
+            await enNuevaPersona(this.test?.title!, {usuario:{sesion:false}}, async ({idper}) => {
+                await server.inDbClient(ADMIN_REQ, async client => {
+                    await client.query(
+                        `update trayectoria_laboral set hasta = $1 where idper = $2`,
+                        [date.iso('2000-01-15'), idper]
+                    ).execute();
+                });
+                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                    {idper, situacion_revista: null},
+                ], 'all', {fixedFields:[{fieldName:'idper', value: idper}, {fieldName:'fecha', value: FECHA_ACTUAL}]})
             })
         });
     });
