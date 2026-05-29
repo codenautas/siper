@@ -23,6 +23,7 @@ WITH base AS (
       AND f.dds NOT IN (0, 6)
       AND n.trabajable IS TRUE
       AND (p.inicia_fichada IS NULL OR n.fecha >= p.inicia_fichada)
+      AND p.activo IS TRUE
 ),
 resumen_mensual AS (
     SELECT
@@ -47,8 +48,9 @@ resumen_presentismo AS (
         CASE WHEN m.dias_con_fichada > 0
             THEN coalesce(m.total_mes, interval '0') / m.dias_con_fichada
         END AS promedio_diario,
+        r.umbral_horas_personales * m.dias_laborables_mes::numeric * interval '1 hour' AS horas_esperadas_mes,
         r.umbral_horas_personales * m.dias_laborables_mes::numeric * interval '1 hour' - coalesce(m.total_mes, interval '0') AS diferencia_horas_mes,
-        r.umbral_horas_mensuales * interval '1 hour' AS horas_maximas_adeudadas_mes
+        coalesce(r.umbral_horas_mensuales, 0) * interval '1 hour' AS horas_maximas_adeudadas_mes
     FROM resumen_mensual m
         JOIN reglas r ON r.annio = extract(year from m.mes_inicio)::integer
 )
@@ -58,6 +60,7 @@ SELECT
     p.mes_inicio,
     p.dias_laborables_mes,
     ${sqlExprHoras('p.total_mes')} AS total_mes,
+    ${sqlExprHoras('p.horas_esperadas_mes')} AS horas_esperadas_mes,
     CASE WHEN p.promedio_diario IS NOT NULL THEN ${sqlExprHoras('p.promedio_diario')} END AS promedio_diario,
     ${sqlExprHorasConSigno('p.diferencia_horas_mes')} AS diferencia_horas_mes,
     p.novedades_injustificadas,
@@ -82,6 +85,7 @@ export function presentismo(_context: TableContext): TableDefinition {
             sector,
             { name: "dias_laborables_mes", typeName: "integer", title: "dias habiles" },
             { name: "total_mes", typeName: "text", title: "cantidad de horas" },
+            { name: "horas_esperadas_mes", typeName: "text", title: "horas esperadas" },
             { name: "promedio_diario", typeName: "text", title: "promedio horas trabajadas" },
             { name: "diferencia_horas_mes", typeName: "text", title: "diferencia horas" },
             { name: "novedades_injustificadas", typeName: "integer", title: "novedades injustificadas" },
