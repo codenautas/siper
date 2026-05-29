@@ -54,7 +54,8 @@ create or replace function horario_estandarizado(p_horario jsonb) returns text
   immutable
 as
 $sql$
-  select string_agg(case when dds = '12345' then '' else translate(dds, '01234567', 'DLMXJVSD') end
+  select case when (p_horario -> 'h') <> 'null'::jsonb then (p_horario ->> 'h') || 'h ' else '' end
+      || string_agg(case when dds = '12345' then '' else translate(dds, '01234567', 'DLMXJVSD') end
       || regexp_replace(to_char(hora_desde,'FMHH24:MI'), '(:00)?:00$', '')
       || 'a'
       || regexp_replace(to_char(hora_hasta,'FMHH24:MI'), '(:00)?:00$', '') , ' ' order by min_dds)
@@ -76,8 +77,9 @@ create or replace function horario_estandarizado(p_cod_horario text) returns tex
   immutable
 as
 $sql$
-  select horario_estandarizado(jsonb_build_object('ds', jsonb_agg(x.*)))
-    from parseo_horario_tabla(parsear_horario(p_cod_horario)) x
+  select horario_estandarizado(case when ph->'h' = 'null'::jsonb then '{}' else jsonb_build_object('h', ph->'h') end || jsonb_build_object('ds', z.t))
+    from parsear_horario(p_cod_horario) ph,
+         lateral (select jsonb_agg(x.*) as t from parseo_horario_tabla(ph) x ) z
 $sql$;
 
 -- Casos de prueba
@@ -99,7 +101,7 @@ select parseado::jsonb as esperado, horario, estandar
 ))
 where obtenido is distinct from esperado or codigo_obtenido is distinct from coalesce(estandar, horario);
 
-/* TRIGGERS
+-- /* TRIGGERS
 CREATE OR REPLACE FUNCTION horarios_per_trg()
   RETURNS TRIGGER
   LANGUAGE PLPGSQL
@@ -108,19 +110,23 @@ $BODY$
 DECLARE
   v_existe boolean;
   v_horario text;
+  v_cant_horas integer;
+  v_parseado jsonb;
 BEGIN
   if new.horario is not null then
-    v_horario := horario_estandarizado(new.horario);
+    v_parseado := parsear_horario(v_horario);
+    v_horario := horario_estandarizado(v_parseado);
+    v_cant_horas := case when v_parseado ->> 'h' <> 'null'::jsonb then (v_parseado ->> 'h')::integer else null end;
     if v_horario is distinct from new.horario then
       new.horario := v_horario;
     end if;
     select true into v_existe
       from horarios_cod where horario = v_horario;
     if v_existe is not true then
-      insert into horarios_cod (horario) values (v_horario);
+      insert into horarios_cod (horario, cant_horas) values (v_horario, v_cant_horas);
       insert into horarios_dds (horario, dds, hora_desde, hora_hasta, trabaja)
         select v_horario, dds, hora_desde, hora_hasta, true as trabaja
-          from parseo_horario_tabla(parsear_horario(v_horario)) h_dds;
+          from parseo_horario_tabla(v_parseado) h_dds;
     end if;
   end if;
   RETURN NEW;
