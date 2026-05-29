@@ -7,49 +7,36 @@ import { sector } from "./table-sectores";
 import { sqlExprHoras, sqlExprHorasConSigno } from "./table-parte_diario";
 
 export const sqlCumplimientoHorasMensual = `
-WITH base AS (
+WITH resumen_mensual AS (
     SELECT
         n.idper,
-        p.sector,
-        date_trunc('month', n.fecha)::date AS mes_inicio,        
-        n.cod_nov,
-        coalesce(cn.injustificado, false) AS es_novedad_injustificada,
-        n.horas
+        min(p.sector) AS sector,
+        date_trunc('month', n.fecha)::date AS mes_inicio,
+        COUNT(*) FILTER (WHERE f.laborable IS DISTINCT FROM false AND f.dds NOT IN (0, 6)) AS dias_considerados,
+        COUNT(*) FILTER (WHERE f.laborable IS DISTINCT FROM false AND f.dds NOT IN (0, 6) AND COALESCE(cn.injustificado, false)) AS novedades_injustificadas,
+        COUNT(n.horas) AS dias_con_fichada,
+        SUM(n.horas) AS total_mes
     FROM novedades_vigentes n
         JOIN (${sqlPersonas}) p ON p.idper = n.idper
         JOIN fechas f ON f.fecha = n.fecha
         LEFT JOIN cod_novedades cn ON cn.cod_nov = n.cod_nov
-    WHERE f.laborable IS DISTINCT FROM false
-      AND f.dds NOT IN (0, 6)
-      AND n.trabajable IS TRUE
-      AND (p.inicia_fichada IS NULL OR n.fecha >= p.inicia_fichada)
+    WHERE (p.inicia_fichada IS NULL OR n.fecha >= p.inicia_fichada)
       AND p.activo IS TRUE
-),
-resumen_mensual AS (
-    SELECT
-        b.idper,
-        min(b.sector) AS sector,
-        b.mes_inicio,
-        COUNT(*) AS dias_laborables_mes,
-        COUNT(*) FILTER (WHERE b.es_novedad_injustificada) AS novedades_injustificadas,
-        COUNT(b.horas) AS dias_con_fichada,
-        SUM(b.horas) AS total_mes
-    FROM base b
-    GROUP BY b.idper, b.mes_inicio
+    GROUP BY n.idper, date_trunc('month', n.fecha)::date
 ),
 resumen_presentismo AS (
     SELECT
         m.idper,
         m.sector,
         m.mes_inicio,
-        m.dias_laborables_mes,
+        m.dias_considerados,
         m.novedades_injustificadas,
         coalesce(m.total_mes, interval '0') AS total_mes,
         CASE WHEN m.dias_con_fichada > 0
             THEN coalesce(m.total_mes, interval '0') / m.dias_con_fichada
         END AS promedio_diario,
-        r.umbral_horas_personales * m.dias_laborables_mes::numeric * interval '1 hour' AS horas_esperadas_mes,
-        r.umbral_horas_personales * m.dias_laborables_mes::numeric * interval '1 hour' - coalesce(m.total_mes, interval '0') AS diferencia_horas_mes,
+        r.umbral_horas_personales * m.dias_con_fichada::numeric * interval '1 hour' AS horas_esperadas_mes,
+        r.umbral_horas_personales * m.dias_con_fichada::numeric * interval '1 hour' - coalesce(m.total_mes, interval '0') AS diferencia_horas_mes,
         coalesce(r.umbral_horas_mensuales, 0) * interval '1 hour' AS horas_maximas_adeudadas_mes
     FROM resumen_mensual m
         JOIN reglas r ON r.annio = extract(year from m.mes_inicio)::integer
@@ -58,7 +45,7 @@ SELECT
     p.idper,
     p.sector,
     p.mes_inicio,
-    p.dias_laborables_mes,
+    p.dias_considerados,
     ${sqlExprHoras('p.total_mes')} AS total_mes,
     ${sqlExprHoras('p.horas_esperadas_mes')} AS horas_esperadas_mes,
     CASE WHEN p.promedio_diario IS NOT NULL THEN ${sqlExprHoras('p.promedio_diario')} END AS promedio_diario,
@@ -83,7 +70,7 @@ export function presentismo(_context: TableContext): TableDefinition {
             { name: "mes_inicio", typeName: "date", title: "mes" },
             idper,
             sector,
-            { name: "dias_laborables_mes", typeName: "integer", title: "dias habiles" },
+            { name: "dias_considerados", typeName: "integer", title: "dias considerados" },
             { name: "total_mes", typeName: "text", title: "cantidad de horas" },
             { name: "horas_esperadas_mes", typeName: "text", title: "horas esperadas" },
             { name: "promedio_diario", typeName: "text", title: "promedio horas trabajadas" },
