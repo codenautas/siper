@@ -15,7 +15,8 @@ export function parametros(context: TableContext): TableDefinition {
             {name: 'fecha_hora_para_test'        , typeName: 'timestamp'                                                           }, // solo se va a cambiar en modo test
             {name: 'cod_nov_habitual'            , typeName: 'text'   , title: 'cód nov', description: 'código de novedad habitual'},
             {name: 'permite_cargar_fichadas'     , typeName: 'boolean', description: 'Si está en Sí habilita la carga de fichadas, caso contrario no', defaultDbValue:'true'},
-            {name: 'carga_nov_hasta_hora'        , typeName: 'time'   , nullable:false, defaultValue:'12:00', description: 'hora hasta la cuál se pueden cargar novedaees'}
+            {name: 'carga_nov_hasta_hora'        , typeName: 'time'   , nullable:false, defaultValue:'12:00', description: 'hora hasta la cuál se pueden cargar novedaees'},
+            {name: 'cant_horas_diarias'          , typeName: 'integer', nullable:false, defaultValue:8}
         ],
         primaryKey: ['unico_registro'],
         foreignKeys: [

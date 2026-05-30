@@ -21,16 +21,16 @@
     "uuid": ">=14.0.0"
   },
   "dependencies": {
-    "backend-plus": "^2.6.3",
-    "best-globals": "^2.1.5",
+    "backend-plus": "^2.6.4",
+    "best-globals": "^2.2.0",
     "frontend-plus": "^0.0.17",
     "guarantee-type": "^0.2.2",
     "json4all": "^1.4.2",
-    "mssql": "^12.5.4",
+    "mssql": "^12.5.5",
     "pg-triggers": "^0.4.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "type-store": "^0.4.10"
+    "type-store": "^0.4.11"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -51,7 +51,7 @@
     "type-fest": "^5.6.0",
     "types.d.ts": "^0.6.22",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.59.4"
+    "typescript-eslint": "^8.60.0"
   },
   "mixin-patch": {
     "patch": false
