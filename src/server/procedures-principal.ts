@@ -274,17 +274,23 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const {idper, annio, mes} = params;
             const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
             const info = await context.client.query(
-                `SELECT count(*) as dias_mes,
+                `SELECT *, suma_horas - horas_esperadas as saldo_horas
+            FROM (
+                SELECT count(*) as dias_mes,
                         count(*) FILTER (WHERE laborable is not false and dds between 1 and 5) as laborables,
                         count(horas) as dias_promediados,
-                        avg(horas) as promedio_horas,
                         sum(horas) as suma_horas,
-                        (sum(horas) - make_interval(hours => (count(horas) * 7)::int)) as saldo_horas
+                        (sum(coalesce(hc.cant_horas, par.cant_horas_diarias)) FILTER (WHERE horas is not null) || ' hours')::interval as horas_esperadas,
+                        avg(horas) as promedio_horas,
+                        (avg(coalesce(hc.cant_horas, par.cant_horas_diarias)) FILTER (WHERE horas is not null) || ' hours')::interval as promedio_esperado
                     FROM novedades_vigentes nv INNER JOIN fechas USING (fecha)
                         INNER JOIN personas p USING (idper)
-                        WHERE nv.fecha BETWEEN $2 AND $2::date + interval '1 month' - interval '1 day'
+                        LEFT JOIN horarios_per h ON p.idper = h.idper AND nv.annio = h.annio AND nv.fecha <@ h.lapso_fechas
+                        LEFT JOIN horarios_cod hc ON h.horario = hc.horario,
+                        parametros par
+                    WHERE nv.fecha BETWEEN $2 AND $2::date + interval '1 month' - interval '1 day'
                         AND nv.idper = $1
-                `,
+                )`,
                 [idper, desde]
             ).fetchUniqueRow();
             return info.row
@@ -855,8 +861,8 @@ export async function consolidarFichadas(parameters: any, client: Client) {
     const cambios = (await client.query(
         `update fechas 
             set fichadas_consolidadas = $3 
-            where fecha between $1 and $2 and fichadas_consolidadas is distinct from $3`,
-        [fechaDesde, fechaHasta, consolidar]
+            where fecha between $1 and $2 and fichadas_consolidadas is distinct from $3`, // ${idper ? `AND idper = $4` : ``}
+        [fechaDesde, fechaHasta, consolidar] // , ...(idper ? [idper] : [])
     ).fetchAll()).rows;
     if (!cambios.length) {
         if (idper) {

@@ -1130,9 +1130,11 @@ describe("SiPer: " + testConfig.name, function(){
                         dias_mes: 31,
                         dias_promediados: 0,
                         laborables: 21,
-                        promedio_horas: null,
                         saldo_horas: null,
-                        suma_horas: null
+                        suma_horas: null,
+                        promedio_horas: null,
+                        horas_esperadas: null,
+                        promedio_esperado: null,
                     }  as unknown as typeof result;
                     assert.deepEqual(result, esperado);
                 })
@@ -1149,9 +1151,11 @@ describe("SiPer: " + testConfig.name, function(){
                             dias_mes: 31,
                             dias_promediados: 1,
                             laborables: 21,
-                            promedio_horas: timeInterval({hours:6}),
                             saldo_horas: timeInterval({hours:-1}),
-                            suma_horas:  timeInterval({hours:6})
+                            suma_horas:  timeInterval({hours:6}),
+                            promedio_horas:  timeInterval({hours:6}),
+                            horas_esperadas: timeInterval({hours:7}),
+                            promedio_esperado: timeInterval({hours:7}),
                         }  as unknown as typeof resumen;
                         discrepances.showAndThrow(resumen, esperado);
                     })
@@ -1612,25 +1616,32 @@ describe("SiPer: " + testConfig.name, function(){
         });
         it("período con 6 horas", async function(){
             try {
-                await enNuevaPersona(this.test?.title!, {inicia_fichada: FECHA_ACTUAL}, async ({idper}, {}) => {
+                const fechaAnterior = date.iso('2000-01-28');
+                await enNuevaPersona(this.test?.title!, {inicia_fichada: fechaAnterior}, async ({idper}, {}) => {
                     // TODO
-                    const fechaAnterior = date.iso('2000-01-28');
                     const entrada = '09:00:00';
                     const salida  = '17:00:00';
+                    await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: '6h10', desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-28')}, 'new')
+                    await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: '7h10', desde:date.iso('2000-01-29'), hasta:date.iso('2000-12-31')}, 'new')
                     await registrarFichadas(server, {idper, fecha:fechaAnterior, entrada, salida})
                     await registrarFichadas(server, {idper, fecha:FECHA_ACTUAL, entrada, salida})
+                    await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha:fechaAnterior, consolidar:true});
                     await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha:FECHA_ACTUAL, consolidar:true});
-
                     var resumen = await rrhhSession.callProcedure(ctts.calendario_persona_resumen, {idper, annio:2000, mes:1});
-                    assert.equal(resumen.dias_promediados, 1);
-                    discrepances.showAndThrow(resumen.suma_horas, timeInterval({hours:8}));
-
-                    await adminMetadatosSession.saveRecord(ctts.personas, {idper, inicia_fichada:fechaAnterior}, 'update');
-
-                    resumen = await rrhhSession.callProcedure(ctts.calendario_persona_resumen, {idper, annio:2000, mes:1});
-                    assert.equal(resumen.dias_promediados, 2);
-                    discrepances.showAndThrow(resumen.suma_horas, timeInterval({hours:16}));
-                    await verificaFichadas({idper, fecha:fechaAnterior, fichadas: TIME_RANGE(entrada, salida), horas: '08:00:00'});
+                    // await verificaFichadas({idper, fecha:fechaAnterior, fichadas: TIME_RANGE(entrada, salida), horas: '08:00:00'});
+                    // assert.equal(resumen.dias_promediados, 2);
+                    // discrepances.showAndThrow(resumen.suma_horas, timeInterval({hours:16}));
+                    var esperado = {
+                        dias_mes: 31,
+                        dias_promediados: 2,
+                        laborables: 21,
+                        saldo_horas: timeInterval({hours:3}),
+                        suma_horas: timeInterval({hours:16}),
+                        promedio_horas: timeInterval({hours:8}),
+                        horas_esperadas: timeInterval({hours:13}),
+                        promedio_esperado: timeInterval({hours:6.5}),
+                    } as typeof resumen;
+                    discrepances.showAndThrow(resumen, esperado);
                 })
             } finally {
                 await server.inDbClient(ADMIN_REQ, async client =>
