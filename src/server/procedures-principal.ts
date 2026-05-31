@@ -279,7 +279,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         count(horas) as dias_promediados,
                         avg(horas) as promedio_horas,
                         sum(horas) as suma_horas,
-                        (sum(horas) - make_interval(hours => (count(horas) * 7)::int)) saldo_horas
+                        (sum(horas) - make_interval(hours => (count(horas) * 7)::int)) as saldo_horas
                     FROM novedades_vigentes nv INNER JOIN fechas USING (fecha)
                         INNER JOIN personas p USING (idper)
                         WHERE nv.fecha BETWEEN $2 AND $2::date + interval '1 month' - interval '1 day'

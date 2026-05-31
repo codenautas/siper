@@ -471,9 +471,9 @@ export const calendario_persona_resumen = {
         dias_mes: is.number,
         laborables: is.number,
         dias_promediados: is.number,
-        promedio_horas: is.nullable.class(TimeInterval),
-        suma_horas: is.nullable.class(TimeInterval),
-        saldo_horas: is.nullable.class(TimeInterval),
+        promedio_horas: {nullable: is.class(TimeInterval)},
+        suma_horas: {nullable: is.class(TimeInterval)},
+        saldo_horas: {nullable: is.class(TimeInterval)},
     })
 }
 

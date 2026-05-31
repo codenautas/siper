@@ -1137,7 +1137,7 @@ describe("SiPer: " + testConfig.name, function(){
                     assert.deepEqual(result, esperado);
                 })
             })
-            it.only("fichar un dia consolidado cambian las horas", async function(){
+            it("fichar un dia consolidado cambian las horas", async function(){
                 const fecha = date.iso('2000-01-28');
                 try {
                     await enNuevaPersona(this.test?.title!, {inicia_fichada: date.iso('2000-01-01')}, async ({idper}, {}) => {
@@ -1153,12 +1153,7 @@ describe("SiPer: " + testConfig.name, function(){
                             saldo_horas: timeInterval({hours:-1}),
                             suma_horas:  timeInterval({hours:6})
                         }  as unknown as typeof resumen;
-                        console.log('******************************************')
-                        console.log(resumen)
-                        console.log('------------------------------------------')
-                        console.log(esperado)
-                        assert.deepEqual(resumen, esperado);
-                        discrepances.showAndThrow(resumen.suma_horas, timeInterval({hours:8}));
+                        discrepances.showAndThrow(resumen, esperado);
                     })
                 } finally {
                     await server.inDbClient(ADMIN_REQ, async client =>
