@@ -116,7 +116,6 @@ type Periodo = {mes:number, annio:number}
 function horassStr(horas:TimeInterval|any, separador:string, minutos:string){
     return (horas instanceof TimeInterval ? horas.toHm() : horas ?? '00:00').replace(/^(-?)(0?)([1-9]?\d+):(\d+):(\d+)(:\d+)?$/, (_:string, sign:string, zero:string, h:string, m:string) => `${zero.length?'\u00A0\u00A0':''}${sign=='-'?'−':sign}${h}${separador}${m}${minutos && m ? minutos : ''}`)
 }
-
 function cantHorasStr(horas:TimeInterval|any){
     return horassStr(horas, 'ₕ', "'")
 }
