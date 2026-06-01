@@ -8,17 +8,17 @@ AS
 $BODY$
 DECLARE
   v_rangos datemultirange := '{}';
-  v_abiertos datemultirange := (select multirange(daterange(make_date(min(annio),1,1), make_date(max(annio),12,31))) from annios where abierto);
+  v_abiertos datemultirange := (select multirange(daterange(make_date(min(annio),1,1), make_date(max(annio),12,31),'[]')) from annios where abierto);
   v_idper text;
   v_rango daterange;
 BEGIN
   IF tg_op <> 'INSERT' THEN
     v_idper := old.idper;
-    v_rangos := v_rangos + multirange(daterange(old.registra_novedades_desde, old.fecha_egreso));
+    v_rangos := v_rangos + multirange(daterange(old.registra_novedades_desde, old.fecha_egreso, '[]'));
   END IF;
   IF tg_op <> 'DELETE' THEN
     v_idper := new.idper;
-    v_rangos := v_rangos + multirange(daterange(new.registra_novedades_desde, new.fecha_egreso));
+    v_rangos := v_rangos + multirange(daterange(new.registra_novedades_desde, new.fecha_egreso, '[]'));
   END IF;
   FOR v_rango IN SELECT * FROM UNNEST(v_rangos * v_abiertos) LOOP
     CALL actualizar_novedades_vigentes_idper(lower(v_rango), upper(v_rango), v_idper);

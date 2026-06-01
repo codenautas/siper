@@ -347,6 +347,14 @@ export const horarios_dds = {
     })
 } 
 
+export const horarios_cod = {
+    table: 'horarios_cod',
+    description: is.object({
+        hroario: is.string, 
+        cant_horas: is.number,
+    })
+} 
+
 export const fichadas_vigentes = {
     table: 'fichadas_vigentes',
     description: is.object({
@@ -463,10 +471,10 @@ export const calendario_persona_resumen = {
         dias_mes: is.number,
         laborables: is.number,
         dias_promediados: is.number,
-        promedio_horas: is.class(TimeInterval),
-        suma_horas: is.class(TimeInterval),
-        saldo_horas: is.string,
-        // saldo_horas: is.class(TimeInterval),
+        suma_horas: {nullable: is.class(TimeInterval)},
+        horas_esperadas: {nullable: is.class(TimeInterval)},
+        saldo_horas: {nullable: is.class(TimeInterval)},
+        promedio_esperado: {nullable: is.class(TimeInterval)},
     })
 }
 
