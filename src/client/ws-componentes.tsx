@@ -114,7 +114,7 @@ function puedeCargarNovedades(infoUsuario: InfoUsuario) {
 type Periodo = {mes:number, annio:number}
 
 function horassStr(horas:TimeInterval|any, separador:string, minutos:string){
-    return (horas instanceof TimeInterval ? horas.toHm() : horas ?? '00:00').replace(/^(-?)(0?)([1-9]?\d+):(\d+):(\d+)(:\d+)?$/, (_:string, sign:string, zero:string, h:string, m:string) => `${zero.length?'\u00A0\u00A0':''}${sign=='-'?'−':sign}${h}${separador}${m}${minutos && m ? minutos : ''}`)
+    return (horas instanceof TimeInterval ? horas.toHm() : horas ?? '00:00').replace(/^(-?)(0?)([1-9]?\d+):(\d+)(:\d+)?$/, (_:string, sign:string, zero:string, h:string, m:string) => `${zero.length?'\u00A0':''}${sign=='-'?'−':sign}${h}${separador}${+m ? '' + m + minutos : ''}`)
 }
 function cantHorasStr(horas:TimeInterval|any){
     return horassStr(horas, 'ₕ', "'")
@@ -133,7 +133,7 @@ function CalendarioResumen(props:{conn:Connector, idper:string, periodo:Periodo}
         }).catch(logError);
     }, [conn, idper, periodo.annio, periodo.mes]);
     if(resumen.dias_promediados == 0) return null;
-    return <Box>{cantHorasStr(resumen.suma_horas)} − {resumen.dias_promediados??0}<small><small>d</small></small>{` × 7ₕ`} = {cantHorasStr(resumen.saldo_horas)}</Box>
+    return <Box>{cantHorasStr(resumen.suma_horas)} − {resumen.dias_promediados??0}<small><small>d</small></small>{` × ${cantHorasStr(resumen.promedio_esperado)}`} = {cantHorasStr(resumen.saldo_horas)}</Box>
 }
 
 function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, fechaActual: RealDate, 
