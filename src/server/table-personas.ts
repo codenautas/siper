@@ -74,7 +74,7 @@ export function personas(context: TableContext): TableDefinition {
             max_nivel_ed,
             {...horario, inTable:false},
             {...banda_horaria                , title: 'banda horaria'},
-            {name: 'inicia_fichada'          , typeName: 'date', title: 'inicia fichada', editable:es.admin}
+            {name: 'inicia_fichada'          , typeName: 'date', title: 'inicia fichada'/*, editable:es.admin*/}
         ],
         primaryKey: [idper.name],
         foreignKeys: [

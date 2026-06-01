@@ -2,26 +2,21 @@
 
 import { TableDefinition, TableContext } from "./types-principal";
 
-import { idper, sqlPersonas } from "./table-personas";
+import { idper } from "./table-personas";
 import { sector } from "./table-sectores";
-import { sqlExprHoras, sqlExprHorasConSigno } from "./table-parte_diario";
+import { sqlExprHoras, sqlExprHorasConSigno, sqlParteDiario } from "./table-parte_diario";
 
 export const sqlCumplimientoHorasMensual = `
 WITH resumen_mensual AS (
-    SELECT
-        n.idper,
-        min(p.sector) AS sector,
-        date_trunc('month', n.fecha)::date AS mes_inicio,
-        COUNT(*) FILTER (WHERE f.laborable IS DISTINCT FROM false AND f.dds NOT IN (0, 6)) AS dias_considerados,
-        COUNT(*) FILTER (WHERE f.laborable IS DISTINCT FROM false AND f.dds NOT IN (0, 6) AND COALESCE(cn.injustificado, false)) AS novedades_injustificadas,
-        COUNT(n.horas) AS dias_con_fichada,
-        SUM(n.horas) AS total_mes
-    FROM novedades_vigentes n
-        JOIN (${sqlPersonas}) p ON p.idper = n.idper
-        JOIN fechas f ON f.fecha = n.fecha
-        LEFT JOIN cod_novedades cn ON cn.cod_nov = n.cod_nov
-    WHERE (p.inicia_fichada IS NULL OR n.fecha >= p.inicia_fichada)
-      AND p.activo IS TRUE
+    SELECT 
+        pd.idper,
+        min(pd.sector) AS sector,
+        date_trunc('month', pd.fecha)::date AS mes_inicio,
+        COUNT(*) FILTER (WHERE pd.injustificado) AS novedades_injustificadas,
+        COUNT(pd.horas) AS dias_con_fichada,
+        SUM(pd.horas) AS total_mes
+    FROM (${sqlParteDiario}) pd
+      AND pd.activo
     GROUP BY n.idper, date_trunc('month', n.fecha)::date
 ),
 resumen_presentismo AS (
@@ -39,7 +34,7 @@ resumen_presentismo AS (
         r.umbral_horas_personales * m.dias_con_fichada::numeric * interval '1 hour' - coalesce(m.total_mes, interval '0') AS diferencia_horas_mes,
         coalesce(r.umbral_horas_mensuales, 0) * interval '1 hour' AS horas_maximas_adeudadas_mes
     FROM resumen_mensual m
-        JOIN reglas r ON r.annio = extract(year from m.mes_inicio)::integer
+        JOIN ${}
 )
 SELECT
     p.idper,
