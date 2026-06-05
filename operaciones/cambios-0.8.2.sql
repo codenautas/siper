@@ -1244,7 +1244,7 @@ alter table "barrios_localidades" add constraint "barrio_localidad<>''" check ("
 alter table "barrios_localidades" add constraint "nombre<>''" check ("nombre"<>'');
 alter table "barrios_localidades" add constraint "provincia dos digitos" check (provincia similar to '\d{2}');
 alter table "barrios_localidades" add constraint "comuna_partido tres digitos" check (comuna_partido similar to '\d{3}');
-alter table "barrios_localidades" add constraint "barrio_localidad uno a tres digitos" check (barrio_localidad similar to '\d{1,3}');
+alter table "barrios_localidades" add constraint "barrio_localidad cuatro a cinco digitos" check (barrio_localidad similar to '\d{3,5}');
 
 alter table "per_domicilios" add constraint "barrio_localidad<>''" check ("barrio_localidad"<>'');
 alter table "per_domicilios" add constraint "comuna_partido<>''" check ("comuna_partido"<>'');
