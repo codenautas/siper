@@ -47,7 +47,7 @@ import { tipos_doc               } from "./table-tipos_doc";
 import { paises                  } from "./table-paises";
 import { provincias              } from "./table-provincias";
 import { barrios                 } from "./table-barrios";
-import { localidades             } from "./table-localidades";
+import { barrios_localidades     } from "./table-barrios_localidades";
 import { calles                  } from "./table-calles";
 import { tipos_domicilio         } from "./table-tipos_domicilio";
 import { per_domicilios          } from "./table-per_domicilios";
@@ -77,7 +77,7 @@ import { tipos_novedad           } from "./table-tipos_novedad";
 import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
 import {sinc_fichadores, ESTADOS} from "./table-sinc_fichadores"
-import { partidos                } from "./table-partidos";
+import { comunas_partidos        } from "./table-comunas_partidos";
 
 import { consolidarFichadas, ejecutarSP, ProceduresPrincipal } from './procedures-principal'
 import * as sql from 'mssql';
@@ -473,7 +473,8 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'paises'           },
                             {menuType:'table', name:'provincias'       },
                             {menuType:'table', name:'barrios'          },
-                            {menuType:'table', name:'localidades'      },
+                            {menuType:'table', name:'comunas_partidos' },
+                            {menuType:'table', name:'barrios_localidades'},
                             {menuType:'table', name:'calles'           },
                             {menuType:'table', name:'tipos_domicilio'  },
                             {menuType:'table', name:'tipos_telefono'   },
@@ -533,7 +534,8 @@ export class AppSiper extends AppBackend{
                                 {menuType:'table', name:'paises'           },
                                 {menuType:'table', name:'provincias'       },
                                 {menuType:'table', name:'barrios'          },
-                                {menuType:'table', name:'localidades'      },
+                                {menuType:'table', name:'comunas_partidos' },
+                                {menuType:'table', name:'barrios_localidades'},
                                 {menuType:'table', name:'calles'           },
                                 {menuType:'table', name:'tipos_domicilio'  },
                                 {menuType:'table', name:'tipos_telefono'   },
@@ -656,8 +658,8 @@ export class AppSiper extends AppBackend{
             paises               ,
             provincias           ,
             barrios              ,
-            partidos             ,
-            localidades          ,
+            comunas_partidos     ,
+            barrios_localidades  ,
             calles               ,
             tipos_domicilio      ,
             per_domicilios       ,

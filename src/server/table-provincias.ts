@@ -24,8 +24,9 @@ export function provincias(context:TableContext):TableDefinition{
             {constraintType: 'check', consName: "provincia dos digitos", expr: `provincia similar to '\\d{2}'`}
         ],
         detailTables: [
-            {table:'barrios'    , fields:[provincia.name], abr:'B'},
-            {table:'localidades', fields:[provincia.name], abr:'L'},
+            {table:'barrios'             , fields:[provincia.name], abr:'B'},
+            {table:'comunas_partidos'    , fields:[provincia.name], abr:'P'},
+            {table:'barrios_localidades' , fields:[provincia.name], abr:'L'},
         ]
     }
 };

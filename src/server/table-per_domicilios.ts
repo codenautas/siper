@@ -30,10 +30,9 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 import {idper} from "./table-personas"
 import {tipo_domicilio} from "./table-tipos_domicilio";
 import {provincia} from "./table-provincias";
-import {localidad} from "./table-localidades";
-import {barrio} from "./table-barrios";
+import {barrio_localidad} from "./table-barrios_localidades";
 import {calle} from "./table-calles";
-import { partido } from "./table-partidos";
+import { comuna_partido } from "./table-comunas_partidos";
 
 export const nro_item: FieldDefinition = {name: 'nro_item', typeName: 'bigint', description: 'identificador del domicilio para una persona'}
 
@@ -50,9 +49,8 @@ export function per_domicilios(context: TableContext): TableDefinition{
             //{...domicilio, sequence:{name:'domicilio_seq', firstValue:1}, nullable:true, editable:false },
             tipo_domicilio,
             provincia,
-            partido,
-            localidad,
-            barrio,
+            comuna_partido,
+            barrio_localidad,
             {name: 'codigo_postal'    ,typeName:'text'   },
             calle,
             {name: 'nombre_calle'     ,typeName:'text'   },
@@ -67,14 +65,18 @@ export function per_domicilios(context: TableContext): TableDefinition{
             {name: 'fecha_confirmado' ,typeName:'date'   },
             {name: 'observaciones'    ,typeName:'text'   },
             {name: 'orden'            ,typeName:'integer', inTable:false, serverSide:true, editable:false },
+            {name: 'coordenada_x'     ,typeName:'text'   },
+            {name: 'coordenada_y'     ,typeName:'text'   },
+            {name: 'obs_geo'          ,typeName:'text'   , title: 'observaciones geo'},
+            {name: 'fecha_codificacion', typeName:'date'   },
+            {name: 'fecha_envio_codificacion', typeName:'date'   },
         ],
         primaryKey: [idper.name, 'nro_item'],
         foreignKeys: [
             {references: 'personas'   , fields: [idper.name]},
             // {references: 'provincias' , fields: [provincia.name]},
-            {references: 'partidos' , fields: [partido.name]},
-            {references: 'localidades', fields: [partido.name, localidad.name]},
-            {references: 'barrios'    , fields: [provincia.name, barrio.name]},
+            {references: 'comunas_partidos' , fields: [provincia.name, comuna_partido.name], displayFields:['nombre']},
+            {references: 'barrios_localidades', fields: [provincia.name, comuna_partido.name, barrio_localidad.name], displayFields:['nombre']},
             {references: 'calles'     , fields: [provincia.name, calle.name]},
             {references: 'tipos_domicilio', fields: [tipo_domicilio.name]},
         ],

@@ -842,17 +842,28 @@ export const barrios = {
 
 export type Barrios = DefinedType<typeof barrios.description>
 
-export const localidades = {
-    table : 'localidades',
+export const comunas_partidos = {
+    table : 'comunas_partidos',
     description: is.object({
         provincia: is.string,
-        localidad: is.string,
-        nombre_localidad: is.string,
-        cod_2024: is.string,
+        comuna_partido: is.string,
+        nombre: is.string,
     })
 }
 
-export type Localidades = DefinedType<typeof localidades.description>
+export type ComunasPartidos = DefinedType<typeof comunas_partidos.description>
+
+export const barrios_localidades = {
+    table : 'barrios_localidades',
+    description: is.object({
+        provincia: is.string,
+        comuna_partido: is.string,
+        barrio_localidad: is.string,
+        nombre: is.string,
+    })
+}
+
+export type BarriosLocalidades = DefinedType<typeof barrios_localidades.description>
 
 export const calles = {
     table : 'calles',
@@ -895,8 +906,8 @@ export const per_domicilios = {
         nro_item:        is.bigint,
         tipo_domicilio:  is.string,
         provincia:       is.string,
-        localidad:       is.string,
-        barrio:          is.string,
+        comuna_partido:  is.string,
+        barrio_localidad:is.string,
         codigo_postal:   is.string,
         calle:           is.string,
         nombre_calle:    is.string,
