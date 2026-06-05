@@ -27,7 +27,7 @@ export function barrios_localidades(context:TableContext):TableDefinition{
         constraints: [
             {constraintType: 'check', consName: "provincia dos digitos", expr: `provincia similar to '\\d{2}'`},
             {constraintType: 'check', consName: "comuna_partido tres digitos", expr: `comuna_partido similar to '\\d{3}'`},
-            {constraintType: 'check', consName: "barrio_localidad cuatro a cinco digitos", expr: `barrio_localidad similar to '\\d{3,5}'`}
+            {constraintType: 'check', consName: "barrio_localidad tres a cinco digitos", expr: `barrio_localidad similar to '\\d{3,5}'`}
         ],
         foreignKeys: [
             {references:'provincias', fields:[provincia.name]},
