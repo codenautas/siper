@@ -106,13 +106,13 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         lateral (
                             select count(*) filter (where f.fecha between params.desde and params.hasta) as dias_corridos,
                                     count(*) filter (
-                                        where extract(dow from f.fecha) between 1 and 5
+                                        where f.dds between 1 and 5
                                             and laborable is not false
                                             and f.fecha between params.desde and params.hasta
                                     ) as dias_habiles,
                                     count(*) filter (where (f.fecha between params.desde and params.hasta or v.cod_nov = cn.cod_nov)) as total_corridos,
                                     count(*) filter (
-                                        where extract(dow from f.fecha) between 1 and 5
+                                        where f.dds between 1 and 5
                                             and laborable is not false
                                             and (f.fecha between params.desde and params.hasta or v.cod_nov = cn.cod_nov)
                                     ) as total_habiles,
@@ -147,6 +147,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name: 'tipo_novedad', typeName: 'text', defaultValue:'V', references:'tipos_novedad' },
         ],
         coreFunction: async function(context: ProcedureContext, params:NovedadRegistrada){
+            var fecha = params.desde as RealDate;
+            var db = context.be.db;
             const annio_abierto = (await context.client.query(`select abierto from annios where annio = $1 `, [params.desde.getFullYear()]).fetchUniqueValue()).value;
             if (!annio_abierto) {
                 var error = expected(new Error("annio cerrado"));
@@ -156,7 +158,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             if (!params.cancela) {
                 const permitidoCodNovParaSitRevista = (await context.client.query(
                     `select ${sqlExprCondicionCodNovSitRevista}
-                        from (${sqlPersonas}) p,
+                        from (${sqlPersonas(db.quoteLiteral(fecha.toYmd()) + '::date' )}) p,
                             cod_novedades cn
                         where p.idper = $1 and cn.cod_nov = $2`,
                     [params.idper, params.cod_nov]
@@ -224,10 +226,10 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const info = await context.client.query(
                 `select case when extract(year from f.fecha) = x.annio then f.fecha else null end as fecha,
                         extract(day from f.fecha) as dia,
-                        extract(dow from f.fecha) as dds,
+                        f.dds,
                         (f.fecha - '2001-01-01'::date - dds) / 7 as semana,
                         v.cod_nov,
-                        case extract(dow from f.fecha)
+                        case f.dds
                             when 0 then 'no-laborable' 
                             when 6 then 'no-laborable' 
                             else 
@@ -358,11 +360,13 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name:'fecha',    typeName:'date'}
         ],
         coreFunction: async function(context: ProcedureContext, params:any){
+            var fecha = params.fecha as RealDate;
+            var db = context.be.db;
             const info = await context.client.query(
                 `select pe.idper, pe.cuil, pe.ficha, pe.idmeta4, pe.apellido, pe.nombres, pe.sector, cod_nov, novedad, nombre_sector, pe.es_jefe, validar_cuit(pe.cuil) AS cuil_valido,
                         pe.fecha_ingreso, pe.fecha_egreso,
                         ((puede_cargar_propio or pe.idper is distinct from u.idper) and (pe.activo is true)) as cargable
-                    from (${sqlPersonas}) pe
+                    from (${sqlPersonas(db.quoteLiteral(fecha.toYmd()) + '::date' )}) pe
                         inner join situacion_revista sr using (situacion_revista)
                         inner join usuarios u on u.usuario = $2
                         inner join roles using (rol)
@@ -384,6 +388,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name:'fecha',  typeName:'date'}
         ],
         coreFunction: async function(context: ProcedureContext, params:any){
+            var fecha = params.fecha as RealDate;
+            var db = context.be.db; 
             const info = await context.client.query(
                     `WITH dias_semana AS (
                         SELECT 
@@ -406,7 +412,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         coalesce(nv.cod_nov, case when d.dds BETWEEN 1 AND 5 then /* cod_nov_habitual */ null else null end) as cod_nov
                     FROM dias_semana d
                         INNER JOIN annios a USING (annio)
-                        INNER JOIN (${sqlPersonas}) p ON p.idper = $1
+                        INNER JOIN (${sqlPersonas(db.quoteLiteral(fecha.toYmd()) + '::date' )}) p ON p.idper = $1
                         LEFT JOIN bandas_horarias bh 
                             ON bh.banda_horaria = p.banda_horaria
                         LEFT JOIN horarios h 

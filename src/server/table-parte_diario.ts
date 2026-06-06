@@ -6,51 +6,50 @@ import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {sector} from "./table-sectores";
 
-import { sqlNovedadesVigentesConDesdeHastaHabiles } from "./table-novedades_vigentes";
+import { sqlJoinDesdeHastaDeNovedadVigente } from "./table-novedades_vigentes";
 import { sqlPersonas } from "./table-personas";
 import { s_revista } from "./table-situacion_revista";
 
-export const sqlParteDiario= `
+export const sqlParteDiarioBase = `
 select 
         p.idper, 
-        f.fecha, 
-        nv.cod_nov,
         p.sector,
         p.ficha as persona_ficha,
         p.cuil,
         p.apellido,
         p.nombres,
-        s.nombre_sector as sector_nombre,
-        coalesce(hd.hora_desde, horario_habitual_desde) horario_entrada, 
-        coalesce(hd.hora_hasta, horario_habitual_hasta) as horario_salida,
-        cn.novedad,
-        nv.ficha,
+        p.ficha,
+        p.banda_horaria,
+        p.situacion_revista,
+        p.activo,
+        nv.fecha, 
+        nv.cod_nov,
         nv.annio,
         nv.trabajable,
         nv.detalles,
-        nv.desde,
-        nv.hasta,
-        nv.habiles,
-        nv.corridos,
-        p.banda_horaria,
-        bh.descripcion as bh_descripcion,
-        cn.requiere_fichadas,
-        cn.cuenta_horas,
         nv.fichadas,
         nv.horas,
+        cn.novedad,
+        cn.requiere_fichadas,
+        cn.cuenta_horas,
         cn.injustificado,
-        p.situacion_revista,
-        p.activo
+    from (${sqlPersonas('nv.fecha')}) p
+        inner join novedades_vigentes nv using (idper)
+        left join cod_novedades cn using (cod_nov)
+`
+
+export const sqlParteDiario= `
+select base.*,
+        s.nombre_sector as sector_nombre,
+        nvdh.desde,
+        nvdh.hasta,
+        nvdh.habiles,
+        nvdh.corridos,
+        bh.descripcion as bh_descripcion
     from
-        (${sqlPersonas}) p
-        inner join fechas f on f.fecha between p.registra_novedades_desde and coalesce(p.fecha_egreso, '3000-01-01'::date)
-        left join annios using (annio)
+        (${sqlParteDiarioBase}) base
         left join sectores s on p.sector = s.sector
-        left join (${sqlNovedadesVigentesConDesdeHastaHabiles}) nv using(idper, fecha)
-        left join cod_novedades cn on nv.cod_nov = cn.cod_nov
-        left join horarios_per h on h.idper = p.idper /*and f.dds = h.dds*/ and f.fecha between h.desde and h.hasta
-        left join horarios_dds hd on p.horario = hd.horario and f.dds = hd.dds 
-        left join bandas_horarias bh on p.banda_horaria = bh.banda_horaria
+        lateral left join (${sqlJoinDesdeHastaDeNovedadVigente}) nvdh on true
 `;
 
 // Función genérica para la configuración base de las tablas

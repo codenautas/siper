@@ -20,20 +20,26 @@ export const idper: FieldDefinition = {
     postInput: 'upperWithoutDiacritics',
 }
 
-export const sqlLeftJoinLateralTrayectoriaLaboral = `
+export const sqlLeftJoinLateralTrayectoriaLaboral = (sqlFecha:string) => `
         LEFT JOIN LATERAL (SELECT * 
                     FROM trayectoria_laboral tl left join situacion_revista sr using (situacion_revista)
-                    WHERE propio AND tl.idper = p.idper and (hasta is null or hasta >= fecha_actual())
+                    WHERE propio AND tl.idper = p.idper and lapso_fechas @> ${sqlFecha}
                     ORDER BY desde DESC, idt DESC
                     LIMIT 1) t ON TRUE
 `
 
-export const sqlPersonas= `
+export const sqlPersonas = (sqlFecha:string) => `
 SELECT p.*, t.categoria, t.situacion_revista, 
         t.motivo_egreso, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado,
-        h.horario, nov_grupo
-    FROM personas p ${sqlLeftJoinLateralTrayectoriaLaboral}
-        LEFT JOIN LATERAL (SELECT horario FROM horarios_per hp WHERE hp.idper = p.idper AND hp.lapso_fechas @> /*incluye*/ fecha_actual()) h ON TRUE
+        hp.horario, nov_grupo,
+        coalesce(hd.hora_desde, horario_habitual_desde) as horario_entrada, 
+        coalesce(hd.hora_hasta, horario_habitual_hasta) as horario_salida
+    FROM personas p ${sqlLeftJoinLateralTrayectoriaLaboral(sqlFecha)}
+        INNER JOIN fechas f ON f.fecha = ${sqlFecha}
+        INNER JOIN annios a ON a.annio = f.annio
+        LEFT JOIN horarios_per hp ON hp.idper = p.idper AND hp.lapso_fechas @> /*incluye*/ f.fecha
+        LEFT JOIN horarios_cod hc ON hp.horario = hc.horario
+        LEFT JOIN horarios_dds hd ON hd.horario = hc.horario AND hd.dds = f.dds
 `;
 
 export function personas(context: TableContext): TableDefinition {
@@ -123,7 +129,7 @@ export function personas(context: TableContext): TableDefinition {
                 cuil_valido:{ expr:`validar_cuit(cuil)` },
             },
             // where: es.rrhh ? 'true' : es.registra ? `personas.activo AND sector_pertenece(personas.sector, ${quoteLiteral(user.sector)})` : `personas.idper = ${quoteLiteral(user.idper)}`
-            from:`(${sqlPersonas})`
+            from:`(${sqlPersonas('fecha_actual()')})`
         },
         hiddenColumns: ['cuil_valido', 'inicia_fichada'],
         sortColumns: [{column: 'activo', order: -1}, {column: 'idper', order: 1}],

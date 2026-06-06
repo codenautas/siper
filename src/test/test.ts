@@ -259,7 +259,7 @@ describe("SiPer: " + testConfig.name, function(){
                             '2000-04-02',
                             '2000-05-01');
                         `,
-                        `update fechas set cod_nov_pred_fecha = '${COD_PRED_PAS}' where extract(dow from fecha) between 1 and 5 and fecha <= '${FECHA_ACTUAL.toYmd()}'`,
+                        `update fechas set cod_nov_pred_fecha = '${COD_PRED_PAS}' where dds between 1 and 5 and fecha <= '${FECHA_ACTUAL.toYmd()}'`,
                         `update annios set horario_habitual_desde = '10:00', horario_habitual_hasta = '17:00' where annio = '${DESDE_AÑO}'`,
                         `select annio_abrir('${DESDE_AÑO}')`,
                         `update parametros set fecha_hora_para_test = '${FECHA_ACTUAL.toYmd()} 10:00', cod_nov_habitual = '${COD_PRED_PAS}', cant_horas_diarias = 7 where unico_registro`,

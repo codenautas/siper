@@ -50,7 +50,7 @@ function sectores_def(name:string, usuarioPuedeEditar: boolean, extendido: boole
                                 count(*) as indirectas,
                                 count(*) filter (where p.activo = true) as pactivas, 
                                 string_agg (p.apellido||', '||p.nombres, '/') filter (where p.sector = s.sector AND p.es_jefe) as jefe
-                            from sectores d inner join (${sqlPersonas}) p using (sector)
+                            from sectores d inner join (${sqlPersonas('fecha_actual()')}) p using (sector)
                             where d.sector = s.sector or sector_pertenece(d.sector, s.sector)                    ) on true
             )`} : {}),
         },
