@@ -65,6 +65,7 @@ export function per_domicilios(context: TableContext): TableDefinition{
             {name: 'fecha_confirmado' ,typeName:'date'   },
             {name: 'observaciones'    ,typeName:'text'   },
             {name: 'orden'            ,typeName:'integer', inTable:false, serverSide:true, editable:false },
+            {name: 'idgeo'            ,typeName:'bigint' , sequence:{name:'per_domicilios_idgeo_seq', firstValue:1}, nullable:true, editable:false },
             {name: 'coordenada_x'     ,typeName:'text'   },
             {name: 'coordenada_y'     ,typeName:'text'   },
             {name: 'obs_geo'          ,typeName:'text'   , title: 'observaciones geo'},

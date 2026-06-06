@@ -51,6 +51,7 @@ import { barrios_localidades     } from "./table-barrios_localidades";
 import { calles                  } from "./table-calles";
 import { tipos_domicilio         } from "./table-tipos_domicilio";
 import { per_domicilios          } from "./table-per_domicilios";
+import { geo_domicilios          } from "./table-geo_domicilios";
 import { tipos_telefono          } from "./table-tipos_telefono";
 import { per_telefonos           } from "./table-per_telefonos";
 import { sexos                   } from "./table-sexos";
@@ -663,6 +664,7 @@ export class AppSiper extends AppBackend{
             calles               ,
             tipos_domicilio      ,
             per_domicilios       ,
+            geo_domicilios       ,
             tipos_telefono       ,
             per_telefonos        ,
             sexos                ,

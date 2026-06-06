@@ -50,6 +50,7 @@ install:
       - ../install/personas_id_trg.sql
       - ../install/validar_digito.sql
       - ../install/per_domicilios_pk_trg.sql
+      - ../install/per_domicilios_idgeo_trg.sql
       - ../install/per_telefonos_pk_trg.sql
       - ../install/function_registrar_fichadas.sql
       - ../install/sinc_fichadas_recibidas.sql    
