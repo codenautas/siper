@@ -47,8 +47,8 @@ select
 export const sqlParteDiario= `
 select p.*,
         s.nombre_sector as sector_nombre,
-        nvdh.desde,
-        nvdh.hasta,
+        nvdh.mismo_cod_nov_desde,
+        nvdh.mismo_cod_nov_hasta,
         nvdh.habiles,
         nvdh.corridos
     from
@@ -76,8 +76,8 @@ export function parte_diario(_context: TableContext): TableDefinition {
             { name: 'fichada', typeName: 'text'},
             { name: 'horas', typeName: 'interval' },
             { name: 'horario', typeName: 'text' },
-            { name: 'desde', typeName: 'date' },
-            { name: 'hasta', typeName: 'date' },
+            { name: 'mismo_cod_nov_desde', typeName: 'date' , label: 'm.c.n. desde', description: 'el código de novedad está registrado desde'},
+            { name: 'mismo_cod_nov_desde', typeName: 'date' , label: 'm.c.n. hasta', description: 'el código de novedad está registrado hasta'},
             { name: 'habiles', typeName: 'integer' },
             { name: 'corridos', typeName: 'integer' },
             s_revista,

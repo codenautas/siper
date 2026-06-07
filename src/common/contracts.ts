@@ -330,8 +330,8 @@ export const parte_diario = {
     description: is.object({
         idper: is.string, 
         cod_nov: is.string, 
-        desde: is.Date, 
-        hasta: is.Date, 
+        mismo_cod_nov_desde: is.Date, 
+        mismo_cod_nov_hasta: is.Date, 
         habiles: is.number, 
         corridos: is.number,
     })

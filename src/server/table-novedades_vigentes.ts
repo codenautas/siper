@@ -19,6 +19,9 @@ with novedades_fecha AS(
       WHEN cod_nov is null then '¡FECHA FUTURA SIN NOVEDAD!' --'999'
       ELSE cod_nov
     END AS cod_nov
+  FROM annios INNER JOIN fechas f on f.annio = annios.annio
+    INNER JOIN (SELECT DISTINCT idper, annio FROM novedades_vigentes) p on p.annio = annios.annio
+    LEFT JOIN novedades_vigentes nv ON f.fecha = nv.fecha AND p.idper = nv.idper    
 ),
 novedades_vigentes_con_marca_de_cambio_de_cod_nov AS(
   select *,
@@ -36,13 +39,13 @@ novedades_vigentes_con_marca_de_cambio_de_cod_nov AS(
   ),
   novedades_vigentes_desde_hasta AS (
   select *, 
-      MIN(ncg.fecha) OVER (PARTITION BY ncg.idper, ncg.numero_tira_cod_nov_iguales) AS desde,
-      MAX(ncg.fecha) OVER (PARTITION BY ncg.idper, ncg.numero_tira_cod_nov_iguales) AS hasta,
+      MIN(ncg.fecha) OVER (PARTITION BY ncg.idper, ncg.numero_tira_cod_nov_iguales) AS mismo_cod_nov_desde,
+      MAX(ncg.fecha) OVER (PARTITION BY ncg.idper, ncg.numero_tira_cod_nov_iguales) AS mismo_cod_nov_hasta,
       COUNT(ncg.fecha) OVER (PARTITION BY ncg.idper, ncg.numero_tira_cod_nov_iguales) AS habiles
     from novedades_vigentes_identificando_tiras_cod_nov_iguales ncg
     order by ncg.idper, ncg.numero_tira_cod_nov_iguales
   )
-  select desde, hasta, habiles, hasta - desde + 1 as corridos, horas
+  select mismo_cod_nov_desde, mismo_cod_nov_hasta, habiles, mismo_cod_nov_hasta - mismo_cod_nov_desde + 1 as corridos, horas
     from novedades_vigentes_desde_hasta`
 
 export function novedades_vigentes(context: TableContext): TableDefinition {

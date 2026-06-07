@@ -1500,7 +1500,7 @@ describe("SiPer: " + testConfig.name, function(){
                         client.query('UPDATE annios SET abierto = false');
                     })
                     await rrhhSession.tableDataTest(ctts.parte_diario, [
-                        {idper, cod_nov: COD_VACACIONES, desde:date.iso('2000-01-17'), hasta:date.iso('2000-02-04'), habiles:15, corridos:19},
+                        {idper, cod_nov: COD_VACACIONES, mismo_cod_nov_desde:date.iso('2000-01-17'), mismo_cod_nov_hasta:date.iso('2000-02-04'), habiles:15, corridos:19},
                     ], 'all', {fixedFields:[{fieldName:'idper', value: idper}, {fieldName:'fecha', value: '2000-01-28'}]})
                 })
             }finally{
