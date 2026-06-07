@@ -12,8 +12,8 @@ import { politicaNovedades } from "./table-novedades_registradas";
 export const sqlJoinDesdeHastaDeNovedadVigente = `
 with novedades_fecha AS(
   SELECT 
-      nv.idper, nv.ficha, nv.fichadas, nv.sector, nv.annio, nv.trabajable, nv.detalles, f.dds, f.laborable, nv.horas,
-    COALESCE(nv.fecha, f.fecha) as fecha,
+      idper, ficha, fichadas, sector, annio, trabajable, detalles, dds, laborable, horas,
+      fecha,
     CASE
       WHEN cod_nov is null and (dds in (6,0) or laborable = false) then '¡FERIADO O FIN DE SEMANA!' --'888'
       WHEN cod_nov is null then '¡FECHA FUTURA SIN NOVEDAD!' --'999'

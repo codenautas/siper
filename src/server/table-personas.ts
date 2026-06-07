@@ -29,7 +29,8 @@ export const sqlLeftJoinLateralTrayectoriaLaboral = (sqlFecha:string) => `
 `
 
 export const sqlPersonas = (sqlFecha:string) => `
-SELECT p.*, t.categoria, t.situacion_revista, 
+SELECT p.*, f.dds, f.laborable,
+        t.categoria, t.situacion_revista, 
         t.motivo_egreso, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado,
         hp.horario, nov_grupo,
         coalesce(hd.hora_desde, horario_habitual_desde) as horario_entrada, 

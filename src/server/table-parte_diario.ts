@@ -22,6 +22,10 @@ select
         p.banda_horaria,
         p.situacion_revista,
         p.activo,
+        p.horario_entrada,
+        p.horario_salida,
+        dds,
+        laborable,
         nv.fecha, 
         nv.cod_nov,
         nv.annio,
@@ -33,23 +37,24 @@ select
         cn.requiere_fichadas,
         cn.cuenta_horas,
         cn.injustificado,
-    from (${sqlPersonas('nv.fecha')}) p
-        inner join novedades_vigentes nv using (idper)
+        bh.descripcion as bh_descripcion
+    from novedades_vigentes nv 
+        inner join lateral (${sqlPersonas('nv.fecha')}) p using (idper)
+        inner join bandas_horarias bh using (banda_horaria)
         left join cod_novedades cn using (cod_nov)
 `
 
 export const sqlParteDiario= `
-select base.*,
+select p.*,
         s.nombre_sector as sector_nombre,
         nvdh.desde,
         nvdh.hasta,
         nvdh.habiles,
-        nvdh.corridos,
-        bh.descripcion as bh_descripcion
+        nvdh.corridos
     from
-        (${sqlParteDiarioBase}) base
-        left join sectores s on p.sector = s.sector
-        lateral left join (${sqlJoinDesdeHastaDeNovedadVigente}) nvdh on true
+        (${sqlParteDiarioBase}) p
+        left join sectores s using (sector)
+        left join lateral (${sqlJoinDesdeHastaDeNovedadVigente}) nvdh on true
 `;
 
 // Función genérica para la configuración base de las tablas
