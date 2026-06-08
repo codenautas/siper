@@ -343,7 +343,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     from usuarios u 
                         inner join roles r using (rol),
                         ( select * from (${sqlNovPer({idper, annio:params.annio})}) p
-                            ${sqlLeftJoinLateralTrayectoriaLaboral}
+                            ${sqlLeftJoinLateralTrayectoriaLaboral('fecha_actual()::date')}
                         ) v
                     where ((con_dato and (v.comun is null or v.comun)) or v.registra and r.puede_cargar_dependientes or puede_cargar_todo)
                         and u.usuario = $1

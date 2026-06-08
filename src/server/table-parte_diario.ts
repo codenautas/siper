@@ -6,14 +6,12 @@ import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
 import {sector} from "./table-sectores";
 
-import { sqlJoinDesdeHastaDeNovedadVigente } from "./table-novedades_vigentes";
+import { sqlEnvolventeDesdeHastaDeNovedadVigente } from "./table-novedades_vigentes";
 import { sqlPersonas } from "./table-personas";
 import { s_revista } from "./table-situacion_revista";
 
-export const sqlParteDiarioBase = `
+export const sqlParteDiarioBase = (novedades_vigentes: string) => `
 select 
-        p.idper, 
-        p.sector,
         p.ficha as persona_ficha,
         p.cuil,
         p.apellido,
@@ -24,37 +22,26 @@ select
         p.activo,
         p.horario_entrada,
         p.horario_salida,
-        dds,
-        laborable,
-        nv.fecha, 
-        nv.cod_nov,
-        nv.annio,
-        nv.trabajable,
-        nv.detalles,
-        nv.fichadas,
-        nv.horas,
+        p.dds,
+        p.laborable,
+        nv.*,
         cn.novedad,
         cn.requiere_fichadas,
         cn.cuenta_horas,
         cn.injustificado,
         bh.descripcion as bh_descripcion
-    from novedades_vigentes nv 
+    from ${novedades_vigentes} nv 
         inner join lateral (${sqlPersonas('nv.fecha')}) p using (idper)
         inner join bandas_horarias bh using (banda_horaria)
         left join cod_novedades cn using (cod_nov)
 `
 
 export const sqlParteDiario= `
-select p.*,
-        s.nombre_sector as sector_nombre,
-        nvdh.mismo_cod_nov_desde,
-        nvdh.mismo_cod_nov_hasta,
-        nvdh.habiles,
-        nvdh.corridos
+select pd.*,
+        s.nombre_sector as sector_nombre
     from
-        (${sqlParteDiarioBase}) p
+        (${sqlParteDiarioBase(sqlEnvolventeDesdeHastaDeNovedadVigente)}) pd
         left join sectores s using (sector)
-        left join lateral (${sqlJoinDesdeHastaDeNovedadVigente}) nvdh on true
 `;
 
 // Función genérica para la configuración base de las tablas
@@ -77,7 +64,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
             { name: 'horas', typeName: 'interval' },
             { name: 'horario', typeName: 'text' },
             { name: 'mismo_cod_nov_desde', typeName: 'date' , label: 'm.c.n. desde', description: 'el código de novedad está registrado desde'},
-            { name: 'mismo_cod_nov_desde', typeName: 'date' , label: 'm.c.n. hasta', description: 'el código de novedad está registrado hasta'},
+            { name: 'mismo_cod_nov_hasta', typeName: 'date' , label: 'm.c.n. hasta', description: 'el código de novedad está registrado hasta'},
             { name: 'habiles', typeName: 'integer' },
             { name: 'corridos', typeName: 'integer' },
             s_revista,
