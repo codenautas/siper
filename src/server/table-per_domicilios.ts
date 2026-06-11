@@ -69,7 +69,7 @@ export function per_domicilios(context: TableContext): TableDefinition{
             {name: 'coordenada_x'     ,typeName:'text'   },
             {name: 'coordenada_y'     ,typeName:'text'   },
             {name: 'obs_geo'          ,typeName:'text'   , title: 'observaciones geo'},
-            {name: 'fecha_codificacion', typeName:'date'   },
+            {name: 'fecha_codificacion', typeName:'date' },
             {name: 'fecha_envio_codificacion', typeName:'date'   },
         ],
         primaryKey: [idper.name, 'nro_item'],

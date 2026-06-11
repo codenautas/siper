@@ -5,6 +5,11 @@ set role to siper_muleto_owner;
 
 alter table "per_domicilios" add column "comuna_partido" text;
 alter table "per_domicilios" add column "barrio_localidad" text;
+alter table "per_domicilios" add column "coordenada_x" text;
+alter table "per_domicilios" add column "coordenada_y" text;
+alter table "per_domicilios" add column "obs_geo" text;
+alter table "per_domicilios" add column "fecha_codificacion" date; 
+alter table "per_domicilios" add column "fecha_envio_codificacion" date; 
 alter table "per_domicilios" drop column "localidad";
 alter table "per_domicilios" drop column "barrio";
 
@@ -181,55 +186,55 @@ insert into "comunas_partidos" ("provincia", "comuna_partido", "nombre") values
 ('06', '882', 'ZARATE');
 
 insert into "barrios_localidades" ("provincia", "comuna_partido", "barrio_localidad", "nombre") values
-('02', '105', '100', 'AGRONOMÍA'),
-('02', '007', '1000', 'CONSTITUCIÓN'),
-('02', '091', '1100', 'COLEGIALES'),
-('02', '105', '1200', 'CHACARITA'),
-('02', '049', '1300', 'FLORES'),
-('02', '070', '1400', 'FLORESTA'),
-('02', '063', '1500', 'LINIERS'),
-('02', '063', '1600', 'MATADEROS'),
-('02', '070', '1700', 'MONTE CASTRO'),
-('02', '007', '1800', 'MONTSERRAT'),
-('02', '028', '1900', 'NUEVA POMPEYA'),
-('02', '035', '200', 'ALMAGRO'),
-('02', '091', '2000', 'NUÑEZ'),
-('02', '098', '2100', 'PALERMO'),
-('02', '063', '2200', 'PARQUE AVELLANEDA'),
-('02', '049', '2300', 'PARQUE CHACABUCO'),
-('02', '028', '2400', 'PARQUE PATRICIOS'),
-('02', '105', '2500', 'PATERNAL'),
-('02', '014', '2600', 'RECOLETA'),
-('02', '007', '2700', 'RETIRO'),
-('02', '084', '2800', 'SAAVEDRA'),
-('02', '021', '2900', 'SAN CRISTOBAL'),
-('02', '021', '300', 'BALVANERA'),
-('02', '007', '3000', 'SAN NICOLÁS'),
-('02', '007', '3100', 'SAN TELMO'),
-('02', '070', '3200', 'VÉLEZ SÁRSFIELD'),
-('02', '070', '3300', 'VERSALLES'),
-('02', '105', '3400', 'VILLA CRESPO'),
-('02', '077', '3500', 'VILLA DEL PARQUE'),
-('02', '077', '3600', 'VILLA DEVOTO'),
-('02', '077', '3700', 'VILLA GENERAL MITRE'),
-('02', '105', '3800', 'VILLA ORTÚZAR'),
-('02', '084', '3900', 'VILLA PUEYRREDÓN'),
-('02', '028', '400', 'BARRACAS'),
-('02', '056', '4000', 'VILLA LUGANO'),
-('02', '070', '4100', 'VILLA LURO'),
-('02', '070', '4200', 'VILLA REAL'),
-('02', '056', '4300', 'VILLA RIACHUELO'),
-('02', '077', '4400', 'VILLA SANTA RITA'),
-('02', '056', '4500', 'VILLA SOLDATI'),
-('02', '084', '4600', 'VILLA URQUIZA'),
-('02', '007', '4700', 'PUERTO MADERO'),
-('02', '105', '4800', 'PARQUE CHAS'),
-('02', '007', '4900', 'ZONA PUERTO'),
-('02', '091', '500', 'BELGRANO'),
-('02', '028', '600', 'BOCA'),
-('02', '035', '700', 'BOEDO'),
-('02', '042', '800', 'CABALLITO'),
-('02', '084', '900', 'COGHLAN'),
+('02', '105', '10501', 'AGRONOMÍA'),
+('02', '007', '710', 'CONSTITUCIÓN'),
+('02', '091', '9111', 'COLEGIALES'),
+('02', '105', '10512', 'CHACARITA'),
+('02', '049', '4913', 'FLORES'),
+('02', '070', '7014', 'FLORESTA'),
+('02', '063', '6315', 'LINIERS'),
+('02', '063', '6316', 'MATADEROS'),
+('02', '070', '7017', 'MONTE CASTRO'),
+('02', '007', '718', 'MONTSERRAT'),
+('02', '028', '2819', 'NUEVA POMPEYA'),
+('02', '035', '3502', 'ALMAGRO'),
+('02', '091', '9120', 'NUÑEZ'),
+('02', '098', '9821', 'PALERMO'),
+('02', '063', '6322', 'PARQUE AVELLANEDA'),
+('02', '049', '4923', 'PARQUE CHACABUCO'),
+('02', '028', '2824', 'PARQUE PATRICIOS'),
+('02', '105', '10525', 'PATERNAL'),
+('02', '014', '1426', 'RECOLETA'),
+('02', '007', '727', 'RETIRO'),
+('02', '084', '8428', 'SAAVEDRA'),
+('02', '021', '2129', 'SAN CRISTOBAL'),
+('02', '021', '2103', 'BALVANERA'),
+('02', '007', '730', 'SAN NICOLÁS'),
+('02', '007', '731', 'SAN TELMO'),
+('02', '070', '7032', 'VÉLEZ SÁRSFIELD'),
+('02', '070', '7033', 'VERSALLES'),
+('02', '105', '10534', 'VILLA CRESPO'),
+('02', '077', '7735', 'VILLA DEL PARQUE'),
+('02', '077', '7736', 'VILLA DEVOTO'),
+('02', '077', '7737', 'VILLA GENERAL MITRE'),
+('02', '105', '10538', 'VILLA ORTÚZAR'),
+('02', '084', '8439', 'VILLA PUEYRREDÓN'),
+('02', '028', '2804', 'BARRACAS'),
+('02', '056', '5640', 'VILLA LUGANO'),
+('02', '070', '7041', 'VILLA LURO'),
+('02', '070', '7042', 'VILLA REAL'),
+('02', '056', '5643', 'VILLA RIACHUELO'),
+('02', '077', '7744', 'VILLA SANTA RITA'),
+('02', '056', '5645', 'VILLA SOLDATI'),
+('02', '084', '8446', 'VILLA URQUIZA'),
+('02', '007', '747', 'PUERTO MADERO'),
+('02', '105', '10548', 'PARQUE CHAS'),
+('02', '007', '749', 'ZONA PUERTO'),
+('02', '091', '9105', 'BELGRANO'),
+('02', '028', '2806', 'BOCA'),
+('02', '035', '3507', 'BOEDO'),
+('02', '042', '4208', 'CABALLITO'),
+('02', '084', '8409', 'COGHLAN'),
 ('06', '638', '4025', 'PRESIDENTE DERQUI'),
 ('06', '560', '1009', 'MORENO SUR'),
 ('06', '560', '1005', 'PASO DEL REY'),
@@ -1246,6 +1251,9 @@ alter table "barrios_localidades" add constraint "provincia dos digitos" check (
 alter table "barrios_localidades" add constraint "comuna_partido tres digitos" check (comuna_partido similar to '\d{3}');
 alter table "barrios_localidades" add constraint "barrio_localidad tres a cinco digitos" check (barrio_localidad similar to '\d{3,5}');
 
+alter table "per_domicilios" add constraint "coordenada_x<>''" check ("coordenada_x"<>'');
+alter table "per_domicilios" add constraint "coordenada_y<>''" check ("coordenada_y"<>'');
+alter table "per_domicilios" add constraint "obs_geo<>''" check ("obs_geo"<>'');
 alter table "per_domicilios" add constraint "barrio_localidad<>''" check ("barrio_localidad"<>'');
 alter table "per_domicilios" add constraint "comuna_partido<>''" check ("comuna_partido"<>'');
 
