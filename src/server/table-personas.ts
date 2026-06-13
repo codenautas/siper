@@ -29,18 +29,22 @@ export const sqlLeftJoinLateralTrayectoriaLaboral = (sqlFecha:string) => `
 `
 
 export const sqlPersonas = (sqlFecha:string) => `
-SELECT p.*, f.dds, f.laborable,
+SELECT p.*, f.dds, f.laborable is not false and f.dds between 1 and 5 as es_laborable,
         t.categoria, t.situacion_revista, 
         t.motivo_egreso, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado,
         hp.horario, nov_grupo,
         coalesce(hd.hora_desde, horario_habitual_desde) as horario_entrada, 
-        coalesce(hd.hora_hasta, horario_habitual_hasta) as horario_salida
+        coalesce(hd.hora_hasta, horario_habitual_hasta) as horario_salida,
+        coalesce(hc.cant_horas, par.cant_horas_diarias) as cant_horas_esperadas,
+        s.nombre_sector as sector_nombre
     FROM personas p ${sqlLeftJoinLateralTrayectoriaLaboral(sqlFecha)}
+        INNER JOIN parametros par ON true
         INNER JOIN fechas f ON f.fecha = ${sqlFecha}
         INNER JOIN annios a ON a.annio = f.annio
         LEFT JOIN horarios_per hp ON hp.idper = p.idper AND hp.lapso_fechas @> /*incluye*/ f.fecha
         LEFT JOIN horarios_cod hc ON hp.horario = hc.horario
         LEFT JOIN horarios_dds hd ON hd.horario = hc.horario AND hd.dds = f.dds
+        LEFT JOIN sectores s USING (sector)
 `;
 
 export function personas(context: TableContext): TableDefinition {

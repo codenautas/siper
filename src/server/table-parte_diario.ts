@@ -10,7 +10,7 @@ import { sqlEnvolventeDesdeHastaDeNovedadVigente } from "./table-novedades_vigen
 import { sqlPersonas } from "./table-personas";
 import { s_revista } from "./table-situacion_revista";
 
-export const sqlParteDiarioBase = (novedades_vigentes: string) => `
+const sqlParteDiarioBase = (novedades_vigentes: string) => `
 select 
         p.ficha as persona_ficha,
         p.cuil,
@@ -23,7 +23,9 @@ select
         p.horario_entrada,
         p.horario_salida,
         p.dds,
-        p.laborable,
+        p.es_laborable,
+        p.cant_horas_esperadas,
+        p.sector_nombre,
         nv.*,
         cn.novedad,
         cn.requiere_fichadas,
@@ -36,13 +38,9 @@ select
         left join cod_novedades cn using (cod_nov)
 `
 
-export const sqlParteDiario= `
-select pd.*,
-        s.nombre_sector as sector_nombre
-    from
-        (${sqlParteDiarioBase(sqlEnvolventeDesdeHastaDeNovedadVigente)}) pd
-        left join sectores s using (sector)
-`;
+export const sqlParteDiario= sqlParteDiarioBase('novedades_vigentes');
+
+export const sqlParteDiarioExtendido= sqlParteDiarioBase(sqlEnvolventeDesdeHastaDeNovedadVigente);
 
 // Función genérica para la configuración base de las tablas
 export function parte_diario(_context: TableContext): TableDefinition {
@@ -93,7 +91,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
                     )
                     FROM unnest(fichadas) WITH ORDINALITY AS t(rng, ord)) as fichada,
                     hora_texto(horario_entrada) || ' - ' || hora_texto(horario_Salida) as horario
-                from (${sqlParteDiario}) x
+                from (${sqlParteDiarioExtendido}) x
             )`,
         },
         sortColumns:[{column:'apellido'}, {column:'nombres'}],

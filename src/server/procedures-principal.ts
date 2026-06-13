@@ -20,6 +20,8 @@ import { ConfigFichadasDb, getConfigFichadasDb, MAX_INTENTOS } from './app-princ
 
 import { sqlLeftJoinLateralTrayectoriaLaboral } from './table-personas';
 
+import { sqlParteDiario } from './table-parte_diario'
+
 const sqlExprCondicionCodNovSitRevista = 'nov_grupo is null or nov_grupo is not distinct from sr_grupo'
 
 async function prevalidarCargaDeNovedades(context: ProcedureContext, params:Partial<NovedadRegistrada>){
@@ -275,24 +277,19 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof calendario_persona.parameters>){
             const {idper, annio, mes} = params;
             const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
-            const info = await context.client.query(
-                `SELECT *, suma_horas - horas_esperadas as saldo_horas
+            const info = await context.client.query(`SELECT *, suma_horas - horas_esperadas as saldo_horas
             FROM (
                 SELECT count(*) as dias_mes,
-                        count(*) FILTER (WHERE laborable is not false and dds between 1 and 5) as laborables,
+                        count(*) FILTER (WHERE es_laborable) as laborables,
                         count(horas) as dias_promediados,
                         sum(horas) as suma_horas,
-                        (sum(coalesce(hc.cant_horas, par.cant_horas_diarias)) FILTER (WHERE horas is not null) || ' hours')::interval as horas_esperadas,
+                        (sum(cant_horas_esperadas) FILTER (WHERE horas is not null) || ' hours')::interval as horas_esperadas,
                         avg(horas) as promedio_horas,
-                        (avg(coalesce(hc.cant_horas, par.cant_horas_diarias)) FILTER (WHERE horas is not null) || ' hours')::interval as promedio_esperado
-                    FROM novedades_vigentes nv INNER JOIN fechas USING (fecha)
-                        INNER JOIN personas p USING (idper)
-                        LEFT JOIN horarios_per h ON p.idper = h.idper AND nv.annio = h.annio AND nv.fecha <@ h.lapso_fechas
-                        LEFT JOIN horarios_cod hc ON h.horario = hc.horario,
-                        parametros par
-                    WHERE nv.fecha BETWEEN $2 AND $2::date + interval '1 month' - interval '1 day'
-                        AND nv.idper = $1
-                )`,
+                        (avg(cant_horas_esperadas) FILTER (WHERE horas is not null) || ' hours')::interval as promedio_esperado
+                    FROM (${sqlParteDiario})
+                    WHERE fecha BETWEEN $2 AND $2::date + interval '1 month' - interval '1 day'
+                        AND idper = $1
+            )`,
                 [idper, desde]
             ).fetchUniqueRow();
             return info.row
