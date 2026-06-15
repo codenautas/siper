@@ -18,6 +18,7 @@ import { date, datetime, timeInterval, TimeInterval } from "best-globals";
 import { guarantee, DefinedType } from "guarantee-type"
 
 import { tipo_novedad, tipo_novedad_inicial, tipo_novedad_verificado } from "../server/table-tipos_novedad"
+import { sqlParteDiario, sqlParteDiarioExtendido } from "../server/table-parte_diario"
 
 import * as discrepances from 'discrepances';
 import { Time } from "../server/types-principal";
@@ -1851,6 +1852,29 @@ describe("SiPer: " + testConfig.name, function(){
                     [{cod_nov: COD_COMISION}]
                 );
             })
+        })
+    })
+    describe("controles finales", function(){
+        this.timeout(900000);
+        it("son iguales los SQL de libro diario y su versión extendida", async function(){
+            var where = `WHERE fecha BETWEEN '2000-01-27' AND '2000-02-02' AND es_laborable`
+            var resultBase = await server.inDbClient(ADMIN_REQ, async client => 
+                await client.query(`SELECT * FROM (${sqlParteDiario}) x ${where} order by fecha, idper`,
+                    []
+                ).fetchAll()
+            )
+            // await fs.writeFile('sqlParteDiario.sql', `SELECT * FROM (${sqlParteDiario}) x ${where} order by fecha, idper`, 'utf8')
+            // await fs.writeFile('sqlParteDiario.json', JSON.stringify(resultBase,null,' '), 'utf8')
+            var resultExt = await server.inDbClient(ADMIN_REQ, async client => 
+                await client.query(`SELECT ${resultBase.fields.map((f:{name:string})=>
+                    f.name == 'cod_nov' ? `case cod_nov when '¡FECHA FUTURA SIN NOVEDAD!' then null when '¡FERIADO O FIN DE SEMANA!' then null else cod_nov end` : f.name
+                )} FROM (${sqlParteDiarioExtendido}) x ${where} order by fecha, idper`,
+                    []
+                ).fetchAll()
+            )
+            // await fs.writeFile('sqlParteDiarioExt.json', JSON.stringify(resultExt,null,' '), 'utf8')
+            discrepances.showAndThrow(resultBase.rows, resultExt.rows);
+            discrepances.showAndThrow(resultExt.rows.length, 390);
         })
     })
     function randInt(int: number) {

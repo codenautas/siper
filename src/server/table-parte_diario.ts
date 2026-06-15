@@ -12,7 +12,6 @@ import { s_revista } from "./table-situacion_revista";
 
 const sqlParteDiarioBase = (novedades_vigentes: string) => `
 select 
-        p.ficha as persona_ficha,
         p.cuil,
         p.apellido,
         p.nombres,
@@ -22,9 +21,9 @@ select
         p.activo,
         p.horario_entrada,
         p.horario_salida,
-        p.dds,
         p.es_laborable,
         p.cant_horas_esperadas,
+        p.sector,
         p.sector_nombre,
         nv.*,
         cn.novedad,
@@ -38,7 +37,15 @@ select
         left join cod_novedades cn using (cod_nov)
 `
 
-export const sqlParteDiario= sqlParteDiarioBase('novedades_vigentes');
+export const sqlParteDiario= sqlParteDiarioBase(`(SELECT
+        nv.idper,
+        nv.fecha,
+        nv.cod_nov,
+        nv.fichadas,
+        nv.annio,
+        nv.trabajable,
+        nv.horas
+    from novedades_vigentes nv)`);
 
 export const sqlParteDiarioExtendido= sqlParteDiarioBase(sqlEnvolventeDesdeHastaDeNovedadVigente);
 
@@ -49,7 +56,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
         elementName: "parte_diario",
         fields: [
             idper,
-            { name: 'persona_ficha'   , typeName: 'text' , title: 'ficha'},
+            { name: 'ficha'   , typeName: 'text' , title: 'ficha'},
             { name: 'cuil'    , typeName: 'text' },
             { name: 'apellido', typeName: 'text'},
             { name: 'nombres' , typeName: 'text'},

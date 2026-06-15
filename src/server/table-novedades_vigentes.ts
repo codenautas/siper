@@ -12,7 +12,7 @@ import { politicaNovedades } from "./table-novedades_registradas";
 export const sqlEnvolventeDesdeHastaDeNovedadVigente = `(
 with novedades_fecha AS(
   SELECT 
-      p.idper, nv.ficha, nv.fichadas, nv.sector, nv.annio, nv.trabajable, nv.detalles, f.dds, f.laborable, nv.horas,
+      p.idper, nv.fichadas, nv.annio, nv.trabajable, nv.detalles, f.dds, f.laborable, nv.horas,
       COALESCE(nv.fecha, f.fecha) as fecha,  
       CASE
         WHEN cod_nov is null and (f.dds in (6,0) or laborable = false) then '¡FERIADO O FIN DE SEMANA!' --'888'
