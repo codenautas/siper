@@ -20,7 +20,7 @@ import { ConfigFichadasDb, getConfigFichadasDb, MAX_INTENTOS } from './app-princ
 
 import { sqlLeftJoinLateralTrayectoriaLaboral } from './table-personas';
 
-import { sqlParteDiario } from './table-parte_diario'
+import { sqlParteDiarioAgrupado } from './table-parte_diario'
 
 const sqlExprCondicionCodNovSitRevista = 'nov_grupo is null or nov_grupo is not distinct from sr_grupo'
 
@@ -277,19 +277,10 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof calendario_persona.parameters>){
             const {idper, annio, mes} = params;
             const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
-            const info = await context.client.query(`SELECT *, suma_horas - horas_esperadas as saldo_horas
-            FROM (
-                SELECT count(*) as dias_mes,
-                        count(*) FILTER (WHERE es_laborable) as laborables,
-                        count(horas) as dias_promediados,
-                        sum(horas) as suma_horas,
-                        (sum(cant_horas_esperadas) FILTER (WHERE horas is not null) || ' hours')::interval as horas_esperadas,
-                        avg(horas) as promedio_horas,
-                        (avg(cant_horas_esperadas) FILTER (WHERE horas is not null) || ' hours')::interval as promedio_esperado
-                    FROM (${sqlParteDiario})
-                    WHERE fecha BETWEEN $2 AND $2::date + interval '1 month' - interval '1 day'
-                        AND idper = $1
-            )`,
+            const info = await context.client.query(`${sqlParteDiarioAgrupado}
+                WHERE fecha BETWEEN $2 AND $2::date + interval '1 month' - interval '1 day'
+                    AND idper = $1
+            `,
                 [idper, desde]
             ).fetchUniqueRow();
             return info.row

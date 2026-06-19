@@ -49,6 +49,18 @@ export const sqlParteDiario= sqlParteDiarioBase(`(SELECT
 
 export const sqlParteDiarioExtendido= sqlParteDiarioBase(sqlEnvolventeDesdeHastaDeNovedadVigente);
 
+const SUMA_HORAS = `sum(horas)`;
+const HORAS_ESPERADAS = `(sum(cant_horas_esperadas) FILTER (WHERE horas is not null) || ' hours')::interval`;
+export const sqlParteDiarioAgrupado = `SELECT count(*) as dias_mes,
+        count(*) FILTER (WHERE es_laborable) as laborables,
+        count(horas) as dias_promediados,
+        ${SUMA_HORAS} as suma_horas,
+        ${HORAS_ESPERADAS} as horas_esperadas,
+        avg(horas) as promedio_horas,
+        (avg(cant_horas_esperadas) FILTER (WHERE horas is not null) || ' hours')::interval as promedio_esperado,
+        ${SUMA_HORAS} - ${HORAS_ESPERADAS} as saldo_horas
+    FROM (${sqlParteDiario})`
+
 // Función genérica para la configuración base de las tablas
 export function parte_diario(_context: TableContext): TableDefinition {
     return {
