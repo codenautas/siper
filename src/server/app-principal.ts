@@ -76,7 +76,8 @@ import { niveles_educativos      } from "./table-niveles_educativos";
 import { tipos_novedad           } from "./table-tipos_novedad";
 import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
-import {sinc_fichadores, ESTADOS} from "./table-sinc_fichadores"
+import { sinc_fichadores, ESTADOS} from "./table-sinc_fichadores"
+import { presentismo             } from "./table-presentismo"
 
 import { consolidarFichadas, ejecutarSP, ProceduresPrincipal } from './procedures-principal'
 import * as sql from 'mssql';
@@ -679,7 +680,8 @@ export class AppSiper extends AppBackend{
             bandas_horarias      ,
             reglas               ,
             avisos_falta_fichada ,   
-            sinc_fichadores,
+            sinc_fichadores      ,
+            presentismo          ,
         }
     }       
 }

@@ -984,6 +984,18 @@ export const fichadas = {
 
 export type Fichada = DefinedType<typeof fichadas.description>
 
+export const presentismo = {
+    table: 'presentismo',
+    description: is.object({
+        idper: is.string,
+        sector: is.string,
+        dias_promediados: is.number,
+        tiene_interes: is.boolean,
+    })
+} satisfies CommonEntityDefinition
+
+export type Presentismo = DefinedType<typeof fichadas.description>
+
 
 //para app de fichadas
 export interface FichadaData { 

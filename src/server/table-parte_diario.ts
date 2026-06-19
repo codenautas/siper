@@ -51,15 +51,23 @@ export const sqlParteDiarioExtendido= sqlParteDiarioBase(sqlEnvolventeDesdeHasta
 
 const SUMA_HORAS = `sum(horas)`;
 const HORAS_ESPERADAS = `(sum(cant_horas_esperadas) FILTER (WHERE horas is not null) || ' hours')::interval`;
-export const sqlParteDiarioAgrupado = `SELECT count(*) as dias_mes,
+const SALDO_HORAS = `${SUMA_HORAS} - ${HORAS_ESPERADAS}`
+const BAJO_UMBRAL_HORAS = `${SALDO_HORAS} < '-7 hours'::interval`
+export const sqlParteDiarioAgrupado = `count(*) as dias_mes,
         count(*) FILTER (WHERE es_laborable) as laborables,
         count(horas) as dias_promediados,
         ${SUMA_HORAS} as suma_horas,
         ${HORAS_ESPERADAS} as horas_esperadas,
         avg(horas) as promedio_horas,
         (avg(cant_horas_esperadas) FILTER (WHERE horas is not null) || ' hours')::interval as promedio_esperado,
-        ${SUMA_HORAS} - ${HORAS_ESPERADAS} as saldo_horas
-    FROM (${sqlParteDiario})`
+        ${SALDO_HORAS} as saldo_horas,
+        count(injustificado) as dias_injustificados,
+        count(injustificado) > 0 as tiene_injustificados,
+        ${BAJO_UMBRAL_HORAS} as bajo_umbral_horas,
+        ${BAJO_UMBRAL_HORAS} OR count(injustificado) > 0 as con_problemas,
+        ${BAJO_UMBRAL_HORAS} OR count(injustificado) > 0 OR ${SUMA_HORAS} > '0 hours'::interval OR ${HORAS_ESPERADAS} > '0 hours'::interval as tiene_interes
+    FROM (${sqlParteDiario}) inner join parametros on true
+    WHERE fecha BETWEEN $1 AND $1::date + interval '1 month' - interval '1 day'`
 
 // Función genérica para la configuración base de las tablas
 export function parte_diario(_context: TableContext): TableDefinition {

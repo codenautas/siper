@@ -1856,6 +1856,10 @@ describe("SiPer: " + testConfig.name, function(){
     })
     describe("controles finales", function(){
         this.timeout(900000);
+        it("presentismo final", async function(){
+            await rrhhSession.tableDataTest(ctts.presentismo, [
+            ], "all", {fixedFields:{inicio_mes: date.iso('2000-01-01'), tiene_interes: true}})
+        })
         it("son iguales los SQL de libro diario y su versión extendida", async function(){
             var where = `WHERE fecha BETWEEN '2000-01-27' AND '2000-02-02' AND es_laborable`
             var resultBase = await server.inDbClient(ADMIN_REQ, async client => 

@@ -277,11 +277,9 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof calendario_persona.parameters>){
             const {idper, annio, mes} = params;
             const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
-            const info = await context.client.query(`${sqlParteDiarioAgrupado}
-                WHERE fecha BETWEEN $2 AND $2::date + interval '1 month' - interval '1 day'
-                    AND idper = $1
-            `,
-                [idper, desde]
+            const info = await context.client.query(
+                `SELECT ${sqlParteDiarioAgrupado} AND idper = $2`,
+                [desde, idper]
             ).fetchUniqueRow();
             return info.row
         }
