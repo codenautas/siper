@@ -166,6 +166,19 @@ var testConfig: {name:string, speed:number, startContext: (app:AppBackendConstru
     process.argv.includes('--nav') ? TEST_VIA_CHROMIUM : TEST_BACKEND_VIA_API;
 
 
+const CALENDARIO_PERSONA_RESUMEN0 = {
+    saldo_horas: null,
+    suma_horas: null,
+    promedio_horas: null,
+    horas_esperadas: null,
+    promedio_esperado: null,
+    bajo_umbral_horas: false,
+    con_problemas: false,
+    dias_injustificados: 0,
+    tiene_injustificados: false,
+    tiene_interes: true
+} as Partial<ctts.Presentismo>
+
 describe("SiPer: " + testConfig.name, function(){
     const TIMEOUT_SPEED = TIMEOUT_SPEED_BE * testConfig.speed;
     this.timeout(TIMEOUT_SPEED);
@@ -1128,14 +1141,11 @@ describe("SiPer: " + testConfig.name, function(){
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta, entrada, salida), horas: {crudas: '08:20:00'}})
                     var result = await rrhhSession.callProcedure(ctts.calendario_persona_resumen, {idper, annio: 2000, mes: 1})
                     var esperado = {
+                        ...CALENDARIO_PERSONA_RESUMEN0,
                         dias_mes: 31,
                         dias_promediados: 0,
                         laborables: 21,
-                        saldo_horas: null,
-                        suma_horas: null,
-                        promedio_horas: null,
-                        horas_esperadas: null,
-                        promedio_esperado: null,
+                        tiene_interes: false,
                     }  as unknown as typeof result;
                     assert.deepEqual(result, esperado);
                 })
@@ -1149,6 +1159,7 @@ describe("SiPer: " + testConfig.name, function(){
                         await registrarFichada(server, {idper, fecha, hora: '15:00:00', tipo_fichada:'S'});
                         const resumen = await rrhhSession.callProcedure(ctts.calendario_persona_resumen, {idper, annio:2000, mes:1});
                         var esperado = {
+                            ...CALENDARIO_PERSONA_RESUMEN0,
                             dias_mes: 31,
                             dias_promediados: 1,
                             laborables: 21,
@@ -1633,6 +1644,7 @@ describe("SiPer: " + testConfig.name, function(){
                     // assert.equal(resumen.dias_promediados, 2);
                     // discrepances.showAndThrow(resumen.suma_horas, timeInterval({hours:16}));
                     var esperado = {
+                        ...CALENDARIO_PERSONA_RESUMEN0,
                         dias_mes: 31,
                         dias_promediados: 2,
                         laborables: 21,
