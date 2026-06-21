@@ -42,7 +42,6 @@ export function presentismo(_context: TableContext): TableDefinition {
             isTable: false,
             from: `(SELECT idper, sector, ${sqlParteDiarioAgrupado} GROUP BY idper, sector)`,
         },
-        // @ts-expect-error esperando nueva versión de bp
         functionDef: {
             parameters: [
                 {name: 'inicio_mes', typeName: 'date'}
