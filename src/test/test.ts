@@ -41,6 +41,12 @@ function TIME_RANGE(desde?:TIME, hasta?:TIME, desde2?:TIME, hasta2?:TIME):string
 }
 
 /*
+function horas(hours:number){
+    return timeInterval({hours})
+}
+*/
+
+/*
  * Para debuguear el servidor por separado hay abrir dos ventanas, en una corren los test (normalmente) 
  * y en la otra corre el servidor (para poner breakpoints elegir cuál se corre en visual studio code).
  * antes de npm start (el servidor) hay que poner 
@@ -1870,6 +1876,12 @@ describe("SiPer: " + testConfig.name, function(){
         this.timeout(900000);
         it("presentismo final", async function(){
             await rrhhSession.tableDataTest(ctts.presentismo, [
+                /* Falta cerrar el día
+                {idper:'XX44', dias_considerados: 1, suma_horas: horas(6), horas_esperadas: horas(7), promedio_horas: horas(6), promedio_esperado: horas(7), saldo_horas: horas(-1), dias_injustificados: 0, tiene_injustificados: false, con_problemas: false, tiene_interes: true},
+                {idper:'XX45', dias_considerados: 1, suma_horas: horas(8), horas_esperadas: horas(7), promedio_horas: horas(8), promedio_esperado: horas(7), saldo_horas: horas( 1), dias_injustificados: 0, tiene_injustificados: false, con_problemas: false, tiene_interes: true},
+                {idper:'XX46', dias_considerados: 1, suma_horas: horas(8), horas_esperadas: horas(7), promedio_horas: horas(8), promedio_esperado: horas(7), saldo_horas: horas( 1), dias_injustificados: 0, tiene_injustificados: false, con_problemas: false, tiene_interes: true},
+                {idper:'XX70', dias_considerados: 1, suma_horas: horas(8), horas_esperadas: horas(6), promedio_horas: horas(8), promedio_esperado: horas(6), saldo_horas: horas( 2), dias_injustificados: 0, tiene_injustificados: false, con_problemas: false, tiene_interes: true},
+                */
             ], "all", {fixedFields:{inicio_mes: date.iso('2000-01-01'), tiene_interes: true}})
         })
         it("son iguales los SQL de libro diario y su versión extendida", async function(){
