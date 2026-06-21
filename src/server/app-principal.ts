@@ -456,6 +456,7 @@ export class AppSiper extends AppBackend{
                 ...(es.registra ? [
                     {menuType:'menu', name:'listados', menuContent:[
                         {menuType:'proc', name:'parte_diario'},
+                        {menuType:'proc', name:'listado_presentismo', label:'presentismo mes'},
                         {menuType:'proc', name:'informe_mensual'},
                         {menuType:'proc', name:'descanso_anual_remunerado'},
                         {menuType:'proc', name:'exportar_descanso_anual_remunerado'},

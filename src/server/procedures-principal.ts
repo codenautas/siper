@@ -837,6 +837,21 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             ).fetchUniqueRow();
             return result.row;
         }
+    },
+    {
+        action: 'listado_presentismo',
+        parameters: [
+            {name: 'annio'  , typeName: 'integer', label: 'año', references: 'annios', defaultValue: date.today().getFullYear()},
+            {name: 'mes'    , typeName: 'integer', defaultValue: date.today().getMonth() + 1},
+        ],
+        resultOk:'showGrid',
+        coreFunction: async function (_context: ProcedureContext, parameters: any) {
+            var grilla = {
+                tableName:'presentismo', 
+                parameterFunctions: {inicio_mes: date.ymd(parameters.annio, parameters.mes, 1)},
+            }
+            return grilla;
+        }
     }
 ];
 
