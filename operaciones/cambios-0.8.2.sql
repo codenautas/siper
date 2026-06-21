@@ -1,7 +1,36 @@
+set search_path = siper;
+
 ALTER TABLE siper.parametros ADD COLUMN cant_horas_diarias integer DEFAULT 8 NOT NULL;
 
 ALTER TABLE siper.horarios_cod ADD COLUMN cant_horas integer;
 ALTER TABLE siper.horarios_cod ADD COLUMN horas_promedio integer;
+
+
+CREATE OR REPLACE FUNCTION siper.parsear_horario(p_cod_horario text) RETURNS jsonb
+    LANGUAGE sql IMMUTABLE
+    AS $$
+  with e as (
+    select substring(p_cod_horario from '^(\d+)h')::integer as h,
+      regexp_replace(p_cod_horario, '^\d+h\s*', '') as resto
+  )
+  select (case when e.h is null then '{}'::jsonb else jsonb_build_object('h', e.h) end)
+      || jsonb_build_object('ds',jsonb_agg(x.*)) from e, lateral (
+  select dias, desde, coalesce(hasta, to_char(desde::time + (coalesce(e.h, 7) || 'h')::interval, 'HH24:MI')) as hasta from (
+  select case when t[1] is null then '[1,2,3,4,5]'::jsonb else
+          (select jsonb_agg(d :: integer) from regexp_split_to_table(translate(t[1], 'DLMXJVS', '0123456'), '') as d)
+        end as dias,
+        (case when t[2] like '%:%' then t[2] else t[2] || ':00' end) as desde,
+        (case when t[3] like '%:%' then t[3] else t[3] || ':00' end) as hasta
+    from regexp_matches(
+      e.resto,
+      '([DLMXJVS]+)?\s*(\d+(?::\d+)?)(?:\s*[-aA]\s*(\d+(?::\d+)?))?',
+      'g'
+    ) t) y) x
+  group by e.h
+$$;
+
+
+ALTER FUNCTION siper.parsear_horario(p_cod_horario text) OWNER TO siper_owner;
 
 
 CREATE OR REPLACE FUNCTION siper.horario_estandarizado(p_horario jsonb) RETURNS text
@@ -189,32 +218,6 @@ $$;
 
 
 ALTER FUNCTION siper.novedades_calculadas(p_desde date, p_hasta date) OWNER TO siper_owner;
-
-CREATE OR REPLACE FUNCTION siper.parsear_horario(p_cod_horario text) RETURNS jsonb
-    LANGUAGE sql IMMUTABLE
-    AS $$
-  with e as (
-    select substring(p_cod_horario from '^(\d+)h')::integer as h,
-      regexp_replace(p_cod_horario, '^\d+h\s*', '') as resto
-  )
-  select (case when e.h is null then '{}'::jsonb else jsonb_build_object('h', e.h) end)
-      || jsonb_build_object('ds',jsonb_agg(x.*)) from e, lateral (
-  select dias, desde, coalesce(hasta, to_char(desde::time + (coalesce(e.h, 7) || 'h')::interval, 'HH24:MI')) as hasta from (
-  select case when t[1] is null then '[1,2,3,4,5]'::jsonb else
-          (select jsonb_agg(d :: integer) from regexp_split_to_table(translate(t[1], 'DLMXJVS', '0123456'), '') as d)
-        end as dias,
-        (case when t[2] like '%:%' then t[2] else t[2] || ':00' end) as desde,
-        (case when t[3] like '%:%' then t[3] else t[3] || ':00' end) as hasta
-    from regexp_matches(
-      e.resto,
-      '([DLMXJVS]+)?\s*(\d+(?::\d+)?)(?:\s*[-aA]\s*(\d+(?::\d+)?))?',
-      'g'
-    ) t) y) x
-  group by e.h
-$$;
-
-
-ALTER FUNCTION siper.parsear_horario(p_cod_horario text) OWNER TO siper_owner;
 CREATE OR REPLACE FUNCTION siper.parseo_horario_tabla(p_json_horarios jsonb) RETURNS TABLE(dds integer, hora_desde time without time zone, hora_hasta time without time zone)
     LANGUAGE sql IMMUTABLE
     AS $$
