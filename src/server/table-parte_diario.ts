@@ -32,7 +32,8 @@ select
         cn.injustificado,
         bh.descripcion as bh_descripcion
     from ${novedades_vigentes} nv 
-        inner join lateral (${sqlPersonas('nv.fecha')} WHERE p.idper = nv.idper) p on true
+        inner join lateral (${sqlPersonas('nv.fecha')} WHERE p.idper = nv.idper) p 
+            on nv.fecha between coalesce(p.registra_novedades_desde, p.fecha_ingreso) and coalesce(p.fecha_egreso, nv.fecha)
         inner join bandas_horarias bh using (banda_horaria)
         left join cod_novedades cn using (cod_nov)
 `
