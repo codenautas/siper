@@ -1,7 +1,14 @@
 -- Cambios desde la versión 0.8.2
+-- Definir variables al inicio del script, setear según entorno
+SET LOCAL my_app.owner = 'siper_test_owner';
+SET LOCAL my_app.admin = 'siper_test_admin';
+
+DO $$
+BEGIN
+
 set search_path = siper;
 
-set role to siper_muleto_owner;
+EXECUTE 'set role to '|| current_setting('my_app.owner');
 
 alter table "per_domicilios" add column "comuna_partido" text;
 alter table "per_domicilios" add column "barrio_localidad" text;
@@ -10,8 +17,48 @@ alter table "per_domicilios" add column "coordenada_y" text;
 alter table "per_domicilios" add column "obs_geo" text;
 alter table "per_domicilios" add column "fecha_codificacion" date; 
 alter table "per_domicilios" add column "fecha_envio_codificacion" date; 
+alter table "per_domicilios" add column "idgeo" bigint; 
 alter table "per_domicilios" drop column "localidad";
 alter table "per_domicilios" drop column "barrio";
+
+CREATE SEQUENCE "per_domicilios_idgeo_seq" START 1;
+ALTER TABLE "per_domicilios" ALTER COLUMN "idgeo" SET DEFAULT nextval('per_domicilios_idgeo_seq'::regclass);
+EXECUTE 'GRANT USAGE, SELECT ON SEQUENCE "per_domicilios_idgeo_seq" TO '|| current_setting('my_app.admin');
+
+CREATE OR REPLACE FUNCTION per_domicilios_idgeo_trg()
+    RETURNS trigger
+    LANGUAGE plpgsql
+AS $BODY$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        new.idgeo := nextval('per_domicilios_idgeo_seq');
+    ELSIF TG_OP = 'UPDATE' THEN
+        IF (new.nombre_calle     IS DISTINCT FROM old.nombre_calle
+         OR new.calle            IS DISTINCT FROM old.calle
+         OR new.barrio_localidad IS DISTINCT FROM old.barrio_localidad
+         OR new.altura           IS DISTINCT FROM old.altura
+         OR new.comuna_partido   IS DISTINCT FROM old.comuna_partido
+         OR new.provincia        IS DISTINCT FROM old.provincia) THEN
+            new.idgeo              := nextval('per_domicilios_idgeo_seq');
+            new.coordenada_x       := null;
+            new.coordenada_y       := null;
+            new.obs_geo            := null;
+            new.fecha_codificacion := null;
+        ELSIF (new.coordenada_x IS DISTINCT FROM old.coordenada_x
+            OR new.coordenada_y IS DISTINCT FROM old.coordenada_y
+            OR new.obs_geo      IS DISTINCT FROM old.obs_geo) THEN
+            new.fecha_codificacion := fecha_actual();
+        END IF;
+    END IF;
+    RETURN new;
+END;
+$BODY$;
+
+CREATE TRIGGER per_domicilios_idgeo_trg
+    BEFORE INSERT OR UPDATE
+    ON per_domicilios
+    FOR EACH ROW
+    EXECUTE PROCEDURE per_domicilios_idgeo_trg();
 
 create table "comunas_partidos" (
   "provincia" text, 
@@ -19,8 +66,8 @@ create table "comunas_partidos" (
   "nombre" text
 , primary key ("provincia", "comuna_partido")
 );
-grant select, insert, update, delete on "comunas_partidos" to siper_admin;
-grant all on "comunas_partidos" to siper_owner;
+EXECUTE 'grant select, insert, update, delete on "comunas_partidos" to '|| current_setting('my_app.admin');
+EXECUTE 'grant all on "comunas_partidos" to '|| current_setting('my_app.owner');
 
 create table "barrios_localidades" (
   "provincia" text, 
@@ -29,9 +76,16 @@ create table "barrios_localidades" (
   "nombre" text
 , primary key ("provincia", "comuna_partido", "barrio_localidad")
 );
-grant select, insert, update, delete on "barrios_localidades" to siper_admin;
-grant all on "barrios_localidades" to siper_owner;
+EXECUTE 'grant select, insert, update, delete on "barrios_localidades" to '|| current_setting('my_app.admin');
+EXECUTE 'grant all on "barrios_localidades" to '|| current_setting('my_app.owner');
 
+do $SQL_ENANCE$
+ begin
+PERFORM enance_table('comunas_partidos','provincia,comuna_partido');
+PERFORM enance_table('barrios_localidades','provincia,comuna_partido,barrio_localidad');
+PERFORM enance_table('per_domicilios','idper,nro_item');
+end
+$SQL_ENANCE$;
 
 insert into "comunas_partidos" ("provincia", "comuna_partido", "nombre") values
 ('02', '007', 'COMUNA 1'),
@@ -1272,10 +1326,4 @@ create index "provincia,comuna_partido 4 barrios_localidades IDX" ON "barrios_lo
 create index "provincia,comuna_partido 4 per_domicilios IDX" ON "per_domicilios" ("provincia", "comuna_partido");
 create index "per_domicilios barrios_localidades IDX" ON "per_domicilios" ("provincia", "comuna_partido", "barrio_localidad");
 
-
-do $SQL_ENANCE$
- begin
-PERFORM enance_table('comunas_partidos','provincia,comuna_partido');
-PERFORM enance_table('barrios_localidades','provincia,comuna_partido,barrio_localidad');
-end
-$SQL_ENANCE$;
+END $$;
