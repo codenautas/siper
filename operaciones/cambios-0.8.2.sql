@@ -5,7 +5,6 @@ ALTER TABLE siper.parametros ADD COLUMN cant_horas_diarias integer DEFAULT 8 NOT
 ALTER TABLE siper.horarios_cod ADD COLUMN cant_horas integer;
 ALTER TABLE siper.horarios_cod ADD COLUMN horas_promedio integer;
 
-
 CREATE OR REPLACE FUNCTION siper.parsear_horario(p_cod_horario text) RETURNS jsonb
     LANGUAGE sql IMMUTABLE
     AS $$
