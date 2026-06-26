@@ -21,28 +21,26 @@
     "uuid": ">=14.0.0"
   },
   "dependencies": {
-    "backend-plus": "^2.6.9",
-    "best-globals": "^2.2.0",
+    "backend-plus": "^2.6.10",
     "frontend-plus": "^0.0.17",
     "guarantee-type": "^0.2.12",
-    "json4all": "^1.4.2",
-    "mssql": "^12.5.5",
+    "mssql": "^12.6.0",
     "pg-triggers": "^0.4.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "type-store": "^0.4.11"
+    "type-store": "^0.5.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/fs-extra": "^11.0.4",
     "@types/mocha": "^10.0.10",
     "@types/mssql": "^12.3.0",
-    "@types/node": "^26.0.0",
+    "@types/node": "^26.0.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "eslint": "^9.39.2",
     "eslint-plugin-react": "^7.37.5",
-    "globals": "^17.6.0",
+    "globals": "^17.7.0",
     "jiti": "^2.7.0",
     "mixin-patch": "^0.5.0",
     "mocha": "^11.7.6",
