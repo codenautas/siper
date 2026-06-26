@@ -20,6 +20,8 @@ import { ConfigFichadasDb, getConfigFichadasDb, MAX_INTENTOS } from './app-princ
 
 import { sqlLeftJoinLateralTrayectoriaLaboral } from './table-personas';
 
+import { sqlParteDiarioAgrupado } from './table-parte_diario'
+
 const sqlExprCondicionCodNovSitRevista = 'nov_grupo is null or nov_grupo is not distinct from sr_grupo'
 
 async function prevalidarCargaDeNovedades(context: ProcedureContext, params:Partial<NovedadRegistrada>){
@@ -106,13 +108,13 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         lateral (
                             select count(*) filter (where f.fecha between params.desde and params.hasta) as dias_corridos,
                                     count(*) filter (
-                                        where extract(dow from f.fecha) between 1 and 5
+                                        where f.dds between 1 and 5
                                             and laborable is not false
                                             and f.fecha between params.desde and params.hasta
                                     ) as dias_habiles,
                                     count(*) filter (where (f.fecha between params.desde and params.hasta or v.cod_nov = cn.cod_nov)) as total_corridos,
                                     count(*) filter (
-                                        where extract(dow from f.fecha) between 1 and 5
+                                        where f.dds between 1 and 5
                                             and laborable is not false
                                             and (f.fecha between params.desde and params.hasta or v.cod_nov = cn.cod_nov)
                                     ) as total_habiles,
@@ -147,6 +149,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name: 'tipo_novedad', typeName: 'text', defaultValue:'V', references:'tipos_novedad' },
         ],
         coreFunction: async function(context: ProcedureContext, params:NovedadRegistrada){
+            var fecha = params.desde as RealDate;
+            var db = context.be.db;
             const annio_abierto = (await context.client.query(`select abierto from annios where annio = $1 `, [params.desde.getFullYear()]).fetchUniqueValue()).value;
             if (!annio_abierto) {
                 var error = expected(new Error("annio cerrado"));
@@ -156,7 +160,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             if (!params.cancela) {
                 const permitidoCodNovParaSitRevista = (await context.client.query(
                     `select ${sqlExprCondicionCodNovSitRevista}
-                        from (${sqlPersonas}) p,
+                        from (${sqlPersonas(db.quoteLiteral(fecha.toYmd()) + '::date' )}) p,
                             cod_novedades cn
                         where p.idper = $1 and cn.cod_nov = $2`,
                     [params.idper, params.cod_nov]
@@ -224,10 +228,10 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const info = await context.client.query(
                 `select case when extract(year from f.fecha) = x.annio then f.fecha else null end as fecha,
                         extract(day from f.fecha) as dia,
-                        extract(dow from f.fecha) as dds,
+                        f.dds,
                         (f.fecha - '2001-01-01'::date - dds) / 7 as semana,
                         v.cod_nov,
-                        case extract(dow from f.fecha)
+                        case f.dds
                             when 0 then 'no-laborable' 
                             when 6 then 'no-laborable' 
                             else 
@@ -274,18 +278,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const {idper, annio, mes} = params;
             const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
             const info = await context.client.query(
-                `SELECT count(*) as dias_mes,
-                        count(*) FILTER (WHERE laborable is not false and dds between 1 and 5) as laborables,
-                        count(horas) as dias_promediados,
-                        avg(horas) as promedio_horas,
-                        sum(horas) as suma_horas,
-                        (sum(horas) - make_interval(hours => (count(horas) * 7)::int))::text as saldo_horas
-                    FROM novedades_vigentes nv INNER JOIN fechas USING (fecha)
-                        INNER JOIN personas p USING (idper)
-                        WHERE nv.fecha BETWEEN $2 AND $2::date + interval '1 month' - interval '1 day'
-                        AND nv.idper = $1
-                `,
-                [idper, desde]
+                `SELECT ${sqlParteDiarioAgrupado} AND idper = $2`,
+                [desde, idper]
             ).fetchUniqueRow();
             return info.row
         }
@@ -335,7 +329,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     from usuarios u 
                         inner join roles r using (rol),
                         ( select * from (${sqlNovPer({idper, annio:params.annio})}) p
-                            ${sqlLeftJoinLateralTrayectoriaLaboral}
+                            ${sqlLeftJoinLateralTrayectoriaLaboral('fecha_actual()::date')}
                         ) v
                     where ((con_dato and (v.comun is null or v.comun)) or v.registra and r.puede_cargar_dependientes or puede_cargar_todo)
                         and u.usuario = $1
@@ -352,11 +346,13 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name:'fecha',    typeName:'date'}
         ],
         coreFunction: async function(context: ProcedureContext, params:any){
+            var fecha = params.fecha as RealDate;
+            var db = context.be.db;
             const info = await context.client.query(
                 `select pe.idper, pe.cuil, pe.ficha, pe.idmeta4, pe.apellido, pe.nombres, pe.sector, cod_nov, novedad, nombre_sector, pe.es_jefe, validar_cuit(pe.cuil) AS cuil_valido,
                         pe.fecha_ingreso, pe.fecha_egreso,
                         ((puede_cargar_propio or pe.idper is distinct from u.idper) and (pe.activo is true)) as cargable
-                    from (${sqlPersonas}) pe
+                    from (${sqlPersonas(db.quoteLiteral(fecha.toYmd()) + '::date' )}) pe
                         inner join situacion_revista sr using (situacion_revista)
                         inner join usuarios u on u.usuario = $2
                         inner join roles using (rol)
@@ -378,6 +374,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name:'fecha',  typeName:'date'}
         ],
         coreFunction: async function(context: ProcedureContext, params:any){
+            var fecha = params.fecha as RealDate;
+            var db = context.be.db; 
             const info = await context.client.query(
                     `WITH dias_semana AS (
                         SELECT 
@@ -400,7 +398,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         coalesce(nv.cod_nov, case when d.dds BETWEEN 1 AND 5 then /* cod_nov_habitual */ null else null end) as cod_nov
                     FROM dias_semana d
                         INNER JOIN annios a USING (annio)
-                        INNER JOIN (${sqlPersonas}) p ON p.idper = $1
+                        INNER JOIN (${sqlPersonas(db.quoteLiteral(fecha.toYmd()) + '::date' )}) p ON p.idper = $1
                         LEFT JOIN bandas_horarias bh 
                             ON bh.banda_horaria = p.banda_horaria
                         LEFT JOIN horarios h 
@@ -839,6 +837,21 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             ).fetchUniqueRow();
             return result.row;
         }
+    },
+    {
+        action: 'listado_presentismo',
+        parameters: [
+            {name: 'annio'  , typeName: 'integer', label: 'año', references: 'annios', defaultValue: date.today().getFullYear()},
+            {name: 'mes'    , typeName: 'integer', defaultValue: date.today().getMonth() + 1},
+        ],
+        resultOk:'showGrid',
+        coreFunction: async function (_context: ProcedureContext, parameters: any) {
+            var grilla = {
+                tableName:'presentismo', 
+                parameterFunctions: {inicio_mes: date.ymd(parameters.annio, parameters.mes, 1)},
+            }
+            return grilla;
+        }
     }
 ];
 
@@ -855,8 +868,8 @@ export async function consolidarFichadas(parameters: any, client: Client) {
     const cambios = (await client.query(
         `update fechas 
             set fichadas_consolidadas = $3 
-            where fecha between $1 and $2 and fichadas_consolidadas is distinct from $3`,
-        [fechaDesde, fechaHasta, consolidar]
+            where fecha between $1 and $2 and fichadas_consolidadas is distinct from $3`, // ${idper ? `AND idper = $4` : ``}
+        [fechaDesde, fechaHasta, consolidar] // , ...(idper ? [idper] : [])
     ).fetchAll()).rows;
     if (!cambios.length) {
         if (idper) {

@@ -9,19 +9,19 @@ import {cod_nov} from "./table-cod_novedades"
 
 import { politicaNovedades } from "./table-novedades_registradas";
 
-export const sqlNovedadesVigentesConDesdeHastaHabiles = `
+export const sqlEnvolventeDesdeHastaDeNovedadVigente = `(
 with novedades_fecha AS(
   SELECT 
-      p.idper, nv.ficha, nv.fichadas, nv.sector, nv.annio, nv.trabajable, nv.detalles, f.dds, f.laborable, nv.horas,
-    COALESCE(nv.fecha, f.fecha) as fecha,
-    CASE
-      WHEN cod_nov is null and (dds in (6,0) or laborable = false) then '¡FERIADO O FIN DE SEMANA!' --'888'
-      WHEN cod_nov is null then '¡FECHA FUTURA SIN NOVEDAD!' --'999'
-      ELSE cod_nov
-    END AS cod_nov
+      p.idper, nv.fichadas, nv.annio, nv.trabajable, nv.detalles, f.dds, f.laborable, nv.horas,
+      COALESCE(nv.fecha, f.fecha) as fecha,  
+      CASE
+        WHEN cod_nov is null and (f.dds in (6,0) or laborable = false) then '¡FERIADO O FIN DE SEMANA!' --'888'
+        WHEN cod_nov is null then '¡FECHA FUTURA SIN NOVEDAD!' --'999'
+        ELSE cod_nov
+      END AS cod_nov
   FROM annios INNER JOIN fechas f on f.annio = annios.annio
     INNER JOIN (SELECT DISTINCT idper, annio FROM novedades_vigentes) p on p.annio = annios.annio
-    LEFT JOIN novedades_vigentes nv ON f.fecha = nv.fecha AND p.idper = nv.idper
+    LEFT JOIN novedades_vigentes nv ON f.fecha = nv.fecha AND p.idper = nv.idper    
 ),
 novedades_vigentes_con_marca_de_cambio_de_cod_nov AS(
   select *,
@@ -39,15 +39,16 @@ novedades_vigentes_con_marca_de_cambio_de_cod_nov AS(
   ),
   novedades_vigentes_desde_hasta AS (
   select *, 
-      MIN(ncg.fecha) OVER (PARTITION BY ncg.idper, ncg.numero_tira_cod_nov_iguales) AS desde,
-      MAX(ncg.fecha) OVER (PARTITION BY ncg.idper, ncg.numero_tira_cod_nov_iguales) AS hasta,
+      MIN(ncg.fecha) OVER (PARTITION BY ncg.idper, ncg.numero_tira_cod_nov_iguales) AS mismo_cod_nov_desde,
+      MAX(ncg.fecha) OVER (PARTITION BY ncg.idper, ncg.numero_tira_cod_nov_iguales) AS mismo_cod_nov_hasta,
       COUNT(ncg.fecha) OVER (PARTITION BY ncg.idper, ncg.numero_tira_cod_nov_iguales) AS habiles
     from novedades_vigentes_identificando_tiras_cod_nov_iguales ncg
     order by ncg.idper, ncg.numero_tira_cod_nov_iguales
   )
-  select idper, fecha, cod_nov, ficha, fichadas, sector, annio, trabajable, detalles,
-         desde, hasta, habiles, hasta - desde + 1 as corridos, horas
-    from novedades_vigentes_desde_hasta`
+  select *, 
+      mismo_cod_nov_hasta - mismo_cod_nov_desde + 1 as corridos
+    from novedades_vigentes_desde_hasta
+)`
 
 export function novedades_vigentes(context: TableContext): TableDefinition {
     return {

@@ -330,8 +330,8 @@ export const parte_diario = {
     description: is.object({
         idper: is.string, 
         cod_nov: is.string, 
-        desde: is.Date, 
-        hasta: is.Date, 
+        mismo_cod_nov_desde: is.Date, 
+        mismo_cod_nov_hasta: is.Date, 
         habiles: is.number, 
         corridos: is.number,
     })
@@ -344,6 +344,14 @@ export const horarios_dds = {
         hora_desde: is.string,
         hora_hasta: is.string,
         trabaja: is.boolean,
+    })
+} 
+
+export const horarios_cod = {
+    table: 'horarios_cod',
+    description: is.object({
+        hroario: is.string, 
+        cant_horas: is.number,
     })
 } 
 
@@ -463,10 +471,10 @@ export const calendario_persona_resumen = {
         dias_mes: is.number,
         laborables: is.number,
         dias_promediados: is.number,
-        promedio_horas: is.class(TimeInterval),
-        suma_horas: is.class(TimeInterval),
-        saldo_horas: is.string,
-        // saldo_horas: is.class(TimeInterval),
+        suma_horas: {nullable: is.class(TimeInterval)},
+        horas_esperadas: {nullable: is.class(TimeInterval)},
+        saldo_horas: {nullable: is.class(TimeInterval)},
+        promedio_esperado: {nullable: is.class(TimeInterval)},
     })
 }
 
@@ -986,6 +994,18 @@ export const fichadas = {
 } satisfies CommonEntityDefinition
 
 export type Fichada = DefinedType<typeof fichadas.description>
+
+export const presentismo = {
+    table: 'presentismo',
+    description: is.object({
+        idper: is.string,
+        sector: is.string,
+        dias_promediados: is.number,
+        tiene_interes: is.boolean,
+    })
+} satisfies CommonEntityDefinition
+
+export type Presentismo = DefinedType<typeof fichadas.description>
 
 
 //para app de fichadas

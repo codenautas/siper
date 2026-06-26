@@ -37,7 +37,7 @@ $BODY$
           (f.dds BETWEEN 1 AND 5) AND (laborable is not false OR inamovible is not true AND f.dds NOT BETWEEN 1 AND 5) as trabajable,
           p.sector, f.annio, nr.detalles,
           CASE WHEN (nr.c_dds IS NOT TRUE -- FILTRO PARA DIAGRAMADO POR DIA DE SEMANA:
-            OR CASE extract(DOW from f.fecha) WHEN 0 THEN nr.dds0 WHEN 1 THEN nr.dds1 WHEN 2 THEN nr.dds2 WHEN 3 THEN nr.dds3 WHEN 4 THEN nr.dds4 WHEN 5 THEN nr.dds5 WHEN 6 THEN nr.dds6 END
+            OR CASE f.dds WHEN 0 THEN nr.dds0 WHEN 1 THEN nr.dds1 WHEN 2 THEN nr.dds2 WHEN 3 THEN nr.dds3 WHEN 4 THEN nr.dds4 WHEN 5 THEN nr.dds5 WHEN 6 THEN nr.dds6 END
           ) THEN nr.cod_nov ELSE null END as nr_cod_nov,
           COALESCE(CASE WHEN nr.cod_nov IS NOT NULL THEN nr.requiere_fichadas ELSE ni.requiere_fichadas END, nr.cod_nov IS NULL) as nr_requiere_fichadas,
           nr.corridos as nr_corridos,

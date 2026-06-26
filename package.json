@@ -1,6 +1,6 @@
 {
   "name": "siper",
-  "version": "0.8.2",
+  "version": "0.9.0-rc.3",
   "private": true,
   "license": "MIT",
   "description": "Sistema Integral de Gestión de Agentes, Recursos, Personal y Actividades",
@@ -21,37 +21,35 @@
     "uuid": ">=14.0.0"
   },
   "dependencies": {
-    "backend-plus": "^2.6.3",
-    "best-globals": "^2.1.5",
+    "backend-plus": "^2.6.10",
     "frontend-plus": "^0.0.17",
-    "guarantee-type": "^0.2.2",
-    "json4all": "^1.4.2",
-    "mssql": "^12.5.4",
+    "guarantee-type": "^0.2.12",
+    "mssql": "^12.6.0",
     "pg-triggers": "^0.4.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "type-store": "^0.4.10"
+    "type-store": "^0.5.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/fs-extra": "^11.0.4",
     "@types/mocha": "^10.0.10",
     "@types/mssql": "^12.3.0",
-    "@types/node": "^25.9.1",
+    "@types/node": "^26.0.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "eslint": "^9.39.2",
     "eslint-plugin-react": "^7.37.5",
-    "globals": "^17.6.0",
+    "globals": "^17.7.0",
     "jiti": "^2.7.0",
     "mixin-patch": "^0.5.0",
     "mocha": "^11.7.6",
     "serial-tester": "^0.3.0-rc.2",
     "source-map-support": "^0.5.21",
-    "type-fest": "^5.6.0",
+    "type-fest": "^5.7.0",
     "types.d.ts": "^0.6.22",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.59.4"
+    "typescript-eslint": "^8.61.1"
   },
   "mixin-patch": {
     "patch": false

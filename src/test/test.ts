@@ -18,6 +18,7 @@ import { date, datetime, timeInterval, TimeInterval } from "best-globals";
 import { guarantee, DefinedType } from "guarantee-type"
 
 import { tipo_novedad, tipo_novedad_inicial, tipo_novedad_verificado } from "../server/table-tipos_novedad"
+import { sqlParteDiario, sqlParteDiarioExtendido } from "../server/table-parte_diario"
 
 import * as discrepances from 'discrepances';
 import { Time } from "../server/types-principal";
@@ -38,6 +39,12 @@ function TIME_RANGE(desde?:TIME, hasta?:TIME, desde2?:TIME, hasta2?:TIME):string
     if (desde2 != null || hasta2 != null) ranges.push([desde2, hasta2]);
     return `{${ranges.map(([desde, hasta])=>TIME_SIMPLERANGE(desde, hasta)).join(',')}}`
 }
+
+/*
+function horas(hours:number){
+    return timeInterval({hours})
+}
+*/
 
 /*
  * Para debuguear el servidor por separado hay abrir dos ventanas, en una corren los test (normalmente) 
@@ -138,6 +145,13 @@ async function registrarFichada(server: AppSiper, params: Partial<ctts.Fichada>,
     })
     return result;
 }
+
+async function registrarFichadas(server: AppSiper, params:{idper: string, fecha: Date, entrada: string, salida: string}, tabla?:'fichadas_recibidas'): Promise<void> {
+    var {idper, fecha, entrada, salida} = params;
+    await registrarFichada(server, {idper, fecha, hora: entrada, tipo_fichada: 'E'}, tabla);
+    await registrarFichada(server, {idper, fecha, hora: salida , tipo_fichada: 'S'}, tabla);
+}
+
 const TEST_BACKEND_VIA_API = {
     name: "via api",
     speed: 1,
@@ -157,6 +171,19 @@ const TEST_VIA_CHROMIUM = {
 var testConfig: {name:string, speed:number, startContext: (app:AppBackendConstructor<AppSiper>) => Promise<Contexts<AppSiper>>} = 
     process.argv.includes('--nav') ? TEST_VIA_CHROMIUM : TEST_BACKEND_VIA_API;
 
+
+const CALENDARIO_PERSONA_RESUMEN0 = {
+    saldo_horas: null,
+    suma_horas: null,
+    promedio_horas: null,
+    horas_esperadas: null,
+    promedio_esperado: null,
+    bajo_umbral_horas: false,
+    con_problemas: false,
+    dias_injustificados: 0,
+    tiene_injustificados: false,
+    tiene_interes: true
+} as Partial<ctts.Presentismo>
 
 describe("SiPer: " + testConfig.name, function(){
     const TIMEOUT_SPEED = TIMEOUT_SPEED_BE * testConfig.speed;
@@ -252,10 +279,10 @@ describe("SiPer: " + testConfig.name, function(){
                             '2000-04-02',
                             '2000-05-01');
                         `,
-                        `update fechas set cod_nov_pred_fecha = '${COD_PRED_PAS}' where extract(dow from fecha) between 1 and 5 and fecha <= '${FECHA_ACTUAL.toYmd()}'`,
+                        `update fechas set cod_nov_pred_fecha = '${COD_PRED_PAS}' where dds between 1 and 5 and fecha <= '${FECHA_ACTUAL.toYmd()}'`,
                         `update annios set horario_habitual_desde = '10:00', horario_habitual_hasta = '17:00' where annio = '${DESDE_AÑO}'`,
                         `select annio_abrir('${DESDE_AÑO}')`,
-                        `update parametros set fecha_hora_para_test = '${FECHA_ACTUAL.toYmd()} 10:00', cod_nov_habitual = '${COD_PRED_PAS}' where unico_registro`,
+                        `update parametros set fecha_hora_para_test = '${FECHA_ACTUAL.toYmd()} 10:00', cod_nov_habitual = '${COD_PRED_PAS}', cant_horas_diarias = 7 where unico_registro`,
                         `insert into sectores (subsector, nombre_sector, pertenece_a, nivel, tipo_sec) values
                             ('Z', 'PRUEBA AUTOMATICA Z'      , null , 0, 'DE'),
                             ('${SECTOR}', 'PRUEBA AUTOMATICA ${SECTOR}', 'Z' , 1, 'DG'),
@@ -454,6 +481,50 @@ describe("SiPer: " + testConfig.name, function(){
             console.error("Test enDosNuevasPersonasConFeriado10EneroFeriadoy11No falla", haciendo)
             console.log({numero, cod_nov})
             throw err;
+        }
+    }
+    type HorasResult = {crudas:TimeInterval|string|null, consolidadas?:TimeInterval|string|null}|string|null
+    async function verificaFichadas(args:{idper:string, fecha:Date, fichadas: TIME|null, cod_nov?:string, cod_nov_final?:string, horas?:HorasResult}){
+        let {cod_nov_final, horas, ...registroFichadasEsperado} = args;
+        const {idper, fecha, cod_nov, fichadas} = registroFichadasEsperado;
+        if (fichadas != null) {
+            await rrhhSession.tableDataTest(ctts.fichadas_vigentes, [
+                registroFichadasEsperado
+            ], 'all', {fixedFields:{idper, fecha}})
+        }
+        if (cod_nov_final !== undefined) {
+            registroFichadasEsperado.cod_nov = cod_nov_final;
+        }
+        if (cod_nov !== undefined) {
+            await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper, fecha, consolidar: true})
+            await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
+                registroFichadasEsperado
+            ], 'all', {fixedFields:{idper, fecha}})
+        }
+        if (horas !== undefined) {
+            if (horas === null ) {
+                horas = {crudas: null, consolidadas: null}
+            }
+            if (typeof horas === 'string' ) {
+                horas = {crudas: horas, consolidadas: horas}
+            }
+            var expected = {
+                crudas: typeof horas.crudas == 'string' ? timeInterval.iso(horas.crudas) : horas.crudas ?? null,
+                consolidadas: typeof horas.consolidadas == 'string' ? timeInterval.iso(horas.consolidadas) : horas.consolidadas ?? null
+            }
+            var result = (await server.inDbClient(ADMIN_REQ, client => 
+                client.query(
+                    `select horas as consolidadas, duration(fichadas) as crudas
+                        from novedades_vigentes nv 
+                            inner join fechas f using (fecha)
+                        where idper = $1 and fecha = $2`,
+                    [idper, fecha]
+                ).fetchOneRowIfExists()
+            )).row || {crudas: null, consolidadas: null};
+            if (horas.consolidadas === undefined) { 
+                horas.consolidadas = null;
+            }
+            discrepances.showAndThrow(result, expected);
         }
     }
     describe("registro de novedades", function(){
@@ -1036,50 +1107,6 @@ describe("SiPer: " + testConfig.name, function(){
                     assert.equal(novedad.cod_nov, cod_nov);
                 })
             })
-            type HorasResult = {crudas:TimeInterval|string|null, consolidadas?:TimeInterval|string|null}|string|null
-            async function verificaFichadas(args:{idper:string, fecha:Date, fichadas: TIME|null, cod_nov?:string, cod_nov_final?:string, horas?:HorasResult}){
-                let {cod_nov_final, horas, ...registroFichadasEsperado} = args;
-                const {idper, fecha, cod_nov, fichadas} = registroFichadasEsperado;
-                if (fichadas != null) {
-                    await rrhhSession.tableDataTest(ctts.fichadas_vigentes, [
-                        registroFichadasEsperado
-                    ], 'all', {fixedFields:{idper, fecha}})
-                }
-                if (cod_nov_final !== undefined) {
-                    registroFichadasEsperado.cod_nov = cod_nov_final;
-                }
-                if (cod_nov !== undefined) {
-                    await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper, fecha, consolidar: true})
-                    await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
-                        registroFichadasEsperado
-                    ], 'all', {fixedFields:{idper, fecha}})
-                }
-                if (horas !== undefined) {
-                    if (horas === null ) {
-                        horas = {crudas: null, consolidadas: null}
-                    }
-                    if (typeof horas === 'string' ) {
-                        horas = {crudas: horas, consolidadas: horas}
-                    }
-                    var expected = {
-                        crudas: typeof horas.crudas == 'string' ? timeInterval.iso(horas.crudas) : horas.crudas ?? null,
-                        consolidadas: typeof horas.consolidadas == 'string' ? timeInterval.iso(horas.consolidadas) : horas.consolidadas ?? null
-                    }
-                    var result = (await server.inDbClient(ADMIN_REQ, client => 
-                        client.query(
-                            `select horas as consolidadas, duration(fichadas) as crudas
-                                from novedades_vigentes nv 
-                                    inner join fechas f using (fecha)
-                                where idper = $1 and fecha = $2`,
-                            [idper, fecha]
-                        ).fetchOneRowIfExists()
-                    )).row || {crudas: null, consolidadas: null};
-                    if (horas.consolidadas === undefined) { 
-                        horas.consolidadas = null;
-                    }
-                    discrepances.showAndThrow(result, expected);
-                }
-            }
             it("fichadas está vacío mañana", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = date.iso('2000-02-01');
@@ -1111,22 +1138,52 @@ describe("SiPer: " + testConfig.name, function(){
             it("cuatro fichadas son dos tramos", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = FECHA_ACTUAL;
-                    // const ayer = fecha.add({days: -1});
                     const desde = '08:00:00';
                     const hasta = '13:00:00';
-                    const desde2 = '14:00:00';
-                    const hasta2 = '17:20:00';
-                    await registrarFichada(server, {idper, fecha, hora: desde, tipo_fichada:'E'});
-                    await registrarFichada(server, {idper, fecha, hora: hasta, tipo_fichada:'S'});
-                    await registrarFichada(server, {idper, fecha, hora: desde2, tipo_fichada:'E'});
-                    await registrarFichada(server, {idper, fecha, hora: hasta2, tipo_fichada:'S'});
-                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta, desde2, hasta2), horas: {crudas: '08:20:00'}})
-                    // await registrarFichada(server, {idper, fecha: ayer, hora: desde, tipo_fichada:'E'});
-                    // await registrarFichada(server, {idper, fecha: ayer, hora: hasta, tipo_fichada:'S'});
-                    // var result = rrhhSession.callProcedure(ctts.calendario_persona_resumen)
+                    const entrada = '14:00:00';
+                    const salida = '17:20:00';
+                    await registrarFichadas(server, {idper, fecha, entrada:desde, salida:hasta})
+                    await registrarFichadas(server, {idper, fecha, entrada, salida})
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta, entrada, salida), horas: {crudas: '08:20:00'}})
+                    var result = await rrhhSession.callProcedure(ctts.calendario_persona_resumen, {idper, annio: 2000, mes: 1})
+                    var esperado = {
+                        ...CALENDARIO_PERSONA_RESUMEN0,
+                        dias_mes: 31,
+                        dias_promediados: 0,
+                        laborables: 21,
+                        tiene_interes: false,
+                    }  as unknown as typeof result;
+                    assert.deepEqual(result, esperado);
                 })
             })
             it("fichar un dia consolidado cambian las horas", async function(){
+                const fecha = date.iso('2000-01-28');
+                try {
+                    await enNuevaPersona(this.test?.title!, {inicia_fichada: date.iso('2000-01-01')}, async ({idper}, {}) => {
+                        await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:true});
+                        await registrarFichada(server, {idper, fecha, hora: '09:00:00', tipo_fichada:'E'});
+                        await registrarFichada(server, {idper, fecha, hora: '15:00:00', tipo_fichada:'S'});
+                        const resumen = await rrhhSession.callProcedure(ctts.calendario_persona_resumen, {idper, annio:2000, mes:1});
+                        var esperado = {
+                            ...CALENDARIO_PERSONA_RESUMEN0,
+                            dias_mes: 31,
+                            dias_promediados: 1,
+                            laborables: 21,
+                            saldo_horas: timeInterval({hours:-1}),
+                            suma_horas:  timeInterval({hours:6}),
+                            promedio_horas:  timeInterval({hours:6}),
+                            horas_esperadas: timeInterval({hours:7}),
+                            promedio_esperado: timeInterval({hours:7}),
+                        }  as unknown as typeof resumen;
+                        discrepances.showAndThrow(resumen, esperado);
+                    })
+                } finally {
+                    await server.inDbClient(ADMIN_REQ, async client =>
+                        client.query(`update fechas set fichadas_consolidadas = false where fecha = $1`, [fecha]).execute()
+                    )
+                }
+            })
+            it("fichar en días con distintas horas", async function(){
                 const fecha = date.iso('2000-01-28');
                 try {
                     await enNuevaPersona(this.test?.title!, {inicia_fichada: date.iso('2000-01-01')}, async ({idper}, {}) => {
@@ -1149,10 +1206,8 @@ describe("SiPer: " + testConfig.name, function(){
                         const fechaAnterior = date.iso('2000-01-28');
                         const entrada = '09:00:00';
                         const salida  = '17:00:00';
-                        await registrarFichada(server, {idper, fecha:fechaAnterior, hora: entrada, tipo_fichada:'E'});
-                        await registrarFichada(server, {idper, fecha:fechaAnterior, hora: salida,  tipo_fichada:'S'});
-                        await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, hora: entrada, tipo_fichada:'E'});
-                        await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, hora: salida,  tipo_fichada:'S'});
+                        await registrarFichadas(server, {idper, fecha:fechaAnterior, entrada, salida})
+                        await registrarFichadas(server, {idper, fecha:FECHA_ACTUAL, entrada, salida})
                         await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha:FECHA_ACTUAL, consolidar:true});
 
                         var resumen = await rrhhSession.callProcedure(ctts.calendario_persona_resumen, {idper, annio:2000, mes:1});
@@ -1310,8 +1365,7 @@ describe("SiPer: " + testConfig.name, function(){
                     // BUG: muestra el predeterminado (COD_PRED_PAS) en vez del código registrado
                     const entrada = '09:00:00';
                     const salida  = '17:00:00';
-                    await registrarFichada(server, {idper, fecha, hora: entrada, tipo_fichada: 'E'});
-                    await registrarFichada(server, {idper, fecha, hora: salida,  tipo_fichada: 'S'});
+                    await registrarFichadas(server, {idper, fecha, entrada, salida});
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov: null, cod_nov_final: cod_nov});
                 });
             })
@@ -1450,7 +1504,7 @@ describe("SiPer: " + testConfig.name, function(){
                     {desde:date.iso('2000-09-06'), hasta:date.iso('2000-09-17'), cod_nov: COD_VACACIONES, idper}
                 );
                 await rrhhSession.tableDataTest(ctts.parte_diario, [
-                    {idper, cod_nov: COD_VACACIONES, desde:date.iso('2000-01-17'), hasta:date.iso('2000-02-04'), habiles:15, corridos:19},
+                    {idper, cod_nov: COD_VACACIONES, mismo_cod_nov_desde:date.iso('2000-01-17'), mismo_cod_nov_hasta:date.iso('2000-02-04'), habiles:15, corridos:19},
                 ], 'all', {fixedFields:[{fieldName:'idper', value: idper}, {fieldName:'fecha', value: '2000-01-28'}]})
             })
         });
@@ -1464,7 +1518,7 @@ describe("SiPer: " + testConfig.name, function(){
                         client.query('UPDATE annios SET abierto = false');
                     })
                     await rrhhSession.tableDataTest(ctts.parte_diario, [
-                        {idper, cod_nov: COD_VACACIONES, desde:date.iso('2000-01-17'), hasta:date.iso('2000-02-04'), habiles:15, corridos:19},
+                        {idper, cod_nov: COD_VACACIONES, mismo_cod_nov_desde:date.iso('2000-01-17'), mismo_cod_nov_hasta:date.iso('2000-02-04'), habiles:15, corridos:19},
                     ], 'all', {fixedFields:[{fieldName:'idper', value: idper}, {fieldName:'fecha', value: '2000-01-28'}]})
                 })
             }finally{
@@ -1478,8 +1532,7 @@ describe("SiPer: " + testConfig.name, function(){
                 var fecha = FECHA_ACTUAL;
                 const entrada = '09:00:00';
                 const salida  = '17:00:00';
-                await registrarFichada(server, {idper, fecha, hora: entrada,  tipo_fichada: 'E'});
-                await registrarFichada(server, {idper, fecha, hora: salida,  tipo_fichada: 'S'});
+                await registrarFichadas(server, {idper, fecha, entrada, salida});
                 // sin consolidar
                 var consolidadas = server.inDbClient(ADMIN_REQ, client =>
                     client.query(`select fichadas_consolidadas from fechas where fecha = $1`, [fecha]).fetchUniqueValue()
@@ -1562,6 +1615,59 @@ describe("SiPer: " + testConfig.name, function(){
                 ], 'all', {fixedFields:{horario}})
             })
         });
+        it("un horario de 6 horas desde las 10", async function(){
+            await enNuevaPersona(this.test?.title!, {inicia_fichada}, async ({idper}) => {
+                var horario_per = await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: '6h10', desde:date.iso('2000-01-01'), hasta:date.iso('2000-12-31')}, 'new')
+                var horario = '6h 10a16'
+                discrepances.showAndThrow(horario_per.horario, horario)
+                await rrhhSession.tableDataTest(ctts.horarios_dds, [
+                    {dds: 1, hora_desde: '10:00', hora_hasta: '16:00', trabaja: true},
+                    {dds: 2, hora_desde: '10:00', hora_hasta: '16:00', trabaja: true},
+                    {dds: 3, hora_desde: '10:00', hora_hasta: '16:00', trabaja: true},
+                    {dds: 4, hora_desde: '10:00', hora_hasta: '16:00', trabaja: true},
+                    {dds: 5, hora_desde: '10:00', hora_hasta: '16:00', trabaja: true},
+                ], 'all', {fixedFields:{horario}})
+                await rrhhSession.tableDataTest(ctts.horarios_cod, [
+                    {horario, cant_horas:6},
+                ], 'all', {fixedFields:{horario}})
+            })
+        });
+        it("período con 6 horas", async function(){
+            try {
+                const fechaAnterior = date.iso('2000-01-28');
+                await enNuevaPersona(this.test?.title!, {inicia_fichada: fechaAnterior}, async ({idper}, {}) => {
+                    // TODO
+                    const entrada = '09:00:00';
+                    const salida  = '17:00:00';
+                    await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: '6h10', desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-28')}, 'new')
+                    await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: '7h10', desde:date.iso('2000-01-29'), hasta:date.iso('2000-12-31')}, 'new')
+                    await registrarFichadas(server, {idper, fecha:fechaAnterior, entrada, salida})
+                    await registrarFichadas(server, {idper, fecha:FECHA_ACTUAL, entrada, salida})
+                    await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha:fechaAnterior, consolidar:true});
+                    await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha:FECHA_ACTUAL, consolidar:true});
+                    var resumen = await rrhhSession.callProcedure(ctts.calendario_persona_resumen, {idper, annio:2000, mes:1});
+                    // await verificaFichadas({idper, fecha:fechaAnterior, fichadas: TIME_RANGE(entrada, salida), horas: '08:00:00'});
+                    // assert.equal(resumen.dias_promediados, 2);
+                    // discrepances.showAndThrow(resumen.suma_horas, timeInterval({hours:16}));
+                    var esperado = {
+                        ...CALENDARIO_PERSONA_RESUMEN0,
+                        dias_mes: 31,
+                        dias_promediados: 2,
+                        laborables: 21,
+                        saldo_horas: timeInterval({hours:3}),
+                        suma_horas: timeInterval({hours:16}),
+                        promedio_horas: timeInterval({hours:8}),
+                        horas_esperadas: timeInterval({hours:13}),
+                        promedio_esperado: timeInterval({hours:6.5}),
+                    } as typeof resumen;
+                    discrepances.showAndThrow(resumen, esperado);
+                })
+            } finally {
+                await server.inDbClient(ADMIN_REQ, async client =>
+                    client.query(`update fechas set fichadas_consolidadas = false where fecha between '2000-01-01' and $1`, [FECHA_ACTUAL]).execute()
+                )
+            }
+        })
     });
     // const AÑO0 = DESDE_AÑO
     const AÑO1 = AÑO_SIGUIENTE
@@ -1764,6 +1870,39 @@ describe("SiPer: " + testConfig.name, function(){
                     [{cod_nov: COD_COMISION}]
                 );
             })
+        })
+    })
+    describe("controles finales", function(){
+        this.timeout(900000);
+        it("presentismo final", async function(){
+            await rrhhSession.tableDataTest(ctts.presentismo, [
+                /* Falta cerrar el día
+                {idper:'XX44', dias_considerados: 1, suma_horas: horas(6), horas_esperadas: horas(7), promedio_horas: horas(6), promedio_esperado: horas(7), saldo_horas: horas(-1), dias_injustificados: 0, tiene_injustificados: false, con_problemas: false, tiene_interes: true},
+                {idper:'XX45', dias_considerados: 1, suma_horas: horas(8), horas_esperadas: horas(7), promedio_horas: horas(8), promedio_esperado: horas(7), saldo_horas: horas( 1), dias_injustificados: 0, tiene_injustificados: false, con_problemas: false, tiene_interes: true},
+                {idper:'XX46', dias_considerados: 1, suma_horas: horas(8), horas_esperadas: horas(7), promedio_horas: horas(8), promedio_esperado: horas(7), saldo_horas: horas( 1), dias_injustificados: 0, tiene_injustificados: false, con_problemas: false, tiene_interes: true},
+                {idper:'XX70', dias_considerados: 1, suma_horas: horas(8), horas_esperadas: horas(6), promedio_horas: horas(8), promedio_esperado: horas(6), saldo_horas: horas( 2), dias_injustificados: 0, tiene_injustificados: false, con_problemas: false, tiene_interes: true},
+                */
+            ], "all", {fixedFields:{inicio_mes: date.iso('2000-01-01'), tiene_interes: true}})
+        })
+        it("son iguales los SQL de libro diario y su versión extendida", async function(){
+            var where = `WHERE fecha BETWEEN '2000-01-27' AND '2000-02-02' AND es_laborable`
+            var resultBase = await server.inDbClient(ADMIN_REQ, async client => 
+                await client.query(`SELECT * FROM (${sqlParteDiario}) x ${where} order by fecha, idper`,
+                    []
+                ).fetchAll()
+            )
+            // await fs.writeFile('sqlParteDiario.sql', `SELECT * FROM (${sqlParteDiario}) x ${where} order by fecha, idper`, 'utf8')
+            // await fs.writeFile('sqlParteDiario.json', JSON.stringify(resultBase,null,' '), 'utf8')
+            var resultExt = await server.inDbClient(ADMIN_REQ, async client => 
+                await client.query(`SELECT ${resultBase.fields.map((f:{name:string})=>
+                    f.name == 'cod_nov' ? `case cod_nov when '¡FECHA FUTURA SIN NOVEDAD!' then null when '¡FERIADO O FIN DE SEMANA!' then null else cod_nov end` : f.name
+                )} FROM (${sqlParteDiarioExtendido}) x ${where} order by fecha, idper`,
+                    []
+                ).fetchAll()
+            )
+            // await fs.writeFile('sqlParteDiarioExt.json', JSON.stringify(resultExt,null,' '), 'utf8')
+            discrepances.showAndThrow(resultBase.rows, resultExt.rows);
+            discrepances.showAndThrow(resultExt.rows.length, 390);
         })
     })
     function randInt(int: number) {

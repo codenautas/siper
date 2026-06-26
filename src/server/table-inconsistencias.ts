@@ -95,7 +95,7 @@ export function inconsistencias(_context: TableContext): TableDefinition{
                        WHERE activo AND sector IS NULL
                      UNION
                      SELECT idper, NULL::INTEGER as annio, 'ACTSINSIT' pauta, NULL::TEXT as cod_nov 
-                       FROM (${sqlPersonas})
+                       FROM (${sqlPersonas('fecha_actual()')})
                        WHERE activo AND situacion_revista IS NULL
                      UNION
                      SELECT idper, annio, 'EXCEDIDO' as pauta, cod_nov

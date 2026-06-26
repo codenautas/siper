@@ -31,7 +31,7 @@ export function trayectoria_laboral(context: TableContext): TableDefinition{
             {...idt, sequence:{madMax:['idper']}                            },
             {name:'desde'             , typeName:'date',                    },
             {name:'hasta'             , typeName:'date',                    },
-            {name:'lapso_fechas'      , typeName:'daterange', visible:false, generatedAs:'daterange(desde, hasta)'},
+            {name:'lapso_fechas'      , typeName:'daterange', visible:false, generatedAs:`daterange(desde, hasta, '[]')`},
             {name:'computa_antiguedad', typeName:'boolean',                 },
             s_revista,
             funcion,

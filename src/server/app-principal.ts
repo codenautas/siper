@@ -77,8 +77,9 @@ import { niveles_educativos      } from "./table-niveles_educativos";
 import { tipos_novedad           } from "./table-tipos_novedad";
 import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
-import {sinc_fichadores, ESTADOS} from "./table-sinc_fichadores"
+import { sinc_fichadores, ESTADOS} from "./table-sinc_fichadores"
 import { comunas_partidos        } from "./table-comunas_partidos";
+import { presentismo             } from "./table-presentismo"
 
 import { consolidarFichadas, ejecutarSP, ProceduresPrincipal } from './procedures-principal'
 import * as sql from 'mssql';
@@ -457,6 +458,7 @@ export class AppSiper extends AppBackend{
                 ...(es.registra ? [
                     {menuType:'menu', name:'listados', menuContent:[
                         {menuType:'proc', name:'parte_diario'},
+                        {menuType:'proc', name:'listado_presentismo', label:'presentismo mes'},
                         {menuType:'proc', name:'informe_mensual'},
                         {menuType:'proc', name:'descanso_anual_remunerado'},
                         {menuType:'proc', name:'exportar_descanso_anual_remunerado'},
@@ -685,7 +687,8 @@ export class AppSiper extends AppBackend{
             bandas_horarias      ,
             reglas               ,
             avisos_falta_fichada ,   
-            sinc_fichadores,
+            sinc_fichadores      ,
+            presentismo          ,
         }
     }       
 }
