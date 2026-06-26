@@ -82,7 +82,7 @@ export function per_domicilios(context: TableContext): TableDefinition{
             {references: 'tipos_domicilio', fields: [tipo_domicilio.name]},
         ],
         constraints: [
-            // {constraintType:'check', consName:'Sólo puede guardar un nombrecalle o un código calle', expr:'calle IS NULL OR nombre_calle IS NULL'},
+            {constraintType:'check', consName:'Sólo puede guardar un nombrecalle o un código calle', expr:'calle IS NULL OR nombre_calle IS NULL'},
         ],
         sql:{
             fields: {
