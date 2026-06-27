@@ -50,6 +50,11 @@ function setEfimero<T extends object|null>(tictac:T){
     return tictac
 }
 
+function esEfimero<T extends object|null>(tictac:T){
+    // @ts-expect-error Situación especial para marcar objetos que ya no están disponibles porque se pidió un dato nuevo
+    return tictac && tictac[EFIMERO];
+}
+
 export function logError(error:Error){
     console.error(error);
     my.log(error);
@@ -59,7 +64,7 @@ export function Componente(props:{children:ReactNode[]|ReactNode, componentType:
     esEfimero?: any
 }){
     return <Card className={"componente-" + props.componentType} 
-        siper-es-efimero={props.esEfimero === true || props.esEfimero?.[EFIMERO] ? "si" : "no"}
+        siper-es-efimero={props.esEfimero === true || esEfimero(props.esEfimero) ? "si" : "no"}
         siper-es-scrollable={props.scrollable === true ? "si" : "no"}
         sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}
     >
@@ -144,7 +149,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
     const {conn, fecha, fechaHasta, idper, ultimaNovedad, fechaActual, annio, infoUsuario} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     const [mes, setMes] = useState(fecha.getMonth()+1);
-    const [periodo, setPeriodo] = [{mes, annio}, (x:Periodo) => {setMes(x.mes); props.onAnnio?.(x.annio);}]
+    const [periodo, setPeriodo] = [{mes, annio}, (x:Periodo) => {setCalendario(setEfimero); setMes(x.mes); props.onAnnio?.(x.annio);}]
     const retrocederUnMes = ({mes: (mes == 1 ? 12 : mes - 1), annio: (annio - (mes == 1  ? 1 : 0 ))})
     const avanzarUnMes    = ({mes: (mes == 12 ? 1 : mes + 1), annio: (annio + (mes == 12 ? 1 : 0 ))})
     const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
@@ -154,6 +159,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
     const puede_cargar_novedades = puedeCargarNovedades(infoUsuario);
 
     useEffect(function(){
+        setCalendario(setEfimero)
         // ver async
         // @ts-ignore infinito
         conn.ajax.table_data<Annio>({table: 'annios', fixedFields: [],paramfun:{} }).then(annios => {
@@ -169,7 +175,6 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
             setAnnios(annios);
         }).catch(logError);
         {
-            setCalendario(setEfimero)
             conn.ajax.calendario_persona({idper, ...periodo}).then(dias => {
                 var primerSemana: number = Number.MAX_SAFE_INTEGER;
                 type Dia = (typeof dias)[number]
@@ -788,10 +793,10 @@ declare module "frontend-plus" {
     }
 }
 
-function DetalleAniosNovPer(props:{detalleVacacionesPersona : ProvisorioDetalleNovPer}){
+function DetalleAniosNovPer(props:{detalleVacacionesPersona : ProvisorioDetalleNovPer, esEfimero:any}){
     const { detalleVacacionesPersona } = props
     const registros = detalleVacacionesPersona ?? []
-    return <Componente componentType="detalle-anios-novper">
+    return <Componente componentType="detalle-anios-novper" esEfimero={props.esEfimero}>
         <div className="vacaciones-contenedor">
             <div className="vacaciones-renglon">
                 vacaciones
@@ -1182,7 +1187,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                         </div>
                     </Paper>
                     <Box className="box-flex">
-                        <DetalleAniosNovPer detalleVacacionesPersona={detalleVacacionesPersona}/>
+                        <DetalleAniosNovPer detalleVacacionesPersona={detalleVacacionesPersona} esEfimero={detalleVacacionesPersona}/>
                     </Box>
                 </Box> }
                 {mostrandoLegajo && (<LegajoPer conn={props.conn} idper={persona.idper}/>)}
