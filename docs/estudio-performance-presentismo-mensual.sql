@@ -11,6 +11,20 @@ set role to siper_muleto_admin;
 
 set SEARCH_PATH TO "siper","public";
 
+-- Prueba de concepto: delegar la visibilidad de novedades_vigentes a la RLS de personas.
+-- En vez de recalcular sector_pertenece por fila, se chequea la pertenencia al conjunto
+-- (no correlacionado) de personas visibles, que la RLS de personas arma una sola vez.
+-- Se aplica dentro de una transacción que se revierte al final, para que el script sea idempotente.
+BEGIN;
+
+set role to siper_muleto_owner;
+
+DROP POLICY "bp select" ON novedades_vigentes;
+CREATE POLICY "bp select" ON novedades_vigentes AS RESTRICTIVE FOR select TO siper_muleto_admin
+    USING ( novedades_vigentes.idper IN (SELECT idper FROM personas) );
+
+set role to siper_muleto_admin;
+
 CALL set_app_user('regis');
 
 \timing on
@@ -115,5 +129,8 @@ SELECT p.*, f.dds, f.laborable is not false and f.dds between 1 and 5 as es_labo
     left join "sectores" as "sectores" on "presentismo"."sector" = "sectores"."sector"
  WHERE true
  ORDER BY "idper";
+
+\timing off
+ROLLBACK;
 
 -- Time: 51289,568 ms (00:51,290)
