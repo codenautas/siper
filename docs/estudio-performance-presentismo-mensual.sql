@@ -115,3 +115,5 @@ SELECT p.*, f.dds, f.laborable is not false and f.dds between 1 and 5 as es_labo
     left join "sectores" as "sectores" on "presentismo"."sector" = "sectores"."sector"
  WHERE true
  ORDER BY "idper";
+
+-- Time: 51289,568 ms (00:51,290)
