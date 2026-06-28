@@ -47,9 +47,14 @@ export function politicaNovedades(alias:string, nombreFecha:string){
             )
         )
     `)
-    var politicaVisibilidad = politicaNovedadesComun(alias, 'ver');
-    if (alias == 'personas' || alias == 'trayectoria_laboral') {
-        politicaVisibilidad = `(case when get_app_user('mode') = 'login' then true else ${politicaVisibilidad} end)`;
+    var politicaVisibilidad:string;
+    if (alias == 'personas') {
+        politicaVisibilidad = `(case when get_app_user('mode') = 'login' then true else ${politicaNovedadesComun(alias, 'ver')} end)`;
+    } else {
+        // La visibilidad de las demás tablas se delega a la RLS de personas: "puedo ver el
+        // registro" equivale a "puedo ver la persona". Evita duplicar la lógica de sector y,
+        // como el subselect no está correlacionado, se evalúa una sola vez (no por fila).
+        politicaVisibilidad = `${alias}.idper IN (SELECT idper FROM personas)`;
     }
     return {
         select: {
