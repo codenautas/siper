@@ -1,7 +1,8 @@
 -- Cambios desde la versión 0.8.2
 -- Definir variables al inicio del script, setear según entorno
-SET LOCAL my_app.owner = 'siper_test_owner';
-SET LOCAL my_app.admin = 'siper_test_admin';
+-- Pero siempre dejar las de muleto para poder poner en el cron, cambios acá no deberían ser comiteados
+SET LOCAL my_app.owner = 'siper_muleto_owner';
+SET LOCAL my_app.admin = 'siper_muleto_admin';
 
 DO $$
 BEGIN
