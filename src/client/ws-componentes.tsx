@@ -118,14 +118,14 @@ function puedeCargarNovedades(infoUsuario: InfoUsuario) {
 
 type Periodo = {mes:number, annio:number}
 
-function horassStr(horas:TimeInterval|any, separador:string, minutos:string){
-    return (horas instanceof TimeInterval ? horas.toHm() : horas ?? '00:00').replace(/^(-?)(0?)([1-9]?\d+):(\d+)(:\d+)?$/, (_:string, sign:string, zero:string, h:string, m:string) => `${zero.length?'\u00A0':''}${sign=='-'?'−':sign}${h}${separador}${+m ? '' + m + minutos : ''}`)
+function horassStr(horas:TimeInterval|any, separador:string, minutos:string, siempreMinutos:boolean){
+    return (horas instanceof TimeInterval ? horas.toHm() : horas ?? '00:00').replace(/^(-?)(0?)([1-9]?\d+):(\d+)(:\d+)?$/, (_:string, sign:string, zero:string, h:string, m:string) => `${zero.length?'\u00A0':''}${sign=='-'?'−':sign}${h}${separador}${+m || siempreMinutos? '' + m + minutos : ''}`)
 }
 function cantHorasStr(horas:TimeInterval|any){
-    return horassStr(horas, 'ₕ', "'")
+    return horassStr(horas, 'ₕ', "'", false)
 }
 function horaStr(horas:TimeInterval|any){
-    return horassStr(horas, ':', '')
+    return horassStr(horas, ':', '', true)
 }
 
 function CalendarioResumen(props:{conn:Connector, idper:string, periodo:Periodo}){
