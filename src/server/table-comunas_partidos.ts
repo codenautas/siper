@@ -20,11 +20,13 @@ export function comunas_partidos(context:TableContext):TableDefinition{
             provincia,
             comuna_partido,
             {name: 'nombre', typeName:'text'  , isName: true  },
+            {name: 'comuna_carto', typeName:'text'            },
         ],
         primaryKey: [provincia.name, comuna_partido.name],
         constraints: [
             {constraintType: 'check', consName: "provincia dos digitos", expr: `provincia similar to '\\d{2}'`},
-            {constraintType: 'check', consName: "comuna_partido tres digitos", expr: `comuna_partido similar to '\\d{3}'`}
+            {constraintType: 'check', consName: "comuna_partido tres digitos", expr: `comuna_partido similar to '\\d{3}'`},
+            {constraintType: 'check', consName: "comuna_carto tres digitos", expr: `comuna_carto similar to '\\d{3}'`}
         ],
         foreignKeys: [
             {references:'provincias', fields:[provincia.name]}
