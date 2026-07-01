@@ -856,6 +856,7 @@ export const comunas_partidos = {
         provincia: is.string,
         comuna_partido: is.string,
         nombre: is.string,
+        comuna_carto: is.string,
     })
 }
 
