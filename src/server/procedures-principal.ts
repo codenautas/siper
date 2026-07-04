@@ -192,11 +192,13 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             if (inconsistencias.rows.length > 0) {
                 const erroresSaldoNegativo = inconsistencias.rows.filter(r => r.error_saldo_negativo);
                 const erroresFaltaEntrada = inconsistencias.rows.filter(r => r.error_falta_entrada);
-                const erroresMultiDetalle = inconsistencias.rows.filter(r => r.detalle_multiorigen?.error ?? []);
+                const erroresMultiDetalle = inconsistencias.rows.filter(r => r.detalle_multiorigen?.error != null);
                 var errores: string[] = []
                 var code: string = 'INDETERMINADO';
                 if (erroresMultiDetalle.length > 0){
-                    errores.concat(erroresMultiDetalle.map(d => d.error as string));
+                    for (const d of erroresMultiDetalle) {
+                        errores.push(...(d.detalle_multiorigen.error as string[]));
+                    }
                     code = ctts.ERROR_BRECHA_EN_CANTIDAD_DE_NOVEDADES;
                 }
                 if (erroresSaldoNegativo.length > 0){
