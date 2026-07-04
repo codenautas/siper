@@ -724,7 +724,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 throw new Error("El archivo supera el tamaño máximo permitido de 1 MB.");
             }
 
-            const originalFilename = file.originalFilename;
+            const originalFilename = file.originalFilename.replace(/[^A-Z0-9ÁÉÍÓÚáéíóúÑñÜüÀÈÌÒÙàèìòù]+/ig,'_');
             const extendedFilename = `adjunto-siper-${numero_adjunto}-${originalFilename}`;
 
             const newPath = `local-attachments/adjuntos/${extendedFilename}`;
@@ -742,17 +742,18 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const moveFile = async function (file: UploadedFileInfo, fileName: string) {
                 await fs.rename(file.path, fileName);
             };
-    
-            await moveFile(file, newPath);
 
             const row = await client.query(
-                `UPDATE adjuntos 
+                `UPDATE adjuntos a
                     SET archivo_nombre = $1, archivo_nombre_fisico = $2
-                    WHERE idper = $3 AND tipo_adjunto = $4 AND numero_adjunto = $5
-                    RETURNING *`,
+                    FROM personas
+                    WHERE a.idper = $3 AND a.tipo_adjunto = $4 AND a.numero_adjunto = $5
+                        AND a.idper = personas.idper
+                    RETURNING a.*`,
                 [originalFilename, extendedFilename, idper, tipo_adjunto, numero_adjunto]
-            ).fetchUniqueRow();
+            ).fetchUniqueRow("Hubo un error al registrar el adjunto en el sistema. El usuario quizas no tenga los permisos suficientes");
 
+            await moveFile(file, newPath);
 
             return {
                 message: `El archivo ${originalFilename} se subió correctamente.`,
