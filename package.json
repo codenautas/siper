@@ -21,7 +21,7 @@
     "uuid": ">=14.0.0"
   },
   "dependencies": {
-    "backend-plus": "^2.7.0-beta.0",
+    "backend-plus": "^2.7.0-beta.1",
     "frontend-plus": "^0.0.17",
     "guarantee-type": "^0.2.12",
     "mssql": "^12.7.0",
