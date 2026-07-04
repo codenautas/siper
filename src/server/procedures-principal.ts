@@ -828,7 +828,15 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name: 'hora'         , typeName: 'time'                                  },
             {name: 'tipo_fichada' , typeName: 'text'   , references: 'tipos_fichada' },
         ],
+        roles:['admin'],
         coreFunction: async function (context: ProcedureContext, parameters: any) {
+            // @ts-expect-error todavía no se pueden agregar opciones. Hay que definir la interface en BP
+            if (!context.be.config.devel?.agregar_fichada) {
+                var error = new Error("Procedimiento de prueba no habilitado");
+                // @ts-expect-error no hay un Error adecuado
+                error.status = "403";
+                throw error;
+            }
             var {idper, fecha, hora, tipo_fichada} = parameters;
             var result = await context.client.query(
                 `INSERT INTO fichadas (idper, fecha, hora, tipo_fichada)
