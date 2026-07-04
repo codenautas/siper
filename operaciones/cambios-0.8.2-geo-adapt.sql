@@ -22,7 +22,7 @@ alter table "comunas_partidos" add constraint "comuna_carto tres digitos" check 
 alter table per_domicilios DISABLE trigger per_domicilios_idgeo_trg; --momentáneo , para que no blanquee coordenada_x, coordenada_y, obs_geo
 
 --comuna_carto pasa a ser la comuna_partido actual
-update "comunas_partidos" set comuna_carto = comuna_partido where provincia = '02';
+update "comunas_partidos" set comuna_carto = comuna_partido where provincia = '2';
 
 --en CABA quito EL PREFIJO de barrio_localidad y lo estandarizo a 3 dígitos 
 update barrios_localidades bl set barrio_localidad = q.nuevo_barrio_localidad
@@ -37,27 +37,27 @@ from
          as nuevo_barrio_localidad,
       nombre
       from barrios_localidades
-      where provincia = '02'
+      where provincia = '2'
       ) q
 where bl.provincia = q.provincia and bl.comuna_partido = q.comuna_partido and bl.barrio_localidad = q.barrio_localidad;
 
 --la comuna_partido pasa a ser la comuna_partido actual / 7
 --cambiará en per_domicilios y en barrios_localidades porque las FKs son on update cascade 
-update comunas_partidos set comuna_partido = '001' where provincia = '02' and comuna_partido = '007';
-update comunas_partidos set comuna_partido = '002' where provincia = '02' and comuna_partido = '014';
-update comunas_partidos set comuna_partido = '003' where provincia = '02' and comuna_partido = '021';
-update comunas_partidos set comuna_partido = '004' where provincia = '02' and comuna_partido = '028';
-update comunas_partidos set comuna_partido = '005' where provincia = '02' and comuna_partido = '035';
-update comunas_partidos set comuna_partido = '006' where provincia = '02' and comuna_partido = '042';
-update comunas_partidos set comuna_partido = '007' where provincia = '02' and comuna_partido = '049';
-update comunas_partidos set comuna_partido = '008' where provincia = '02' and comuna_partido = '056';
-update comunas_partidos set comuna_partido = '009' where provincia = '02' and comuna_partido = '063';
-update comunas_partidos set comuna_partido = '010' where provincia = '02' and comuna_partido = '070';
-update comunas_partidos set comuna_partido = '011' where provincia = '02' and comuna_partido = '077';
-update comunas_partidos set comuna_partido = '012' where provincia = '02' and comuna_partido = '084';
-update comunas_partidos set comuna_partido = '013' where provincia = '02' and comuna_partido = '091';
-update comunas_partidos set comuna_partido = '014' where provincia = '02' and comuna_partido = '098';
-update comunas_partidos set comuna_partido = '015' where provincia = '02' and comuna_partido = '105';
+update comunas_partidos set comuna_partido = '1' where provincia = '2' and comuna_partido = '7';
+update comunas_partidos set comuna_partido = '2' where provincia = '2' and comuna_partido = '14';
+update comunas_partidos set comuna_partido = '3' where provincia = '2' and comuna_partido = '21';
+update comunas_partidos set comuna_partido = '4' where provincia = '2' and comuna_partido = '28';
+update comunas_partidos set comuna_partido = '5' where provincia = '2' and comuna_partido = '35';
+update comunas_partidos set comuna_partido = '6' where provincia = '2' and comuna_partido = '42';
+update comunas_partidos set comuna_partido = '7' where provincia = '2' and comuna_partido = '49';
+update comunas_partidos set comuna_partido = '8' where provincia = '2' and comuna_partido = '56';
+update comunas_partidos set comuna_partido = '9' where provincia = '2' and comuna_partido = '63';
+update comunas_partidos set comuna_partido = '10' where provincia = '2' and comuna_partido = '70';
+update comunas_partidos set comuna_partido = '11' where provincia = '2' and comuna_partido = '77';
+update comunas_partidos set comuna_partido = '12' where provincia = '2' and comuna_partido = '84';
+update comunas_partidos set comuna_partido = '13' where provincia = '2' and comuna_partido = '91';
+update comunas_partidos set comuna_partido = '14' where provincia = '2' and comuna_partido = '98';
+update comunas_partidos set comuna_partido = '15' where provincia = '2' and comuna_partido = '105';
 
 alter table per_domicilios ENABLE trigger per_domicilios_idgeo_trg; --momentáneo , para que no blanquee coordenada_x, coordenada_y, obs_geo
 
