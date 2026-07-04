@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition, sinMinusculas} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, soloDigitosCons, soloDigitosPostConfig} from "./types-principal";
 
 import { comuna_partido } from "./table-comunas_partidos";
 import { provincia } from "./table-provincias";
@@ -8,7 +8,7 @@ import { provincia } from "./table-provincias";
 export const barrio_localidad:FieldDefinition = {
     name: 'barrio_localidad', 
     typeName: 'text', 
-    postInput: sinMinusculas
+    postInput: soloDigitosPostConfig
 }
 
 export function barrios_localidades(context:TableContext):TableDefinition{
@@ -25,9 +25,9 @@ export function barrios_localidades(context:TableContext):TableDefinition{
         ],
         primaryKey: [provincia.name, comuna_partido.name, barrio_localidad.name],
         constraints: [
-            {constraintType: 'check', consName: "provincia dos digitos", expr: `provincia similar to '\\d{2}'`},
-            {constraintType: 'check', consName: "comuna_partido tres digitos", expr: `comuna_partido similar to '\\d{3}'`},
-            {constraintType: 'check', consName: "barrio_localidad tres a cinco digitos", expr: `barrio_localidad similar to '\\d{3,5}'`}
+            soloDigitosCons(provincia.name),
+            soloDigitosCons(comuna_partido.name),
+            soloDigitosCons(barrio_localidad.name),
         ],
         foreignKeys: [
             {references:'provincias', fields:[provincia.name]},

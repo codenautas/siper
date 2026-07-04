@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition, sinMinusculas} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, sinMinusculas, soloDigitosCons} from "./types-principal";
 
 import {provincia} from "./table-provincias";
 
@@ -24,8 +24,8 @@ export function barrios(context:TableContext):TableDefinition{
         ],
         primaryKey: [provincia.name, barrio.name],
         constraints: [
-            {constraintType: 'check', consName: "provincia dos digitos", expr: `provincia similar to '\\d{2}'`},
-            {constraintType: 'check', consName: "barrio uno o dos digitos", expr: `barrio similar to '\\d{1,2}'`}
+            soloDigitosCons(provincia.name),
+            soloDigitosCons(barrio.name)
         ],
         foreignKeys: [
             {references:'provincias', fields:[provincia.name]}

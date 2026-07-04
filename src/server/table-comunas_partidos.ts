@@ -1,13 +1,13 @@
 "use strict";
 
-import {TableDefinition, TableContext, FieldDefinition, sinMinusculas} from "./types-principal";
+import {TableDefinition, TableContext, FieldDefinition, soloDigitosCons, soloDigitosPostConfig} from "./types-principal";
 
 import {provincia} from "./table-provincias";
 
 export const comuna_partido:FieldDefinition = {
     name: 'comuna_partido',
     typeName: 'text',
-    postInput: sinMinusculas
+    postInput: soloDigitosPostConfig
 }
 
 export function comunas_partidos(context:TableContext):TableDefinition{
@@ -24,14 +24,15 @@ export function comunas_partidos(context:TableContext):TableDefinition{
         ],
         primaryKey: [provincia.name, comuna_partido.name],
         constraints: [
-            {constraintType: 'check', consName: "provincia dos digitos", expr: `provincia similar to '\\d{2}'`},
-            {constraintType: 'check', consName: "comuna_partido tres digitos", expr: `comuna_partido similar to '\\d{3}'`},
-            {constraintType: 'check', consName: "comuna_carto tres digitos", expr: `comuna_carto similar to '\\d{3}'`}
+            soloDigitosCons(provincia.name),
+            soloDigitosCons(comuna_partido.name),
+            soloDigitosCons('comuna_carto'),
         ],
         foreignKeys: [
             {references:'provincias', fields:[provincia.name]}
         ],
         detailTables: [
+            {table: 'barrio_localidades', fields:[provincia.name, comuna_partido.name], abr:'b'}
         ]
     }
 };
