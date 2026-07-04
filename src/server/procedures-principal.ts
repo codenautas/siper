@@ -192,11 +192,13 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             if (inconsistencias.rows.length > 0) {
                 const erroresSaldoNegativo = inconsistencias.rows.filter(r => r.error_saldo_negativo);
                 const erroresFaltaEntrada = inconsistencias.rows.filter(r => r.error_falta_entrada);
-                const erroresMultiDetalle = inconsistencias.rows.filter(r => r.detalle_multiorigen?.error ?? []);
+                const erroresMultiDetalle = inconsistencias.rows.filter(r => r.detalle_multiorigen?.error != null);
                 var errores: string[] = []
                 var code: string = 'INDETERMINADO';
                 if (erroresMultiDetalle.length > 0){
-                    errores.concat(erroresMultiDetalle.map(d => d.error as string));
+                    for (const d of erroresMultiDetalle) {
+                        errores.push(...(d.detalle_multiorigen.error as string[]));
+                    }
                     code = ctts.ERROR_BRECHA_EN_CANTIDAD_DE_NOVEDADES;
                 }
                 if (erroresSaldoNegativo.length > 0){
@@ -724,7 +726,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 throw new Error("El archivo supera el tamaño máximo permitido de 1 MB.");
             }
 
-            const originalFilename = file.originalFilename;
+            const originalFilename = file.originalFilename.replace(/[^A-Z0-9ÁÉÍÓÚáéíóúÑñÜüÀÈÌÒÙàèìòù]+/ig,'_');
             const extendedFilename = `adjunto-siper-${numero_adjunto}-${originalFilename}`;
 
             const newPath = `local-attachments/adjuntos/${extendedFilename}`;
@@ -742,17 +744,18 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const moveFile = async function (file: UploadedFileInfo, fileName: string) {
                 await fs.rename(file.path, fileName);
             };
-    
-            await moveFile(file, newPath);
 
             const row = await client.query(
-                `UPDATE adjuntos 
+                `UPDATE adjuntos a
                     SET archivo_nombre = $1, archivo_nombre_fisico = $2
-                    WHERE idper = $3 AND tipo_adjunto = $4 AND numero_adjunto = $5
-                    RETURNING *`,
+                    FROM personas
+                    WHERE a.idper = $3 AND a.tipo_adjunto = $4 AND a.numero_adjunto = $5
+                        AND a.idper = personas.idper
+                    RETURNING a.*`,
                 [originalFilename, extendedFilename, idper, tipo_adjunto, numero_adjunto]
-            ).fetchUniqueRow();
+            ).fetchUniqueRow("Hubo un error al registrar el adjunto en el sistema. El usuario quizas no tenga los permisos suficientes");
 
+            await moveFile(file, newPath);
 
             return {
                 message: `El archivo ${originalFilename} se subió correctamente.`,
@@ -827,7 +830,15 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             {name: 'hora'         , typeName: 'time'                                  },
             {name: 'tipo_fichada' , typeName: 'text'   , references: 'tipos_fichada' },
         ],
+        roles:['admin'],
         coreFunction: async function (context: ProcedureContext, parameters: any) {
+            // @ts-expect-error todavía no se pueden agregar opciones. Hay que definir la interface en BP
+            if (!context.be.config.devel?.agregar_fichada) {
+                var error = new Error("Procedimiento de prueba no habilitado");
+                // @ts-expect-error no hay un Error adecuado
+                error.status = "403";
+                throw error;
+            }
             var {idper, fecha, hora, tipo_fichada} = parameters;
             var result = await context.client.query(
                 `INSERT INTO fichadas (idper, fecha, hora, tipo_fichada)

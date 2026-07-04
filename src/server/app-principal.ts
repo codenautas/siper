@@ -375,8 +375,8 @@ export class AppSiper extends AppBackend{
             await be.inDbClient(req, async (client) => {
                 const result = await client.query(
                     `SELECT archivo_nombre, archivo_nombre_fisico
-                    FROM adjuntos 
-                    WHERE idper = $1 AND tipo_adjunto = $2 AND (numero_adjunto=$3 or ($3 is null and numero_adjunto is null))`,
+                    FROM adjuntos join personas using (idper)
+                    WHERE idper = $1 AND tipo_adjunto = $2 AND numero_adjunto is not distinct from $3`,
                     [idper, tipo_adjunto, numero_adjunto]
                 ).fetchUniqueRow();
 

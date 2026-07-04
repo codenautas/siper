@@ -1756,6 +1756,31 @@ describe("SiPer: " + testConfig.name, function(){
             })
             fallaEnLaQueQuieroOmitirElBorrado = false;
         })
+        it("la brecha multiorigen informa el detalle en el mensaje de error", async function(){
+            fallaEnLaQueQuieroOmitirElBorrado = true;
+            this.timeout(TIMEOUT_SPEED * 3);
+            await enNuevaPersona(this.test?.title!, {inicia_fichada, vacaciones: [
+                {cantidad:10, origen:'2000', vencimiento:date.iso('2000-12-31')},
+                {cantidad:10, origen:'2001'}
+            ]}, async ({idper}) => {
+                const cod_nov = COD_VACACIONES
+                await abrirAño(idper);
+                await registrarNovedad(rrhhSession, {desde:date.iso('2000-02-01'), hasta:date.iso('2000-02-07'), idper, cod_nov});
+                let errorCapturado: {code?:string, message?:string} | null = null;
+                try {
+                    await registrarNovedad(rrhhSession, {desde:date.iso('2001-02-01'), hasta:date.iso('2001-02-21'), idper, cod_nov});
+                } catch (err) {
+                    errorCapturado = err as {code?:string, message?:string};
+                }
+                assert.ok(errorCapturado != null, "se esperaba un error de brecha multiorigen");
+                assert.equal(errorCapturado!.code, ctts.ERROR_BRECHA_EN_CANTIDAD_DE_NOVEDADES);
+                assert.ok(
+                    /inconsistencia/.test(errorCapturado!.message ?? ''),
+                    `el mensaje debe describir la brecha; se obtuvo: "${errorCapturado!.message}"`
+                );
+            })
+            fallaEnLaQueQuieroOmitirElBorrado = false;
+        })
         it("después de abrir el año siguiente se tienen que reiniciar los trámites pero no las vacaciones", async function(){
             await enNuevaPersona(this.test?.title!, {inicia_fichada, vacaciones: 20, tramites: 4}, async ({idper}) => {
                 const desde = date.iso('2000-05-02');
@@ -1902,7 +1927,7 @@ describe("SiPer: " + testConfig.name, function(){
             )
             // await fs.writeFile('sqlParteDiarioExt.json', JSON.stringify(resultExt,null,' '), 'utf8')
             discrepances.showAndThrow(resultBase.rows, resultExt.rows);
-            discrepances.showAndThrow(resultExt.rows.length, 390);
+            discrepances.showAndThrow(resultExt.rows.length, 395);
         })
     })
     function randInt(int: number) {
