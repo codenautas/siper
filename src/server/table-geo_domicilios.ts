@@ -23,8 +23,6 @@ export function geo_domicilios(context: TableContext): TableDefinition {
             {...calle               ,                      editable: admin },
             {name: 'coordenada_x'   , typeName: 'decimal', dataLength:11, dataDecimals:7, editable: admin },
             {name: 'coordenada_y'   , typeName: 'decimal', dataLength:11, dataDecimals:7, editable: admin },
-            {name: 'coordenada_x'   , typeName: 'text'   , editable: admin },
-            {name: 'coordenada_y'   , typeName: 'text'   , editable: admin },
             {name: 'obs_geo'        , typeName: 'text'   , editable: admin },
             {name: 'fecha_codificacion', typeName: 'date', editable: false, title: 'fecha geo'},
         ],

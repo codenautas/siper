@@ -13,8 +13,8 @@ EXECUTE 'set role to '|| current_setting('my_app.owner');
 
 alter table "per_domicilios" add column "comuna_partido" text;
 alter table "per_domicilios" add column "barrio_localidad" text;
-alter table "per_domicilios" add column "coordenada_x" text;
-alter table "per_domicilios" add column "coordenada_y" text;
+alter table "per_domicilios" add column "coordenada_x" decimal(11,7);
+alter table "per_domicilios" add column "coordenada_y" decimal(11,7);
 alter table "per_domicilios" add column "obs_geo" text;
 alter table "per_domicilios" add column "fecha_codificacion" date; 
 alter table "per_domicilios" add column "fecha_envio_codificacion" date; 
