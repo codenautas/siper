@@ -1,14 +1,11 @@
 SET LOCAL my_app.owner = 'siper_muleto_owner';
 SET LOCAL my_app.admin = 'siper_muleto_admin';
 
-DO $$
-BEGIN
-
 set search_path = siper;
 
+DO $$ BEGIN
 EXECUTE 'set role to '|| current_setting('my_app.owner');
-
-alter table "comunas_partidos" add column "comuna_carto" text;
+END $$;
 
 do $SQL_ENANCE$
  begin
@@ -17,23 +14,17 @@ end
 $SQL_ENANCE$;
 
 alter table "comunas_partidos" add constraint "comuna_carto<>''" check ("comuna_carto"<>'');
-alter table "comunas_partidos" add constraint "comuna_carto tres digitos" check (comuna_carto similar to '\d{3}');
 
 alter table per_domicilios DISABLE trigger per_domicilios_idgeo_trg; --momentáneo , para que no blanquee coordenada_x, coordenada_y, obs_geo
 
 --comuna_carto pasa a ser la comuna_partido actual
 update "comunas_partidos" set comuna_carto = comuna_partido where provincia = '2';
 
---en CABA quito EL PREFIJO de barrio_localidad y lo estandarizo a 3 dígitos 
 update barrios_localidades bl set barrio_localidad = q.nuevo_barrio_localidad
 from
       (
       select provincia, comuna_partido, barrio_localidad,
-         case when substr(barrio_localidad,(length((comuna_partido::integer)::text)+1))::integer < 99 then
-         '0'||substr(barrio_localidad,(length((comuna_partido::integer)::text)+1))
-         else
-         substr(barrio_localidad,(length((comuna_partido::integer)::text)+1))
-         end 
+         substr(barrio_localidad,(length((comuna_partido::integer)::text)+1))::INTEGER::TEXT
          as nuevo_barrio_localidad,
       nombre
       from barrios_localidades
@@ -60,5 +51,3 @@ update comunas_partidos set comuna_partido = '14' where provincia = '2' and comu
 update comunas_partidos set comuna_partido = '15' where provincia = '2' and comuna_partido = '105';
 
 alter table per_domicilios ENABLE trigger per_domicilios_idgeo_trg; --momentáneo , para que no blanquee coordenada_x, coordenada_y, obs_geo
-
-END $$;

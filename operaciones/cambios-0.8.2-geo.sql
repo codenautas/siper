@@ -10,6 +10,11 @@ do $$ begin
 EXECUTE 'set role to '|| current_setting('my_app.owner');
 end $$;
 
+alter table "provincias" drop constraint "provincia dos digitos";
+alter table "barrios" drop constraint "provincia dos digitos";
+alter table "calles" drop constraint "provincia dos digitos";
+alter table "localidades" drop constraint "provincia dos digitos";
+
 alter table "per_domicilios" add column "comuna_partido" text;
 alter table "per_domicilios" add column "barrio_localidad" text;
 alter table "per_domicilios" add column "coordenada_x" decimal(11,7);
@@ -62,7 +67,8 @@ CREATE TRIGGER per_domicilios_idgeo_trg
 create table "comunas_partidos" (
   "provincia" text, 
   "comuna_partido" text, 
-  "nombre" text
+  "nombre" text,
+  comuna_carto text
 , primary key ("provincia", "comuna_partido")
 );
 
@@ -1303,6 +1309,9 @@ alter table "barrios_localidades" add constraint "solo digitos sin ceros a la iz
 alter table "per_domicilios" add constraint "obs_geo<>''" check ("obs_geo"<>'');
 alter table "per_domicilios" add constraint "barrio_localidad<>''" check ("barrio_localidad"<>'');
 alter table "per_domicilios" add constraint "comuna_partido<>''" check ("comuna_partido"<>'');
+
+update provincias set provincia='2' where provincia='02';
+update provincias set provincia='6' where provincia='06';
 
 alter table "comunas_partidos" add constraint "comunas_partidos provincias REL" foreign key ("provincia") references "provincias" ("provincia")  on update cascade;
 alter table "barrios_localidades" add constraint "barrios_localidades provincias REL" foreign key ("provincia") references "provincias" ("provincia")  on update cascade;
