@@ -4,12 +4,11 @@
 SET LOCAL my_app.owner = 'siper_muleto_owner';
 SET LOCAL my_app.admin = 'siper_muleto_admin';
 
-DO $$
-BEGIN
-
 set search_path = siper;
 
+do $$ begin
 EXECUTE 'set role to '|| current_setting('my_app.owner');
+end $$;
 
 alter table "per_domicilios" add column "comuna_partido" text;
 alter table "per_domicilios" add column "barrio_localidad" text;
@@ -24,7 +23,6 @@ alter table "per_domicilios" drop column "barrio";
 
 CREATE SEQUENCE "per_domicilios_idgeo_seq" START 1;
 ALTER TABLE "per_domicilios" ALTER COLUMN "idgeo" SET DEFAULT nextval('per_domicilios_idgeo_seq'::regclass);
-EXECUTE 'GRANT USAGE, SELECT ON SEQUENCE "per_domicilios_idgeo_seq" TO '|| current_setting('my_app.admin');
 
 CREATE OR REPLACE FUNCTION per_domicilios_idgeo_trg()
     RETURNS trigger
@@ -67,8 +65,6 @@ create table "comunas_partidos" (
   "nombre" text
 , primary key ("provincia", "comuna_partido")
 );
-EXECUTE 'grant select, insert, update, delete on "comunas_partidos" to '|| current_setting('my_app.admin');
-EXECUTE 'grant all on "comunas_partidos" to '|| current_setting('my_app.owner');
 
 create table "barrios_localidades" (
   "provincia" text, 
@@ -77,8 +73,6 @@ create table "barrios_localidades" (
   "nombre" text
 , primary key ("provincia", "comuna_partido", "barrio_localidad")
 );
-EXECUTE 'grant select, insert, update, delete on "barrios_localidades" to '|| current_setting('my_app.admin');
-EXECUTE 'grant all on "barrios_localidades" to '|| current_setting('my_app.owner');
 
 do $SQL_ENANCE$
  begin
@@ -1292,9 +1286,6 @@ insert into "barrios_localidades" ("provincia", "comuna_partido", "barrio_locali
 ('6', '371', '1018', 'VILLA JUAN MARTIN DE PUEYRREDON'),
 ('6', '371', '1004', 'CIUDAD JARDIN EL LIBERTADOR');
 
-alter table "calles" add constraint "solo digitos sin ceros a la izquierda en provincia" check (provincia similar to '[1-9][0-9]*|0');
-alter table "calles" add constraint "solo digitos sin ceros a la izquierda en calle" check (calle similar to '[1-9][0-9]*|0');
-
 alter table "comunas_partidos" add constraint "provincia<>''" check ("provincia"<>'');
 alter table "comunas_partidos" add constraint "comuna_partido<>''" check ("comuna_partido"<>'');
 alter table "comunas_partidos" add constraint "nombre<>''" check ("nombre"<>'');
@@ -1320,6 +1311,16 @@ alter table "barrios_localidades" add constraint "barrios_localidades comunas_pa
 alter table "per_domicilios" add constraint "per_domicilios comunas_partidos REL" foreign key ("provincia", "comuna_partido") references "comunas_partidos" ("provincia", "comuna_partido")  on update cascade;
 alter table "per_domicilios" add constraint "per_domicilios barrios_localidades REL" foreign key ("provincia", "comuna_partido", "barrio_localidad") references "barrios_localidades" ("provincia", "comuna_partido", "barrio_localidad")  on update cascade;
 
+update calles 
+  set provincia = regexp_replace(provincia, '^0+(?=\d)', '')
+  where provincia <> regexp_replace(provincia, '^0+(?=\d)', '');
+
+update calles 
+  set calle = regexp_replace(calle, '^0+(?=\d)', '')
+  where calle <> regexp_replace(calle, '^0+(?=\d)', '');
+
+alter table "calles" add constraint "solo digitos sin ceros a la izquierda en provincia" check (provincia similar to '[1-9][0-9]*|0');
+alter table "calles" add constraint "solo digitos sin ceros a la izquierda en calle" check (calle similar to '[1-9][0-9]*|0');
 
 
 create index "provincia 4 comunas_partidos IDX" ON "comunas_partidos" ("provincia");
@@ -1328,4 +1329,11 @@ create index "provincia,comuna_partido 4 barrios_localidades IDX" ON "barrios_lo
 create index "provincia,comuna_partido 4 per_domicilios IDX" ON "per_domicilios" ("provincia", "comuna_partido");
 create index "per_domicilios barrios_localidades IDX" ON "per_domicilios" ("provincia", "comuna_partido", "barrio_localidad");
 
-END $$;
+
+do $$ begin
+EXECUTE 'GRANT USAGE, SELECT ON SEQUENCE "per_domicilios_idgeo_seq" TO '|| current_setting('my_app.admin');
+EXECUTE 'grant select, insert, update, delete on "comunas_partidos" to '|| current_setting('my_app.admin');
+EXECUTE 'grant all on "comunas_partidos" to '|| current_setting('my_app.owner');
+EXECUTE 'grant select, insert, update, delete on "barrios_localidades" to '|| current_setting('my_app.admin');
+EXECUTE 'grant all on "barrios_localidades" to '|| current_setting('my_app.owner');
+end $$;
