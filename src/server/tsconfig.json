@@ -2,8 +2,8 @@
     "compilerOptions": {
         "outDir": "../../dist/server",
         "module": "none",
-        "target": "es2018",
-        "lib":["es2017", "es2015", "es2018"],
+        "target": "es2020",
+        "lib":["es2017", "es2015", "es2018", "es2020"],
         "baseUrl": "",
         "strict": true,
         "noImplicitAny": true,

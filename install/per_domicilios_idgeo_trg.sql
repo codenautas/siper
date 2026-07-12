@@ -20,13 +20,11 @@ BEGIN
          OR new.comuna_partido   IS DISTINCT FROM old.comuna_partido
          OR new.provincia        IS DISTINCT FROM old.provincia) THEN
             new.idgeo              := nextval('per_domicilios_idgeo_seq');
-            new.coordenada_x       := null;
-            new.coordenada_y       := null;
+            new.punto              := null;
             new.obs_geo            := null;
             new.fecha_codificacion := null;
-        ELSIF (new.coordenada_x IS DISTINCT FROM old.coordenada_x
-            OR new.coordenada_y IS DISTINCT FROM old.coordenada_y
-            OR new.obs_geo      IS DISTINCT FROM old.obs_geo) THEN
+        ELSIF (new.punto::text IS DISTINCT FROM old.punto::text -- point no tiene operador =
+            OR new.obs_geo     IS DISTINCT FROM old.obs_geo) THEN
             new.fecha_codificacion := fecha_actual();
         END IF;
     END IF;

@@ -113,6 +113,7 @@ const PAUTA_CORRIDOS = "CORRIDOS";
 const PAUTA_ANTCOMVSRE = "ANTCOMVSRE";
 
 const NOVEDADES_TEST = `('10001','10002','10003')`;
+const TERM_OBELISCO = {punto: '(-58.3812,-34.6051)'}
 
 const sqlCalcularNovedades = `CALL actualizar_novedades_vigentes('${DESDE_AÑO}-01-01'::date,'${DESDE_AÑO}-12-31'::date)`;
 
@@ -146,10 +147,10 @@ async function registrarFichada(server: AppSiper, params: Partial<ctts.Fichada>,
     return result;
 }
 
-async function registrarFichadas(server: AppSiper, params:{idper: string, fecha: Date, entrada: string, salida: string}, tabla?:'fichadas_recibidas'): Promise<void> {
-    var {idper, fecha, entrada, salida} = params;
-    await registrarFichada(server, {idper, fecha, hora: entrada, tipo_fichada: 'E'}, tabla);
-    await registrarFichada(server, {idper, fecha, hora: salida , tipo_fichada: 'S'}, tabla);
+async function registrarFichadas(server: AppSiper, params:{idper: string, fecha: Date, entrada: string, salida: string, punto?: string}, tabla?:'fichadas_recibidas'): Promise<void> {
+    var {idper, fecha, entrada, salida, punto} = params;
+    await registrarFichada(server, {idper, fecha, hora: entrada, tipo_fichada: 'E', ...(punto !== undefined ? {punto} : {})}, tabla);
+    await registrarFichada(server, {idper, fecha, hora: salida , tipo_fichada: 'S', ...(punto !== undefined ? {punto} : {})}, tabla);
 }
 
 const TEST_BACKEND_VIA_API = {
@@ -266,6 +267,7 @@ describe("SiPer: " + testConfig.name, function(){
                         `delete from annios where ${AÑOS_DE_PRUEBA}`,
                         `delete from cod_novedades where novedad like 'PRUEBA AUTOM_TICA%'`,
                         `delete from sectores where nombre_sector like 'PRUEBA AUTOM_TICA%'`,
+                        `delete from sedes where sede like 'TEST%'`,
                         `update cod_novedades set sr_grupo = 'CONT' where cod_nov = '${COD_COMISION}'`,
                         `select annio_preparar(d) from generate_series(${PRE_AÑO}, ${HASTA_AÑO}) d`,
                         `update fechas set laborable = false, repite = false, inamovible = false, leyenda = 'feriado '||fecha where fecha in (
@@ -283,6 +285,7 @@ describe("SiPer: " + testConfig.name, function(){
                         `update annios set horario_habitual_desde = '10:00', horario_habitual_hasta = '17:00' where annio = '${DESDE_AÑO}'`,
                         `select annio_abrir('${DESDE_AÑO}')`,
                         `update parametros set fecha_hora_para_test = '${FECHA_ACTUAL.toYmd()} 10:00', cod_nov_habitual = '${COD_PRED_PAS}', cant_horas_diarias = 7 where unico_registro`,
+                        `insert into sedes (sede, para_presencial, punto) values ('TEST1', true, '(-58.3816,-34.6037)'), ('TEST2', true, '(-58.446,-34.607)')`,
                         `insert into sectores (subsector, nombre_sector, pertenece_a, nivel, tipo_sec) values
                             ('Z', 'PRUEBA AUTOMATICA Z'      , null , 0, 'DE'),
                             ('${SECTOR}', 'PRUEBA AUTOMATICA ${SECTOR}', 'Z' , 1, 'DG'),
@@ -1494,6 +1497,73 @@ describe("SiPer: " + testConfig.name, function(){
             })
         })
     })
+    describe("puntos en el parte diario", function(){
+        const LUGANO = '(-58.4650,-34.6841)'
+        // const LUGANOXY = {x:-58.4650,y:-34.6841};
+        it("fichadas normales con puntos compatibles", async function(){
+            const fecha = date.iso('2000-01-28');
+            await enNuevaPersona(this.test?.title!, {inicia_fichada: fecha}, async ({idper}) => {
+                const entrada = '09:00:00';
+                const salida  = '17:00:00';
+                await registrarFichadas(server, {idper, fecha, entrada, salida, ...TERM_OBELISCO});
+                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                    {puntos_compatibles: true}
+                ], 'all', {fixedFields:{idper, fecha}})
+            });
+        })
+        it("ficha la salida lejos, sin puntos compatibles", async function(){
+            const fecha = date.iso('2000-01-28');
+            const RETIRO = {punto: '(-58.3850,-58.3808)'}
+            await enNuevaPersona(this.test?.title!, {inicia_fichada: fecha}, async ({idper}) => {
+                const entrada = '09:00:00';
+                const salida  = '17:00:00';
+                await registrarFichada(server, {idper, fecha, tipo_fichada:'E', hora:entrada, ...TERM_OBELISCO});
+                await registrarFichada(server, {idper, fecha, tipo_fichada:'S', hora:salida , ...RETIRO});
+                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                    {puntos_compatibles: false}
+                ], 'all', {fixedFields:{idper, fecha}})
+            });
+        })
+        it("ficha sin punto la salida", async function(){
+            const fecha = date.iso('2000-01-28');
+            await enNuevaPersona(this.test?.title!, {inicia_fichada: fecha}, async ({idper}) => {
+                const entrada = '09:00:00';
+                const salida  = '17:00:00';
+                await registrarFichada(server, {idper, fecha, tipo_fichada:'E', hora:entrada, ...TERM_OBELISCO});
+                await registrarFichada(server, {idper, fecha, tipo_fichada:'S', hora:salida });
+                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                    {puntos_compatibles: false}
+                ], 'all', {fixedFields:{idper, fecha}})
+            });
+        })
+        it("teletrabajo en domicilio", async function(){
+            const fecha = date.iso('2000-01-28');
+            await enNuevaPersona(this.test?.title!, {inicia_fichada: fecha}, async ({idper}) => {
+                await adminMetadatosSession.saveRecord(ctts.per_domicilios, {idper, nro_item:1, tipo_domicilio: 'P' }, 'new');
+                await adminMetadatosSession.saveRecord(ctts.per_domicilios, {idper, nro_item:2, tipo_domicilio: 'TA', punto: LUGANO }, 'new');
+                await registrarNovedad(superiorSession, {idper, desde:fecha, hasta:fecha, cod_nov: COD_DIAGRAMADO});
+                const entrada = '10:00:00';
+                const salida  = '16:30:00';
+                await registrarFichadas(server, {idper, fecha, entrada, salida, punto: LUGANO});
+                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                    {puntos_compatibles: false}
+                ], 'all', {fixedFields:{idper, fecha}})
+            });
+        })
+        it("teletrabajo en domicilio pero no lo registró", async function(){
+            const fecha = date.iso('2000-01-28');
+            await enNuevaPersona(this.test?.title!, {inicia_fichada: fecha}, async ({idper}) => {
+                await adminMetadatosSession.saveRecord(ctts.per_domicilios, {idper, nro_item:1, tipo_domicilio: 'P' }, 'new');
+                await adminMetadatosSession.saveRecord(ctts.per_domicilios, {idper, nro_item:2, tipo_domicilio: 'TA', punto: LUGANO }, 'new');
+                const entrada = '10:00:00';
+                const salida  = '16:30:00';
+                await registrarFichadas(server, {idper, fecha, entrada, salida, punto: LUGANO});
+                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                    {puntos_compatibles: false}
+                ], 'all', {fixedFields:{idper, fecha}})
+            });
+        })
+    });
     describe("parte diario", function(){
         it("toma en cuenta las vacaciones partidas", async function(){
             await enNuevaPersona(this.test?.title!, {inicia_fichada: date.iso('2000-12-31'), usuario:{sesion:false}}, async ({idper}) => {
@@ -1927,7 +1997,7 @@ describe("SiPer: " + testConfig.name, function(){
             )
             // await fs.writeFile('sqlParteDiarioExt.json', JSON.stringify(resultExt,null,' '), 'utf8')
             discrepances.showAndThrow(resultBase.rows, resultExt.rows);
-            discrepances.showAndThrow(resultExt.rows.length, 395);
+            discrepances.showAndThrow(resultExt.rows.length, 420);
         })
     })
     function randInt(int: number) {

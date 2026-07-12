@@ -30,7 +30,8 @@ select
         cn.requiere_fichadas,
         cn.cuenta_horas,
         cn.injustificado,
-        bh.descripcion as bh_descripcion
+        bh.descripcion as bh_descripcion,
+        puntos_compatibles(nv.idper, nv.fecha, nv.cod_nov, array[lower(nv.fichadas), upper(nv.fichadas)]) as puntos_compatibles
     from ${novedades_vigentes} nv 
         inner join lateral (${sqlPersonas('nv.fecha')} WHERE p.idper = nv.idper) p 
             on nv.fecha between coalesce(p.registra_novedades_desde, p.fecha_ingreso) and coalesce(p.fecha_egreso, nv.fecha)
@@ -97,6 +98,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
             { name: 'banda_horaria', typeName: 'text'},
             { name: 'bh_descripcion', typeName: 'text', title: 'descripción' },
             { name: 'injustificado' , typeName: 'boolean'},
+            { name: 'puntos_compatibles', typeName: 'boolean', description: 'posee puntos compatibles en entrada y salida'},
             { name: 'activo', typeName: 'boolean'},
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],

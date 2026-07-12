@@ -334,6 +334,7 @@ export const parte_diario = {
         mismo_cod_nov_hasta: is.Date, 
         habiles: is.number, 
         corridos: is.number,
+        horas: is.class(TimeInterval)
     })
 } 
 
@@ -912,24 +913,25 @@ export const per_domicilios = {
     table: 'per_domicilios',
     description: is.object({
         idper:           is.string,
-        nro_item:        is.bigint,
+        nro_item:        is.number,
         tipo_domicilio:  is.string,
-        provincia:       is.string,
-        comuna_partido:  is.string,
-        barrio_localidad:is.string,
-        codigo_postal:   is.string,
-        calle:           is.string,
-        nombre_calle:    is.string,
-        altura:          is.string,
-        piso:            is.string,
-        depto:           is.string,
-        escalera:        is.string,
-        torre:           is.string,
-        nudo:            is.string,
-        ala:             is.string,
-        confirmado:      is.boolean,
-        fecha_confirmado:is.Date,
-        observaciones:   is.string,
+        provincia:       is.nullable.string,
+        comuna_partido:  is.nullable.string,
+        barrio_localidad:is.nullable.string,
+        codigo_postal:   is.nullable.string,
+        calle:           is.nullable.string,
+        nombre_calle:    is.nullable.string,
+        altura:          is.nullable.string,
+        piso:            is.nullable.string,
+        depto:           is.nullable.string,
+        escalera:        is.nullable.string,
+        torre:           is.nullable.string,
+        nudo:            is.nullable.string,
+        ala:             is.nullable.string,
+        confirmado:      is.nullable.boolean,
+        fecha_confirmado:is.nullable.Date,
+        observaciones:   is.nullable.string,
+        punto:           is.nullable.string,
     })
 }
 export const perfiles_sgc = {
@@ -957,7 +959,7 @@ export const per_telefonos = {
     table: 'per_telefonos',
     description: is.object({
         idper:           is.string,
-        nro_item:        is.bigint,
+        nro_item:        is.number,
         tipo_telefono:   is.string,
         telefono:        is.string,
         observaciones:   is.string,
@@ -1097,6 +1099,8 @@ export const ERROR_COD_NOVEDAD_NO_INDICA_CON_NOVEDAD= 'P1008';
 export const ERROR_SECTORES_DESNIVELADOS            = 'P1009';
 export const ERROR_SECTOR_HUERFANO_NO_TOPE          = 'P1010';
 export const ERROR_HORA_PASADA                      = '42501' // algún día vamos a preferir que sea 'P1011', por ahora es la política la que falla;
+export const ERROR_COORDENADAS_GPS_FUERA_DE_RANGO   = 'P1012';
+export const ERROR_TEXTO_GPS_NO_INTERPRETABLE       = 'P1013';
 
 //////////// ERRORES PROPIOS DEL BACKEND:
 export const ERROR_EXCEDIDA_CANTIDAD_DE_NOVEDADES   = 'B9001';

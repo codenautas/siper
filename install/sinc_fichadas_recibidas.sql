@@ -10,30 +10,30 @@ DECLARE
     v_hora_redondeada time;
 BEGIN
     BEGIN
-        SELECT idper INTO v_idper 
-        FROM usuarios 
+        SELECT idper INTO v_idper
+        FROM usuarios
         WHERE usuario = NEW.fichador;
 
         IF v_idper IS NULL THEN
             RAISE EXCEPTION 'Usuario "%" no encontrado en la tabla usuarios', NEW.fichador;
         END IF;
-        
-        v_tipo_mapeado := CASE 
+
+        v_tipo_mapeado := CASE
             WHEN lower(NEW.tipo) IN ('e', 'entrada') THEN 'E'
             WHEN lower(NEW.tipo) IN ('s', 'salida' ) THEN 'S'
             ELSE 'O'
         END CASE;
 
-        v_hora_redondeada := date_trunc('minute', 
+        v_hora_redondeada := date_trunc('minute',
             new.hora + CASE v_tipo_mapeado WHEN 'E' THEN '0'::interval WHEN 'S' THEN '59 seconds'::interval ELSE '30 seconds'::interval END
         );
 
         INSERT INTO fichadas (
-            idper, fecha, hora, tipo_fichada, 
+            idper, fecha, hora, tipo_fichada,
             observaciones, punto, tipo_dispositivo
         ) VALUES (
             v_idper, NEW.fecha, v_hora_redondeada, v_tipo_mapeado,
-            NEW.texto, NEW.punto_gps, NEW.dispositivo
+            NEW.texto, texto_gps_a_punto(NEW.punto_gps), NEW.dispositivo
         );
 
         NEW.migrado_estado := 'OK';
@@ -41,7 +41,7 @@ BEGIN
 
     EXCEPTION WHEN OTHERS THEN
         NEW.migrado_estado := 'ERROR';
-        NEW.migrado_log := SQLERRM; 
+        NEW.migrado_log := SQLERRM;
     END;
 
     RETURN NEW;

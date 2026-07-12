@@ -37,11 +37,14 @@ install:
       owner: siper_owner
       extensions: 
       - gist
+      - cube
+      - earthdistance
     enances: inline
     scripts:
       prepare:
       - ../node_modules/type-store/postgres/time_range.sql
       - ../install/fecha_actual.sql
+      - ../install/texto_gps_a_punto.sql
       pre-adapt:
       - ../node_modules/pg-triggers/lib/table-changes.sql
       - ../install/hora_texto.sql
@@ -84,6 +87,7 @@ install:
       - ../install/detalle_nov_multi_oirgen.sql
       - ../install/sinc_fichadores.sql
       - ../install/fichadas_vigentes_trgs.sql  
+      - ../install/puntos_compatibles.sql
       - ../install/post-modulo_fichador.sql  
 logo: 
   path: client/img

@@ -1,3 +1,160 @@
+-- Cambios para la versión 0.9.2: puntos GPS con el tipo point nativo,
+-- con la convención (x,y) = (longitud,latitud) que usa earthdistance para el operador <@>.
+-- sedes se crea con punto; en per_domicilios coordenada_x/coordenada_y pasan a punto;
+-- en fichadas punto deja de ser text.
+
+-- las extensiones se crean antes del set role por si requieren superusuario
+create extension if not exists cube;          -- requerida por earthdistance
+create extension if not exists earthdistance; -- para el operador <@>
+
+set search_path = siper, public;
+set role to siper_muleto_owner;
+
+-- install/texto_gps_a_punto.sql (nueva)
+
+CREATE OR REPLACE FUNCTION texto_gps_a_punto(p_texto text) RETURNS point
+    IMMUTABLE
+    LANGUAGE plpgsql
+AS $BODY$
+DECLARE
+    v_latitud  double precision;
+    v_longitud double precision;
+    v_punto    point;
+BEGIN
+    IF p_texto IS NULL OR p_texto = '' THEN
+        RETURN null;
+    ELSIF p_texto ~ '^\s*[-+]?\d+(\.\d+)?\s*,\s*[-+]?\d+(\.\d+)?\s*$' THEN
+        v_latitud  := split_part(p_texto, ',', 1);
+        v_longitud := split_part(p_texto, ',', 2);
+    ELSIF p_texto ~ '^\s*\(' THEN
+        v_punto := p_texto::point; -- si el literal está mal formado el cast lanza su propio error
+        v_longitud := v_punto[0];
+        v_latitud  := v_punto[1];
+    ELSE
+        RAISE 'texto GPS no interpretable: %', p_texto USING ERRCODE = 'P1013';
+    END IF;
+    IF abs(v_latitud) > 90 OR abs(v_longitud) > 180 THEN
+        RAISE 'coordenadas GPS fuera de rango: %', p_texto USING ERRCODE = 'P1012';
+    END IF;
+    RETURN point(v_longitud, v_latitud);
+END;
+$BODY$;
+
+create table "sedes" (
+  "sede" text,
+  "descripcion" text,
+  "para_presencial" boolean,
+  "punto" point
+, primary key ("sede")
+);
+grant select, insert, update, delete on "sedes" to siper_muleto_admin;
+
+do $SQL_ENANCE$
+ begin
+PERFORM enance_table('sedes','sede');
+end
+$SQL_ENANCE$;
+
+---------------------------------------------------------------------
+-- per_domicilios: coordenada_x, coordenada_y pasan a punto
+---------------------------------------------------------------------
+
+alter table per_domicilios DISABLE trigger per_domicilios_idgeo_trg; --momentáneo, para que no blanquee punto, obs_geo ni fecha_codificacion
+
+alter table "per_domicilios" add column "punto" point;
+
+update per_domicilios
+   set punto = point(coordenada_x, coordenada_y)
+ where coordenada_x is not null and coordenada_y is not null;
+
+alter table "per_domicilios" drop column "coordenada_x";
+alter table "per_domicilios" drop column "coordenada_y";
+
+-- install/per_domicilios_idgeo_trg.sql (cambia: punto en vez de coordenada_x/coordenada_y)
+CREATE OR REPLACE FUNCTION per_domicilios_idgeo_trg()
+    RETURNS trigger
+    LANGUAGE plpgsql
+AS $BODY$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        new.idgeo := nextval('per_domicilios_idgeo_seq');
+    ELSIF TG_OP = 'UPDATE' THEN
+        IF (new.nombre_calle     IS DISTINCT FROM old.nombre_calle
+         OR new.calle            IS DISTINCT FROM old.calle
+         OR new.barrio_localidad IS DISTINCT FROM old.barrio_localidad
+         OR new.altura           IS DISTINCT FROM old.altura
+         OR new.comuna_partido   IS DISTINCT FROM old.comuna_partido
+         OR new.provincia        IS DISTINCT FROM old.provincia) THEN
+            new.idgeo              := nextval('per_domicilios_idgeo_seq');
+            new.punto              := null;
+            new.obs_geo            := null;
+            new.fecha_codificacion := null;
+        ELSIF (new.punto::text IS DISTINCT FROM old.punto::text -- point no tiene operador =
+            OR new.obs_geo     IS DISTINCT FROM old.obs_geo) THEN
+            new.fecha_codificacion := fecha_actual();
+        END IF;
+    END IF;
+    RETURN new;
+END;
+$BODY$;
+
+alter table per_domicilios ENABLE trigger per_domicilios_idgeo_trg;
+
+alter table "fichadas" drop constraint "punto<>''";
+alter table "fichadas" alter column "punto" type point using texto_gps_a_punto("punto");
+
+-- install/sinc_fichadas_recibidas.sql (cambia: punto_gps se convierte con texto_gps_a_punto)
+CREATE OR REPLACE FUNCTION procesar_fichada_recibida_trg() RETURNS trigger
+    LANGUAGE plpgsql
+    SECURITY DEFINER
+    set search_path=siper
+AS
+$$
+DECLARE
+    v_idper text;
+    v_tipo_mapeado text;
+    v_hora_redondeada time;
+BEGIN
+    BEGIN
+        SELECT idper INTO v_idper
+        FROM usuarios
+        WHERE usuario = NEW.fichador;
+
+        IF v_idper IS NULL THEN
+            RAISE EXCEPTION 'Usuario "%" no encontrado en la tabla usuarios', NEW.fichador;
+        END IF;
+
+        v_tipo_mapeado := CASE
+            WHEN lower(NEW.tipo) IN ('e', 'entrada') THEN 'E'
+            WHEN lower(NEW.tipo) IN ('s', 'salida' ) THEN 'S'
+            ELSE 'O'
+        END CASE;
+
+        v_hora_redondeada := date_trunc('minute',
+            new.hora + CASE v_tipo_mapeado WHEN 'E' THEN '0'::interval WHEN 'S' THEN '59 seconds'::interval ELSE '30 seconds'::interval END
+        );
+
+        INSERT INTO fichadas (
+            idper, fecha, hora, tipo_fichada,
+            observaciones, punto, tipo_dispositivo
+        ) VALUES (
+            v_idper, NEW.fecha, v_hora_redondeada, v_tipo_mapeado,
+            NEW.texto, texto_gps_a_punto(NEW.punto_gps), NEW.dispositivo
+        );
+
+        NEW.migrado_estado := 'OK';
+        NEW.migrado_log := 'Migrado exitosamente';
+
+    EXCEPTION WHEN OTHERS THEN
+        NEW.migrado_estado := 'ERROR';
+        NEW.migrado_log := SQLERRM;
+    END;
+
+    RETURN NEW;
+END;
+$$;
+
+-- install/function_registrar_fichadas.sql (cambia: punto se convierte con texto_gps_a_punto)
 CREATE OR REPLACE FUNCTION registrar_fichadas(
     p_data_json_text TEXT -- La entrada es TEXT (cadena JSON)
 )
@@ -212,3 +369,55 @@ EXCEPTION
         RETURN v_resultado;
 END;
 $$;
+
+-- install/puntos_compatibles.sql (nueva)
+/* Indica si las fichadas con punto GPS de una persona en una fecha son compatibles
+   con los puntos de referencia que corresponden al código de novedad:
+     - 101 (teletrabajo): los domicilios declarados de la persona
+       (per_domicilios con tipo_domicilio 'P' o 'TA' y punto calculado)
+     - cualquier otro código que compara (por ahora solo 999): las sedes con para_presencial
+     - los códigos que no comparan devuelven null
+   Es compatible cuando para cada horario recibido (hoy: la entrada y la salida; se podría
+   extender a todos los extremos del multirango de fichadas) hay alguna fichada con punto
+   a media hora de ese horario y a menos de 500 metros de alguna referencia.
+   Devuelve null si no recibe horarios o si alguno es desconocido (null).
+   EXCEPCIÓN a la regla de no depender del código de novedad: los códigos 101 y 999 están
+   hardcodeados a propósito por ahora; cuando haya más códigos que comparen, pasar esta
+   configuración a campos de cod_novedades. */
+
+CREATE OR REPLACE FUNCTION puntos_compatibles(p_idper text, p_fecha date, p_cod_nov text, p_horas time[]) RETURNS boolean
+    STABLE
+    LANGUAGE plpgsql
+    SET search_path = siper, public
+AS $BODY$
+DECLARE
+    c_metros_maximos   CONSTANT double precision := 500;
+    c_metros_por_milla CONSTANT double precision := 1609.344; -- el operador <@> de earthdistance devuelve millas terrestres
+    c_ventana          CONSTANT interval := '30 minutes';
+BEGIN
+    IF p_cod_nov IS NULL OR p_cod_nov NOT IN ('101', '999')
+        OR p_horas IS NULL OR cardinality(p_horas) = 0
+        OR array_position(p_horas, null) IS NOT NULL
+    THEN
+        RETURN null;
+    END IF;
+    RETURN (
+        WITH referencias AS (
+            SELECT punto FROM sedes
+                WHERE p_cod_nov <> '101' AND para_presencial AND punto IS NOT NULL
+            UNION ALL
+            SELECT punto FROM per_domicilios
+                WHERE p_cod_nov = '101' AND idper = p_idper
+                  AND tipo_domicilio IN ('P', 'TA') AND punto IS NOT NULL
+        )
+        SELECT bool_and(EXISTS (
+            SELECT 1
+                FROM fichadas f
+                    JOIN referencias r ON (f.punto <@> r.punto) * c_metros_por_milla <= c_metros_maximos
+                WHERE f.idper = p_idper AND f.fecha = p_fecha AND f.punto IS NOT NULL
+                  AND f.hora BETWEEN h - c_ventana AND h + c_ventana
+        ))
+        FROM unnest(p_horas) h
+    );
+END;
+$BODY$;

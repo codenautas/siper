@@ -26,7 +26,7 @@ export function fichadas(context: TableContext): TableDefinition{
             {name: tipo_fichada.name, typeName: 'text', nullable: false                       },
             //{name: 'origen' , typeName: 'text'                                                },
             {name: 'observaciones', typeName: 'text'                                          },
-            {name: 'punto', typeName: 'text',                                                 },
+            {name: 'punto', typeName: 'point',                                                },
             {name: 'tipo_dispositivo', typeName: 'text',                                      },
             {name: 'id_original', typeName: 'text',                                           },
         ],         
