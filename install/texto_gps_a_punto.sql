@@ -31,6 +31,6 @@ BEGIN
     IF abs(v_latitud) > 90 OR abs(v_longitud) > 180 THEN
         RAISE 'coordenadas GPS fuera de rango: %', p_texto USING ERRCODE = 'P1012';
     END IF;
-    RETURN point(v_longitud, v_latitud);
+    RETURN point(round(v_longitud, 4), round(v_latitud, 4));
 END;
 $BODY$;
