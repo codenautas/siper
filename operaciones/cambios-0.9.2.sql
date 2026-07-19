@@ -17,8 +17,34 @@ CREATE OR REPLACE FUNCTION texto_gps_a_punto(p_texto text) RETURNS point
     LANGUAGE plpgsql
 AS $BODY$
 DECLARE
-    v_latitud  double precision;
-    v_longitud double precision;
+    v_latitud  decimal;
+    v_longitud decimal;
+    v_punto    point;
+BEGIN
+    IF p_texto IS NULL OR p_texto = '' THEN
+        RETURN null;
+    ELSIF p_texto ~ '^\s*\(' THEN
+        v_punto := p_texto::point; -- si el literal está mal formado el cast lanza su propio error
+        v_longitud := v_punto[0];
+        v_latitud  := v_punto[1];
+    ELSE
+        RAISE 'texto GPS no interpretable: %', p_texto USING ERRCODE = 'P1013';
+    END IF;
+    IF abs(v_latitud) > 90 OR abs(v_longitud) > 180 THEN
+        RAISE 'coordenadas GPS fuera de rango: %', p_texto USING ERRCODE = 'P1012';
+    END IF;
+    RETURN point(round(v_longitud, 4), round(v_latitud, 4));
+END;
+$BODY$;
+
+
+CREATE OR REPLACE FUNCTION textolatlong_gps_a_punto(p_texto text) RETURNS point
+    IMMUTABLE
+    LANGUAGE plpgsql
+AS $BODY$
+DECLARE
+    v_latitud  decimal;
+    v_longitud decimal;
     v_punto    point;
 BEGIN
     IF p_texto IS NULL OR p_texto = '' THEN
@@ -26,12 +52,8 @@ BEGIN
     ELSIF p_texto ~ '^\s*[-+]?\d+(\.\d+)?\s*,\s*[-+]?\d+(\.\d+)?\s*$' THEN
         v_latitud  := split_part(p_texto, ',', 1);
         v_longitud := split_part(p_texto, ',', 2);
-    ELSIF p_texto ~ '^\s*\(' THEN
-        v_punto := p_texto::point; -- si el literal está mal formado el cast lanza su propio error
-        v_longitud := v_punto[0];
-        v_latitud  := v_punto[1];
     ELSE
-        RAISE 'texto GPS no interpretable: %', p_texto USING ERRCODE = 'P1013';
+        RAISE 'latitud y longitud no interpretables: %', p_texto USING ERRCODE = 'P1013';
     END IF;
     IF abs(v_latitud) > 90 OR abs(v_longitud) > 180 THEN
         RAISE 'coordenadas GPS fuera de rango: %', p_texto USING ERRCODE = 'P1012';
@@ -101,9 +123,9 @@ $BODY$;
 alter table per_domicilios ENABLE trigger per_domicilios_idgeo_trg;
 
 alter table "fichadas" drop constraint "punto<>''";
-alter table "fichadas" alter column "punto" type point using texto_gps_a_punto("punto");
+alter table "fichadas" alter column "punto" type point using textolatlong_gps_a_punto("punto");
 
--- install/sinc_fichadas_recibidas.sql (cambia: punto_gps se convierte con texto_gps_a_punto)
+-- install/sinc_fichadas_recibidas.sql (cambia: punto_gps se convierte con textolatlong_gps_a_punto)
 CREATE OR REPLACE FUNCTION procesar_fichada_recibida_trg() RETURNS trigger
     LANGUAGE plpgsql
     SECURITY DEFINER
@@ -139,7 +161,7 @@ BEGIN
             observaciones, punto, tipo_dispositivo
         ) VALUES (
             v_idper, NEW.fecha, v_hora_redondeada, v_tipo_mapeado,
-            NEW.texto, texto_gps_a_punto(NEW.punto_gps), NEW.dispositivo
+            NEW.texto, textolatlong_gps_a_punto(NEW.punto_gps), NEW.dispositivo
         );
 
         NEW.migrado_estado := 'OK';
@@ -154,7 +176,7 @@ BEGIN
 END;
 $$;
 
--- install/function_registrar_fichadas.sql (cambia: punto se convierte con texto_gps_a_punto)
+-- install/function_registrar_fichadas.sql (cambia: punto se convierte con textolatlong_gps_a_punto)
 CREATE OR REPLACE FUNCTION registrar_fichadas(
     p_data_json_text TEXT -- La entrada es TEXT (cadena JSON)
 )
@@ -269,7 +291,7 @@ BEGIN
                     (v_fichada->>'fecha')::DATE,
                     (v_fichada->>'hora')::TIME WITH TIME ZONE,
                     v_fichada->>'observaciones',
-                    texto_gps_a_punto(v_fichada->>'punto'),
+                    textolatlong_gps_a_punto(v_fichada->>'punto'),
                     v_fichada->>'tipo_dispositivo', -- MODIFICADO: COALESCE eliminado
                     v_fichada->>'id_original'
                 );
@@ -370,20 +392,15 @@ EXCEPTION
 END;
 $$;
 
--- install/puntos_compatibles.sql (nueva)
 /* Indica si las fichadas con punto GPS de una persona en una fecha son compatibles
    con los puntos de referencia que corresponden al código de novedad:
-     - 101 (teletrabajo): los domicilios declarados de la persona
-       (per_domicilios con tipo_domicilio 'P' o 'TA' y punto calculado)
-     - cualquier otro código que compara (por ahora solo 999): las sedes con para_presencial
+     - se podría agregar un booleano con_puntos (por ahora toma injustificado y cuenta_horas)
      - los códigos que no comparan devuelven null
    Es compatible cuando para cada horario recibido (hoy: la entrada y la salida; se podría
    extender a todos los extremos del multirango de fichadas) hay alguna fichada con punto
    a media hora de ese horario y a menos de 500 metros de alguna referencia.
    Devuelve null si no recibe horarios o si alguno es desconocido (null).
-   EXCEPCIÓN a la regla de no depender del código de novedad: los códigos 101 y 999 están
-   hardcodeados a propósito por ahora; cuando haya más códigos que comparen, pasar esta
-   configuración a campos de cod_novedades. */
+*/
 
 CREATE OR REPLACE FUNCTION puntos_compatibles(p_idper text, p_fecha date, p_cod_nov text, p_horas time[]) RETURNS boolean
     STABLE
@@ -394,8 +411,9 @@ DECLARE
     c_metros_maximos   CONSTANT double precision := 500;
     c_metros_por_milla CONSTANT double precision := 1609.344; -- el operador <@> de earthdistance devuelve millas terrestres
     c_ventana          CONSTANT interval := '30 minutes';
+    c_con_puntos       CONSTANT boolean := (select injustificado OR cuenta_horas FROM cod_novedades WHERE cod_nov = p_cod_nov);
 BEGIN
-    IF p_cod_nov IS NULL OR p_cod_nov NOT IN ('101', '999')
+    IF c_con_puntos IS NOT TRUE
         OR p_horas IS NULL OR cardinality(p_horas) = 0
         OR array_position(p_horas, null) IS NOT NULL
     THEN
@@ -424,5 +442,46 @@ $BODY$;
 
 
 update fichadas_recibidas 
-  set punto_gps = (texto_gps_a_punto(punto_gps))[1] || ',' || (texto_gps_a_punto(punto_gps))[0]
+  set punto_gps = (textolatlong_gps_a_punto(punto_gps))[1] || ',' || (textolatlong_gps_a_punto(punto_gps))[0]
   where length(punto_gps)>17;
+
+set search_path = siper, public;
+
+create or replace view geo_domicilios as
+  select d.idgeo, -- pk
+        d.provincia,
+        d.comuna_partido,
+        d.barrio_localidad,
+        d.calle,
+        coalesce(d.nombre_calle, c.nombre_calle) as nombre_calle,
+        d.altura,
+        d.punto[0] as coordenada_x,
+        d.punto[1] as coordenada_y,
+        d.obs_geo,
+        d.fecha_codificacion
+    from per_domicilios d
+      left join provincias p using (provincia)
+      left join comunas_partidos co using (provincia, comuna_partido)
+      left join barrios_localidades b using (provincia, comuna_partido, barrio_localidad)
+      left join calles c using (provincia, calle)
+    where d.idgeo is not null;
+
+grant select, update on geo_domicilios to siper_admin;
+
+CREATE OR REPLACE FUNCTION geo_domicilios_update() RETURNS trigger
+  LANGUAGE plpgsql AS
+$$
+BEGIN
+  UPDATE per_domicilios
+    SET obs_geo = NEW.obs_geo,
+        punto = point(NEW.coordenada_x, NEW.coordenada_y),
+        fecha_codificacion = fecha_actual()
+    WHERE idgeo = OLD.idgeo;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER geo_domicilios_update
+  INSTEAD OF UPDATE ON geo_domicilios
+  FOR EACH ROW
+  EXECUTE FUNCTION geo_domicilios_update();

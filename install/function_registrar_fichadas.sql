@@ -112,7 +112,7 @@ BEGIN
                     (v_fichada->>'fecha')::DATE,
                     (v_fichada->>'hora')::TIME WITH TIME ZONE,
                     v_fichada->>'observaciones',
-                    texto_gps_a_punto(v_fichada->>'punto'),
+                    textolatlong_gps_a_punto(v_fichada->>'punto'),
                     v_fichada->>'tipo_dispositivo', -- MODIFICADO: COALESCE eliminado
                     v_fichada->>'id_original'
                 );

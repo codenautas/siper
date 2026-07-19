@@ -89,6 +89,7 @@ install:
       - ../install/fichadas_vigentes_trgs.sql  
       - ../install/puntos_compatibles.sql
       - ../install/post-modulo_fichador.sql  
+      - ../install/geo_domicilios.sql
 logo: 
   path: client/img
 `;

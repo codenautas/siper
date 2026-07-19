@@ -289,10 +289,12 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                                 }
                             }}
                         >
-                            <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
+                            <span className="calendario-dia-numero">{dia.dia ?? ''} 
+                                <span calendario-puntos-compatibles={JSON.stringify(dia.puntos_compatibles)} x-algo="si">{dia.puntos_compatibles == null || !mostrarFichadaEnDia ? '' :  dia.puntos_compatibles ? ' •' : ' ⨂' }</span>
+                            </span>
                             {mostrarFichadaEnDia && dia.horas ? (
                                 <span className="calendario-dia-horas">
-                                    {horaStr(dia.horas.toString())}
+                                    {cantHorasStr(dia.horas)}
                                 </span>
                             ) : null}
                             <span 

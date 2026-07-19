@@ -33,7 +33,7 @@ BEGIN
             observaciones, punto, tipo_dispositivo
         ) VALUES (
             v_idper, NEW.fecha, v_hora_redondeada, v_tipo_mapeado,
-            NEW.texto, texto_gps_a_punto(NEW.punto_gps), NEW.dispositivo
+            NEW.texto, textolatlong_gps_a_punto(NEW.punto_gps), NEW.dispositivo
         );
 
         NEW.migrado_estado := 'OK';

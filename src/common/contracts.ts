@@ -456,6 +456,7 @@ export const calendario_persona = {
         consolidada: is.boolean,
         requiere_fichadas: is.boolean,
         injustificado: is.boolean,
+        puntos_compatibles: is.boolean,
     })
 }
 
@@ -932,8 +933,29 @@ export const per_domicilios = {
         fecha_confirmado:is.nullable.Date,
         observaciones:   is.nullable.string,
         punto:           is.nullable.string,
+        idgeo:           is.nullable.number,
+        fecha_codificacion:is.nullable.Date
     })
 }
+
+
+export const geo_domicilios = {
+    table: 'geo_domicilios',
+    description: is.object({
+        provincia:       is.nullable.string,
+        comuna_partido:  is.nullable.string,
+        barrio_localidad:is.nullable.string,
+        calle:           is.nullable.string,
+        nombre_calle:    is.nullable.string,
+        altura:          is.nullable.string,
+        coordenada_x:    is.nullable.number,
+        coordenada_y:    is.nullable.number,
+        obs_geo:         is.nullable.string,
+        idgeo:           is.nullable.number,
+        fecha_codificacion: is.nullable.Date
+    })
+}
+
 export const perfiles_sgc = {
     table : 'perfiles_sgc',
     description : is.object({

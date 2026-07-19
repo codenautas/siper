@@ -232,7 +232,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         extract(day from f.fecha) as dia,
                         f.dds,
                         (f.fecha - '2001-01-01'::date - dds) / 7 as semana,
-                        v.cod_nov,
+                        nv.cod_nov,
                         case f.dds
                             when 0 then 'no-laborable' 
                             when 6 then 'no-laborable' 
@@ -244,11 +244,12 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         end as tipo_dia,
                         cn.novedad,
                         extract(month from f.fecha) = mes as mismo_mes,
-                        v.fichadas,
-                        v.horas,
+                        nv.fichadas,
+                        nv.horas,
                         f.fichadas_consolidadas or f.fecha < coalesce(p.inicia_fichada, p.registra_novedades_desde) as consolidada,
                         cn.requiere_fichadas,
-                        cn.injustificado
+                        cn.injustificado,
+                        puntos_compatibles(nv.idper, nv.fecha, nv.cod_nov, array[lower(nv.fichadas), upper(nv.fichadas)]) as puntos_compatibles
                     from (
                         select  fecha - 2 - extract(dow from f.fecha - 2)::integer      as desde,
                                 fecha - 2 - extract(dow from f.fecha - 2)::integer + 41 as hasta,
@@ -259,9 +260,9 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                             where fecha = $2::date
                         ) x, 
                         lateral (select * from fechas where annio = x.annio) f
-                        left join novedades_vigentes v on v.fecha = f.fecha and v.idper = $1
-                        left join personas p on p.idper = v.idper
-                        left join cod_novedades cn on cn.cod_nov = v.cod_nov
+                        left join novedades_vigentes nv on nv.fecha = f.fecha and nv.idper = $1
+                        left join personas p on p.idper = nv.idper
+                        left join cod_novedades cn on cn.cod_nov = nv.cod_nov
                     where f.fecha between desde and hasta
                     order by f.fecha`,
                 [idper, desde]

@@ -1,18 +1,14 @@
 /* Indica si las fichadas con punto GPS de una persona en una fecha son compatibles
    con los puntos de referencia que corresponden al código de novedad:
-     - 101 (teletrabajo): los domicilios declarados de la persona
-       (per_domicilios con tipo_domicilio 'P' o 'TA' y punto calculado)
-     - cualquier otro código que compara (por ahora solo 999): las sedes con para_presencial
+     - se podría agregar un booleano con_puntos (por ahora toma injustificado y cuenta_horas)
      - los códigos que no comparan devuelven null
    Es compatible cuando para cada horario recibido (hoy: la entrada y la salida; se podría
    extender a todos los extremos del multirango de fichadas) hay alguna fichada con punto
    a media hora de ese horario y a menos de 500 metros de alguna referencia.
    Devuelve null si no recibe horarios o si alguno es desconocido (null).
-   EXCEPCIÓN a la regla de no depender del código de novedad: los códigos 101 y 999 están
-   hardcodeados a propósito por ahora; cuando haya más códigos que comparen, pasar esta
-   configuración a campos de cod_novedades. */
+*/
 
-CREATE OR REPLACE FUNCTION puntos_compatibles(p_idper text, p_fecha date, p_cod_nov text, p_horas time[]) RETURNS boolean
+lowerCREATE OR REPLACE FUNCTION puntos_compatibles(p_idper text, p_fecha date, p_cod_nov text, p_horas time[]) RETURNS boolean
     STABLE
     LANGUAGE plpgsql
     SET search_path = siper, public
@@ -21,10 +17,9 @@ DECLARE
     c_metros_maximos   CONSTANT double precision := 500;
     c_metros_por_milla CONSTANT double precision := 1609.344; -- el operador <@> de earthdistance devuelve millas terrestres
     c_ventana          CONSTANT interval := '30 minutes';
+    c_con_puntos       CONSTANT boolean := (select injustificado OR cuenta_horas FROM cod_novedades WHERE cod_nov = p_cod_nov);
 BEGIN
-    IF p_cod_nov IS NULL OR p_cod_nov NOT IN ('101', '999')
-        OR p_horas IS NULL OR cardinality(p_horas) = 0
-        OR array_position(p_horas, null) IS NOT NULL
+    IF c_con_puntos IS NOT TRUE
     THEN
         RETURN null;
     END IF;
@@ -45,6 +40,7 @@ BEGIN
                   AND f.hora BETWEEN h - c_ventana AND h + c_ventana
         ))
         FROM unnest(p_horas) h
+        WHERE h IS NOT NULL
     );
 END;
 $BODY$;

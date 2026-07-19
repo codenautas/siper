@@ -1967,6 +1967,47 @@ describe("SiPer: " + testConfig.name, function(){
             })
         })
     })
+    describe("geolocalización", function(){
+        it("geolocaliza ok", async function(){
+            await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                var coordenada_x=-58.125;
+                var coordenada_y=-34.0625;
+                var nro_item = 2;
+                var dom = await rrhhSession.saveRecord(ctts.per_domicilios, {
+                    idper, nro_item, tipo_domicilio: 'TA', nombre_calle: 'ASCASUBI'
+                }, 'new');
+                discrepances.showAndThrow(
+                    {idgeo_mayor_a_cero: dom.idgeo > 0 , fecha_codificacion:dom.fecha_codificacion},
+                    {idgeo_mayor_a_cero: true          , fecha_codificacion:null}
+                );
+                var geo = await adminMetadatosSession.saveRecord(ctts.geo_domicilios, {
+                    idgeo: dom.idgeo, coordenada_x, coordenada_y
+                }, 'update', [dom.idgeo]);
+                discrepances.showAndThrow(geo, {
+                    idgeo: dom.idgeo,
+                    calle: dom.calle,
+                    nombre_calle: dom.nombre_calle,
+                    provincia: dom.provincia,
+                    comuna_partido: dom.comuna_partido,
+                    barrio_localidad: dom.barrio_localidad,
+                    altura: dom.altura,
+                    coordenada_x,
+                    coordenada_y,
+                    obs_geo: null,
+                    fecha_codificacion: FECHA_ACTUAL
+                } as unknown as DefinedType<typeof ctts.geo_domicilios.description>);
+                var nombre_calle = 'YRURTIA';
+                var obtDom = await rrhhSession.saveRecord(ctts.per_domicilios, {
+                    idper, nro_item, nombre_calle,                     
+                }, 'update', [idper, nro_item]);
+                // espero un idgeo distinto al del dom, quiero ver que el punto se anule
+                var expDom = {...dom, nombre_calle, punto: null, idgeo: obtDom.idgeo} as typeof obtDom;
+                discrepances.showAndThrow(obtDom, expDom)
+                // verifico un idgeo distinto al del dom
+                discrepances.showAndThrow(obtDom.idgeo > dom.idgeo, true)
+            });
+        })
+    })
     describe("controles finales", function(){
         this.timeout(900000);
         it("presentismo final", async function(){
@@ -1997,7 +2038,7 @@ describe("SiPer: " + testConfig.name, function(){
             )
             // await fs.writeFile('sqlParteDiarioExt.json', JSON.stringify(resultExt,null,' '), 'utf8')
             discrepances.showAndThrow(resultBase.rows, resultExt.rows);
-            discrepances.showAndThrow(resultExt.rows.length, 420);
+            discrepances.showAndThrow(resultExt.rows.length, 425);
         })
     })
     function randInt(int: number) {
