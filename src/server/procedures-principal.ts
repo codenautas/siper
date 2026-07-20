@@ -249,7 +249,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         f.fichadas_consolidadas or f.fecha < coalesce(p.inicia_fichada, p.registra_novedades_desde) as consolidada,
                         cn.requiere_fichadas,
                         cn.injustificado,
-                        puntos_compatibles(nv.idper, nv.fecha, nv.cod_nov, array[lower(nv.fichadas), upper(nv.fichadas)]) as puntos_compatibles
+                        ${context.be.config.siper?.puntos_compatibles ? `puntos_compatibles(nv.idper, nv.fecha, nv.cod_nov, array[lower(nv.fichadas), upper(nv.fichadas)])` : 'null::boolean' } as puntos_compatibles 
                     from (
                         select  fecha - 2 - extract(dow from f.fecha - 2)::integer      as desde,
                                 fecha - 2 - extract(dow from f.fecha - 2)::integer + 41 as hasta,

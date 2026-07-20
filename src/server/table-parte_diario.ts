@@ -9,6 +9,7 @@ import {sector} from "./table-sectores";
 import { sqlEnvolventeDesdeHastaDeNovedadVigente } from "./table-novedades_vigentes";
 import { sqlPersonas } from "./table-personas";
 import { s_revista } from "./table-situacion_revista";
+import { FieldDefinition } from "backend-plus";
 
 const sqlParteDiarioBase = (novedades_vigentes: string) => `
 select 
@@ -72,7 +73,7 @@ export const sqlParteDiarioAgrupado = `count(*) as dias_mes,
     WHERE fecha BETWEEN $1 AND $1::date + interval '1 month' - interval '1 day'`
 
 // Función genérica para la configuración base de las tablas
-export function parte_diario(_context: TableContext): TableDefinition {
+export function parte_diario(context: TableContext): TableDefinition {
     return {
         name: "parte_diario",
         elementName: "parte_diario",
@@ -98,7 +99,7 @@ export function parte_diario(_context: TableContext): TableDefinition {
             { name: 'banda_horaria', typeName: 'text'},
             { name: 'bh_descripcion', typeName: 'text', title: 'descripción' },
             { name: 'injustificado' , typeName: 'boolean'},
-            { name: 'puntos_compatibles', typeName: 'boolean', description: 'posee puntos compatibles en entrada y salida'},
+            ...(context.be.config.siper?.puntos_compatibles ? [{ name: 'puntos_compatibles', typeName: 'boolean', description: 'posee puntos compatibles en entrada y salida'}] : [] ) as FieldDefinition[],
             { name: 'activo', typeName: 'boolean'},
         ],
         primaryKey: [idper.name, 'fecha', cod_nov.name],

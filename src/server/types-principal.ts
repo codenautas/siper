@@ -34,6 +34,9 @@ declare module "backend-plus"{
             minutos: number
         }
         "modulo-fichadas-db": sql.config;
+        siper?:{
+            puntos_compatibles: boolean
+        }
     }
 
     interface FieldDefinition {
