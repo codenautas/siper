@@ -36,6 +36,7 @@ declare module "backend-plus"{
         "modulo-fichadas-db": sql.config;
         siper?:{
             puntos_compatibles: boolean
+            puntos_desde?: string
         }
     }
 

@@ -20,7 +20,7 @@ import { ConfigFichadasDb, getConfigFichadasDb, MAX_INTENTOS } from './app-princ
 
 import { sqlLeftJoinLateralTrayectoriaLaboral } from './table-personas';
 
-import { sqlParteDiarioAgrupado } from './table-parte_diario'
+import { sqlParteDiarioAgrupado, sqlPuntosCompatibles } from './table-parte_diario'
 
 const sqlExprCondicionCodNovSitRevista = 'nov_grupo is null or nov_grupo is not distinct from sr_grupo'
 
@@ -249,7 +249,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         f.fichadas_consolidadas or f.fecha < coalesce(p.inicia_fichada, p.registra_novedades_desde) as consolidada,
                         cn.requiere_fichadas,
                         cn.injustificado,
-                        ${context.be.config.siper?.puntos_compatibles ? `puntos_compatibles(nv.idper, nv.fecha, nv.cod_nov, array[lower(nv.fichadas), upper(nv.fichadas)])` : 'null::boolean' } as puntos_compatibles 
+                        ${sqlPuntosCompatibles(context)} as puntos_compatibles 
                     from (
                         select  fecha - 2 - extract(dow from f.fecha - 2)::integer      as desde,
                                 fecha - 2 - extract(dow from f.fecha - 2)::integer + 41 as hasta,
@@ -281,7 +281,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
             const {idper, annio, mes} = params;
             const desde = date.ymd(annio, mes as 1|2|3|4|5|6|7|8|9|10|11|12, 1);
             const info = await context.client.query(
-                `SELECT ${sqlParteDiarioAgrupado} AND idper = $2`,
+                `SELECT ${sqlParteDiarioAgrupado(context)} AND idper = $2`,
                 [desde, idper]
             ).fetchUniqueRow();
             return info.row

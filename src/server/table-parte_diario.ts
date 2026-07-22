@@ -1,6 +1,6 @@
 "use strict";
 
-import {TableDefinition, TableContext} from "./types-principal";
+import {TableDefinition, TableContext, Context} from "./types-principal";
 
 import {idper} from "./table-personas"
 import {cod_nov} from "./table-cod_novedades";
@@ -11,7 +11,12 @@ import { sqlPersonas } from "./table-personas";
 import { s_revista } from "./table-situacion_revista";
 import { FieldDefinition } from "backend-plus";
 
-const sqlParteDiarioBase = (novedades_vigentes: string) => `
+export const sqlPuntosCompatibles = (context:Context) => 
+    context.be.config.siper?.puntos_compatibles ? ` case when ${context.es.admin ? 'true' : ` nv.fecha >= '${context.be.config.siper?.puntos_desde ?? '2026-07-01'}' and fichadas_consolidadas `} 
+        then puntos_compatibles(nv.idper, nv.fecha, nv.cod_nov, array[lower(nv.fichadas), upper(nv.fichadas)]) else null end` 
+    : 'null::boolean' 
+
+const sqlParteDiarioBase = (novedades_vigentes: string, context:Context) => `
 select 
         p.cuil,
         p.apellido,
@@ -32,15 +37,16 @@ select
         cn.cuenta_horas,
         cn.injustificado,
         bh.descripcion as bh_descripcion,
-        puntos_compatibles(nv.idper, nv.fecha, nv.cod_nov, array[lower(nv.fichadas), upper(nv.fichadas)]) as puntos_compatibles
+        ${sqlPuntosCompatibles(context)} as puntos_compatibles
     from ${novedades_vigentes} nv 
         inner join lateral (${sqlPersonas('nv.fecha')} WHERE p.idper = nv.idper) p 
             on nv.fecha between coalesce(p.registra_novedades_desde, p.fecha_ingreso) and coalesce(p.fecha_egreso, nv.fecha)
         inner join bandas_horarias bh using (banda_horaria)
+        inner join fechas using (fecha)
         left join cod_novedades cn using (cod_nov)
 `
 
-export const sqlParteDiario= sqlParteDiarioBase(`(SELECT
+export const sqlParteDiario = (context:Context) => sqlParteDiarioBase(`(SELECT
         nv.idper,
         nv.fecha,
         nv.cod_nov,
@@ -48,15 +54,15 @@ export const sqlParteDiario= sqlParteDiarioBase(`(SELECT
         nv.annio,
         nv.trabajable,
         nv.horas
-    from novedades_vigentes nv)`);
+    from novedades_vigentes nv)`, context);
 
-export const sqlParteDiarioExtendido= sqlParteDiarioBase(sqlEnvolventeDesdeHastaDeNovedadVigente);
+export const sqlParteDiarioExtendido = (context:Context) => sqlParteDiarioBase(sqlEnvolventeDesdeHastaDeNovedadVigente, context);
 
 const SUMA_HORAS = `sum(horas)`;
 const HORAS_ESPERADAS = `(sum(cant_horas_esperadas) FILTER (WHERE horas is not null) || ' hours')::interval`;
 const SALDO_HORAS = `${SUMA_HORAS} - ${HORAS_ESPERADAS}`
 const BAJO_UMBRAL_HORAS = `(${SALDO_HORAS} < '-7 hours'::interval) is true`
-export const sqlParteDiarioAgrupado = `count(*) as dias_mes,
+export const sqlParteDiarioAgrupado = (context:Context) => `count(*) as dias_mes,
         count(*) FILTER (WHERE es_laborable) as laborables,
         count(horas) as dias_promediados,
         ${SUMA_HORAS} as suma_horas,
@@ -69,7 +75,7 @@ export const sqlParteDiarioAgrupado = `count(*) as dias_mes,
         ${BAJO_UMBRAL_HORAS} as bajo_umbral_horas,
         (${BAJO_UMBRAL_HORAS} OR count(injustificado) > 0) is true as con_problemas,
         (${BAJO_UMBRAL_HORAS} OR count(injustificado) > 0 OR ${SUMA_HORAS} > '0 hours'::interval OR ${HORAS_ESPERADAS} > '0 hours'::interval) is true as tiene_interes
-    FROM (${sqlParteDiario}) inner join parametros on true
+    FROM (${sqlParteDiario(context)}) inner join parametros on true
     WHERE fecha BETWEEN $1 AND $1::date + interval '1 month' - interval '1 day'`
 
 // Función genérica para la configuración base de las tablas
@@ -122,7 +128,7 @@ export function parte_diario(context: TableContext): TableDefinition {
                     )
                     FROM unnest(fichadas) WITH ORDINALITY AS t(rng, ord)) as fichada,
                     hora_texto(horario_entrada) || ' - ' || hora_texto(horario_Salida) as horario
-                from (${sqlParteDiarioExtendido}) x
+                from (${sqlParteDiarioExtendido(context)}) x
             )`,
         },
         sortColumns:[{column:'apellido'}, {column:'nombres'}],

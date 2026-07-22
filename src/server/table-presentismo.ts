@@ -9,7 +9,7 @@ import { sqlParteDiarioAgrupado } from "./table-parte_diario";
 
 // import { annio } from "./table-annios"
 
-export function presentismo(_context: TableContext): TableDefinition {
+export function presentismo(context: TableContext): TableDefinition {
     return {
         name: "presentismo",
         title: "control mensual de presentismo",
@@ -40,7 +40,7 @@ export function presentismo(_context: TableContext): TableDefinition {
         ],
         sql: {
             isTable: false,
-            from: `(SELECT idper, sector, ${sqlParteDiarioAgrupado} GROUP BY idper, sector)`,
+            from: `(SELECT idper, sector, ${sqlParteDiarioAgrupado(context)} GROUP BY idper, sector)`,
         },
         functionDef: {
             parameters: [

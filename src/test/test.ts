@@ -203,6 +203,8 @@ describe("SiPer: " + testConfig.name, function(){
             contexto = await testConfig.startContext(AppSiper);
             contexto.verbose = VERBOSE;
             server = contexto.backend;
+            server.config.siper = server.config.siper ?? {puntos_compatibles: true}
+            server.config.siper.puntos_desde = server.config.siper.puntos_desde ?? '2000-01-01';
             if (VERBOSE) console.log('Sesión admin')
             adminMetadatosSession = contexto.createSession();
             await adminMetadatosSession.login({
@@ -1506,7 +1508,7 @@ describe("SiPer: " + testConfig.name, function(){
                 const entrada = '09:00:00';
                 const salida  = '17:00:00';
                 await registrarFichadas(server, {idper, fecha, entrada, salida, ...TERM_OBELISCO});
-                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
                     {puntos_compatibles: true}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
@@ -1519,7 +1521,7 @@ describe("SiPer: " + testConfig.name, function(){
                 const salida  = '17:00:00';
                 await registrarFichada(server, {idper, fecha, tipo_fichada:'E', hora:entrada, ...TERM_OBELISCO});
                 await registrarFichada(server, {idper, fecha, tipo_fichada:'S', hora:salida , ...RETIRO});
-                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
                     {puntos_compatibles: false}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
@@ -1531,7 +1533,7 @@ describe("SiPer: " + testConfig.name, function(){
                 const salida  = '17:00:00';
                 await registrarFichada(server, {idper, fecha, tipo_fichada:'E', hora:entrada, ...TERM_OBELISCO});
                 await registrarFichada(server, {idper, fecha, tipo_fichada:'S', hora:salida });
-                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
                     {puntos_compatibles: false}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
@@ -1545,7 +1547,7 @@ describe("SiPer: " + testConfig.name, function(){
                 const entrada = '10:00:00';
                 const salida  = '16:30:00';
                 await registrarFichadas(server, {idper, fecha, entrada, salida, punto: LUGANO});
-                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
                     {puntos_compatibles: false}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
@@ -1558,7 +1560,7 @@ describe("SiPer: " + testConfig.name, function(){
                 const entrada = '10:00:00';
                 const salida  = '16:30:00';
                 await registrarFichadas(server, {idper, fecha, entrada, salida, punto: LUGANO});
-                await rrhhSession.tableDataTest(ctts.parte_diario, [
+                await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
                     {puntos_compatibles: false}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
@@ -2022,17 +2024,16 @@ describe("SiPer: " + testConfig.name, function(){
         })
         it("son iguales los SQL de libro diario y su versión extendida", async function(){
             var where = `WHERE fecha BETWEEN '2000-01-27' AND '2000-02-02' AND es_laborable`
-            var resultBase = await server.inDbClient(ADMIN_REQ, async client => 
-                await client.query(`SELECT * FROM (${sqlParteDiario}) x ${where} order by fecha, idper`,
+            const req = ADMIN_REQ as any;
+            var resultBase = await server.inTransactionProcedureContext(req, async (context) =>
+                await context.client.query(`SELECT * FROM (${sqlParteDiario(context)}) x ${where} order by fecha, idper`,
                     []
                 ).fetchAll()
             )
-            // await fs.writeFile('sqlParteDiario.sql', `SELECT * FROM (${sqlParteDiario}) x ${where} order by fecha, idper`, 'utf8')
-            // await fs.writeFile('sqlParteDiario.json', JSON.stringify(resultBase,null,' '), 'utf8')
-            var resultExt = await server.inDbClient(ADMIN_REQ, async client => 
-                await client.query(`SELECT ${resultBase.fields.map((f:{name:string})=>
+            var resultExt = await server.inTransactionProcedureContext(req, async (context) =>
+                await context.client.query(`SELECT ${resultBase.fields.map((f:{name:string})=>
                     f.name == 'cod_nov' ? `case cod_nov when '¡FECHA FUTURA SIN NOVEDAD!' then null when '¡FERIADO O FIN DE SEMANA!' then null else cod_nov end` : f.name
-                )} FROM (${sqlParteDiarioExtendido}) x ${where} order by fecha, idper`,
+                )} FROM (${sqlParteDiarioExtendido(context)}) x ${where} order by fecha, idper`,
                     []
                 ).fetchAll()
             )

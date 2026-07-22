@@ -8,7 +8,7 @@
    Devuelve null si no recibe horarios o si alguno es desconocido (null).
 */
 
-lowerCREATE OR REPLACE FUNCTION puntos_compatibles(p_idper text, p_fecha date, p_cod_nov text, p_horas time[]) RETURNS boolean
+CREATE OR REPLACE FUNCTION puntos_compatibles(p_idper text, p_fecha date, p_cod_nov text, p_horas time[]) RETURNS boolean
     STABLE
     LANGUAGE plpgsql
     SET search_path = siper, public
