@@ -15,6 +15,12 @@
     "node": ">=22.18",
     "npm": ">=10.9"
   },
+  "overrides": {
+    "diff": ">=8.0.2",
+    "serialize-javascript": ">=7.0.0",
+    "stylus": { "glob": "^11" },
+    "uuid": ">=14.0.0"
+  },
   "dependencies": {
     "backend-plus": "^2.7.0-beta.7",
     "frontend-plus": "^0.0.17",
@@ -38,7 +44,7 @@
     "globals": "^17.8.0",
     "jiti": "^2.7.0",
     "mixin-patch": "^0.5.0",
-    "mocha": "^11.7.6",
+    "mocha": "^12.0.0-rc.5",
     "serial-tester": "^0.3.0-rc.2",
     "source-map-support": "^0.5.21",
     "type-fest": "^5.8.0",
