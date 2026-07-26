@@ -26,11 +26,11 @@ BEGIN
     RETURN (
         WITH referencias AS (
             SELECT punto FROM sedes
-                WHERE p_cod_nov <> '101' AND para_presencial AND punto IS NOT NULL
+                WHERE para_presencial AND punto IS NOT NULL
             UNION ALL
             SELECT punto FROM per_domicilios
                 WHERE p_cod_nov = '101' AND idper = p_idper
-                  AND tipo_domicilio IN ('P', 'TA') AND punto IS NOT NULL
+                    AND tipo_domicilio IN ('P', 'TA') AND punto IS NOT NULL
         )
         SELECT bool_and(EXISTS (
             SELECT 1
