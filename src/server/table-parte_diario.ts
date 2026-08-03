@@ -84,12 +84,12 @@ export function parte_diario(context: TableContext): TableDefinition {
         name: "parte_diario",
         elementName: "parte_diario",
         fields: [
+            { name: 'fecha'   , typeName: 'date' },
             idper,
             { name: 'ficha'   , typeName: 'text' , title: 'ficha'},
             { name: 'cuil'    , typeName: 'text' },
             { name: 'apellido', typeName: 'text'},
             { name: 'nombres' , typeName: 'text'},
-            { name: 'fecha'  , typeName: 'date' },
             sector,
             { name: 'sector_nombre', typeName: 'text', title: 'sector departamento área' },        // <-- AGREGADO
             cod_nov,
@@ -108,7 +108,7 @@ export function parte_diario(context: TableContext): TableDefinition {
             ...(context.be.config.siper?.puntos_compatibles ? [{ name: 'puntos_compatibles', typeName: 'boolean', description: 'posee puntos compatibles en entrada y salida'}] : [] ) as FieldDefinition[],
             { name: 'activo', typeName: 'boolean'},
         ],
-        primaryKey: [idper.name, 'fecha', cod_nov.name],
+        primaryKey: [idper.name, 'fecha'],
         hiddenColumns: [],
         constraints: [
         ],

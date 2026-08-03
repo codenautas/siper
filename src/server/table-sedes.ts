@@ -17,7 +17,7 @@ export function sedes(context:TableContext):TableDefinition{
             sede,
             {name: 'descripcion'      ,typeName:'text'   },
             {name: 'para_presencial'  ,typeName:'boolean'},
-            {name: 'punto'            ,typeName:'point'  , editable:false},
+            {name: 'punto'            ,typeName:'point'  },
         ],
         primaryKey: ['sede'],
         constraints: [
