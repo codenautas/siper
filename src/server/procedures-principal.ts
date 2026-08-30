@@ -187,7 +187,6 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     FROM (${sqlNovPer({idper, annio, annioAbierto:true})}) x
                     WHERE error_saldo_negativo OR error_falta_entrada OR (detalle_multiorigen ->> 'error' IS NOT NULL)
             `
-            await fs.writeFile('local-guardar.sql', sqlInconsistencias, 'utf-8')
             var inconsistencias = await context.client.query(sqlInconsistencias, []).fetchAll();
             if (inconsistencias.rows.length > 0) {
                 const erroresSaldoNegativo = inconsistencias.rows.filter(r => r.error_saldo_negativo);

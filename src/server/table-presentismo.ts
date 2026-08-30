@@ -31,11 +31,13 @@ export function presentismo(context: TableContext): TableDefinition {
             { name: "tiene_injustificados"      , typeName: "boolean"   },
             { name: "bajo_umbral_horas"         , typeName: "boolean"   },
             { name: "con_problemas"             , typeName: "boolean"   },
+            { name: 'incidencias_horas'         , typeName: 'integer'},
+            { name: 'incidencias'               , typeName: 'integer'},
             { name: "tiene_interes"             , typeName: "boolean"   },
         ],
         primaryKey: [idper.name],
         softForeignKeys: [
-            { references: "personas", fields: [idper.name], displayFields: ["apellido", "nombres"] },
+            { references: "personas", fields: [idper.name], displayFields: ["cuil", "apellido", "nombres"] },
             { references: "sectores", fields: [sector.name] },
         ],
         sql: {

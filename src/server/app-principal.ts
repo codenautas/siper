@@ -430,7 +430,7 @@ export class AppSiper extends AppBackend{
     completeContext(context:Context){
         var es = context.es ?? {} as Context["es"]
         es.admin = context.user && context.user.rol=="admin"
-        es.superior = es.admin || context.user && (context.user.rol=="superior" || context.user.rol=="superior")
+        es.superior = es.admin || context.user && context.user.rol=="superior"
         es.rrhh = es.superior || context.user && context.user.rol=="rrhh" 
         es.registra = es.rrhh || context.user && context.user.rol=="registra"
         context.es = es;

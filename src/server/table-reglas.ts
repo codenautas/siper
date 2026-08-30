@@ -16,7 +16,7 @@ export function reglas(_context: TableContext): TableDefinition{
             {name: 'umbral_horas_mensuales',            typeName: 'integer' },
             {name: 'umbral_horas_diarias',              typeName: 'integer' },
             {name: 'umbral_horas_semanales',            typeName: 'integer' },
-            {name: 'umbral_horas_personales',           typeName: 'integer' },
+            {name: 'umbral_horas_personales',           typeName: 'integer' , nullable:false},
             {name: 'horario_consolidado',               typeName: 'time'    },
             {name: 'minimas_horas_diarias_declaradas',  typeName: 'integer' },
             {name: 'maximas_horas_diarias_declaradas',  typeName: 'integer' },

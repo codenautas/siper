@@ -31,14 +31,14 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "type-store": "^0.6.0",
-    "xlsx-now": "^0.1.8"
+    "xlsx-now": "^0.2.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/fs-extra": "^11.0.4",
     "@types/mocha": "^10.0.10",
     "@types/mssql": "^12.3.0",
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.2.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "eslint": "^9.39.2",

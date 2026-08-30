@@ -61,7 +61,12 @@ export const sqlParteDiarioExtendido = (context:Context) => sqlParteDiarioBase(s
 const SUMA_HORAS = `sum(horas)`;
 const HORAS_ESPERADAS = `(sum(cant_horas_esperadas) FILTER (WHERE horas is not null) || ' hours')::interval`;
 const SALDO_HORAS = `${SUMA_HORAS} - ${HORAS_ESPERADAS}`
-const BAJO_UMBRAL_HORAS = `(${SALDO_HORAS} < '-7 hours'::interval) is true`
+const PORCENTAHE_HORAS = `CASE WHEN EXTRACT(EPOCH FROM ${HORAS_ESPERADAS})/3600 >= 1 THEN EXTRACT(EPOCH FROM ${SUMA_HORAS}) / EXTRACT(EPOCH FROM ${HORAS_ESPERADAS}) ELSE NULL END`;
+const INCIDENCIAS_HORAS = `case when ${PORCENTAHE_HORAS} < nullif(split_part(max(incidencias_por_hora),',',1),'')::numeric then 1 end +  
+        case when ${PORCENTAHE_HORAS} < nullif(split_part(max(incidencias_por_hora),',',2),'')::numeric then 1 end +  
+        case when ${PORCENTAHE_HORAS} < nullif(split_part(max(incidencias_por_hora),',',3),'')::numeric then 1 end +  
+        case when ${PORCENTAHE_HORAS} < nullif(split_part(max(incidencias_por_hora),',',4),'')::numeric then 1 end`
+const BAJO_UMBRAL_HORAS = `(${SALDO_HORAS} < ('-'||avg(umbral_horas_personales)||' hours')::interval) is true`
 export const sqlParteDiarioAgrupado = (context:Context) => `count(*) as dias_mes,
         count(*) FILTER (WHERE es_laborable) as laborables,
         count(horas) as dias_promediados,
@@ -74,8 +79,11 @@ export const sqlParteDiarioAgrupado = (context:Context) => `count(*) as dias_mes
         count(injustificado) > 0 as tiene_injustificados,
         ${BAJO_UMBRAL_HORAS} as bajo_umbral_horas,
         (${BAJO_UMBRAL_HORAS} OR count(injustificado) > 0) is true as con_problemas,
+        ${INCIDENCIAS_HORAS} AS incidencias_horas,
+        ${INCIDENCIAS_HORAS} + count(injustificado) as incidencias,
         (${BAJO_UMBRAL_HORAS} OR count(injustificado) > 0 OR ${SUMA_HORAS} > '0 hours'::interval OR ${HORAS_ESPERADAS} > '0 hours'::interval) is true as tiene_interes
-    FROM (${sqlParteDiario(context)}) inner join parametros on true
+        FROM (${sqlParteDiario(context)}) inner join parametros on true
+            inner join reglas using (annio)
     WHERE fecha BETWEEN $1 AND $1::date + interval '1 month' - interval '1 day'`
 
 // Función genérica para la configuración base de las tablas
