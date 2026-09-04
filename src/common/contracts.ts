@@ -977,6 +977,17 @@ export const niveles_educativos = {
 
 export type NivelesEducativos = DefinedType<typeof niveles_educativos.description>
 
+export const modalidades_trabajo = {
+    table : 'modalidades_trabajo',
+    description : is.object({
+        modalidad_trabajo: is.string,
+        descripcion: is.string,
+    })
+}
+
+export type ModalidadesTabajo = DefinedType<typeof modalidades_trabajo.description>
+
+
 export const per_telefonos = {
     table: 'per_telefonos',
     description: is.object({
