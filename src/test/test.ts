@@ -28,7 +28,7 @@ const VERBOSE = process.argv.includes('--verbose');
 
 type TIME = string;
 
-const TIME_SIMPLERANGE = (desde:TIME, hasta:TIME) => `${desde == null ? '(' : '[' + desde},${hasta == null ? '' : hasta})`
+const TIME_SIMPLERANGE = (desde:TIME, hasta:TIME) => `${desde == null ? '(' : '(' + desde},${hasta == null ? '' : hasta})`
 
 function TIME_RANGE():string
 function TIME_RANGE(desde:TIME, hasta:TIME):string
@@ -183,6 +183,8 @@ const CALENDARIO_PERSONA_RESUMEN0 = {
     con_problemas: false,
     dias_injustificados: 0,
     tiene_injustificados: false,
+    incidencias: null,
+    incidencias_horas: null,                        
     tiene_interes: true
 } as Partial<ctts.Presentismo>
 
@@ -1245,8 +1247,8 @@ describe("SiPer: " + testConfig.name, function(){
             it("las fichadas se redondean al minuto para arriba y para abajo", async function(){
                 await enNuevaPersona(this.test?.title!, {usuario:{sesion:false}}, async ({idper}, {usuario}) => {
                     const fecha = FECHA_ACTUAL;
-                    const desde = '08:03:00';
-                    const hasta = '15:03:00';
+                    const desde = '08:03:52';
+                    const hasta = '15:02:10';
                     await registrarFichada(server, {idper: usuario.usuario, fecha, hora: '08:03:52', tipo_fichada:'E'}, 'fichadas_recibidas');
                     await registrarFichada(server, {idper: usuario.usuario, fecha, hora: '15:02:10', tipo_fichada:'S'}, 'fichadas_recibidas');
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta)})
