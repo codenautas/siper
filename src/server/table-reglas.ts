@@ -21,6 +21,7 @@ export function reglas(_context: TableContext): TableDefinition{
             {name: 'minimas_horas_diarias_declaradas',  typeName: 'integer' },
             {name: 'maximas_horas_diarias_declaradas',  typeName: 'integer' },
             {name: 'tolerancia_consolidacion',          typeName: 'integer' },
+            {name: 'incidencias_por_hora',              typeName: 'text'    },
         ],         
         primaryKey: [annio.name],
         foreignKeys: [],

@@ -558,7 +558,8 @@ export const per_cant_multiorigen = {
     procedure: 'per_cant_multiorigen',
     parameters: is.object({
         idper: is.string,
-        annio: is.number
+        annio: is.number,
+        mes: is.number
     }),
     result: is.object({
         detalle: is.array.object({

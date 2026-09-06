@@ -767,17 +767,21 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     {
         parameters: [
             {name:'idper'       , typeName:'text'    , references: 'personas'},
-            {name:'annio'       , typeName:'integer' }
+            {name:'annio'       , typeName:'integer' },
+            {name:'mes'         , typeName:'integer' }
         ],
         action: 'per_cant_multiorigen',
         coreFunction: async function (context:ProcedureContext, parameters:any) {
-            const {idper, annio} = parameters;
+            const {idper, annio, mes} = parameters;
             const result = await context.client.query(`
                 select * 
                     from (${sqlNovPer({idper, annio, annioAbierto:true})}) x
                     where cod_nov = '1'
             `).fetchAll();
-            return result.rows?.[0]?.detalle_multiorigen ?? {detalle:[]};
+            var detalle = result.rows?.[0]?.detalle_multiorigen?.detalle?.map(
+                (row:{vencimiento:string|null}) => ({...row, vencimiento: row.vencimiento && date.iso(row.vencimiento) })
+            ).filter(({vencimiento}:{vencimiento:Date}) => vencimiento == null || vencimiento >= date.ymd(annio, mes, 1)) ?? [];
+            return {detalle};
         }
     },
     {

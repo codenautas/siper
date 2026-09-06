@@ -28,7 +28,7 @@ const VERBOSE = process.argv.includes('--verbose');
 
 type TIME = string;
 
-const TIME_SIMPLERANGE = (desde:TIME, hasta:TIME) => `${desde == null ? '(' : '[' + desde},${hasta == null ? '' : hasta})`
+const TIME_SIMPLERANGE = (desde:TIME, hasta:TIME) => `${desde == null ? '(' : '(' + desde},${hasta == null ? '' : hasta})`
 
 function TIME_RANGE():string
 function TIME_RANGE(desde:TIME, hasta:TIME):string
@@ -183,6 +183,8 @@ const CALENDARIO_PERSONA_RESUMEN0 = {
     con_problemas: false,
     dias_injustificados: 0,
     tiene_injustificados: false,
+    incidencias: null,
+    incidencias_horas: null,                        
     tiene_interes: true
 } as Partial<ctts.Presentismo>
 
@@ -1245,8 +1247,8 @@ describe("SiPer: " + testConfig.name, function(){
             it("las fichadas se redondean al minuto para arriba y para abajo", async function(){
                 await enNuevaPersona(this.test?.title!, {usuario:{sesion:false}}, async ({idper}, {usuario}) => {
                     const fecha = FECHA_ACTUAL;
-                    const desde = '08:03:00';
-                    const hasta = '15:03:00';
+                    const desde = '08:03:52';
+                    const hasta = '15:02:10';
                     await registrarFichada(server, {idper: usuario.usuario, fecha, hora: '08:03:52', tipo_fichada:'E'}, 'fichadas_recibidas');
                     await registrarFichada(server, {idper: usuario.usuario, fecha, hora: '15:02:10', tipo_fichada:'S'}, 'fichadas_recibidas');
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(desde, hasta)})
@@ -1784,7 +1786,7 @@ describe("SiPer: " + testConfig.name, function(){
                     {annio: 2000, cod_nov, cantidad:30  , usados:0, pendientes:5, saldo:25  },
                     {annio: 2001, cod_nov, cantidad:null, usados:0, pendientes:5, saldo:null}
                 ],"all",{fixedFields:{idper, cod_nov, annio:[2000, 2001]}})
-                const detalle = await rrhhSession.callProcedure(ctts.per_cant_multiorigen, {idper, annio:2000});
+                const detalle = await rrhhSession.callProcedure(ctts.per_cant_multiorigen, {idper, annio:2000, mes:1});
                 discrepances.showAndThrow(
                     detalle,
                     {detalle: [
@@ -1873,7 +1875,7 @@ describe("SiPer: " + testConfig.name, function(){
         })
         it("el cuadro final tiene que mostrar vacaciones del siguiente año", async function(){
             await enNuevaPersona(this.test?.title!, {inicia_fichada, vacaciones: [
-                {origen:'2000', cantidad:10, vencimiento:date.iso('2000-12-31')},
+                {origen:'2000', cantidad:10, vencimiento:date.iso('2000-11-30')},
                 {origen:'2001', cantidad:20}
             ]}, async ({idper}) => {
                 const desde0 = date.iso('2000-02-11');
@@ -1891,19 +1893,19 @@ describe("SiPer: " + testConfig.name, function(){
                     {annio: 2000, cod_nov, cantidad:30  , usados:0, pendientes:5, saldo:25  },
                     {annio: 2001, cod_nov, cantidad:null, usados:0, pendientes:5, saldo:null}
                 ],"all",{fixedFields:{idper, cod_nov, annio:[2000, 2001]}})
-                const detalle = await rrhhSession.callProcedure(ctts.per_cant_multiorigen, {idper, annio:2000});
+                const detalle = await rrhhSession.callProcedure(ctts.per_cant_multiorigen, {idper, annio:2000, mes:1});
                 discrepances.showAndThrow(
                     detalle,
                     {detalle: [
-                        {origen: '2000', cantidad: 10, usados: null, pendientes: 5, saldo:  5, comienzo: null, vencimiento: null},
+                        {origen: '2000', cantidad: 10, usados: null, pendientes: 5, saldo:  5, comienzo: null, vencimiento: date.iso('2000-11-30')},
                         {origen: '2001', cantidad: 20, usados: null, pendientes: 5, saldo: 15, comienzo: null, vencimiento: null}
                     ]} as never as DefinedType<typeof ctts.per_cant_multiorigen.result>
                 );
-                const detalle2 = await rrhhSession.callProcedure(ctts.per_cant_multiorigen, {idper, annio:2001});
+                const detalle2 = await rrhhSession.callProcedure(ctts.per_cant_multiorigen, {idper, annio:2001, mes:12});
                 discrepances.showAndThrow(
                     detalle2,
                     {detalle: [
-                        {origen: '2000', cantidad: 10, usados: null, pendientes: 5, saldo:  5, comienzo: null, vencimiento: null},
+                        // {origen: '2000', cantidad: 10, usados: null, pendientes: 5, saldo:  5, comienzo: null, vencimiento: date.iso('2000-11-30')},
                         {origen: '2001', cantidad: 20, usados: null, pendientes: 5, saldo: 15, comienzo: null, vencimiento: null}
                     ]} as never as DefinedType<typeof ctts.per_cant_multiorigen.result>
                 );

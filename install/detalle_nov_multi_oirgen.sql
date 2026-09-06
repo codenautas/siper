@@ -47,6 +47,7 @@ BEGIN
       v_renglon.origen := v_esquema.origen;
       v_renglon.usados := null;
       v_renglon.pendientes := null;
+      v_renglon.vencimiento := v_esquema.vencimiento;
       WHILE CASE WHEN i > ARRAY_LENGTH(p_fechas, 1) OR p_fechas is null THEN FALSE 
         ELSE v_renglon.saldo > 0 AND (v_esquema.vencimiento IS NULL OR p_fechas[i] <= v_esquema.vencimiento) END 
       LOOP
@@ -85,28 +86,36 @@ END;
 $BODY$;
 
 /* CASOS DE PRUEBA
-select esperado = detalle_nov_multiorigen(d.fechas, d.esquema) as ok, detalle_nov_multiorigen(d.fechas, d.esquema), esperado
+
+select caso, esperado = detalle_nov_multiorigen(d.fechas, d.esquema) as ok, detalle_nov_multiorigen(d.fechas, d.esquema), esperado
   FROM (
       VALUES (
+          1,
           array['2021-01-03'::date, '2021-01-04'::date], 
           '{"2021":{"cantidad": 20}, "2022":{"cantidad": 30}}', 
           '{"detalle": [{"saldo": 18, "origen": "2021", "usados": null, "cantidad": 20, "comienzo": null, "pendientes": 2, "vencimiento": null}, {"saldo": 30, "origen": "2022", "usados": null, "cantidad": 30, "comienzo": null, "pendientes": null, "vencimiento": null}]}'
          ), (
+          2,
           array['2021-01-03'::date, '2021-02-02'::date, '2021-02-02'::date], 
           '{"2021":{"cantidad": 20, "comienzo": "2021-01-01","vencimiento":"2021-01-31"}, "2022":{"cantidad": 30, "comienzo": "2021-02-01","vencimiento":"2021-02-28"}}', 
-          '{"detalle": [{"saldo": 19, "origen": "2021", "usados": null, "cantidad": 20, "comienzo": null, "pendientes": 1, "vencimiento": null}, {"saldo": 28, "origen": "2022", "usados": null, "cantidad": 30, "comienzo": null, "pendientes": 2, "vencimiento": null}]}'
+          '{"detalle": [{"saldo": 19, "origen": "2021", "usados": null, "cantidad": 20, "comienzo": null, "pendientes": 1, "vencimiento": "2021-01-31"}, {"saldo": 28, "origen": "2022", "usados": null, "cantidad": 30, "comienzo": null, "pendientes": 2, "vencimiento": "2021-02-28"}]}'
          ), (
+          3,
           array['2021-01-03'::date, '2021-02-02'::date, '2021-03-02'::date, '2021-04-02'::date], 
           '{"2021":{"cantidad": 20, "comienzo": "2021-01-01","vencimiento":"2021-01-31"}, "2022":{"cantidad": 30, "comienzo": "2021-03-01","vencimiento":"2021-03-31"}}', 
-          '{"error": ["inconsistencia 1 fecha(s) en brecha agotada", "inconsistencia 1 fecha(s) pasado el limite"], "detalle": [{"saldo": 19, "origen": "2021", "usados": null, "cantidad": 20, "comienzo": null, "pendientes": 1, "vencimiento": null}, {"saldo": 29, "origen": "2022", "usados": null, "cantidad": 30, "comienzo": null, "pendientes": 1, "vencimiento": null}]}'
+          '{"error": ["inconsistencia 1 fecha(s) en brecha agotada", "inconsistencia 1 fecha(s) pasado el limite"], "detalle": [{"saldo": 19, "origen": "2021", "usados": null, "cantidad": 20, "comienzo": null, "pendientes": 1, "vencimiento": "2021-01-31"}, {"saldo": 29, "origen": "2022", "usados": null, "cantidad": 30, "comienzo": null, "pendientes": 1, "vencimiento": "2021-03-31"}]}'
          ), (
+          4,
           array['2021-01-03'::date, '2021-03-01'::date, '2021-03-02'::date, '2021-03-03'::date], 
           '{"2021":{"cantidad": 2, "vencimiento":"2021-01-31"}, "2022":{"cantidad": 2}}', 
-          '{"error": ["inconsistencia 1 fecha(s) pasado el limite"], "detalle": [{"saldo": 1, "origen": "2021", "usados": null, "cantidad": 2, "comienzo": null, "pendientes": 1, "vencimiento": null}, {"saldo": 0, "origen": "2022", "usados": null, "cantidad": 2, "comienzo": null, "pendientes": 2, "vencimiento": null}]}'
+          '{"error": ["inconsistencia 1 fecha(s) pasado el limite"], "detalle": [{"saldo": 1, "origen": "2021", "usados": null, "cantidad": 2, "comienzo": null, "pendientes": 1, "vencimiento": "2021-01-31"}, {"saldo": 0, "origen": "2022", "usados": null, "cantidad": 2, "comienzo": null, "pendientes": 2, "vencimiento": null}]}'
          ), (
+          5,
           null, 
           '{"2021":{"cantidad": 2, "vencimiento":"2021-01-31"}, "2022":{"cantidad": 2}}', 
-          '{"detalle": [{"saldo": 2, "origen": "2021", "usados": null, "cantidad": 2, "comienzo": null, "pendientes": null, "vencimiento": null}, {"saldo": 2, "origen": "2022", "usados": null, "cantidad": 2, "comienzo": null, "pendientes": null, "vencimiento": null}]}'
+          '{"detalle": [{"saldo": 2, "origen": "2021", "usados": null, "cantidad": 2, "comienzo": null, "pendientes": null, "vencimiento": "2021-01-31"}, {"saldo": 2, "origen": "2022", "usados": null, "cantidad": 2, "comienzo": null, "pendientes": null, "vencimiento": null}]}'
          )
-    ) as d (fechas, esquema, esperado);
+    ) as d (caso, fechas, esquema, esperado)
+    order by caso;
+    
 -- */
