@@ -144,12 +144,12 @@ function CalendarioResumen(props:{conn:Connector, idper:string, periodo:Periodo}
 function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaHasta?: RealDate, fechaActual: RealDate, 
     annio:number, infoUsuario:InfoUsuario
     onFecha?: (fecha: RealDate) => void, onFechaHasta?: (fechaHasta: RealDate) => void, ultimaNovedad?: ULTIMA_NOVEDAD
-    onAnnio?: (annio:number) => void
+    onAnnio?: (annio:number, mes:number) => void
 }){
     const {conn, fecha, fechaHasta, idper, ultimaNovedad, fechaActual, annio, infoUsuario} = props;
     const [annios, setAnnios] = useState<Annio[]>([]);
     const [mes, setMes] = useState(fecha.getMonth()+1);
-    const [periodo, setPeriodo] = [{mes, annio}, (x:Periodo) => {setCalendario(setEfimero); setMes(x.mes); props.onAnnio?.(x.annio);}]
+    const [periodo, setPeriodo] = [{mes, annio}, (x:Periodo) => {setCalendario(setEfimero); setMes(x.mes); props.onAnnio?.(x.annio, x.mes);}]
     const retrocederUnMes = ({mes: (mes == 1 ? 12 : mes - 1), annio: (annio - (mes == 1  ? 1 : 0 ))})
     const avanzarUnMes    = ({mes: (mes == 12 ? 1 : mes + 1), annio: (annio + (mes == 12 ? 1 : 0 ))})
     const [calendario, setCalendario] = useState<CalendarioResult[][]>([]);
@@ -788,7 +788,7 @@ declare module "frontend-plus" {
         parametros: (params:object) => Promise<ParametrosResult>;
         registrar_novedad: (params:NovedadRegistrada) => Promise<NovedadRegistrada & { idr: number }>;
         fichada_registrar:(params:{fichada:FichadaData}) => Promise<RegistroFichadaResponse>
-        per_cant_multiorigen: (params: {annio: number,idper: string}) => Promise<ProvisorioDetalleNovPer>
+        per_cant_multiorigen: (params: {annio: number,mes:number,idper: string}) => Promise<ProvisorioDetalleNovPer>
     }
     interface Connector {
         config: AppConfigClientSetup
@@ -1040,6 +1040,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     const {idper} = persona
     const [ultimaNovedad, setUltimaNovedad] = useState(0);
     const [annio, setAnnio] = useState((defaults.fecha ?? date.today()).getFullYear());
+    const [mes, setMes] = useState((defaults.fecha ?? date.today()).getMonth()+1);
     const [fechaActual, setFechaActual] =  useState<RealDate>(date.today()); // corresponde today, es un default provisorio
     const [detalleVacacionesPersona, setDetalleVacacionesPersona] = useState<ProvisorioDetalleNovPer>(DETALLE_VACIO)
     const [mostrandoLegajo, setMostrandoLegajo] = useState(false);
@@ -1079,7 +1080,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
     useEffect(() => {
         if (idper) {
             setDetalleVacacionesPersona(setEfimero)
-            conn.ajax.per_cant_multiorigen({annio, idper}).then(function(detalle){
+            conn.ajax.per_cant_multiorigen({annio, mes, idper}).then(function(detalle){
                 if (detalle){
                     setDetalleVacacionesPersona(detalle);
                 }else{
@@ -1087,7 +1088,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                 }
             }).catch(logError)
         }
-    }, [idper, annio, ultimaNovedad]);
+    }, [idper, annio, mes, ultimaNovedad]);
     function registrarNovedad(){
         setGuardandoRegistroNovedad(true);
         conn.ajax.registrar_novedad({
@@ -1194,7 +1195,7 @@ function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
                 </Box> }
                 {mostrandoLegajo && (<LegajoPer conn={props.conn} idper={persona.idper}/>)}
                 <Calendario conn={conn} idper={idper} fecha={fecha} fechaHasta={hasta} onFecha={setFecha} onFechaHasta={setHasta} ultimaNovedad={ultimaNovedad}
-                    fechaActual={fechaActual!} annio={annio} onAnnio={setAnnio} infoUsuario={infoUsuario}
+                    fechaActual={fechaActual!} annio={annio} onAnnio={(annio,mes) => {setAnnio(annio); setMes(mes)}} infoUsuario={infoUsuario}
                 />
                 {/* <Calendario conn={conn} idper={idper} fecha={hasta} onFecha={setHasta}/> */}
                 {cod_nov && idper && fecha && hasta && !guardandoRegistroNovedad && !registrandoNovedad && persona.cargable && puede_cargar_novedades && (fecha >= fechaActual || infoUsuario.puede_corregir_el_pasado) ? <Box key="setSiCargaraNovedad">
