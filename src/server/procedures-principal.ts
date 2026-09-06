@@ -777,7 +777,10 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                     from (${sqlNovPer({idper, annio, annioAbierto:true})}) x
                     where cod_nov = '1'
             `).fetchAll();
-            return result.rows?.[0]?.detalle_multiorigen ?? {detalle:[]};
+            var detalle = result.rows?.[0]?.detalle_multiorigen?.detalle?.map(
+                (row:{vencimiento:string|null}) => ({...row, vencimiento: row.vencimiento && date.iso(row.vencimiento) })
+            ) ?? [];
+            return {detalle};
         }
     },
     {

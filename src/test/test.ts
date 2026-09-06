@@ -1897,7 +1897,7 @@ describe("SiPer: " + testConfig.name, function(){
                 discrepances.showAndThrow(
                     detalle,
                     {detalle: [
-                        {origen: '2000', cantidad: 10, usados: null, pendientes: 5, saldo:  5, comienzo: null, vencimiento: null},
+                        {origen: '2000', cantidad: 10, usados: null, pendientes: 5, saldo:  5, comienzo: null, vencimiento: date.iso('2000-12-31')},
                         {origen: '2001', cantidad: 20, usados: null, pendientes: 5, saldo: 15, comienzo: null, vencimiento: null}
                     ]} as never as DefinedType<typeof ctts.per_cant_multiorigen.result>
                 );
@@ -1905,7 +1905,7 @@ describe("SiPer: " + testConfig.name, function(){
                 discrepances.showAndThrow(
                     detalle2,
                     {detalle: [
-                        {origen: '2000', cantidad: 10, usados: null, pendientes: 5, saldo:  5, comienzo: null, vencimiento: null},
+                        {origen: '2000', cantidad: 10, usados: null, pendientes: 5, saldo:  5, comienzo: null, vencimiento: date.iso('2000-12-31')},
                         {origen: '2001', cantidad: 20, usados: null, pendientes: 5, saldo: 15, comienzo: null, vencimiento: null}
                     ]} as never as DefinedType<typeof ctts.per_cant_multiorigen.result>
                 );
