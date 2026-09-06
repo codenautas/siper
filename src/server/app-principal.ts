@@ -80,7 +80,8 @@ import { reglas                  } from "./table-reglas";
 import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
 import { sinc_fichadores, ESTADOS} from "./table-sinc_fichadores"
 import { comunas_partidos        } from "./table-comunas_partidos";
-import { presentismo             } from "./table-presentismo"
+import { presentismo             } from "./table-presentismo";
+import { modalidades_trabajo     } from "./table-modalidades_trabajo";
 
 import { consolidarFichadas, ejecutarSP, ProceduresPrincipal } from './procedures-principal'
 import * as sql from 'mssql';
@@ -500,6 +501,7 @@ export class AppSiper extends AppBackend{
                             {menuType:'table', name:'perfiles_sgc'     },
                             {menuType:'table', name:'bandas_horarias'  },
                             {menuType:'table', name:'niveles_educativos'},
+                            {menuType:'table', name:'modalidades_trabajo'  },
                         ]},
                         {menuType:'table', name:'cod_novedades' },
                         {menuType:'table', name:'usuarios'      },
@@ -560,6 +562,7 @@ export class AppSiper extends AppBackend{
                                 {menuType:'table', name:'tareas'           },
                                 {menuType:'table', name:'perfiles_sgc'     },
                                 {menuType:'table', name:'bandas_horarias'  },
+                                {menuType:'table', name:'modalidades_trabajo'  },
                             ]},
                             {menuType:'table', name:'cod_novedades' },
                             {menuType:'table', name:'usuarios'      },
@@ -691,6 +694,7 @@ export class AppSiper extends AppBackend{
             avisos_falta_fichada ,   
             sinc_fichadores      ,
             presentismo          ,
+            modalidades_trabajo  ,
         }
     }       
 }
