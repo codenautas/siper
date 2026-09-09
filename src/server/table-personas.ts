@@ -10,6 +10,7 @@ import {sector} from "./table-sectores";
 import { max_nivel_ed, nivel_educativo } from "./table-niveles_educativos";
 import { horario } from "./table-horarios_cod"
 import { modalidad_trabajo } from "./table-modalidades_trabajo";
+import { cod_sede} from "./table-sedes";
 
 
 import { politicaNovedades } from "./table-novedades_registradas";
@@ -87,7 +88,8 @@ export function personas(context: TableContext): TableDefinition {
             {...horario, inTable:false},
             {...banda_horaria                , title: 'banda horaria'},
             {name: 'inicia_fichada'          , typeName: 'date', title: 'inicia fichada', editable:es.admin},
-            modalidad_trabajo
+            modalidad_trabajo,
+            cod_sede,
         ],
         primaryKey: [idper.name],
         foreignKeys: [
@@ -99,6 +101,7 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'perfiles_sgc'       , fields:[perfil_sgc.name]   },
             {references: 'niveles_educativos' , fields:[{source:'max_nivel_ed',target:nivel_educativo.name}] },
             {references: 'modalidades_trabajo', fields:['modalidad_trabajo']},
+            {references: 'sedes', fields:['cod_sede']},
         ],
         softForeignKeys: [
             {references: 'jerarquias'      , fields:['jerarquia']     },
