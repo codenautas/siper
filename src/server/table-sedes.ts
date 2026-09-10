@@ -27,7 +27,7 @@ export function sedes(context:TableContext):TableDefinition{
             {name: 'para_presencial'  ,typeName:'boolean'},
             {name: 'punto'            ,typeName:'point'  },
         ],
-        primaryKey: ['id_punto'],
+        primaryKey: [id_punto.name],
         constraints: [
             {constraintType:'unique', fields:[cod_sede.name]},
             soloCodigo(id_punto.name)
