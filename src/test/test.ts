@@ -271,7 +271,7 @@ describe("SiPer: " + testConfig.name, function(){
                         `delete from annios where ${AÑOS_DE_PRUEBA}`,
                         `delete from cod_novedades where novedad like 'PRUEBA AUTOM_TICA%'`,
                         `delete from sectores where nombre_sector like 'PRUEBA AUTOM_TICA%'`,
-                        `delete from sedes where sede like 'TEST%'`,
+                        `delete from sedes where cod_sede like 'TEST%'`,
                         `update cod_novedades set sr_grupo = 'CONT' where cod_nov = '${COD_COMISION}'`,
                         `select annio_preparar(d) from generate_series(${PRE_AÑO}, ${HASTA_AÑO}) d`,
                         `update fechas set laborable = false, repite = false, inamovible = false, leyenda = 'feriado '||fecha where fecha in (
@@ -289,7 +289,7 @@ describe("SiPer: " + testConfig.name, function(){
                         `update annios set horario_habitual_desde = '10:00', horario_habitual_hasta = '17:00' where annio = '${DESDE_AÑO}'`,
                         `select annio_abrir('${DESDE_AÑO}')`,
                         `update parametros set fecha_hora_para_test = '${FECHA_ACTUAL.toYmd()} 10:00', cod_nov_habitual = '${COD_PRED_PAS}', cant_horas_diarias = 7 where unico_registro`,
-                        `insert into sedes (sede, para_presencial, punto) values ('TEST1', true, '(-58.3816,-34.6037)'), ('TEST2', true, '(-58.446,-34.607)')`,
+                        `insert into sedes (id_punto, cod_sede, para_presencial, punto) values ('TP1','TEST1', true, '(-58.3816,-34.6037)'), ('TP2','TEST2', true, '(-58.446,-34.607)')`,
                         `insert into sectores (subsector, nombre_sector, pertenece_a, nivel, tipo_sec) values
                             ('Z', 'PRUEBA AUTOMATICA Z'      , null , 0, 'DE'),
                             ('${SECTOR}', 'PRUEBA AUTOMATICA ${SECTOR}', 'Z' , 1, 'DG'),
