@@ -13,6 +13,7 @@ import { fechas                  } from './table-fechas';
 import { clases                  } from './table-clases';
 import { grupos                  } from './table-grupos';
 import { sedes                   } from './table-sedes';
+import { sedes_laborales         } from './table-sedes_laborales';
 import { situacion_revista       } from './table-situacion_revista';
 import { tipos_sec               } from "./table-tipos_sec";
 import { sectores, sectores_edit } from './table-sectores';
@@ -634,6 +635,7 @@ export class AppSiper extends AppBackend{
             clases               ,
             grupos               ,
             sedes                ,
+            sedes_laborales      ,
             situacion_revista    ,
             personas             ,
             per_gru              ,

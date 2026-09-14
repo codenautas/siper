@@ -11,6 +11,7 @@ export const cod_sede:FieldDefinition = {
     name: 'cod_sede', 
     typeName: 'text',
     title: 'cod_sede',
+    isName: true
 }
 
 export function sedes(context:TableContext):TableDefinition{
