@@ -81,6 +81,7 @@ import { avisos_falta_fichada    } from "./table-avisos_falta_fichada";
 import { sinc_fichadores, ESTADOS} from "./table-sinc_fichadores"
 import { comunas_partidos        } from "./table-comunas_partidos";
 import { presentismo             } from "./table-presentismo";
+import { semestral               } from "./table-semestral";
 import { modalidades_trabajo     } from "./table-modalidades_trabajo";
 
 import { consolidarFichadas, ejecutarSP, ProceduresPrincipal } from './procedures-principal'
@@ -694,6 +695,7 @@ export class AppSiper extends AppBackend{
             avisos_falta_fichada ,   
             sinc_fichadores      ,
             presentismo          ,
+            semestral            ,
             modalidades_trabajo  ,
         }
     }       
