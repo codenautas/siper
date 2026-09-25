@@ -1159,6 +1159,8 @@ describe("SiPer: " + testConfig.name, function(){
                         dias_promediados: 0,
                         laborables: 21,
                         tiene_interes: false,
+                        incidencias: 0,
+                        incidencias_horas: 0,
                     }  as unknown as typeof result;
                     assert.deepEqual(result, esperado);
                 })
@@ -1181,6 +1183,8 @@ describe("SiPer: " + testConfig.name, function(){
                             promedio_horas:  timeInterval({hours:6}),
                             horas_esperadas: timeInterval({hours:7}),
                             promedio_esperado: timeInterval({hours:7}),
+                            incidencias: 0,
+                            incidencias_horas: 0,
                         }  as unknown as typeof resumen;
                         discrepances.showAndThrow(resumen, esperado);
                     })
@@ -1733,6 +1737,8 @@ describe("SiPer: " + testConfig.name, function(){
                         promedio_horas: timeInterval({hours:8}),
                         horas_esperadas: timeInterval({hours:13}),
                         promedio_esperado: timeInterval({hours:6.5}),
+                        incidencias: 0,
+                        incidencias_horas: 0,
                     } as typeof resumen;
                     discrepances.showAndThrow(resumen, esperado);
                 })
