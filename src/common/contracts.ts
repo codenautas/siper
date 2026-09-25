@@ -988,6 +988,19 @@ export const modalidades_trabajo = {
 
 export type ModalidadesTabajo = DefinedType<typeof modalidades_trabajo.description>
 
+export const sedes = {
+    table : 'sedes',
+    description : is.object({
+        id_punto: is.string,
+        cod_sede: is.string,
+        punto_alternativo: is.boolean,
+        descripcion: is.string,
+        para_presencial: is.boolean,
+    })
+}
+
+export type Sedes = DefinedType<typeof sedes.description>
+
 
 export const per_telefonos = {
     table: 'per_telefonos',
