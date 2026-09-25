@@ -13,6 +13,8 @@ ALTER TABLE siper.sedes
     RENAME COLUMN sede TO cod_sede;
 -- como no es pk le saco el NOT NULL que hereda de sede
 -- mas adelante preciso que sean NULL para el filtro de la softFK
+ALTER TABLE IF EXISTS siper.sedes DROP CONSTRAINT IF EXISTS sedes_pkey;
+
 ALTER TABLE siper.sedes
     ALTER COLUMN cod_sede DROP NOT NULL;
 ---------------
@@ -39,8 +41,8 @@ ALTER TABLE siper.sedes
 
 -- 4) Crear la PK
 -- 4).0 Borrar la PK
-ALTER TABLE siper.sedes
-    DROP CONSTRAINT sedes_pkey;
+--ALTER TABLE siper.sedes
+--    DROP CONSTRAINT sedes_pkey;
 -- 4).1
 ALTER TABLE siper.sedes
     ADD CONSTRAINT sedes_pkey PRIMARY KEY (id_punto);
