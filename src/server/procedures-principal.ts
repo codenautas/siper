@@ -220,8 +220,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         action: 'calendario_persona',
         parameters: [
             {name:'idper'      , typeName:'text'   },
-            {name:'annio'     , typeName:'integer'},
-            {name:'mes'       , typeName:'integer'},
+            {name:'annio'     , typeName:'integer' , specialDefaultValue:'current_year'},
+            {name:'mes'       , typeName:'integer' , specialDefaultValue:'current_month'},
         ],
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof calendario_persona.parameters>){
             const {idper, annio, mes} = params;
@@ -273,8 +273,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         action: 'calendario_persona_resumen',
         parameters: [
             {name:'idper'     , typeName:'text'   },
-            {name:'annio'     , typeName:'integer'},
-            {name:'mes'       , typeName:'integer'},
+            {name:'annio'     , typeName:'integer', specialDefaultValue:'current_year'},
+            {name:'mes'       , typeName:'integer', specialDefaultValue:'current_month'},
         ],
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof calendario_persona.parameters>){
             const {idper, annio, mes} = params;
@@ -290,8 +290,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         action: 'historico_persona',
         parameters: [
             {name:'idper'      , typeName:'text'   },
-            {name:'annio'     , typeName:'integer'},
-            {name:'mes'       , typeName:'integer'},
+            {name:'annio'     , typeName:'integer', specialDefaultValue:'current_year'},
+            {name:'mes'       , typeName:'integer', specialDefaultValue:'current_month'},
         ],
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof historico_persona.parameters>){
             const {idper, annio, mes} = params;
@@ -313,7 +313,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         action: 'novedades_disponibles',
         parameters: [
             {name:'idper'     , typeName:'text'   },
-            {name:'annio'     , typeName:'integer'},
+            {name:'annio'     , typeName:'integer', specialDefaultValue:'current_year'},
         ],
         coreFunction: async function(context: ProcedureContext, params:DefinedType<typeof novedades_disponibles.parameters>){
             const {idper} = params;
@@ -516,6 +516,21 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         }
     },
     {
+        action: 'incidencias_mensuales',
+        parameters: [
+            {name:'annio', typeName:'integer', label:'año', specialDefaultValue: 'current_year'},
+            {name:'mes'  , typeName:'integer', specialDefaultValue: 'current_month'}
+        ],
+        resultOk:'showGrid',
+        coreFunction: async function(_context: ProcedureContext, params:any){
+            return {
+                tableName:'incidencias_mensuales',
+                parameterFunctions:{annio: params.annio, mes: params.mes},
+                tableDef:{title:'Informe inciencias del mes '+params.mes+'/'+params.annio+' - Generado con información hasta '+datetime.now().toLocaleString(),}
+            };
+        }
+    },
+    {
         action: 'visor_de_fichadas',
         parameters: [
             {name:'fecha'  , typeName:'date', specialDefaultValue: 'current_date'},
@@ -547,7 +562,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     {
         action: 'descanso_anual_remunerado',
         parameters: [
-            {name:'annio'  , typeName:'integer', label: 'año', references: 'annios', defaultValue:date.today().getFullYear()},
+            {name:'annio'  , typeName:'integer', label: 'año', references: 'annios', specialDefaultValue:'current_year'},
             {name:'idper'  , typeName:'text', label:'persona', references: 'personas', defaultValue:null},
             {name:'sector'  , typeName:'text', label:'sector', references: 'sectores', defaultValue:null}
         ],
@@ -577,7 +592,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     {
         action: 'exportar_descanso_anual_remunerado',
         parameters: [
-            {name:'annio'  , typeName:'integer', label: 'año', references: 'annios', defaultValue:date.today().getFullYear()},
+            {name:'annio'  , typeName:'integer', label: 'año', references: 'annios', specialDefaultValue:'current_year'},
         ],
         forExport:{
             fileName:'descanso_anual_remunerado.xlsx',
@@ -856,8 +871,8 @@ export const ProceduresPrincipal:ProcedureDef[] = [
     {
         action: 'listado_presentismo',
         parameters: [
-            {name: 'annio'  , typeName: 'integer', label: 'año', references: 'annios', defaultValue: date.today().getFullYear()},
-            {name: 'mes'    , typeName: 'integer', defaultValue: date.today().getMonth() + 1},
+            {name: 'annio'  , typeName: 'integer', label: 'año', specialDefaultValue:'current_year'},
+            {name: 'mes'    , typeName: 'integer', specialDefaultValue:'current_month'},
         ],
         resultOk:'showGrid',
         coreFunction: async function (_context: ProcedureContext, parameters: any) {

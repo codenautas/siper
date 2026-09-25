@@ -82,6 +82,7 @@ import { sinc_fichadores, ESTADOS} from "./table-sinc_fichadores"
 import { comunas_partidos        } from "./table-comunas_partidos";
 import { presentismo             } from "./table-presentismo";
 import { semestral               } from "./table-semestral";
+import { incidencias_mensuales   } from "./table-incidencias_mensuales";
 import { modalidades_trabajo     } from "./table-modalidades_trabajo";
 
 import { consolidarFichadas, ejecutarSP, ProceduresPrincipal } from './procedures-principal'
@@ -463,6 +464,7 @@ export class AppSiper extends AppBackend{
                         {menuType:'proc', name:'parte_diario'},
                         {menuType:'proc', name:'listado_presentismo', label:'presentismo mes'},
                         {menuType:'proc', name:'informe_mensual'},
+                        ...(es.superior ? [{menuType:'proc', name:'incidencias_mensuales'}] : []),
                         {menuType:'proc', name:'descanso_anual_remunerado'},
                         {menuType:'proc', name:'exportar_descanso_anual_remunerado'},
                         // {menuType:'proc', name:'visor_de_fichadas'},
@@ -696,6 +698,7 @@ export class AppSiper extends AppBackend{
             sinc_fichadores      ,
             presentismo          ,
             semestral            ,
+            incidencias_mensuales,
             modalidades_trabajo  ,
         }
     }       

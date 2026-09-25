@@ -288,3 +288,8 @@ myOwn.clientSides.ejecutarSPModuloFichadas = {
         
     }
 }
+
+// @ts-ignore
+myOwn.specialDefaultValue.current_month = function(){ return myOwn.config.currentDate||date.today().getMonth()+1; }
+// @ts-ignore
+myOwn.specialDefaultValue.current_year = function(){ return myOwn.config.currentDate||date.today().getFullYear(); }
