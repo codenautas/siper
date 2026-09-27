@@ -1037,16 +1037,26 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
     </Componente>
 }
 
-function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
+function parametrosDeFixedFields(fixedFields: FixedFields): {idper: string | null, fecha: RealDate | null, cod_nov: string, sedes: string | null} {
     var ffObject: Record<string, any> = {
     };
-    props.fixedFields.forEach(({fieldName, value}) => {
+    fixedFields.forEach(({fieldName, value}) => {
         ffObject[fieldName] = value;
     });
-    var defaults = {
+    return {
+        idper: typeof ffObject.idper == "string" ? ffObject.idper : null,
         fecha: typeof ffObject.fecha == "string" ? date.iso(ffObject.fecha) : null,
-        persona: typeof ffObject.idper == "string" ? {idper: ffObject.idper} : {},
-        cod_nov: ffObject.cod_nov ?? ""
+        cod_nov: ffObject.cod_nov ?? "",
+        sedes: typeof ffObject.sedes == "string" ? ffObject.sedes : null
+    };
+}
+
+function Pantalla1(props:{conn: Connector, fixedFields:FixedFields}){
+    var parametros = parametrosDeFixedFields(props.fixedFields);
+    var defaults = {
+        fecha: parametros.fecha,
+        persona: parametros.idper != null ? {idper: parametros.idper} : {},
+        cod_nov: parametros.cod_nov
     };
     const {conn} = props;
     const [infoUsuario, setInfoUsuario] = useState({} as InfoUsuario);
@@ -1377,8 +1387,18 @@ function crearCapaMapa(capa: CapaMapa): L.TileLayer {
     }
 }
 
-function MapaDomicilios(props: { domicilios: ProvisorioPersonaDomicilio[], capa: CapaMapa }) {
-    const { domicilios, capa } = props;
+type ProvisorioFichadaMapa = {idper:string, fecha:RealDate, hora:string, id_fichada:number, tipo_fichada:string, observaciones:string|null, punto:string|null}
+type ProvisorioSedeMapa = {id_punto:string, cod_sede:string, punto_alternativo:boolean|null, descripcion:string|null, punto:string|null}
+
+type PuntoMapa = {punto:string, texto:string, estilo:L.CircleMarkerOptions, ampliaEncuadre:boolean, origen:string}
+
+const ESTILO_DOMICILIO: L.CircleMarkerOptions = { radius: 8, color: '#b71c1c', fillColor: '#e53935', fillOpacity: 0.9 };
+const ESTILO_FICHADA: L.CircleMarkerOptions = { radius: 6, color: '#0d47a1', fillColor: '#1e88e5', fillOpacity: 0.9 };
+const ESTILO_SEDE: L.CircleMarkerOptions = { radius: 8, color: '#4a148c', fillColor: '#8e24aa', fillOpacity: 0.9 };
+const ESTILO_SEDE_PUNTO_ALTERNATIVO: L.CircleMarkerOptions = { radius: 6, color: '#424242', fillColor: '#9e9e9e', fillOpacity: 0.9 };
+
+function MapaPuntos(props: { puntos: PuntoMapa[], capa: CapaMapa }) {
+    const { puntos, capa } = props;
     const mapaRef = React.useRef<HTMLDivElement>(null);
     const [mapa, setMapa] = useState<L.Map | null>(null);
 
@@ -1386,20 +1406,21 @@ function MapaDomicilios(props: { domicilios: ProvisorioPersonaDomicilio[], capa:
         if (mapaRef.current == null) return;
         const mapa = L.map(mapaRef.current);
         const encuadre = L.latLngBounds(CABA_SUR_OESTE, CABA_NORTE_ESTE);
-        domicilios.forEach(domicilio => {
-            if (domicilio.punto == null) return;
-            const latLng = latLngDePunto(domicilio.punto);
+        puntos.forEach(punto => {
+            const latLng = latLngDePunto(punto.punto);
             if (latLng == null) {
-                logError(new Error(`punto con formato inesperado en el domicilio ${domicilio.idper} ${domicilio.nro_item}: ${domicilio.punto}`));
+                logError(new Error(`punto con formato inesperado en ${punto.origen}: ${punto.punto}`));
                 return;
             }
             const tooltip = document.createElement('div');
-            tooltip.textContent = textoDomicilio(domicilio).trim();
-            L.circleMarker(latLng, { radius: 8, color: '#b71c1c', fillColor: '#e53935', fillOpacity: 0.9 })
+            tooltip.textContent = punto.texto;
+            L.circleMarker(latLng, punto.estilo)
                 .bindTooltip(tooltip)
                 .addTo(mapa);
-            encuadre.extend(latLng);
-            encuadre.extend([2 * CABA_CENTRO[0] - latLng[0], 2 * CABA_CENTRO[1] - latLng[1]]);
+            if (punto.ampliaEncuadre) {
+                encuadre.extend(latLng);
+                encuadre.extend([2 * CABA_CENTRO[0] - latLng[0], 2 * CABA_CENTRO[1] - latLng[1]]);
+            }
         });
         mapa.fitBounds(encuadre);
         setMapa(mapa);
@@ -1407,7 +1428,7 @@ function MapaDomicilios(props: { domicilios: ProvisorioPersonaDomicilio[], capa:
             setMapa(null);
             mapa.remove();
         };
-    }, [domicilios]);
+    }, [puntos]);
 
     useEffect(() => {
         if (mapa == null) return;
@@ -1420,10 +1441,76 @@ function MapaDomicilios(props: { domicilios: ProvisorioPersonaDomicilio[], capa:
 
 function PantallaMapaDomicilios(props: { conn: Connector, fixedFields: FixedFields, infoUsuario: InfoUsuario }) {
     const { conn, fixedFields, infoUsuario } = props;
-    const idper = fixedFields.find(ff => ff.fieldName == 'idper')?.value as string | undefined;
+    const {idper, fecha, sedes} = parametrosDeFixedFields(fixedFields);
     const [persona, setPersona] = useState<ProvisorioPersonas | null>(null);
     const [domicilios, setDomicilios] = useState<ProvisorioPersonaDomicilio[] | null>(null);
+    const [fichadas, setFichadas] = useState<ProvisorioFichadaMapa[] | null>(null);
+    const [sedesMapa, setSedesMapa] = useState<ProvisorioSedeMapa[] | null>(null);
     const [capa, setCapa] = useState<CapaMapa>('BA');
+
+    useEffect(() => {
+        if (idper == null || fecha == null) {
+            setFichadas([]);
+            return;
+        }
+        conn.ajax.table_data<ProvisorioFichadaMapa>({
+            table: 'fichadas',
+            fixedFields: [{fieldName:'idper', value:idper}, {fieldName:'fecha', value:fecha}],
+            paramfun: {}
+        }).then(fichadas => {
+            setFichadas(fichadas);
+        }).catch(logError);
+    }, [idper, fecha?.toYmd()]);
+
+    useEffect(() => {
+        if (sedes == null) {
+            setSedesMapa([]);
+            return;
+        }
+        conn.ajax.table_data<ProvisorioSedeMapa>({
+            table: 'sedes',
+            fixedFields: [],
+            paramfun: {}
+        }).then(sedesMapa => {
+            setSedesMapa(sedes == 'puntos_alternativos' ? sedesMapa : sedesMapa.filter(sede => sede.punto_alternativo !== true));
+        }).catch(logError);
+    }, [sedes]);
+
+    const puntos = React.useMemo<PuntoMapa[] | null>(() => {
+        if (domicilios == null || fichadas == null || sedesMapa == null) return null;
+        const puntos: PuntoMapa[] = [];
+        sedesMapa.forEach(sede => {
+            if (sede.punto == null) return;
+            puntos.push({
+                punto: sede.punto,
+                texto: sede.cod_sede + (sede.descripcion ? ` — ${sede.descripcion}` : ''),
+                estilo: sede.punto_alternativo === true ? ESTILO_SEDE_PUNTO_ALTERNATIVO : ESTILO_SEDE,
+                ampliaEncuadre: false,
+                origen: `la sede ${sede.id_punto}`
+            });
+        });
+        domicilios.forEach(domicilio => {
+            if (domicilio.punto == null) return;
+            puntos.push({
+                punto: domicilio.punto,
+                texto: textoDomicilio(domicilio).trim(),
+                estilo: ESTILO_DOMICILIO,
+                ampliaEncuadre: true,
+                origen: `el domicilio ${domicilio.idper} ${domicilio.nro_item}`
+            });
+        });
+        fichadas.forEach(fichada => {
+            if (fichada.punto == null) return;
+            puntos.push({
+                punto: fichada.punto,
+                texto: `${fichada.hora} — ${fichada.tipo_fichada}` + (fichada.observaciones ? ` (${fichada.observaciones})` : ''),
+                estilo: ESTILO_FICHADA,
+                ampliaEncuadre: true,
+                origen: `la fichada ${fichada.idper} ${fichada.id_fichada}`
+            });
+        });
+        return puntos;
+    }, [domicilios, fichadas, sedesMapa]);
 
     useEffect(() => {
         document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
@@ -1452,9 +1539,8 @@ function PantallaMapaDomicilios(props: { conn: Connector, fixedFields: FixedFiel
             <Switch color="default" checked={capa == 'OSM'} onChange={(event) => setCapa(event.target.checked ? 'OSM' : 'BA')}/>
             <Typography>OSM</Typography>
         </BarraSuperior>
-        {idper == null ? <Typography>Falta indicar la persona (idper)</Typography>
-            : domicilios == null ? <CircularProgress/>
-            : <MapaDomicilios domicilios={domicilios} capa={capa}/>
+        {idper == null ? <Typography>Falta indicar la persona (idper)</Typography>            : puntos == null ? <CircularProgress/>
+            : <MapaPuntos puntos={puntos} capa={capa}/>
         }
     </Paper>
 }
