@@ -1044,10 +1044,10 @@ function parametrosDeFixedFields(fixedFields: FixedFields): {idper: string | nul
         ffObject[fieldName] = value;
     });
     return {
-        idper: typeof ffObject.idper == "string" ? ffObject.idper : null,
-        fecha: typeof ffObject.fecha == "string" ? date.iso(ffObject.fecha) : null,
-        cod_nov: ffObject.cod_nov ?? "",
-        sedes: typeof ffObject.sedes == "string" ? ffObject.sedes : null
+        idper: ffObject.idper ?? null,
+        fecha: ffObject.fecha ?? null,
+        cod_nov: ffObject.cod_nov ?? null,
+        sedes: ffObject.sedes ?? null
     };
 }
 
