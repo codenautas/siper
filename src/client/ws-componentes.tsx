@@ -23,7 +23,7 @@ import {
     List, ListItemButton,
     MenuItem, 
     Paper,
-    Select, Slider,
+    Select, Slider, Switch,
     Toolbar, Typography, TextField,
     Checkbox,
     Tooltip
@@ -1297,7 +1297,7 @@ export function renderRol( _infoUsuario: InfoUsuario ) {
     */
 }
 
-function BarraSuperior(props: { infoUsuario: InfoUsuario, titulo: string }) {
+function BarraSuperior(props: { infoUsuario: InfoUsuario, titulo: string, children?: ReactNode }) {
 
     const getManualHref = (rol: string) => {
         const userRol = rol.trim();
@@ -1315,6 +1315,7 @@ function BarraSuperior(props: { infoUsuario: InfoUsuario, titulo: string }) {
                 <Typography flexGrow={2}>
                     {props.titulo}
                 </Typography>
+                {props.children}
                 <div>
                 <IconButton color="inherit">
                     <a
@@ -1359,17 +1360,31 @@ function latLngDePunto(punto: string): L.LatLngTuple | null {
     return [Number(partes[2]), Number(partes[1])];
 }
 
-function MapaDomicilios(props: { domicilios: ProvisorioPersonaDomicilio[] }) {
-    const { domicilios } = props;
+type CapaMapa = 'BA' | 'OSM';
+
+function crearCapaMapa(capa: CapaMapa): L.TileLayer {
+    switch (capa) {
+        case 'BA': return L.tileLayer('https://servicios.usig.buenosaires.gob.ar/mapcache/tms/1.0.0/amba_con_transporte_3857@GoogleMapsCompatible/{z}/{x}/{-y}.png', {
+            attribution: 'Mapa de la Ciudad de Buenos Aires / USIG',
+            maxZoom: 18,
+            minZoom: 9,
+            tms: true
+        });
+        case 'OSM': return L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        });
+    }
+}
+
+function MapaDomicilios(props: { domicilios: ProvisorioPersonaDomicilio[], capa: CapaMapa }) {
+    const { domicilios, capa } = props;
     const mapaRef = React.useRef<HTMLDivElement>(null);
+    const [mapa, setMapa] = useState<L.Map | null>(null);
 
     useEffect(() => {
         if (mapaRef.current == null) return;
         const mapa = L.map(mapaRef.current);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(mapa);
         const encuadre = L.latLngBounds(CABA_SUR_OESTE, CABA_NORTE_ESTE);
         domicilios.forEach(domicilio => {
             if (domicilio.punto == null) return;
@@ -1387,8 +1402,18 @@ function MapaDomicilios(props: { domicilios: ProvisorioPersonaDomicilio[] }) {
             encuadre.extend([2 * CABA_CENTRO[0] - latLng[0], 2 * CABA_CENTRO[1] - latLng[1]]);
         });
         mapa.fitBounds(encuadre);
-        return () => { mapa.remove(); };
+        setMapa(mapa);
+        return () => {
+            setMapa(null);
+            mapa.remove();
+        };
     }, [domicilios]);
+
+    useEffect(() => {
+        if (mapa == null) return;
+        const capaMapa = crearCapaMapa(capa).addTo(mapa);
+        return () => { capaMapa.remove(); };
+    }, [mapa, capa]);
 
     return <div ref={mapaRef} className="mapa-domicilios"/>
 }
@@ -1398,6 +1423,7 @@ function PantallaMapaDomicilios(props: { conn: Connector, fixedFields: FixedFiel
     const idper = fixedFields.find(ff => ff.fieldName == 'idper')?.value as string | undefined;
     const [persona, setPersona] = useState<ProvisorioPersonas | null>(null);
     const [domicilios, setDomicilios] = useState<ProvisorioPersonaDomicilio[] | null>(null);
+    const [capa, setCapa] = useState<CapaMapa>('BA');
 
     useEffect(() => {
         document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
@@ -1421,10 +1447,14 @@ function PantallaMapaDomicilios(props: { conn: Connector, fixedFields: FixedFiel
     return <Paper className="paper-principal">
         <BarraSuperior infoUsuario={infoUsuario} titulo={
             `SiPer - Domicilios - ${idper ?? ''}` + (persona ? ` ${persona.apellido}, ${persona.nombres}` : '')
-        }/>
+        }>
+            <Typography>BA</Typography>
+            <Switch color="default" checked={capa == 'OSM'} onChange={(event) => setCapa(event.target.checked ? 'OSM' : 'BA')}/>
+            <Typography>OSM</Typography>
+        </BarraSuperior>
         {idper == null ? <Typography>Falta indicar la persona (idper)</Typography>
             : domicilios == null ? <CircularProgress/>
-            : <MapaDomicilios domicilios={domicilios}/>
+            : <MapaDomicilios domicilios={domicilios} capa={capa}/>
         }
     </Paper>
 }
