@@ -26,7 +26,7 @@
   "dependencies": {
     "backend-plus": "^2.7.0-beta.11",
     "fflate": "^0.8.3",
-    "frontend-plus": "^0.0.17",
+    "frontend-plus": "^0.1.0-beta.1",
     "guarantee-type": "^0.2.13",
     "mssql": "^12.7.0",
     "pg-triggers": "^0.4.6",

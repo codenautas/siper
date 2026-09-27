@@ -1,5 +1,4 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
 
 import {
     ReactNode,
@@ -11,7 +10,8 @@ import {
     FixedFields,
     ICON,
     renderConnectedApp,
-    RowType
+    RowType,
+    unmountConnectedApp
 } from "frontend-plus";
 
 import {
@@ -1293,8 +1293,7 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, i
         <AppBar position="static" className="app-bar-bg" sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}>
             <Toolbar>
                 <IconButton color="inherit" onClick={()=>{
-                    var root = document.getElementById('total-layout');
-                    if (root != null ) ReactDOM.unmountComponentAtNode(root)
+                    unmountConnectedApp();
                     location.hash="";
                 }}><ICON.Menu/></IconButton>
                 <Typography flexGrow={2}>
