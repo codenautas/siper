@@ -39,6 +39,7 @@ import { CalendarioResult, Annio, meses, NovedadesDisponiblesResult, PersonasNov
 import * as ctts from "../common/contracts"
 import { strict as likeAr, createIndex } from "like-ar";
 import { DefinedType } from "guarantee-type";
+import * as L from "leaflet";
 import type { AppConfigClientSetup } from "../server/types-principal";
 
 const EFIMERO = Symbol("EFIMERO");
@@ -345,7 +346,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean, 
     fecha_ingreso?:RealDate, fecha_egreso?:RealDate /*, activo?:boolean, fecha_nacimiento?:RealDate, nombre_sector?:string, jerarquia?:string, jerarquias__descripcion?:string, cargo_atgc?:string, agrupamiento?:string, tramo?:string, grado?:string, domicilio?:string, nacionalidad?:string, sectores__nombre_sector?:string*/};
 type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string, perfil_sgc:number, perfiles_sgc__nombre:string, banda_horaria:string, bandas_horarias__descripcion:string, sexo:string, sexos__descripcion:string, motivo_egreso?:string, motivos_egreso__descripcion?:string, cuil_valido?:boolean};
-type ProvisorioPersonaDomicilio = {idper:string, barrios_localidades__nombre:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__descripcion:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio_localidad:string, codigo_postal:string, comuna_partido:string, comunas_partidos__nombre:string, nro_item:string, orden:number}
+type ProvisorioPersonaDomicilio = {idper:string, barrios_localidades__nombre:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__descripcion:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio_localidad:string, codigo_postal:string, comuna_partido:string, comunas_partidos__nombre:string, nro_item:string, orden:number, punto:string|null}
 type ProvisorioPersonaTelefono = {idper: string, tipo_telefono: string, tipos_telefono__descripcion?: string, telefono: string, observaciones?: string, nro_item?: number, orden?: number}
 type ProvisorioSectores = {pactivas: number, activo: boolean,sector:string, nombre_sector:string, pertenece_a:string, nivel:number};
 type ProvisorioSectoresAumentados = ProvisorioSectores & {perteneceA: Record<string, boolean>, hijos:ProvisorioSectoresAumentados[], profundidad:number}
@@ -835,6 +836,33 @@ function DetalleAniosNovPer(props:{detalleVacacionesPersona : ProvisorioDetalleN
     </Componente>
 }
 
+function textoDomicilio(domicilio: ProvisorioPersonaDomicilio): string {
+    return (domicilio.calles__nombre_calle ? ` ${domicilio.calles__nombre_calle}` : ` ${domicilio.nombre_calle}`) +
+        (domicilio.altura ? ` ${domicilio.altura}` : '') +
+        (domicilio.piso ? ` piso ${domicilio.piso}` : '') +
+        (domicilio.depto ? ` depto ${domicilio.depto}` : '') +
+        (domicilio.codigo_postal ? ` (${domicilio.codigo_postal})` : '') +
+        (domicilio.barrios_localidades__nombre ? `, ${domicilio.barrios_localidades__nombre}` : '') +
+        (domicilio.comunas_partidos__nombre ? `, ${domicilio.comunas_partidos__nombre}` : '') +
+        (domicilio.provincias__nombre_provincia ? ` — ${domicilio.provincias__nombre_provincia}` : '') +
+        (domicilio.tipos_domicilio__descripcion && domicilio.tipos_domicilio__descripcion !== "PRINCIPAL" ? ` (${domicilio.tipos_domicilio__descripcion})` : '');
+}
+
+function hrefMapaDomicilios(idper: string): string {
+    return `./menu#w=mapa_domicilios&ff=,idper:${encodeURIComponent(idper)}`;
+}
+
+/** Link que navega dentro de la aplicación, o abre una pestaña nueva con ctrl+click (misma lógica que createForkeableButton de backend-plus) */
+function LinkForkeable(props: {href: string, className?: string, title?: string, children: ReactNode}) {
+    return <a href={props.href} className={props.className} title={props.title} onClick={(event) => {
+        if (!event.ctrlKey && event.button != 1) {
+            event.preventDefault();
+            history.pushState(null, '', props.href);
+            myOwn.showPage();
+        }
+    }}>{props.children}</a>
+}
+
 function LegajoPer(props: {conn: Connector, idper:string}) {
     const {idper, conn} = props;
     const [persona, setPersona] = useState<ProvisorioPersonaLegajo>({} as ProvisorioPersonaLegajo);
@@ -965,6 +993,11 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 <div className="legajo-grupo">
                     <div className="legajo-campo legajo-campo-largo">
                         <div className="legajo-etiqueta">Domicilios:</div>
+                        {domicilios.some(domicilio => domicilio.punto != null) &&
+                            <LinkForkeable href={hrefMapaDomicilios(idper)} className="legajo-link-mapa" title="ver domicilios en el mapa">
+                                <ICON.LocaltionOn/>
+                            </LinkForkeable>
+                        }
                     </div>
                 </div>
             </div>
@@ -972,17 +1005,7 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                 <div className="legajo-grupo legajo-grupo-domicilios">
                     {domicilios.map(domicilio => (
                         <div key={domicilio.nro_item} className="legajo-campo legajo-campo-largo">
-                            <div className="legajo-valor">{'  '} - 
-                                {domicilio.calles__nombre_calle ? ` ${domicilio.calles__nombre_calle}` : ` ${domicilio.nombre_calle}`} 
-                                {domicilio.altura && ` ${domicilio.altura}`}
-                                {domicilio.piso && ` piso ${domicilio.piso}`}
-                                {domicilio.depto && ` depto ${domicilio.depto}`}
-                                {domicilio.codigo_postal && ` (${domicilio.codigo_postal})`}
-                                {domicilio.barrios_localidades__nombre && `, ${domicilio.barrios_localidades__nombre}`}
-                                {domicilio.comunas_partidos__nombre && `, ${domicilio.comunas_partidos__nombre}`}
-                                {domicilio.provincias__nombre_provincia && ` \u2014 ${domicilio.provincias__nombre_provincia}`} 
-                                {domicilio.tipos_domicilio__descripcion && domicilio.tipos_domicilio__descripcion !== "PRINCIPAL" && ` (${domicilio.tipos_domicilio__descripcion})`}
-                            </div>
+                            <div className="legajo-valor">{'  '} -{textoDomicilio(domicilio)}</div>
                         </div>
                     ))}
                     {domicilios.length === 0 && 
@@ -1274,30 +1297,23 @@ export function renderRol( _infoUsuario: InfoUsuario ) {
     */
 }
 
-function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, infoUsuario: InfoUsuario }) {
-    
+function BarraSuperior(props: { infoUsuario: InfoUsuario, titulo: string }) {
+
     const getManualHref = (rol: string) => {
         const userRol = rol.trim();
         if (userRol === "basico") return "./docs/manual-basico.pdf";
         if (userRol === "registra") return "./docs/manual-registra.pdf";
         return "./docs/manual-rrhh.pdf";
     }
-    useEffect(() => {
-        document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
-        if (props.infoUsuario.usuario) {
-            renderRol( props.infoUsuario );
-        }
-    }, []);
 
-    return <Paper className="paper-principal">
-        <AppBar position="static" className="app-bar-bg" sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}>
+    return <AppBar position="static" className="app-bar-bg" sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}>
             <Toolbar>
                 <IconButton color="inherit" onClick={()=>{
                     unmountConnectedApp();
                     location.hash="";
                 }}><ICON.Menu/></IconButton>
                 <Typography flexGrow={2}>
-                    SiPer - Principal
+                    {props.titulo}
                 </Typography>
                 <div>
                 <IconButton color="inherit">
@@ -1315,9 +1331,102 @@ function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, i
                 </div>
             </Toolbar>
         </AppBar>
+}
+
+function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, infoUsuario: InfoUsuario }) {
+
+    useEffect(() => {
+        document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
+        if (props.infoUsuario.usuario) {
+            renderRol( props.infoUsuario );
+        }
+    }, []);
+
+    return <Paper className="paper-principal">
+        <BarraSuperior infoUsuario={props.infoUsuario} titulo="SiPer - Principal"/>
         <Pantalla1 conn={props.conn} fixedFields={props.fixedFields}/>
     </Paper>
 
+}
+
+const CABA_SUR_OESTE: L.LatLngTuple = [-34.705, -58.531];
+const CABA_NORTE_ESTE: L.LatLngTuple = [-34.527, -58.335];
+const CABA_CENTRO: L.LatLngTuple = [-34.616, -58.433];
+
+function latLngDePunto(punto: string): L.LatLngTuple | null {
+    const partes = /^\((-?\d+(?:\.\d*)?),(-?\d+(?:\.\d*)?)\)$/.exec(punto);
+    if (partes == null) return null;
+    return [Number(partes[2]), Number(partes[1])];
+}
+
+function MapaDomicilios(props: { domicilios: ProvisorioPersonaDomicilio[] }) {
+    const { domicilios } = props;
+    const mapaRef = React.useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (mapaRef.current == null) return;
+        const mapa = L.map(mapaRef.current);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(mapa);
+        const encuadre = L.latLngBounds(CABA_SUR_OESTE, CABA_NORTE_ESTE);
+        domicilios.forEach(domicilio => {
+            if (domicilio.punto == null) return;
+            const latLng = latLngDePunto(domicilio.punto);
+            if (latLng == null) {
+                logError(new Error(`punto con formato inesperado en el domicilio ${domicilio.idper} ${domicilio.nro_item}: ${domicilio.punto}`));
+                return;
+            }
+            const tooltip = document.createElement('div');
+            tooltip.textContent = textoDomicilio(domicilio).trim();
+            L.circleMarker(latLng, { radius: 8, color: '#b71c1c', fillColor: '#e53935', fillOpacity: 0.9 })
+                .bindTooltip(tooltip)
+                .addTo(mapa);
+            encuadre.extend(latLng);
+            encuadre.extend([2 * CABA_CENTRO[0] - latLng[0], 2 * CABA_CENTRO[1] - latLng[1]]);
+        });
+        mapa.fitBounds(encuadre);
+        return () => { mapa.remove(); };
+    }, [domicilios]);
+
+    return <div ref={mapaRef} className="mapa-domicilios"/>
+}
+
+function PantallaMapaDomicilios(props: { conn: Connector, fixedFields: FixedFields, infoUsuario: InfoUsuario }) {
+    const { conn, fixedFields, infoUsuario } = props;
+    const idper = fixedFields.find(ff => ff.fieldName == 'idper')?.value as string | undefined;
+    const [persona, setPersona] = useState<ProvisorioPersonas | null>(null);
+    const [domicilios, setDomicilios] = useState<ProvisorioPersonaDomicilio[] | null>(null);
+
+    useEffect(() => {
+        document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
+        if (idper == null) return;
+        conn.ajax.table_data<ProvisorioPersonas>({
+            table: 'personas',
+            fixedFields: [{fieldName:'idper', value:idper}],
+            paramfun: {}
+        }).then(personas => {
+            setPersona(personas[0] ?? null);
+        }).catch(logError);
+        conn.ajax.table_data<ProvisorioPersonaDomicilio>({
+            table: 'per_domicilios',
+            fixedFields: [{fieldName:'idper', value:idper}],
+            paramfun: {}
+        }).then(domicilios => {
+            setDomicilios(domicilios);
+        }).catch(logError);
+    }, [idper]);
+
+    return <Paper className="paper-principal">
+        <BarraSuperior infoUsuario={infoUsuario} titulo={
+            `SiPer - Domicilios - ${idper ?? ''}` + (persona ? ` ${persona.apellido}, ${persona.nombres}` : '')
+        }/>
+        {idper == null ? <Typography>Falta indicar la persona (idper)</Typography>
+            : domicilios == null ? <CircularProgress/>
+            : <MapaDomicilios domicilios={domicilios}/>
+        }
+    </Paper>
 }
 
 // @ts-ignore
@@ -1329,6 +1438,18 @@ myOwn.wScreens.principal = function principal(addrParams:any){
             document.getElementById('total-layout')!,
             ({ conn, fixedFields }) => (<PantallaPrincipal conn={conn} fixedFields={fixedFields} infoUsuario={infoUsuario} />
             )
+        );
+    }).catch(logError);
+}
+
+// @ts-ignore
+myOwn.wScreens.mapa_domicilios = function mapa_domicilios(addrParams:any){
+    myOwn.ajax.info_usuario().then((infoUsuario: InfoUsuario) => {
+        renderConnectedApp(
+            myOwn as never as Connector,
+            { ...addrParams },
+            document.getElementById('total-layout')!,
+            ({ conn, fixedFields }) => (<PantallaMapaDomicilios conn={conn} fixedFields={fixedFields} infoUsuario={infoUsuario} />)
         );
     }).catch(logError);
 }

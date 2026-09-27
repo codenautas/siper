@@ -608,6 +608,8 @@ export class AppSiper extends AppBackend{
             { type: 'js', src: 'lib/my-icons.js' },
             { type: 'js', module: 'guarantee-type', file:'guarantee-type.js'},
             { type: 'js', module: 'frontend-plus', file:'frontend-plus.js'},
+            { type: 'js', module: 'leaflet', path: 'leaflet', file:'leaflet.js'},
+            { type: 'css', module: 'leaflet', path: 'leaflet', file:'leaflet.css'},
             { type: 'css', file: 'menu.css' },
             { type: 'css', file: 'arbol.css' },
             { type: 'js', file: 'common/contracts.js' },
