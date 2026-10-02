@@ -1,4 +1,4 @@
-cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|prioritario|comun|requiere_entrada|inicializacion|inicializacion_limite|requiere_fichadas|cuenta_horas
+cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|prioritario|comun|requiere_entrada|inicializacion|inicializacion_limite|requiere_fichadas|\: cuenta_horas injustificado
 1|Art. 18 Descanso anual remunerado|I|||true|||true|true|||LICORD|||
 2|Licencia ordinaria no controlada||||true||||true||||||
 3|Accidente de trabajo||||true||||true||||||
@@ -43,13 +43,13 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|priorit
 52|Licencia por excedencia||||true||||||||||
 53|Licencia medica familiar injustificada||||true||||||||||
 54|No controlado||||true||||||||||
-55|Salida anticipada por razones personales||||true||||||true|||true|true
+55|Salida anticipada por razones personales||||true||||||true|||true|cuenta_horas:true
 56|Aut. entrada demorada por comision||||true|||||||||true|
 57|Salida anticipada por comision||||true|||||||||true|
 58|Justificacion entrada demorada por razones personales||||true||||||||||
-59|Abandono de servicios|||||true|||||||||
+59|Abandono de servicios|||||true|||||||||injustificado:true
 60|Justificacion Aut. salida anticipada Pers.||||true||||||||||
-61|Salida con retorno personal||||true|||||||||true|true
+61|Salida con retorno personal||||true|||||||||true|cuenta_horas:true
 62|Salida con retorno comision||||true|||||||||true|
 63|Justificacion entrada demorada comis.||||true||||||||||
 64|Justificacion aut. salida anticipada comis.||||true||||||||||
@@ -64,9 +64,9 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|priorit
 88|Valuador||||true||||||||||
 89|Encuestador y/o supervisor||||true|||true|true||||||
 99|Presente (justificado por personal)||||true||||true||||||
-100|Aut. entrada demorada por razones personales||||true|||||||||true|true
-101|Teletrabajo Diagramado||true||true|||true|true|||||true|true
-102|AI Ausente injustificado||||true||||true||||||
+100|Aut. entrada demorada por razones personales||||true|||||||||true|cuenta_horas:true
+101|Teletrabajo Diagramado||true||true|||true|true|||||true|cuenta_horas:true
+102|AI Ausente injustificado||||true||||true||||||injustificado:true
 103|Franco diagramado||true||true||||||||||
 104|Relevamiento secretaria de seguridad GCBA||||true||||||||||
 105|Permiso de Ausencia Extraordinario S/Dec. N° 147/AJG/2020 y Complementarias||||true||||||||||
@@ -124,4 +124,4 @@ cod_nov|novedad|clase|c_dds|con_detalles|total|parcial|corridos|registra|priorit
 191|Licencia por Alumbramiento Interlicencia||||true||||||||||
 200|Fuera de rango horario||||true||||||||||
 259|Salida momentanea||||true||||||||||
-999|Presente||||true|||||||||true|true
+999|Presente||||true|||||||||true|cuenta_horas:true

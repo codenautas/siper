@@ -31,6 +31,7 @@ client-setup:
   menu: true
   lang: es
   user-scalable: no
+  tab-plus: only
 install:
   dump:
     db:

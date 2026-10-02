@@ -491,8 +491,8 @@ describe("SiPer: " + testConfig.name, function(){
         }
     }
     type HorasResult = {crudas:TimeInterval|string|null, consolidadas?:TimeInterval|string|null}|string|null
-    async function verificaFichadas(args:{idper:string, fecha:Date, fichadas: TIME|null, cod_nov?:string, cod_nov_final?:string, horas?:HorasResult}){
-        let {cod_nov_final, horas, ...registroFichadasEsperado} = args;
+    async function verificaFichadas(args:{idper:string, fecha:Date, fichadas: TIME|null, cod_nov?:string, cod_nov_final?:string, horas?:HorasResult, nr_cod_presencialidad?:string|null}){
+        let {cod_nov_final, horas, nr_cod_presencialidad, ...registroFichadasEsperado} = args;
         const {idper, fecha, cod_nov, fichadas} = registroFichadasEsperado;
         if (fichadas != null) {
             await rrhhSession.tableDataTest(ctts.fichadas_vigentes, [
@@ -505,7 +505,7 @@ describe("SiPer: " + testConfig.name, function(){
         if (cod_nov !== undefined) {
             await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper, fecha, consolidar: true})
             await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
-                registroFichadasEsperado
+                nr_cod_presencialidad === undefined ? registroFichadasEsperado : {...registroFichadasEsperado, nr_cod_presencialidad}
             ], 'all', {fixedFields:{idper, fecha}})
         }
         if (horas !== undefined) {
@@ -1167,6 +1167,7 @@ describe("SiPer: " + testConfig.name, function(){
             })
             it("fichar un dia consolidado cambian las horas", async function(){
                 const fecha = date.iso('2000-01-28');
+                var dias_injustificados = 19;
                 try {
                     await enNuevaPersona(this.test?.title!, {inicia_fichada: date.iso('2000-01-01')}, async ({idper}, {}) => {
                         await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha, consolidar:true});
@@ -1183,8 +1184,11 @@ describe("SiPer: " + testConfig.name, function(){
                             promedio_horas:  timeInterval({hours:6}),
                             horas_esperadas: timeInterval({hours:7}),
                             promedio_esperado: timeInterval({hours:7}),
-                            incidencias: 0,
+                            dias_injustificados,
+                            incidencias: dias_injustificados, // los días anteriores
                             incidencias_horas: 0,
+                            tiene_injustificados: true,
+                            con_problemas: true,
                         }  as unknown as typeof resumen;
                         discrepances.showAndThrow(resumen, esperado);
                     })
@@ -1379,6 +1383,45 @@ describe("SiPer: " + testConfig.name, function(){
                     await registrarFichadas(server, {idper, fecha, entrada, salida});
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov: null, cod_nov_final: cod_nov});
                 });
+            })
+            describe("código tapado por las fichadas (nr_cod_presencialidad)", function(){
+                it("sin fichadas guarda el código predeterminado que quedó tapado", async function(){
+                    await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                        const fecha = FECHA_ACTUAL;
+                        await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper, fecha, consolidar:false})
+                        await rrhhSession.tableDataTest(ctts.novedades_vigentes, [
+                            {idper, fecha, cod_nov: COD_PRED_PAS, nr_cod_presencialidad: null}
+                        ], 'all', {fixedFields:{idper, fecha}});
+                        await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(), cod_nov: COD_AUSENTE, nr_cod_presencialidad: COD_PRED_PAS})
+                    })
+                })
+                it("una sola fichada guarda la novedad registrada que quedó tapada", async function(){
+                    await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                        const fecha = FECHA_ACTUAL;
+                        const hora = '09:00:00';
+                        await registrarNovedad(rrhhSession, {desde: fecha, hasta: fecha, cod_nov: COD_DIAGRAMADO, idper
+                            ,dds1:true, dds2:true, dds3:true, dds4:true, dds5:true
+                        });
+                        await registrarFichada(server, {idper, fecha, hora, tipo_fichada:'E'});
+                        await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(hora, null), cod_nov: COD_ABANDONO, nr_cod_presencialidad: COD_DIAGRAMADO})
+                    })
+                })
+                it("con ambas fichadas no hay código tapado", async function(){
+                    await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                        const fecha = FECHA_ACTUAL;
+                        const entrada = '09:00:00';
+                        const salida  = '16:00:00';
+                        await registrarFichadas(server, {idper, fecha, entrada, salida});
+                        await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(entrada, salida), cod_nov: null, cod_nov_final: COD_PRED_PAS, nr_cod_presencialidad: null})
+                    })
+                })
+                it("novedad que no requiere fichadas no tiene código tapado", async function(){
+                    await enNuevaPersona(this.test?.title!, {vacaciones: 5}, async ({idper}) => {
+                        const fecha = FECHA_ACTUAL;
+                        await registrarNovedad(rrhhSession, {desde: fecha, hasta: fecha, cod_nov: COD_VACACIONES, idper});
+                        await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(), cod_nov: COD_AUSENTE, cod_nov_final: COD_VACACIONES, nr_cod_presencialidad: null})
+                    })
+                })
             })
         })
         describe("cod_nov_pred_fecha", function(){
@@ -1660,6 +1703,7 @@ describe("SiPer: " + testConfig.name, function(){
                     '2000|2000|XX39|T|5|0|0|5|5|0|0|5|XX Prueba 39',
                     '2000|2000|XX4|T|15|0|3|12|15|0|3|12|XX Prueba 4',
                     '2000|2000|XX5|T|20|0|4|16|20|0|4|16|XX Prueba 5',
+                    '2000|2000|XX63|T|5|1|0|4|5|1|0|4|XX Prueba 63',
                 ];
                 discrepances.showAndThrow(obtenido, expected);
             })
@@ -2047,7 +2091,7 @@ describe("SiPer: " + testConfig.name, function(){
             )
             // await fs.writeFile('sqlParteDiarioExt.json', JSON.stringify(resultExt,null,' '), 'utf8')
             discrepances.showAndThrow(resultBase.rows, resultExt.rows);
-            discrepances.showAndThrow(resultExt.rows.length, 425);
+            discrepances.showAndThrow(resultExt.rows.length, 445);
         })
     })
     function randInt(int: number) {

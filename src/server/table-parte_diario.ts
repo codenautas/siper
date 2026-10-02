@@ -53,7 +53,8 @@ export const sqlParteDiario = (context:Context) => sqlParteDiarioBase(`(SELECT
         nv.fichadas,
         nv.annio,
         nv.trabajable,
-        nv.horas
+        nv.horas,
+        nv.nr_cod_presencialidad
     from novedades_vigentes nv)`, context);
 
 export const sqlParteDiarioExtendido = (context:Context) => sqlParteDiarioBase(sqlEnvolventeDesdeHastaDeNovedadVigente, context);
@@ -102,6 +103,7 @@ export function parte_diario(context: TableContext): TableDefinition {
             { name: 'sector_nombre', typeName: 'text', title: 'sector departamento área' },        // <-- AGREGADO
             cod_nov,
             { name: 'novedad', typeName: 'text'},
+            { name: 'nr_cod_presencialidad', typeName: 'text', title: 'cod pres', description: 'código de presencialidad (anterior a código de incidencia)'},
             { name: 'fichada', typeName: 'text'},
             { name: 'horas', typeName: 'interval' },
             { name: 'horario', typeName: 'text' },

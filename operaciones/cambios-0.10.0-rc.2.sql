@@ -1,5 +1,16 @@
--- EJECUTAR LOCALMENTE, NO DESCOMENTAR Y COMMITEAR:
--- SET search_path = siper; SET ROLE siper_owner;
+-- Agrega nr_cod_presencialidad a novedades_vigentes: el código de novedad que quedó tapado por el código de las fichadas
+set role to siper_muleto_owner;
+set search_path = siper;
+
+alter table "novedades_vigentes" add column "nr_cod_presencialidad" text;
+alter table "novedades_vigentes" add constraint "nr_cod_presencialidad<>''" check ("nr_cod_presencialidad"<>'');
+alter table "novedades_vigentes" add constraint "novedades_vigentes cnf REL" foreign key ("nr_cod_presencialidad") references "cod_novedades" ("cod_nov")  on update cascade;
+create index "nr_cod_presencialidad 4 novedades_vigentes IDX" ON "novedades_vigentes" ("nr_cod_presencialidad");
+
+DROP FUNCTION novedades_calculadas(date, date);
+DROP FUNCTION novedades_calculadas_idper(date, date, text);
+
+DROP TYPE novedades_calculadas_return;
 
 CREATE TYPE novedades_calculadas_return AS (
   idper text,
@@ -90,18 +101,67 @@ $BODY$
 -- ¡ATENCIÓN! NO MODIFICAR MANUALMENTE ESTA FUNCIÓN FUE GENERADA CON EL SCRIPT novedades_calculadas.sql
 -- Otras funciones que comienzan con el nombre novedades_calculadas se generaron junto a esta!
 $$);
+
+DO 
+$CREATOR$
+DECLARE
+  v_sql text := $SQL_CON_TAG$
+
+CREATE OR REPLACE PROCEDURE actualizar_novedades_vigentes/*idper**_idper**idper*/(p_desde date, p_hasta date/*idper**, p_idper text**idper*/)
+  SECURITY DEFINER
+  LANGUAGE PLPGSQL
+AS
+$BODY$
+BEGIN
+MERGE INTO novedades_vigentes nv 
+  USING novedades_calculadas/*idper**_idper**idper*/(p_desde, p_hasta/*idper**, p_idper**idper*/) q
+    ON nv.idper = q.idper AND nv.fecha = q.fecha
+  WHEN MATCHED AND 
+      (nv.ficha IS DISTINCT FROM q.ficha 
+      OR nv.cod_nov IS DISTINCT FROM q.cod_nov 
+      OR nv.fichadas IS DISTINCT FROM q.fichadas
+      OR nv.sector IS DISTINCT FROM q.sector
+      OR nv.detalles IS DISTINCT FROM q.detalles
+      OR nv.trabajable IS DISTINCT FROM q.trabajable
+      OR nv.cod_nov_ini IS DISTINCT FROM q.cod_nov_ini
+      OR nv.horas IS DISTINCT FROM q.horas
+      OR nv.nr_cod_presencialidad IS DISTINCT FROM q.nr_cod_presencialidad
+      ) THEN
+    UPDATE SET ficha = q.ficha, cod_nov = q.cod_nov, fichadas = q.fichadas, sector = q.sector, detalles = q.detalles,
+      trabajable = q.trabajable, cod_nov_ini = q.cod_nov_ini, horas = q.horas, nr_cod_presencialidad = q.nr_cod_presencialidad
+  WHEN NOT MATCHED THEN
+    INSERT   (  idper,   ficha,   fecha,   cod_nov,   fichadas,   sector,   detalles,   trabajable,   cod_nov_ini,   horas,   nr_cod_presencialidad)
+      VALUES (q.idper, q.ficha, q.fecha, q.cod_nov, q.fichadas, q.sector, q.detalles, q.trabajable, q.cod_nov_ini, q.horas, q.nr_cod_presencialidad)
+  WHEN NOT MATCHED BY SOURCE AND nv.fecha BETWEEN p_desde AND p_hasta/*idper** AND nv.idper = p_idper**idper*/ THEN DELETE;
+END;
+$BODY$;
+
+$SQL_CON_TAG$;
+BEGIN
+  v_sql := replace(v_sql,
+$$
+$BODY$
+BEGIN
+$$,
+$$
+$BODY$
+BEGIN
+-- ¡ATENCIÓN! NO MODIFICAR MANUALMENTE ESTA FUNCIÓN FUE GENERADA CON EL SCRIPT actualizar_novedades_vigentes.sql
+-- Otras funciones que comienzan con el nombre actualizar_novedades_vigentes se generaron junto a esta!
+$$);
   execute v_sql;
   execute replace(replace(v_sql,'/*idper**',''),'**idper*/','');
 END;
 $CREATOR$;
 
-/*
-select * from novedades_registradas;
-select * from personas;
-select * from HORARIOS;
-SELECT * FROM FECHAS ORDER BY FECHA ASC;
-insert into fechas (fecha) select date_trunc('day', d) from generate_series(cast('2000-01-01' as timestamp), cast('2000-12-31' as timestamp), cast('1 day' as interval)) d
-insert into novedades_registradas (idper, cod_nov, desde, hasta)  values ('AR8', '121', '2000-01-01', '2000-01-04');
-select * from novedades_calculadas_idper('2000-01-01'::date, '2000-01-11'::date, 'AR8'::text);
-select * from novedades_vigentes WHERE idper = 'AR8';
-*/
+-- recalcula solo los años abiertos
+DO
+$$
+DECLARE
+  r record;
+BEGIN
+  FOR r IN SELECT annio FROM annios WHERE abierto ORDER BY annio LOOP
+    CALL actualizar_novedades_vigentes(make_date(r.annio, 1, 1), make_date(r.annio, 12, 31));
+  END LOOP;
+END;
+$$;
