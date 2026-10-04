@@ -12,7 +12,7 @@ import { politicaNovedades } from "./table-novedades_registradas";
 export const sqlEnvolventeDesdeHastaDeNovedadVigente = `(
 with novedades_fecha AS(
   SELECT 
-      p.idper, nv.fichadas, nv.annio, nv.trabajable, nv.detalles, f.dds, f.laborable, nv.horas, nv.nr_cod_presencialidad,
+      p.idper, nv.fichadas, nv.annio, nv.trabajable, nv.detalles, f.dds, f.laborable, nv.horas, nv.cod_presencialidad,
       COALESCE(nv.fecha, f.fecha) as fecha,  
       CASE
         WHEN cod_nov is null and (f.dds in (6,0) or laborable = false) then '¡FERIADO O FIN DE SEMANA!' --'888'
@@ -70,7 +70,7 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
             {name: 'detalles'   , typeName: 'text'   ,                                    },
             {name: 'cod_nov_ini', typeName: 'text'   , description: 'código de novedad inicial obtenida por disposición, resolución o en función de las características de la persona'},
             {name: 'horas'      , typeName:'interval', description: 'cantidad de horas trabajadas calculadas por las fichadas (cuando corresponde)'},
-            {name: 'nr_cod_presencialidad', typeName: 'text', description: 'código de novedad que quedó tapado por el código de las fichadas (sin fichadas, única fichada, etc)'},
+            {name: 'cod_presencialidad', typeName: 'text', description: 'código de novedad que quedó tapado por el código de las fichadas (sin fichadas, única fichada, etc)'},
         ],
         primaryKey: [idper.name, fecha.name],
         foreignKeys: [
@@ -79,7 +79,7 @@ export function novedades_vigentes(context: TableContext): TableDefinition {
             {references:'sectores'     , fields: [sector.name], onDelete:'set null'},
             {references:'cod_novedades', fields: [cod_nov.name]},
             {references:'cod_novedades', fields: [{source:'cod_nov_ini', target:cod_nov.name}], alias:'cnb'},
-            {references:'cod_novedades', fields: [{source:'nr_cod_presencialidad', target:cod_nov.name}], alias:'cnf'},
+            {references:'cod_novedades', fields: [{source:'cod_presencialidad', target:cod_nov.name}], alias:'cnf'},
         ],
         sql: {
             fields: {

@@ -13,7 +13,7 @@ CREATE TYPE novedades_calculadas_return AS (
   detalles text,
   cod_nov_ini text,
   horas interval,
-  nr_cod_presencialidad text
+  cod_presencialidad text
 );
 
 DO
@@ -35,7 +35,7 @@ $BODY$
       CASE WHEN fichadas_consolidadas AND nr_cuenta_horas AND trabajable AND fecha >= fecha_inicio_fichada THEN duration(fichadas) ELSE null END as horas,
       CASE WHEN (trabajable OR nr_corridos) AND fichadas_consolidadas AND nr_requiere_fichadas AND fecha >= fecha_inicio_fichada AND fv_cod_nov IS NOT NULL THEN
         coalesce(nr_cod_nov, cod_nov_pred_fecha)
-      ELSE null END as nr_cod_presencialidad
+      ELSE null END as cod_presencialidad
     FROM (
       SELECT p.idper, p.ficha, f.fecha, f.fichadas_consolidadas,
           (f.dds BETWEEN 1 AND 5) AND (laborable is not false OR inamovible is not true AND f.dds NOT BETWEEN 1 AND 5) as trabajable,

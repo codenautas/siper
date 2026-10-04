@@ -1,11 +1,12 @@
--- Agrega nr_cod_presencialidad a novedades_vigentes: el código de novedad que quedó tapado por el código de las fichadas
+-- Agrega cod_presencialidad a novedades_vigentes: el código de novedad que quedó tapado por el código de las fichadas
 set role to siper_muleto_owner;
 set search_path = siper;
 
-alter table "novedades_vigentes" add column "nr_cod_presencialidad" text;
-alter table "novedades_vigentes" add constraint "nr_cod_presencialidad<>''" check ("nr_cod_presencialidad"<>'');
-alter table "novedades_vigentes" add constraint "novedades_vigentes cnf REL" foreign key ("nr_cod_presencialidad") references "cod_novedades" ("cod_nov")  on update cascade;
-create index "nr_cod_presencialidad 4 novedades_vigentes IDX" ON "novedades_vigentes" ("nr_cod_presencialidad");
+alter table "novedades_vigentes" add column "cod_presencialidad" text;
+alter table "novedades_vigentes" add constraint "cod_presencialidad<>''" check ("cod_presencialidad"<>'');
+alter table "novedades_vigentes" drop constraint if exists "novedades_vigentes cnf REL";
+alter table "novedades_vigentes" add constraint "novedades_vigentes cnf REL" foreign key ("cod_presencialidad") references "cod_novedades" ("cod_nov")  on update cascade;
+create index "cod_presencialidad 4 novedades_vigentes IDX" ON "novedades_vigentes" ("cod_presencialidad");
 
 DROP FUNCTION novedades_calculadas(date, date);
 DROP FUNCTION novedades_calculadas_idper(date, date, text);
@@ -24,7 +25,7 @@ CREATE TYPE novedades_calculadas_return AS (
   detalles text,
   cod_nov_ini text,
   horas interval,
-  nr_cod_presencialidad text
+  cod_presencialidad text
 );
 
 DO
@@ -46,7 +47,7 @@ $BODY$
       CASE WHEN fichadas_consolidadas AND nr_cuenta_horas AND trabajable AND fecha >= fecha_inicio_fichada THEN duration(fichadas) ELSE null END as horas,
       CASE WHEN (trabajable OR nr_corridos) AND fichadas_consolidadas AND nr_requiere_fichadas AND fecha >= fecha_inicio_fichada AND fv_cod_nov IS NOT NULL THEN
         coalesce(nr_cod_nov, cod_nov_pred_fecha)
-      ELSE null END as nr_cod_presencialidad
+      ELSE null END as cod_presencialidad
     FROM (
       SELECT p.idper, p.ficha, f.fecha, f.fichadas_consolidadas,
           (f.dds BETWEEN 1 AND 5) AND (laborable is not false OR inamovible is not true AND f.dds NOT BETWEEN 1 AND 5) as trabajable,
@@ -101,6 +102,10 @@ $BODY$
 -- ¡ATENCIÓN! NO MODIFICAR MANUALMENTE ESTA FUNCIÓN FUE GENERADA CON EL SCRIPT novedades_calculadas.sql
 -- Otras funciones que comienzan con el nombre novedades_calculadas se generaron junto a esta!
 $$);
+  execute v_sql;
+  execute replace(replace(v_sql,'/*idper**',''),'**idper*/','');
+END;
+$CREATOR$;
 
 DO 
 $CREATOR$
@@ -125,13 +130,13 @@ MERGE INTO novedades_vigentes nv
       OR nv.trabajable IS DISTINCT FROM q.trabajable
       OR nv.cod_nov_ini IS DISTINCT FROM q.cod_nov_ini
       OR nv.horas IS DISTINCT FROM q.horas
-      OR nv.nr_cod_presencialidad IS DISTINCT FROM q.nr_cod_presencialidad
+      OR nv.cod_presencialidad IS DISTINCT FROM q.cod_presencialidad
       ) THEN
     UPDATE SET ficha = q.ficha, cod_nov = q.cod_nov, fichadas = q.fichadas, sector = q.sector, detalles = q.detalles,
-      trabajable = q.trabajable, cod_nov_ini = q.cod_nov_ini, horas = q.horas, nr_cod_presencialidad = q.nr_cod_presencialidad
+      trabajable = q.trabajable, cod_nov_ini = q.cod_nov_ini, horas = q.horas, cod_presencialidad = q.cod_presencialidad
   WHEN NOT MATCHED THEN
-    INSERT   (  idper,   ficha,   fecha,   cod_nov,   fichadas,   sector,   detalles,   trabajable,   cod_nov_ini,   horas,   nr_cod_presencialidad)
-      VALUES (q.idper, q.ficha, q.fecha, q.cod_nov, q.fichadas, q.sector, q.detalles, q.trabajable, q.cod_nov_ini, q.horas, q.nr_cod_presencialidad)
+    INSERT   (  idper,   ficha,   fecha,   cod_nov,   fichadas,   sector,   detalles,   trabajable,   cod_nov_ini,   horas,   cod_presencialidad)
+      VALUES (q.idper, q.ficha, q.fecha, q.cod_nov, q.fichadas, q.sector, q.detalles, q.trabajable, q.cod_nov_ini, q.horas, q.cod_presencialidad)
   WHEN NOT MATCHED BY SOURCE AND nv.fecha BETWEEN p_desde AND p_hasta/*idper** AND nv.idper = p_idper**idper*/ THEN DELETE;
 END;
 $BODY$;

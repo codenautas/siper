@@ -312,7 +312,7 @@ export const novedades_vigentes = {
         tipo_novedad: is.nullable.string,
         trabajable: is.nullable.boolean,
         cod_nov_ini: is.nullable.string,
-        nr_cod_presencialidad: is.nullable.string,
+        cod_presencialidad: is.nullable.string,
     })
 } satisfies CommonEntityDefinition
 
