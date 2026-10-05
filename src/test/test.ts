@@ -98,7 +98,7 @@ const COD_ENFERMEDAD = "13";
 const COD_MUDANZA = "124";
 const COD_COMISION = "10";
 const COD_NO_FICHAR = "85";
-const COD_SALIDA_ANTI = "55";
+const COD_SALIDA_ANTI = "57";
 const COD_AUSENTE = "102";
 const COD_ABANDONO = "59";
 const COD_PRED_PAS: string|null = '999'; // es el código predeterminado para un día laborable en el pasado y presente
@@ -2014,9 +2014,17 @@ describe("SiPer: " + testConfig.name, function(){
         it("tiene que ver un solo las novedades de su situación de revista", async function(){
             await enNuevaPersona(this.test?.title!, {inicia_fichada, vacaciones: 20, situacion_revista: SITUACION_REVISTA_TERCER}, async ({idper}) => {
                 var result = await rrhhSession.callProcedure(ctts.novedades_disponibles, {idper, annio: Number(DESDE_AÑO)})
+                var {rows: esperados} = await server.inDbClient(ADMIN_REQ, async client => client.query(
+                    `select cod_nov from cod_novedades where sr_grupo = 'CONT' order by cod_nov`
+                ).fetchAll());
+                var codigosEsperados = esperados.map(({cod_nov}) => cod_nov);
                 discrepances.showAndThrow(
-                    result.map(({cod_nov}) => ({cod_nov})), 
-                    [{cod_nov: COD_COMISION}]
+                    {incluyeComision: codigosEsperados.includes(COD_COMISION), incluyeVacaciones: codigosEsperados.includes(COD_VACACIONES)},
+                    {incluyeComision: true                                   , incluyeVacaciones: false}
+                );
+                discrepances.showAndThrow(
+                    result.map(({cod_nov}) => ({cod_nov})),
+                    esperados.map(({cod_nov}) => ({cod_nov}))
                 );
             })
         })
