@@ -108,7 +108,7 @@ export function personas(context: TableContext): TableDefinition {
             {references: 'categorias'      , fields:['categoria']     },
             {references: 'agrupamientos'   , fields:[agrupamiento.name]},
             {references: 'grados'          , fields:['tramo','grado'] },
-            {references: 'sedes_laborales', fields:['cod_sede'], displayFields:['descripcion']},
+            {references: 'sedes_laborales', fields:['cod_sede'], displayFields:['descripcion', 'domicilio']},
         ],
         constraints: [
             soloCodigo(idper.name),
@@ -142,7 +142,7 @@ export function personas(context: TableContext): TableDefinition {
             // where: es.rrhh ? 'true' : es.registra ? `personas.activo AND sector_pertenece(personas.sector, ${quoteLiteral(user.sector)})` : `personas.idper = ${quoteLiteral(user.idper)}`
             from:`(${sqlPersonas('fecha_actual()')})`
         },
-        hiddenColumns: ['cuil_valido', 'inicia_fichada'],
+        hiddenColumns: ['cuil_valido', 'inicia_fichada', 'sedes_laborales__domicilio'],
         sortColumns: [{column: 'activo', order: -1}, {column: 'idper', order: 1}],
     };
 }

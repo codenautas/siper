@@ -25,6 +25,7 @@ export function sedes_laborales(context:TableContext):TableDefinition{
             cod_sede,
             {name: 'punto_alternativo',typeName:'boolean'},
             {name: 'descripcion'      ,typeName:'text'   , isName:true},
+            {name: 'domicilio'        ,typeName:'text'   },
             {name: 'para_presencial'  ,typeName:'boolean'},
             {name: 'punto'            ,typeName:'point'  },
         ],
@@ -37,7 +38,7 @@ export function sedes_laborales(context:TableContext):TableDefinition{
         ],
         sql:{
                 isTable:false,
-                from:`(select sd.id_punto, sd.cod_sede, sd.descripcion, sd.punto_alternativo, sd.para_presencial, sd.punto
+                from:`(select sd.id_punto, sd.cod_sede, sd.descripcion, sd.domicilio, sd.punto_alternativo, sd.para_presencial, sd.punto
                 from sedes sd 
                     where sd.cod_sede is not null)
             `

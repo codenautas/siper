@@ -996,6 +996,7 @@ export const sedes = {
         cod_sede: is.string,
         punto_alternativo: is.boolean,
         descripcion: is.string,
+        domicilio: is.nullable.string,
         para_presencial: is.boolean,
     })
 }

@@ -345,7 +345,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
 // @ts-ignore
 type ProvisorioPersonas = {sector?:string, idper:string, apellido:string, nombres:string, cuil:string, ficha?:string, idmeta4?:string, cargable?:boolean, cuil_valido?:boolean, 
     fecha_ingreso?:RealDate, fecha_egreso?:RealDate /*, activo?:boolean, fecha_nacimiento?:RealDate, nombre_sector?:string, jerarquia?:string, jerarquias__descripcion?:string, cargo_atgc?:string, agrupamiento?:string, tramo?:string, grado?:string, domicilio?:string, nacionalidad?:string, sectores__nombre_sector?:string*/};
-type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string, perfil_sgc:number, perfiles_sgc__nombre:string, banda_horaria:string, bandas_horarias__descripcion:string, sexo:string, sexos__descripcion:string, motivo_egreso?:string, motivos_egreso__descripcion?:string, cuil_valido?:boolean};
+type ProvisorioPersonaLegajo = ProvisorioPersonas & {tipo_doc:string, documento:string, sector:string, es_jefe:boolean, categoria:string, situacion_revista:string, registra_novedades_desde:RealDate, para_antiguedad_relativa:RealDate, activo:boolean, fecha_ingreso:RealDate, fecha_egreso:RealDate, nacionalidad:string, jerarquia:string, jerarquias__descripcion:string, cargo_atgc:string, agrupamiento:string, tramo:string, grado:string, domicilio:string, fecha_nacimiento:RealDate, sectores__nombre_sector:string, perfil_sgc:number, perfiles_sgc__nombre:string, banda_horaria:string, bandas_horarias__descripcion:string, sexo:string, sexos__descripcion:string, motivo_egreso?:string, motivos_egreso__descripcion?:string, cuil_valido?:boolean, sedes_laborales__domicilio?:string};
 type ProvisorioPersonaDomicilio = {idper:string, barrios_localidades__nombre:string,calles__nombre_calle:string, nombre_calle:string, altura:string, piso:string, depto:string, tipos_domicilio__descripcion:string, tipo_domicilio:string, provincias__nombre_provincia:string, provincia:string, barrio_localidad:string, codigo_postal:string, comuna_partido:string, comunas_partidos__nombre:string, nro_item:string, orden:number, punto:string|null}
 type ProvisorioPersonaTelefono = {idper: string, tipo_telefono: string, tipos_telefono__descripcion?: string, telefono: string, observaciones?: string, nro_item?: number, orden?: number}
 type ProvisorioSectores = {pactivas: number, activo: boolean,sector:string, nombre_sector:string, pertenece_a:string, nivel:number};
@@ -986,6 +986,14 @@ function LegajoPer(props: {conn: Connector, idper:string}) {
                     <div className="legajo-campo">
                         <div className="legajo-etiqueta">Fecha Egreso:</div>
                         <div className="legajo-valor">{persona.fecha_egreso?.toDmy() || '-'}</div>
+                    </div>
+                </div>
+            </div>
+            <div className="legajo-seccion">
+                <div className="legajo-grupo">
+                    <div className="legajo-campo legajo-campo-largo">
+                        <div className="legajo-etiqueta">Domicilio laboral:</div>
+                        <div className="legajo-valor">{persona.sedes_laborales__domicilio || '-'}</div>
                     </div>
                 </div>
             </div>

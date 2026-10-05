@@ -8,6 +8,11 @@ alter table "novedades_vigentes" drop constraint if exists "novedades_vigentes c
 alter table "novedades_vigentes" add constraint "novedades_vigentes cnf REL" foreign key ("cod_presencialidad") references "cod_novedades" ("cod_nov")  on update cascade;
 create index "cod_presencialidad 4 novedades_vigentes IDX" ON "novedades_vigentes" ("cod_presencialidad");
 
+-- Agrega domicilio a sedes (domicilio laboral de las personas)
+alter table "sedes" add column "domicilio" text;
+alter table "sedes" add constraint "domicilio<>''" check ("domicilio"<>'');
+update "sedes" set "domicilio" = "descripcion" where "punto_alternativo" is not true;
+
 DROP FUNCTION novedades_calculadas(date, date);
 DROP FUNCTION novedades_calculadas_idper(date, date, text);
 

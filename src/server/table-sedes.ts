@@ -25,6 +25,7 @@ export function sedes(context:TableContext):TableDefinition{
             cod_sede,
             {name: 'punto_alternativo',typeName:'boolean'},
             {name: 'descripcion'      ,typeName:'text'   },
+            {name: 'domicilio'        ,typeName:'text'   },
             {name: 'para_presencial'  ,typeName:'boolean'},
             {name: 'punto'            ,typeName:'point'  },
         ],
