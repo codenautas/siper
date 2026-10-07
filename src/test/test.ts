@@ -359,6 +359,8 @@ describe("SiPer: " + testConfig.name, function(){
             ctts.personas,
             persona as ctts.Persona,
             'new',
+            undefined,
+            {unhide:true}
         );
         var personaSituacionRevista = {
             idper: personaGrabada.idper,
@@ -1229,7 +1231,7 @@ describe("SiPer: " + testConfig.name, function(){
                         assert.equal(resumen.dias_promediados, 1);
                         discrepances.showAndThrow(resumen.suma_horas, timeInterval({hours:8}));
 
-                        await adminMetadatosSession.saveRecord(ctts.personas, {idper, inicia_fichada:fechaAnterior}, 'update');
+                        await adminMetadatosSession.saveRecord(ctts.personas, {idper, inicia_fichada:fechaAnterior}, 'update', undefined, {unhide:true});
 
                         resumen = await rrhhSession.callProcedure(ctts.calendario_persona_resumen, {idper, annio:2000, mes:1});
                         assert.equal(resumen.dias_promediados, 2);

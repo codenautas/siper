@@ -313,6 +313,7 @@ export const novedades_vigentes = {
         trabajable: is.nullable.boolean,
         cod_nov_ini: is.nullable.string,
         cod_presencialidad: is.nullable.string,
+        fichadas: is.nullable.string,
     })
 } satisfies CommonEntityDefinition
 
@@ -322,7 +323,8 @@ export const inconsistencias = {
     table: 'inconsistencias',
     description: is.object({
         idper: is.string,
-        pauta: is.string
+        pauta: is.string,
+        cod_nov: is.nullable.string
     })
 }
 
@@ -335,9 +337,11 @@ export const parte_diario = {
         mismo_cod_nov_hasta: is.Date, 
         habiles: is.number, 
         corridos: is.number,
-        horas: is.class(TimeInterval)
+        horas: is.nullable.class(TimeInterval),
+        puntos_compatibles: is.nullable.boolean,
+        fichada: is.nullable.string
     })
-} 
+}
 
 export const horarios_dds = {
     table: 'horarios_dds',
@@ -362,7 +366,8 @@ export const fichadas_vigentes = {
     description: is.object({
         idper: is.string,
         fecha: is.Date,
-        fichadas: isTimeRange
+        fichadas: isTimeRange,
+        cod_nov: is.nullable.string
     })
 }
 
