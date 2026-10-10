@@ -32,6 +32,15 @@ function sinMinusculasNiAcentos(textWithValue: string){
         .replace(/[ñ]/g,'Ñ');
 };
 
+// si hay alguna coordenada las dos son obligatorias, así la grilla las graba juntas
+// (se usa con specialValidator: 'coordenadas' en las tablas que tengan coordenada_x y coordenada_y)
+myOwn.validators.coordenadas = {
+    getMandatoryMap: function(row: Record<string, unknown>){
+        var alguna = row.coordenada_x != null || row.coordenada_y != null;
+        return {coordenada_x: alguna, coordenada_y: alguna};
+    }
+};
+
 myOwn.clientSides.detalle_dias = {
     update: function(){},
     prepare: function(depot, fieldName){

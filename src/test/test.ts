@@ -165,7 +165,8 @@ const TEST_VIA_CHROMIUM = {
     startContext: (app:AppBackendConstructor<AppSiper>) => startNavigatorContext(app, {
         browserType: 'chromium',
         headless: false,
-        slowMo: 10
+        slowMo: 10,
+        // verbose: VERBOSE
     }),
 }
 
@@ -1553,6 +1554,15 @@ describe("SiPer: " + testConfig.name, function(){
     describe("puntos en el parte diario", function(){
         const LUGANO = '(-58.4650,-34.6841)'
         // const LUGANOXY = {x:-58.4650,y:-34.6841};
+        // por SQL porque nro_item y punto no son editables desde la grilla
+        async function registrarDomicilio(params:{idper: string, nro_item: number, tipo_domicilio: string, punto?: string}): Promise<void> {
+            await server.inDbClient(ADMIN_REQ, async client => {
+                await client.query(
+                    `insert into per_domicilios (${Object.keys(params)}) values (${Object.keys(params).map((_, i) => "$" + (i+1))})`,
+                    Object.values(params)
+                ).execute();
+            })
+        }
         it("fichadas normales con puntos compatibles", async function(){
             const fecha = date.iso('2000-01-28');
             await enNuevaPersona(this.test?.title!, {inicia_fichada: fecha}, async ({idper}) => {
@@ -1592,8 +1602,8 @@ describe("SiPer: " + testConfig.name, function(){
         it("teletrabajo en domicilio", async function(){
             const fecha = date.iso('2000-01-28');
             await enNuevaPersona(this.test?.title!, {inicia_fichada: fecha}, async ({idper}) => {
-                await adminMetadatosSession.saveRecord(ctts.per_domicilios, {idper, nro_item:1, tipo_domicilio: 'P' }, 'new');
-                await adminMetadatosSession.saveRecord(ctts.per_domicilios, {idper, nro_item:2, tipo_domicilio: 'TA', punto: LUGANO }, 'new');
+                await registrarDomicilio({idper, nro_item:1, tipo_domicilio: 'P' });
+                await registrarDomicilio({idper, nro_item:2, tipo_domicilio: 'TA', punto: LUGANO });
                 await registrarNovedad(superiorSession, {idper, desde:fecha, hasta:fecha, cod_nov: COD_DIAGRAMADO});
                 const entrada = '10:00:00';
                 const salida  = '16:30:00';
@@ -1606,8 +1616,8 @@ describe("SiPer: " + testConfig.name, function(){
         it("teletrabajo en domicilio pero no lo registró", async function(){
             const fecha = date.iso('2000-01-28');
             await enNuevaPersona(this.test?.title!, {inicia_fichada: fecha}, async ({idper}) => {
-                await adminMetadatosSession.saveRecord(ctts.per_domicilios, {idper, nro_item:1, tipo_domicilio: 'P' }, 'new');
-                await adminMetadatosSession.saveRecord(ctts.per_domicilios, {idper, nro_item:2, tipo_domicilio: 'TA', punto: LUGANO }, 'new');
+                await registrarDomicilio({idper, nro_item:1, tipo_domicilio: 'P' });
+                await registrarDomicilio({idper, nro_item:2, tipo_domicilio: 'TA', punto: LUGANO });
                 const entrada = '10:00:00';
                 const salida  = '16:30:00';
                 await registrarFichadas(server, {idper, fecha, entrada, salida, punto: LUGANO});
@@ -1727,7 +1737,7 @@ describe("SiPer: " + testConfig.name, function(){
     describe("horarios", function(){
         it("al ingresar un horario se genera horarios y horarios_dds", async function(){
             await enNuevaPersona(this.test?.title!, {inicia_fichada}, async ({idper}) => {
-                var horario_per = await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: 'LMV 8:13 XJ 9-16', desde:date.iso('2000-01-01'), hasta:date.iso('2000-12-31')}, 'new')
+                var horario_per = await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: 'LMV 8:13 XJ 9-16', desde:date.iso('2000-01-01'), hasta:date.iso('2000-12-31')}, 'new', undefined, {ignoreMergeConflictsIn:['horario']})
                 var horario = 'LMV8:13a15:13 XJ9a16'
                 discrepances.showAndThrow(horario_per.horario, horario)
                 await rrhhSession.tableDataTest(ctts.horarios_dds, [
@@ -1741,7 +1751,7 @@ describe("SiPer: " + testConfig.name, function(){
         });
         it("un horario de 6 horas desde las 10", async function(){
             await enNuevaPersona(this.test?.title!, {inicia_fichada}, async ({idper}) => {
-                var horario_per = await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: '6h10', desde:date.iso('2000-01-01'), hasta:date.iso('2000-12-31')}, 'new')
+                var horario_per = await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: '6h10', desde:date.iso('2000-01-01'), hasta:date.iso('2000-12-31')}, 'new', undefined, {ignoreMergeConflictsIn:['horario']})
                 var horario = '6h 10a16'
                 discrepances.showAndThrow(horario_per.horario, horario)
                 await rrhhSession.tableDataTest(ctts.horarios_dds, [
@@ -1763,8 +1773,8 @@ describe("SiPer: " + testConfig.name, function(){
                     // TODO
                     const entrada = '09:00:00';
                     const salida  = '17:00:00';
-                    await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: '6h10', desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-28')}, 'new')
-                    await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: '7h10', desde:date.iso('2000-01-29'), hasta:date.iso('2000-12-31')}, 'new')
+                    await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: '6h10', desde:date.iso('2000-01-01'), hasta:date.iso('2000-01-28')}, 'new', undefined, {ignoreMergeConflictsIn:['horario']})
+                    await rrhhSession.saveRecord(ctts.horarios_per, {idper, horario: '7h10', desde:date.iso('2000-01-29'), hasta:date.iso('2000-12-31')}, 'new', undefined, {ignoreMergeConflictsIn:['horario']})
                     await registrarFichadas(server, {idper, fecha:fechaAnterior, entrada, salida})
                     await registrarFichadas(server, {idper, fecha:FECHA_ACTUAL, entrada, salida})
                     await adminMetadatosSession.callProcedure(ctts.consolidar_fichadas, {idper:null, fecha:fechaAnterior, consolidar:true});
@@ -2036,10 +2046,10 @@ describe("SiPer: " + testConfig.name, function(){
             await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
                 var coordenada_x=-58.125;
                 var coordenada_y=-34.0625;
-                var nro_item = 2;
                 var dom = await rrhhSession.saveRecord(ctts.per_domicilios, {
-                    idper, nro_item, tipo_domicilio: 'TA', nombre_calle: 'ASCASUBI'
+                    idper, tipo_domicilio: 'TA', nombre_calle: 'ASCASUBI'
                 }, 'new');
+                var nro_item = dom.nro_item;
                 discrepances.showAndThrow(
                     {idgeo_mayor_a_cero: dom.idgeo > 0 , fecha_codificacion:dom.fecha_codificacion},
                     {idgeo_mayor_a_cero: true          , fecha_codificacion:null}

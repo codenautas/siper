@@ -486,7 +486,7 @@ function FichadaForm(props: { infoUsuario: InfoUsuario, conn:Connector, tiposFic
 
 function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, infoUsuario: InfoUsuario, tiposFichada: Tipos_fichada[] }) {
     useEffect(() => {
-        document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
+        document.body.style.backgroundImage = myOwn.backgroundUrl;
         if (props.infoUsuario.usuario) {
             renderRol( props.infoUsuario );
         }
@@ -524,7 +524,7 @@ function PantallaFichadas(props: { conn: Connector, fixedFields: FixedFields, in
                 boxSizing: 'border-box'
             }}
         >
-            <AppBar position="static" className="app-bar-bg" sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}>
+            <AppBar position="static" className="app-bar-bg" sx={{ backgroundImage: myOwn.backgroundUrl }}>
                 <Toolbar>
                     <Typography flexGrow={2}>
                         SiPer - Registro de fichada

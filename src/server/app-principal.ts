@@ -587,7 +587,7 @@ export class AppSiper extends AppBackend{
     override clientIncludes(req:Request|null, opts:OptsClientPage):ClientModuleDefinition[]{
         var UsandoREact = true;
         var menuedResources:ClientModuleDefinition[]=req && opts && !opts.skipMenu ? [
-            { type:'js' , src:'client.js' },
+            // { type:'js' , src:'client.js' },
         ]:[
         ];
         var list: ClientModuleDefinition[] = [

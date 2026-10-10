@@ -67,7 +67,7 @@ export function Componente(props:{children:ReactNode[]|ReactNode, componentType:
     return <Card className={"componente-" + props.componentType} 
         siper-es-efimero={props.esEfimero === true || esEfimero(props.esEfimero) ? "si" : "no"}
         siper-es-scrollable={props.scrollable === true ? "si" : "no"}
-        sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}
+        sx={{ backgroundImage: myOwn.backgroundUrl }}
     >
         {props.children}
     </Card>
@@ -532,7 +532,7 @@ function ListaPersonasEditables(props: {conn: Connector, sector:string, idper:st
             <Accordion key = {s.sector?.toString()} expanded = {!!expandido[s.sector]}
                 onChange={(_, b: boolean) => { setExpandido(e => ({...e, [s.sector]:b })) }}
                 className="accordion-bg"
-                sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}
+                sx={{ backgroundImage: myOwn.backgroundUrl }}
                 hidden = {s.nivel > verNivelSectorHasta && !expandido[s.pertenece_a] && !expandido[s.sector]}
             >
                 <AccordionSummary className="accordion-summary" id = {s.sector} expandIcon={<ICON.NavigationDown />} > 
@@ -1324,7 +1324,7 @@ function BarraSuperior(props: { infoUsuario: InfoUsuario, titulo: string, childr
         return "./docs/manual-rrhh.pdf";
     }
 
-    return <AppBar position="static" className="app-bar-bg" sx={{ backgroundImage: `url('${myOwn.config.config["background-img"]}')` }}>
+    return <AppBar position="static" className="app-bar-bg" sx={{ backgroundImage: myOwn.backgroundUrl }}>
             <Toolbar>
                 <IconButton color="inherit" onClick={()=>{
                     unmountConnectedApp();
@@ -1355,7 +1355,7 @@ function BarraSuperior(props: { infoUsuario: InfoUsuario, titulo: string, childr
 function PantallaPrincipal(props: { conn: Connector, fixedFields: FixedFields, infoUsuario: InfoUsuario }) {
 
     useEffect(() => {
-        document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
+        document.body.style.backgroundImage = myOwn.backgroundUrl;
         if (props.infoUsuario.usuario) {
             renderRol( props.infoUsuario );
         }
@@ -1521,7 +1521,7 @@ function PantallaMapaDomicilios(props: { conn: Connector, fixedFields: FixedFiel
     }, [domicilios, fichadas, sedesMapa]);
 
     useEffect(() => {
-        document.body.style.backgroundImage = `url('${myOwn.config.config["background-img"]}')`;
+        document.body.style.backgroundImage = myOwn.backgroundUrl;
         if (idper == null) return;
         conn.ajax.table_data<ProvisorioPersonas>({
             table: 'personas',

@@ -13,6 +13,7 @@ export function geo_domicilios(context: TableContext): TableDefinition {
         title: 'Geolocalización de domicilios',
         tableName: 'geo_domicilios',
         editable: esGeo,
+        specialValidator: 'coordenadas', // las dos coordenadas se graban juntas (ver menu.ts)
         fields: [
             {name: 'idgeo'          , typeName: 'bigint' , editable: false},
             {...provincia           ,                      editable: false},
