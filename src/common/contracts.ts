@@ -339,6 +339,8 @@ export const parte_diario = {
         corridos: is.number,
         horas: is.nullable.class(TimeInterval),
         puntos_compatibles: is.nullable.boolean,
+        puntos_compatibles_entrada: is.nullable.boolean,
+        puntos_compatibles_salida: is.nullable.boolean,
         fichada: is.nullable.string
     })
 }
@@ -462,7 +464,8 @@ export const calendario_persona = {
         consolidada: is.boolean,
         requiere_fichadas: is.boolean,
         injustificado: is.boolean,
-        puntos_compatibles: is.boolean,
+        puntos_compatibles_entrada: is.nullable.boolean,
+        puntos_compatibles_salida: is.nullable.boolean,
     })
 }
 
@@ -544,6 +547,26 @@ export const info_usuario = {
 }
 
 export type InfoUsuario = DefinedType<typeof info_usuario.result>
+
+export const situacion_actual = {
+    procedure: 'situacion_actual',
+    parameters: is.object({}),
+    result: is.nullable.object({
+        fecha: is.Date,
+        cod_nov: is.string,
+        novedad: is.nullable.string,
+        cuenta_horas: is.nullable.boolean,
+        mismo_cod_nov_desde: is.Date,
+        mismo_cod_nov_hasta: is.Date,
+        entrada: is.nullable.string,
+        salida: is.nullable.string,
+        horas: is.nullable.class(TimeInterval),
+        puntos_compatibles_entrada: is.nullable.boolean,
+        puntos_compatibles_salida: is.nullable.boolean,
+    })
+}
+
+export type SituacionActual = DefinedType<typeof situacion_actual.result>
 
 export const parametros = {
     procedure : 'parametros',

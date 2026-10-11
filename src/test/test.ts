@@ -265,6 +265,7 @@ describe("SiPer: " + testConfig.name, function(){
                         `delete from fichadas_vigentes where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
                         `delete from novedades_vigentes where (${AÑOS_DE_PRUEBA} OR ${IDPER_DE_PRUEBA})`,
                         `delete from usuarios where ${IDPER_DE_PRUEBA}`,
+                        `delete from per_domicilios where ${IDPER_DE_PRUEBA}`,
                         `delete from personas where ${IDPER_DE_PRUEBA}`,
                         `delete from situacion_revista where situacion_revista IN ('${SITUACION_REVISTA_PLANTA}', '${SITUACION_REVISTA_TERCER}')`,
                         `delete from grupos where ${IDPER_DE_PRUEBA.replace('idper', 'grupo')}`,
@@ -1570,7 +1571,7 @@ describe("SiPer: " + testConfig.name, function(){
                 const salida  = '17:00:00';
                 await registrarFichadas(server, {idper, fecha, entrada, salida, ...TERM_OBELISCO});
                 await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
-                    {puntos_compatibles: true}
+                    {puntos_compatibles: true, puntos_compatibles_entrada: true, puntos_compatibles_salida: true}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
         })
@@ -1583,7 +1584,7 @@ describe("SiPer: " + testConfig.name, function(){
                 await registrarFichada(server, {idper, fecha, tipo_fichada:'E', hora:entrada, ...TERM_OBELISCO});
                 await registrarFichada(server, {idper, fecha, tipo_fichada:'S', hora:salida , ...RETIRO});
                 await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
-                    {puntos_compatibles: false}
+                    {puntos_compatibles: false, puntos_compatibles_entrada: true, puntos_compatibles_salida: false}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
         })
@@ -1595,7 +1596,16 @@ describe("SiPer: " + testConfig.name, function(){
                 await registrarFichada(server, {idper, fecha, tipo_fichada:'E', hora:entrada, ...TERM_OBELISCO});
                 await registrarFichada(server, {idper, fecha, tipo_fichada:'S', hora:salida });
                 await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
-                    {puntos_compatibles: false}
+                    {puntos_compatibles: false, puntos_compatibles_entrada: true, puntos_compatibles_salida: false}
+                ], 'all', {fixedFields:{idper, fecha}})
+            });
+        })
+        it("ficha solo la entrada, la salida es desconocida", async function(){
+            const fecha = date.iso('2000-01-28');
+            await enNuevaPersona(this.test?.title!, {inicia_fichada: fecha}, async ({idper}) => {
+                await registrarFichada(server, {idper, fecha, tipo_fichada:'E', hora:'09:00:00', ...TERM_OBELISCO});
+                await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
+                    {puntos_compatibles: null, puntos_compatibles_entrada: true, puntos_compatibles_salida: null}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
         })
@@ -1609,7 +1619,7 @@ describe("SiPer: " + testConfig.name, function(){
                 const salida  = '16:30:00';
                 await registrarFichadas(server, {idper, fecha, entrada, salida, punto: LUGANO});
                 await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
-                    {puntos_compatibles: false}
+                    {puntos_compatibles: false, puntos_compatibles_entrada: false, puntos_compatibles_salida: false}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
         })
@@ -1622,11 +1632,68 @@ describe("SiPer: " + testConfig.name, function(){
                 const salida  = '16:30:00';
                 await registrarFichadas(server, {idper, fecha, entrada, salida, punto: LUGANO});
                 await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
-                    {puntos_compatibles: false}
+                    {puntos_compatibles: false, puntos_compatibles_entrada: false, puntos_compatibles_salida: false}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
         })
     });
+    describe("situación actual (bienvenida)", function(){
+        type SituacionActualEsperada = Partial<NonNullable<ctts.SituacionActual>>;
+        async function verificarSituacionActual(sesion: SesionEmuladaSiper, esperada: SituacionActualEsperada | null){
+            const situacion = await sesion.callProcedure(ctts.situacion_actual, {});
+            if (esperada == null || situacion == null) {
+                discrepances.showAndThrow(situacion, esperada);
+            } else {
+                const obtenida: SituacionActualEsperada = {};
+                for (const campo of Object.keys(esperada) as (keyof SituacionActualEsperada)[]) {
+                    Object.assign(obtenida, {[campo]: situacion[campo]});
+                }
+                discrepances.showAndThrow(obtenida, esperada);
+            }
+        }
+        it("sin fichadas", async function(){
+            await enNuevaPersona(this.test?.title!, {usuario:{sesion:true}}, async (_persona, {sesion}) => {
+                await verificarSituacionActual(sesion, {
+                    fecha: FECHA_ACTUAL, cod_nov: COD_PRED_PAS!, cuenta_horas: true, entrada: null, salida: null, horas: null,
+                    puntos_compatibles_entrada: null, puntos_compatibles_salida: null
+                });
+            });
+        })
+        it("ficha solo la entrada", async function(){
+            await enNuevaPersona(this.test?.title!, {usuario:{sesion:true}}, async ({idper}, {sesion}) => {
+                await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, tipo_fichada:'E', hora:'09:10:00', ...TERM_OBELISCO});
+                await verificarSituacionActual(sesion, {
+                    cod_nov: COD_PRED_PAS!, entrada: '9:10', salida: null, horas: null,
+                    puntos_compatibles_entrada: true, puntos_compatibles_salida: null
+                });
+            });
+        })
+        it("ficha la entrada y la salida sin punto", async function(){
+            await enNuevaPersona(this.test?.title!, {usuario:{sesion:true}}, async ({idper}, {sesion}) => {
+                await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, tipo_fichada:'E', hora:'09:10:00', ...TERM_OBELISCO});
+                await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, tipo_fichada:'S', hora:'15:22:00'});
+                await verificarSituacionActual(sesion, {
+                    cod_nov: COD_PRED_PAS!, entrada: '9:10', salida: '15:22', horas: timeInterval({hours:6, minutes:12}),
+                    puntos_compatibles_entrada: true, puntos_compatibles_salida: false
+                });
+            });
+        })
+        it("novedad de varios días", async function(){
+            await enNuevaPersona(this.test?.title!, {vacaciones: 20, usuario:{sesion:true}}, async ({idper}, {sesion}) => {
+                const hasta = date.iso('2000-02-04');
+                await registrarNovedad(superiorSession, {idper, desde:FECHA_ACTUAL, hasta, cod_nov:COD_VACACIONES});
+                await verificarSituacionActual(sesion, {
+                    cod_nov: COD_VACACIONES, mismo_cod_nov_desde: FECHA_ACTUAL, mismo_cod_nov_hasta: hasta,
+                    entrada: null, salida: null, horas: null
+                });
+            });
+        })
+        it("no hay situación en el fin de semana", async function(){
+            await enNuevaPersona(this.test?.title!, {usuario:{sesion:true}, hoy: date.iso('2000-01-29')}, async (_persona, {sesion}) => {
+                await verificarSituacionActual(sesion, null);
+            });
+        })
+    })
     describe("parte diario", function(){
         it("toma en cuenta las vacaciones partidas", async function(){
             await enNuevaPersona(this.test?.title!, {inicia_fichada: date.iso('2000-12-31'), usuario:{sesion:false}}, async ({idper}) => {
@@ -1716,6 +1783,7 @@ describe("SiPer: " + testConfig.name, function(){
                     '2000|2000|XX4|T|15|0|3|12|15|0|3|12|XX Prueba 4',
                     '2000|2000|XX5|T|20|0|4|16|20|0|4|16|XX Prueba 5',
                     '2000|2000|XX63|T|5|1|0|4|5|1|0|4|XX Prueba 63',
+                    '2000|2000|XX77|T|20|1|4|15|20|1|4|15|XX Prueba 77',
                 ];
                 discrepances.showAndThrow(obtenido, expected);
             })
@@ -2105,13 +2173,13 @@ describe("SiPer: " + testConfig.name, function(){
             var resultExt = await server.inTransactionProcedureContext(req, async (context) =>
                 await context.client.query(`SELECT ${resultBase.fields.map((f:{name:string})=>
                     f.name == 'cod_nov' ? `case cod_nov when '¡FECHA FUTURA SIN NOVEDAD!' then null when '¡FERIADO O FIN DE SEMANA!' then null else cod_nov end` : f.name
-                )} FROM (${sqlParteDiarioExtendido(context)}) x ${where} order by fecha, idper`,
+                )} FROM (${sqlParteDiarioExtendido(context, true)}) x ${where} order by fecha, idper`,
                     []
                 ).fetchAll()
             )
             // await fs.writeFile('sqlParteDiarioExt.json', JSON.stringify(resultExt,null,' '), 'utf8')
             discrepances.showAndThrow(resultBase.rows, resultExt.rows);
-            discrepances.showAndThrow(resultExt.rows.length, 445);
+            discrepances.showAndThrow(resultExt.rows.length, 475);
         })
     })
     function randInt(int: number) {

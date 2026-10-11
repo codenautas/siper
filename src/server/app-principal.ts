@@ -459,6 +459,7 @@ export class AppSiper extends AppBackend{
             menuContent.push({menuType:'fichar', name:'fichar'});
         }else{
             menuContent.push(
+                {menuType:'bienvenida', name:'bienvenida'   },
                 {menuType:'principal', name:'principal'     },
                 ...(es.registra ? [
                     {menuType:'menu', name:'listados', menuContent:[

@@ -129,6 +129,22 @@ function horaStr(horas:TimeInterval|any){
     return horassStr(horas, ':', '', true)
 }
 
+type ExtremoFichada = 'entrada' | 'salida';
+const SIGNO_PUNTO_COMPATIBLE: Record<ExtremoFichada, string> = {entrada: 'Ⓔ', salida: 'Ⓢ'};
+const SIGNO_SIN_PUNTO_COMPATIBLE = '⨂';
+
+function textoPuntoCompatible(compatible: boolean, extremo?: ExtremoFichada){
+    return (compatible ? 'con punto compatible' : 'no se encuentra punto compatible') + (extremo ? ` de ${extremo}` : '');
+}
+
+function MarcaPuntoCompatible(props: {extremo: ExtremoFichada, compatible: boolean | null}){
+    const {extremo, compatible} = props;
+    if (compatible == null) return null;
+    return <span calendario-puntos-compatibles={JSON.stringify(compatible)} title={textoPuntoCompatible(compatible, extremo)}>
+        {compatible ? SIGNO_PUNTO_COMPATIBLE[extremo] : SIGNO_SIN_PUNTO_COMPATIBLE}
+    </span>
+}
+
 function CalendarioResumen(props:{conn:Connector, idper:string, periodo:Periodo}){
     const {conn, idper, periodo} = props;
     var [resumen, setResumen] = useState<ctts.CalendarioResumenResult>({} as ctts.CalendarioResumenResult);
@@ -291,7 +307,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                             }}
                         >
                             <span className="calendario-dia-numero">{dia.dia ?? ''} 
-                                <span calendario-puntos-compatibles={JSON.stringify(dia.puntos_compatibles)} x-algo="si">{dia.puntos_compatibles == null || !mostrarFichadaEnDia ? '' :  dia.puntos_compatibles ? ' •' : ' ⨂' }</span>
+                                <span x-algo="si">{!mostrarFichadaEnDia ? '' : <> <MarcaPuntoCompatible extremo="entrada" compatible={dia.puntos_compatibles_entrada}/><MarcaPuntoCompatible extremo="salida" compatible={dia.puntos_compatibles_salida}/></>}</span>
                             </span>
                             {mostrarFichadaEnDia && dia.horas ? (
                                 <span className="calendario-dia-horas">
@@ -763,6 +779,7 @@ type SiCargaraNovedades = {mensaje:string, con_detalle:boolean, c_dds: boolean, 
 declare module "frontend-plus" {
     interface BEAPI {
         info_usuario: () => Promise<DefinedType<typeof ctts.info_usuario.result>>;
+        situacion_actual: (params:DefinedType<typeof ctts.situacion_actual.parameters>) => Promise<ctts.SituacionActual>;
         calendario_persona: (params:DefinedType<typeof ctts.calendario_persona.parameters>) => Promise<CalendarioResult[]>;
         calendario_persona_resumen: (params:DefinedType<typeof ctts.calendario_persona_resumen.parameters>) => Promise<ctts.CalendarioResumenResult>;
         novedades_disponibles: (params:{
@@ -1315,7 +1332,19 @@ export function renderRol( _infoUsuario: InfoUsuario ) {
     */
 }
 
-function BarraSuperior(props: { infoUsuario: InfoUsuario, titulo: string, children?: ReactNode }) {
+function volverAPrincipal(){
+    unmountConnectedApp();
+    location.hash = "i=principal";
+}
+
+function BotonOkVolverAPrincipal(){
+    return <Button variant="contained" onClick={volverAPrincipal} sx={{ position: 'fixed', right: 16, bottom: 32, zIndex: 1000 }}>
+        OK
+    </Button>
+}
+
+// cerrable: en vez del ícono de menú tiene una cruz (y abajo un OK) que cierra la pantalla y vuelve a principal
+function BarraSuperior(props: { infoUsuario: InfoUsuario, titulo: string, cerrable?: boolean, children?: ReactNode }) {
 
     const getManualHref = (rol: string) => {
         const userRol = rol.trim();
@@ -1326,10 +1355,14 @@ function BarraSuperior(props: { infoUsuario: InfoUsuario, titulo: string, childr
 
     return <AppBar position="static" className="app-bar-bg" sx={{ backgroundImage: myOwn.backgroundUrl }}>
             <Toolbar>
+                {props.cerrable ?
+                <IconButton color="inherit" title="cerrar y volver a principal" onClick={volverAPrincipal}><ICON.Close/></IconButton>
+                :
                 <IconButton color="inherit" onClick={()=>{
                     unmountConnectedApp();
                     location.hash="";
                 }}><ICON.Menu/></IconButton>
+                }
                 <Typography flexGrow={2}>
                     {props.titulo}
                 </Typography>
@@ -1349,6 +1382,7 @@ function BarraSuperior(props: { infoUsuario: InfoUsuario, titulo: string, childr
                 </Typography>
                 </div>
             </Toolbar>
+            {props.cerrable ? <BotonOkVolverAPrincipal/> : null}
         </AppBar>
 }
 
@@ -1540,7 +1574,7 @@ function PantallaMapaDomicilios(props: { conn: Connector, fixedFields: FixedFiel
     }, [idper]);
 
     return <Paper className="paper-principal">
-        <BarraSuperior infoUsuario={infoUsuario} titulo={
+        <BarraSuperior infoUsuario={infoUsuario} cerrable={true} titulo={
             `SiPer - Domicilios - ${idper ?? ''}` + (persona ? ` ${persona.apellido}, ${persona.nombres}` : '')
         }>
             <Typography>BA</Typography>
@@ -1550,6 +1584,65 @@ function PantallaMapaDomicilios(props: { conn: Connector, fixedFields: FixedFiel
         {idper == null ? <Typography>Falta indicar la persona (idper)</Typography>            : puntos == null ? <CircularProgress/>
             : <MapaPuntos puntos={puntos} capa={capa}/>
         }
+    </Paper>
+}
+
+function fechaStr(fecha: Date){
+    return fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function LineasSituacionActual(props: { situacion: NonNullable<ctts.SituacionActual> }) {
+    const { situacion } = props;
+    const lineas: string[] = [];
+    if (situacion.cuenta_horas !== true && situacion.novedad != null) {
+        lineas.push(`código ${situacion.cod_nov}: ${situacion.novedad}` + (
+            sameValue(situacion.mismo_cod_nov_desde, situacion.mismo_cod_nov_hasta) ? ''
+            : ` del ${fechaStr(situacion.mismo_cod_nov_desde)} al ${fechaStr(situacion.mismo_cod_nov_hasta)}`
+        ));
+    }
+    if (situacion.entrada == null && situacion.salida == null) {
+        if (situacion.cuenta_horas) lineas.push('Sin fichada.');
+    } else {
+        const lineaFichada = (texto: string, novedad: string | null, compatible: boolean | null) =>
+            [texto, novedad, compatible == null ? null : textoPuntoCompatible(compatible)].filter(parte => parte != null).join(' - ');
+        if (situacion.entrada != null) {
+            lineas.push(lineaFichada(`Fichada de entrada ${horaStr(situacion.entrada)}`, situacion.cuenta_horas ? situacion.novedad : null, situacion.puntos_compatibles_entrada));
+        }
+        if (situacion.salida != null) {
+            lineas.push(lineaFichada(`Fichada de salida ${horaStr(situacion.salida)}`, null, situacion.puntos_compatibles_salida));
+        }
+        if (situacion.horas != null) {
+            lineas.push(`Registra ${horassStr(situacion.horas, ' horas ', ' minutos', false)}`);
+        }
+    }
+    return <Box className="situacion-actual">
+        {lineas.map((linea, i) => <Typography key={i}>{linea}</Typography>)}
+    </Box>
+}
+
+function PantallaBienvenida(props: { conn: Connector, infoUsuario: InfoUsuario }) {
+    const { conn, infoUsuario } = props;
+    // undefined: todavía no llegó; null: no hay situación para hoy (ej: fin de semana)
+    const [situacion, setSituacion] = useState<ctts.SituacionActual | undefined>(undefined);
+
+    useEffect(() => {
+        document.body.style.backgroundImage = myOwn.backgroundUrl;
+        conn.ajax.situacion_actual({}).then(situacion => {
+            setSituacion(situacion);
+        }).catch(logError);
+    }, []);
+
+    return <Paper className="paper-principal">
+        <BarraSuperior infoUsuario={infoUsuario} cerrable={true} titulo="SiPer - Bienvenida"/>
+        <Box sx={{ padding: 2 }}>
+            <Typography variant="h5">Bienvenido {infoUsuario.nombres} {infoUsuario.apellido}</Typography>
+            <Typography variant="h6">{fechaStr(infoUsuario.fecha_actual)}</Typography>
+            {/* acá van a ir los mensajes */}
+            {situacion === undefined ? <CircularProgress/>
+                : situacion == null ? null
+                : <LineasSituacionActual situacion={situacion}/>
+            }
+        </Box>
     </Paper>
 }
 
@@ -1574,6 +1667,18 @@ myOwn.wScreens.mapa_domicilios = function mapa_domicilios(addrParams:any){
             { ...addrParams },
             document.getElementById('total-layout')!,
             ({ conn, fixedFields }) => (<PantallaMapaDomicilios conn={conn} fixedFields={fixedFields} infoUsuario={infoUsuario} />)
+        );
+    }).catch(logError);
+}
+
+// @ts-ignore
+myOwn.wScreens.bienvenida = function bienvenida(addrParams:any){
+    myOwn.ajax.info_usuario().then((infoUsuario: InfoUsuario) => {
+        renderConnectedApp(
+            myOwn as never as Connector,
+            { ...addrParams },
+            document.getElementById('total-layout')!,
+            ({ conn }) => (<PantallaBienvenida conn={conn} infoUsuario={infoUsuario} />)
         );
     }).catch(logError);
 }

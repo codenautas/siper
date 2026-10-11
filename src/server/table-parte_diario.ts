@@ -11,12 +11,17 @@ import { sqlPersonas } from "./table-personas";
 import { s_revista } from "./table-situacion_revista";
 import { FieldDefinition } from "backend-plus";
 
-export const sqlPuntosCompatibles = (context:Context) => 
-    context.be.config.siper?.puntos_compatibles ? ` case when ${context.es.admin ? 'true' : ` nv.fecha >= '${context.be.config.siper?.puntos_desde ?? '2026-07-01'}' and fichadas_consolidadas `} 
-        then puntos_compatibles(nv.idper, nv.fecha, nv.cod_nov, array[lower(nv.fichadas), upper(nv.fichadas)]) else null end` 
-    : 'null::boolean' 
+const sqlPuntoCompatible = (context:Context, exigirConsolidacion:boolean, sqlHora:string) =>
+    context.be.config.siper?.puntos_compatibles ? ` case when ${context.es.admin ? 'true' : ` nv.fecha >= '${context.be.config.siper?.puntos_desde ?? '2026-07-01'}' ${exigirConsolidacion ? 'and fichadas_consolidadas' : ''} `}
+        then puntos_compatibles(nv.idper, nv.fecha, nv.cod_nov, array[${sqlHora}]) else null end`
+    : 'null::boolean'
 
-const sqlParteDiarioBase = (novedades_vigentes: string, context:Context) => `
+// la primera entrada y la última salida (si el último rango no está cerrado la salida es null)
+export const sqlPuntosCompatibles = (context:Context, exigirConsolidacion:boolean) => `
+        ${sqlPuntoCompatible(context, exigirConsolidacion, 'lower(nv.fichadas)')} as puntos_compatibles_entrada,
+        ${sqlPuntoCompatible(context, exigirConsolidacion, 'upper(nv.fichadas)')} as puntos_compatibles_salida`
+
+const sqlParteDiarioBase = (novedades_vigentes: string, context:Context, exigirConsolidacion:boolean) => `
 select 
         p.cuil,
         p.apellido,
@@ -37,13 +42,16 @@ select
         cn.cuenta_horas,
         cn.injustificado,
         bh.descripcion as bh_descripcion,
-        ${sqlPuntosCompatibles(context)} as puntos_compatibles
+        pc.puntos_compatibles_entrada,
+        pc.puntos_compatibles_salida,
+        pc.puntos_compatibles_entrada and pc.puntos_compatibles_salida as puntos_compatibles
     from ${novedades_vigentes} nv 
         inner join lateral (${sqlPersonas('nv.fecha')} WHERE p.idper = nv.idper) p 
             on nv.fecha between coalesce(p.registra_novedades_desde, p.fecha_ingreso) and coalesce(p.fecha_egreso, nv.fecha)
         inner join bandas_horarias bh using (banda_horaria)
         inner join fechas using (fecha)
         left join cod_novedades cn using (cod_nov)
+        cross join lateral (select ${sqlPuntosCompatibles(context, exigirConsolidacion)} offset 0 /* para que no se aplane y repita las llamadas a puntos_compatibles */) pc
 `
 
 export const sqlParteDiario = (context:Context) => sqlParteDiarioBase(`(SELECT
@@ -55,9 +63,9 @@ export const sqlParteDiario = (context:Context) => sqlParteDiarioBase(`(SELECT
         nv.trabajable,
         nv.horas,
         nv.cod_presencialidad
-    from novedades_vigentes nv)`, context);
+    from novedades_vigentes nv)`, context, true);
 
-export const sqlParteDiarioExtendido = (context:Context) => sqlParteDiarioBase(sqlEnvolventeDesdeHastaDeNovedadVigente, context);
+export const sqlParteDiarioExtendido = (context:Context, exigirConsolidacion:boolean) => sqlParteDiarioBase(sqlEnvolventeDesdeHastaDeNovedadVigente, context, exigirConsolidacion);
 
 const SUMA_HORAS = `sum(horas)`;
 const HORAS_ESPERADAS = `(sum(cant_horas_esperadas) FILTER (WHERE horas is not null) || ' hours')::interval`;
@@ -115,7 +123,11 @@ export function parte_diario(context: TableContext): TableDefinition {
             { name: 'banda_horaria', typeName: 'text'},
             { name: 'bh_descripcion', typeName: 'text', title: 'descripción' },
             { name: 'injustificado' , typeName: 'boolean'},
-            ...(context.be.config.siper?.puntos_compatibles ? [{ name: 'puntos_compatibles', typeName: 'boolean', description: 'posee puntos compatibles en entrada y salida'}] : [] ) as FieldDefinition[],
+            ...(context.be.config.siper?.puntos_compatibles ? [
+                { name: 'puntos_compatibles', typeName: 'boolean', description: 'posee puntos compatibles en entrada y salida'},
+                { name: 'puntos_compatibles_entrada', typeName: 'boolean', title: 'p.c. entrada', description: 'posee punto compatible en la primera entrada'},
+                { name: 'puntos_compatibles_salida', typeName: 'boolean', title: 'p.c. salida', description: 'posee punto compatible en la última salida'},
+            ] : [] ) as FieldDefinition[],
             { name: 'activo', typeName: 'boolean'},
         ],
         primaryKey: [idper.name, 'fecha'],
@@ -138,7 +150,7 @@ export function parte_diario(context: TableContext): TableDefinition {
                     )
                     FROM unnest(fichadas) WITH ORDINALITY AS t(rng, ord)) as fichada,
                     hora_texto(horario_entrada) || ' - ' || hora_texto(horario_Salida) as horario
-                from (${sqlParteDiarioExtendido(context)}) x
+                from (${sqlParteDiarioExtendido(context, true)}) x
             )`,
         },
         sortColumns:[{column:'apellido'}, {column:'nombres'}],

@@ -7,7 +7,7 @@ import { NovedadRegistrada, calendario_persona, historico_persona, novedades_dis
 import { sqlNovPer } from "./table-nov_per";
 
 import { date, datetime, RealDate } from 'best-globals'
-import { DefinedType} from 'guarantee-type';
+import { DefinedType, guarantee } from 'guarantee-type';
 import { FixedFields } from 'frontend-plus';
 import { expected } from 'cast-error';
 import { sqlPersonas } from "./table-personas";
@@ -20,7 +20,7 @@ import { ConfigFichadasDb, getConfigFichadasDb, MAX_INTENTOS } from './app-princ
 
 import { sqlLeftJoinLateralTrayectoriaLaboral } from './table-personas';
 
-import { sqlParteDiarioAgrupado, sqlPuntosCompatibles } from './table-parte_diario'
+import { sqlParteDiarioAgrupado, sqlParteDiarioExtendido, sqlPuntosCompatibles } from './table-parte_diario'
 
 const sqlExprCondicionCodNovSitRevista = 'nov_grupo is null or nov_grupo is not distinct from sr_grupo'
 
@@ -248,7 +248,7 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         f.fichadas_consolidadas or f.fecha < coalesce(p.inicia_fichada, p.registra_novedades_desde) as consolidada,
                         cn.requiere_fichadas,
                         cn.injustificado,
-                        ${sqlPuntosCompatibles(context)} as puntos_compatibles 
+                        ${sqlPuntosCompatibles(context, false)}
                     from (
                         select  fecha - 2 - extract(dow from f.fecha - 2)::integer      as desde,
                                 fecha - 2 - extract(dow from f.fecha - 2)::integer + 41 as hasta,
@@ -470,6 +470,26 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                 [context.username]
             ).fetchUniqueRow();
             return info.row;
+        }
+    },
+    {
+        action: 'situacion_actual',
+        parameters: [],
+        coreFunction: async function(context: ProcedureContext, _params:DefinedType<typeof ctts.situacion_actual.parameters>):Promise<ctts.SituacionActual>{
+            // la primera entrada y la última salida (si el último rango no está cerrado no hay salida ni horas)
+            const info = await context.client.query(
+                `select x.fecha, x.cod_nov, x.novedad, x.cuenta_horas, x.mismo_cod_nov_desde, x.mismo_cod_nov_hasta,
+                        lower(x.fichadas) as entrada,
+                        upper(x.fichadas) as salida,
+                        case when upper(x.fichadas) is not null then duration(x.fichadas) else null end as horas,
+                        x.puntos_compatibles_entrada,
+                        x.puntos_compatibles_salida
+                    from (${sqlParteDiarioExtendido(context, false)}) x
+                        inner join usuarios u using (idper)
+                    where u.usuario = $1 and x.fecha = fecha_actual()`,
+                [context.username]
+            ).fetchOneRowIfExists();
+            return guarantee(ctts.situacion_actual.result, info.row ?? null);
         }
     },
     {
