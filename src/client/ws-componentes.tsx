@@ -130,18 +130,24 @@ function horaStr(horas:TimeInterval|any){
 }
 
 type ExtremoFichada = 'entrada' | 'salida';
-const SIGNO_PUNTO_COMPATIBLE: Record<ExtremoFichada, string> = {entrada: 'Ⓔ', salida: 'Ⓢ'};
-const SIGNO_SIN_PUNTO_COMPATIBLE = '⨂';
+type EstadoPuntosCompatibles = NonNullable<ctts.PuntosCompatibles>;
+const SIGNO_PUNTO_COMPATIBLE: Record<ExtremoFichada, string> = {entrada: 'e', salida: 's'};
+const SIGNO_PUNTOS_COMPATIBLES: Record<Exclude<EstadoPuntosCompatibles, 'compatible'>, string> = {sin_compatible: '⨂', sin_punto: '⊙'};
+const TEXTO_PUNTOS_COMPATIBLES: Record<EstadoPuntosCompatibles, string> = {
+    compatible: 'con punto compatible',
+    sin_compatible: 'no se encuentra punto compatible',
+    sin_punto: 'no se encuentra ningún punto',
+};
 
-function textoPuntoCompatible(compatible: boolean, extremo?: ExtremoFichada){
-    return (compatible ? 'con punto compatible' : 'no se encuentra punto compatible') + (extremo ? ` de ${extremo}` : '');
+function textoPuntoCompatible(estado: EstadoPuntosCompatibles, extremo?: ExtremoFichada){
+    return TEXTO_PUNTOS_COMPATIBLES[estado] + (extremo ? ` de ${extremo}` : '');
 }
 
-function MarcaPuntoCompatible(props: {extremo: ExtremoFichada, compatible: boolean | null}){
-    const {extremo, compatible} = props;
-    if (compatible == null) return null;
-    return <span calendario-puntos-compatibles={JSON.stringify(compatible)} title={textoPuntoCompatible(compatible, extremo)}>
-        {compatible ? SIGNO_PUNTO_COMPATIBLE[extremo] : SIGNO_SIN_PUNTO_COMPATIBLE}
+function MarcaPuntoCompatible(props: {extremo: ExtremoFichada, estado: ctts.PuntosCompatibles}){
+    const {extremo, estado} = props;
+    if (estado == null) return null;
+    return <span calendario-puntos-compatibles={estado} title={textoPuntoCompatible(estado, extremo)}>
+        {estado == 'compatible' ? SIGNO_PUNTO_COMPATIBLE[extremo] : SIGNO_PUNTOS_COMPATIBLES[estado]}
     </span>
 }
 
@@ -307,7 +313,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                             }}
                         >
                             <span className="calendario-dia-numero">{dia.dia ?? ''} 
-                                <span x-algo="si">{!mostrarFichadaEnDia ? '' : <> <MarcaPuntoCompatible extremo="entrada" compatible={dia.puntos_compatibles_entrada}/><MarcaPuntoCompatible extremo="salida" compatible={dia.puntos_compatibles_salida}/></>}</span>
+                                <span x-algo="si">{!mostrarFichadaEnDia ? '' : <> <MarcaPuntoCompatible extremo="entrada" estado={dia.puntos_compatibles_entrada}/><MarcaPuntoCompatible extremo="salida" estado={dia.puntos_compatibles_salida}/></>}</span>
                             </span>
                             {mostrarFichadaEnDia && dia.horas ? (
                                 <span className="calendario-dia-horas">
@@ -1587,36 +1593,34 @@ function PantallaMapaDomicilios(props: { conn: Connector, fixedFields: FixedFiel
     </Paper>
 }
 
-function fechaStr(fecha: Date){
-    return fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
 function LineasSituacionActual(props: { situacion: NonNullable<ctts.SituacionActual> }) {
     const { situacion } = props;
-    const lineas: string[] = [];
+    const lineas: {texto: string, error: boolean}[] = [];
     if (situacion.cuenta_horas !== true && situacion.novedad != null) {
-        lineas.push(`código ${situacion.cod_nov}: ${situacion.novedad}` + (
+        lineas.push({error: false, texto: `código ${situacion.cod_nov}: ${situacion.novedad}` + (
             sameValue(situacion.mismo_cod_nov_desde, situacion.mismo_cod_nov_hasta) ? ''
-            : ` del ${fechaStr(situacion.mismo_cod_nov_desde)} al ${fechaStr(situacion.mismo_cod_nov_hasta)}`
-        ));
+            : ` del ${(situacion.mismo_cod_nov_desde as RealDate).toDmy()} al ${(situacion.mismo_cod_nov_hasta as RealDate).toDmy()}`
+        )});
     }
     if (situacion.entrada == null && situacion.salida == null) {
-        if (situacion.cuenta_horas) lineas.push('Sin fichada.');
+        if (situacion.cuenta_horas) lineas.push({error: false, texto: 'Sin fichada.'});
     } else {
-        const lineaFichada = (texto: string, novedad: string | null, compatible: boolean | null) =>
-            [texto, novedad, compatible == null ? null : textoPuntoCompatible(compatible)].filter(parte => parte != null).join(' - ');
+        const lineaFichada = (texto: string, novedad: string | null, estado: ctts.PuntosCompatibles) =>
+            [texto, novedad, estado == null ? null : textoPuntoCompatible(estado)].filter(parte => parte != null).join(' - ');
         if (situacion.entrada != null) {
-            lineas.push(lineaFichada(`Fichada de entrada ${horaStr(situacion.entrada)}`, situacion.cuenta_horas ? situacion.novedad : null, situacion.puntos_compatibles_entrada));
+            lineas.push({error: false, texto: lineaFichada(`Fichada de entrada ${horaStr(situacion.entrada)}`, situacion.cuenta_horas ? situacion.novedad : null, situacion.puntos_compatibles_entrada)});
+        } else {
+            lineas.push({error: true, texto: 'No hay fichada de entrada'});
         }
         if (situacion.salida != null) {
-            lineas.push(lineaFichada(`Fichada de salida ${horaStr(situacion.salida)}`, null, situacion.puntos_compatibles_salida));
+            lineas.push({error: false, texto: lineaFichada(`Fichada de salida ${horaStr(situacion.salida)}`, null, situacion.puntos_compatibles_salida)});
         }
         if (situacion.horas != null) {
-            lineas.push(`Registra ${horassStr(situacion.horas, ' horas ', ' minutos', false)}`);
+            lineas.push({error: false, texto: `Registra ${horassStr(situacion.horas, ' horas ', ' minutos', false)}`});
         }
     }
     return <Box className="situacion-actual">
-        {lineas.map((linea, i) => <Typography key={i}>{linea}</Typography>)}
+        {lineas.map((linea, i) => <Typography key={i} color={linea.error ? 'error' : undefined}>{linea.texto}</Typography>)}
     </Box>
 }
 
@@ -1636,7 +1640,7 @@ function PantallaBienvenida(props: { conn: Connector, infoUsuario: InfoUsuario }
         <BarraSuperior infoUsuario={infoUsuario} cerrable={true} titulo="SiPer - Bienvenida"/>
         <Box sx={{ padding: 2 }}>
             <Typography variant="h5">Bienvenido {infoUsuario.nombres} {infoUsuario.apellido}</Typography>
-            <Typography variant="h6">{fechaStr(infoUsuario.fecha_actual)}</Typography>
+            <Typography variant="h6">{(infoUsuario.fecha_actual as RealDate).toDmy()}</Typography>
             {/* acá van a ir los mensajes */}
             {situacion === undefined ? <CircularProgress/>
                 : situacion == null ? null

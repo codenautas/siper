@@ -1571,7 +1571,7 @@ describe("SiPer: " + testConfig.name, function(){
                 const salida  = '17:00:00';
                 await registrarFichadas(server, {idper, fecha, entrada, salida, ...TERM_OBELISCO});
                 await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
-                    {puntos_compatibles: true, puntos_compatibles_entrada: true, puntos_compatibles_salida: true}
+                    {puntos_compatibles: true, puntos_compatibles_entrada: 'compatible', puntos_compatibles_salida: 'compatible'}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
         })
@@ -1584,7 +1584,7 @@ describe("SiPer: " + testConfig.name, function(){
                 await registrarFichada(server, {idper, fecha, tipo_fichada:'E', hora:entrada, ...TERM_OBELISCO});
                 await registrarFichada(server, {idper, fecha, tipo_fichada:'S', hora:salida , ...RETIRO});
                 await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
-                    {puntos_compatibles: false, puntos_compatibles_entrada: true, puntos_compatibles_salida: false}
+                    {puntos_compatibles: false, puntos_compatibles_entrada: 'compatible', puntos_compatibles_salida: 'sin_compatible'}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
         })
@@ -1596,7 +1596,7 @@ describe("SiPer: " + testConfig.name, function(){
                 await registrarFichada(server, {idper, fecha, tipo_fichada:'E', hora:entrada, ...TERM_OBELISCO});
                 await registrarFichada(server, {idper, fecha, tipo_fichada:'S', hora:salida });
                 await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
-                    {puntos_compatibles: false, puntos_compatibles_entrada: true, puntos_compatibles_salida: false}
+                    {puntos_compatibles: false, puntos_compatibles_entrada: 'compatible', puntos_compatibles_salida: 'sin_punto'}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
         })
@@ -1605,7 +1605,7 @@ describe("SiPer: " + testConfig.name, function(){
             await enNuevaPersona(this.test?.title!, {inicia_fichada: fecha}, async ({idper}) => {
                 await registrarFichada(server, {idper, fecha, tipo_fichada:'E', hora:'09:00:00', ...TERM_OBELISCO});
                 await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
-                    {puntos_compatibles: null, puntos_compatibles_entrada: true, puntos_compatibles_salida: null}
+                    {puntos_compatibles: null, puntos_compatibles_entrada: 'compatible', puntos_compatibles_salida: null}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
         })
@@ -1619,7 +1619,7 @@ describe("SiPer: " + testConfig.name, function(){
                 const salida  = '16:30:00';
                 await registrarFichadas(server, {idper, fecha, entrada, salida, punto: LUGANO});
                 await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
-                    {puntos_compatibles: false, puntos_compatibles_entrada: false, puntos_compatibles_salida: false}
+                    {puntos_compatibles: false, puntos_compatibles_entrada: 'sin_compatible', puntos_compatibles_salida: 'sin_compatible'}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
         })
@@ -1632,7 +1632,7 @@ describe("SiPer: " + testConfig.name, function(){
                 const salida  = '16:30:00';
                 await registrarFichadas(server, {idper, fecha, entrada, salida, punto: LUGANO});
                 await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
-                    {puntos_compatibles: false, puntos_compatibles_entrada: false, puntos_compatibles_salida: false}
+                    {puntos_compatibles: false, puntos_compatibles_entrada: 'sin_compatible', puntos_compatibles_salida: 'sin_compatible'}
                 ], 'all', {fixedFields:{idper, fecha}})
             });
         })
@@ -1664,7 +1664,7 @@ describe("SiPer: " + testConfig.name, function(){
                 await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, tipo_fichada:'E', hora:'09:10:00', ...TERM_OBELISCO});
                 await verificarSituacionActual(sesion, {
                     cod_nov: COD_PRED_PAS!, entrada: '9:10', salida: null, horas: null,
-                    puntos_compatibles_entrada: true, puntos_compatibles_salida: null
+                    puntos_compatibles_entrada: 'compatible', puntos_compatibles_salida: null
                 });
             });
         })
@@ -1674,7 +1674,7 @@ describe("SiPer: " + testConfig.name, function(){
                 await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, tipo_fichada:'S', hora:'15:22:00'});
                 await verificarSituacionActual(sesion, {
                     cod_nov: COD_PRED_PAS!, entrada: '9:10', salida: '15:22', horas: timeInterval({hours:6, minutes:12}),
-                    puntos_compatibles_entrada: true, puntos_compatibles_salida: false
+                    puntos_compatibles_entrada: 'compatible', puntos_compatibles_salida: 'sin_punto'
                 });
             });
         })

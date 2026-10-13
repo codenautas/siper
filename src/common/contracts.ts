@@ -328,6 +328,11 @@ export const inconsistencias = {
     })
 }
 
+// estado de los puntos GPS de una fichada (ver install/puntos_compatibles.sql); null: no corresponde controlar
+const puntosCompatibles = {nullable: is.union([is.literal('compatible'), is.literal('sin_compatible'), is.literal('sin_punto')])};
+
+export type PuntosCompatibles = DefinedType<typeof puntosCompatibles>
+
 export const parte_diario = {
     table: 'parte_diario',
     description: is.object({
@@ -339,8 +344,8 @@ export const parte_diario = {
         corridos: is.number,
         horas: is.nullable.class(TimeInterval),
         puntos_compatibles: is.nullable.boolean,
-        puntos_compatibles_entrada: is.nullable.boolean,
-        puntos_compatibles_salida: is.nullable.boolean,
+        puntos_compatibles_entrada: puntosCompatibles,
+        puntos_compatibles_salida: puntosCompatibles,
         fichada: is.nullable.string
     })
 }
@@ -464,8 +469,8 @@ export const calendario_persona = {
         consolidada: is.boolean,
         requiere_fichadas: is.boolean,
         injustificado: is.boolean,
-        puntos_compatibles_entrada: is.nullable.boolean,
-        puntos_compatibles_salida: is.nullable.boolean,
+        puntos_compatibles_entrada: puntosCompatibles,
+        puntos_compatibles_salida: puntosCompatibles,
     })
 }
 
@@ -561,8 +566,8 @@ export const situacion_actual = {
         entrada: is.nullable.string,
         salida: is.nullable.string,
         horas: is.nullable.class(TimeInterval),
-        puntos_compatibles_entrada: is.nullable.boolean,
-        puntos_compatibles_salida: is.nullable.boolean,
+        puntos_compatibles_entrada: puntosCompatibles,
+        puntos_compatibles_salida: puntosCompatibles,
     })
 }
 

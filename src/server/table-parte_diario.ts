@@ -13,10 +13,11 @@ import { FieldDefinition } from "backend-plus";
 
 const sqlPuntoCompatible = (context:Context, exigirConsolidacion:boolean, sqlHora:string) =>
     context.be.config.siper?.puntos_compatibles ? ` case when ${context.es.admin ? 'true' : ` nv.fecha >= '${context.be.config.siper?.puntos_desde ?? '2026-07-01'}' ${exigirConsolidacion ? 'and fichadas_consolidadas' : ''} `}
-        then puntos_compatibles(nv.idper, nv.fecha, nv.cod_nov, array[${sqlHora}]) else null end`
-    : 'null::boolean'
+        then puntos_compatibles(nv.idper, nv.fecha, nv.cod_nov, ${sqlHora}) else null end`
+    : 'null::text'
 
 // la primera entrada y la última salida (si el último rango no está cerrado la salida es null)
+// valores: 'compatible', 'sin_compatible', 'sin_punto' o null (ver install/puntos_compatibles.sql)
 export const sqlPuntosCompatibles = (context:Context, exigirConsolidacion:boolean) => `
         ${sqlPuntoCompatible(context, exigirConsolidacion, 'lower(nv.fichadas)')} as puntos_compatibles_entrada,
         ${sqlPuntoCompatible(context, exigirConsolidacion, 'upper(nv.fichadas)')} as puntos_compatibles_salida`
@@ -44,7 +45,7 @@ select
         bh.descripcion as bh_descripcion,
         pc.puntos_compatibles_entrada,
         pc.puntos_compatibles_salida,
-        pc.puntos_compatibles_entrada and pc.puntos_compatibles_salida as puntos_compatibles
+        pc.puntos_compatibles_entrada = 'compatible' and pc.puntos_compatibles_salida = 'compatible' as puntos_compatibles
     from ${novedades_vigentes} nv 
         inner join lateral (${sqlPersonas('nv.fecha')} WHERE p.idper = nv.idper) p 
             on nv.fecha between coalesce(p.registra_novedades_desde, p.fecha_ingreso) and coalesce(p.fecha_egreso, nv.fecha)
@@ -125,8 +126,8 @@ export function parte_diario(context: TableContext): TableDefinition {
             { name: 'injustificado' , typeName: 'boolean'},
             ...(context.be.config.siper?.puntos_compatibles ? [
                 { name: 'puntos_compatibles', typeName: 'boolean', description: 'posee puntos compatibles en entrada y salida'},
-                { name: 'puntos_compatibles_entrada', typeName: 'boolean', title: 'p.c. entrada', description: 'posee punto compatible en la primera entrada'},
-                { name: 'puntos_compatibles_salida', typeName: 'boolean', title: 'p.c. salida', description: 'posee punto compatible en la última salida'},
+                { name: 'puntos_compatibles_entrada', typeName: 'text', title: 'p.c. entrada', description: 'puntos de la primera entrada: compatible, sin_compatible o sin_punto'},
+                { name: 'puntos_compatibles_salida', typeName: 'text', title: 'p.c. salida', description: 'puntos de la última salida: compatible, sin_compatible o sin_punto'},
             ] : [] ) as FieldDefinition[],
             { name: 'activo', typeName: 'boolean'},
         ],
