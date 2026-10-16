@@ -131,8 +131,8 @@ function horaStr(horas:TimeInterval|any){
 
 type ExtremoFichada = 'entrada' | 'salida';
 type EstadoPuntosCompatibles = NonNullable<ctts.PuntosCompatibles>;
-const SIGNO_PUNTO_COMPATIBLE: Record<ExtremoFichada, string> = {entrada: 'e', salida: 's'};
-const SIGNO_PUNTOS_COMPATIBLES: Record<Exclude<EstadoPuntosCompatibles, 'compatible'>, string> = {sin_compatible: '⨂', sin_punto: '⊙'};
+const SIGNO_PUNTO_COMPATIBLE: Record<ExtremoFichada, string> = {entrada: 'E', salida: 'S'};
+const SIGNO_PUNTOS_COMPATIBLES: Record<Exclude<EstadoPuntosCompatibles, 'compatible'>, string> = {sin_compatible: 'X', sin_punto: '–'};
 const TEXTO_PUNTOS_COMPATIBLES: Record<EstadoPuntosCompatibles, string> = {
     compatible: 'con punto compatible',
     sin_compatible: 'no se encuentra punto compatible',
@@ -143,11 +143,21 @@ function textoPuntoCompatible(estado: EstadoPuntosCompatibles, extremo?: Extremo
     return TEXTO_PUNTOS_COMPATIBLES[estado] + (extremo ? ` de ${extremo}` : '');
 }
 
-function MarcaPuntoCompatible(props: {extremo: ExtremoFichada, estado: ctts.PuntosCompatibles}){
-    const {extremo, estado} = props;
-    if (estado == null) return null;
-    return <span calendario-puntos-compatibles={estado} title={textoPuntoCompatible(estado, extremo)}>
-        {estado == 'compatible' ? SIGNO_PUNTO_COMPATIBLE[extremo] : SIGNO_PUNTOS_COMPATIBLES[estado]}
+// un solo rectángulo de ancho fijo: la mitad izquierda es la entrada y la derecha la salida (una mitad sin dato queda vacía)
+function MarcaPuntosCompatibles(props: {entrada: ctts.PuntosCompatibles, salida: ctts.PuntosCompatibles}){
+    const {entrada, salida} = props;
+    if (entrada == null && salida == null) return null;
+    const extremos: {extremo: ExtremoFichada, estado: ctts.PuntosCompatibles}[] = [
+        {extremo: 'entrada', estado: entrada},
+        {extremo: 'salida' , estado: salida },
+    ];
+    const tooltip = extremos.flatMap(({extremo, estado}) => estado == null ? [] : [textoPuntoCompatible(estado, extremo)]).join('\n');
+    return <span className="calendario-puntos-compatibles" title={tooltip}>
+        {extremos.map(({extremo, estado}) =>
+            <span key={extremo} calendario-puntos-compatibles={estado ?? 'sin_dato'}>
+                {estado == null ? '' : estado == 'compatible' ? SIGNO_PUNTO_COMPATIBLE[extremo] : SIGNO_PUNTOS_COMPATIBLES[estado]}
+            </span>
+        )}
     </span>
 }
 
@@ -313,7 +323,7 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                             }}
                         >
                             <span className="calendario-dia-numero">{dia.dia ?? ''} 
-                                <span x-algo="si">{!mostrarFichadaEnDia ? '' : <> <MarcaPuntoCompatible extremo="entrada" estado={dia.puntos_compatibles_entrada}/><MarcaPuntoCompatible extremo="salida" estado={dia.puntos_compatibles_salida}/></>}</span>
+                                <span x-algo="si">{!mostrarFichadaEnDia ? '' : <MarcaPuntosCompatibles entrada={dia.puntos_compatibles_entrada} salida={dia.puntos_compatibles_salida}/>}</span>
                             </span>
                             {mostrarFichadaEnDia && dia.horas ? (
                                 <span className="calendario-dia-horas">

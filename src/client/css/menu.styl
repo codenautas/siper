@@ -586,18 +586,32 @@ button[es-este-mes]
   margin-left 2px
   vertical-align bottom
 
-[calendario-puntos-compatibles="compatible"]
-  display inline-block
-  width 1.4em
-  height 1.4em
-  line-height 1.4em
-  border-radius 50%
-  text-align center
+ancho-puntos-compatibles = 1.5em
+
+// un solo rectángulo: la mitad izquierda es la entrada y la derecha la salida
+span.calendario-puntos-compatibles
+  display inline-flex
+  width ancho-puntos-compatibles
+  height 1.3em
+  line-height 1.3em
+  margin-left 2px
+  vertical-align middle
   font-size 85%
-  margin-left 1px
-  color white
-  background-color green
+  border-radius 2px
+  overflow hidden
+  > span
+    flex 1 1 50%
+    text-align center
+
+[calendario-puntos-compatibles="compatible"]
+  color black
+  background-color #a5d6a7
 
 [calendario-puntos-compatibles="sin_compatible"]
 [calendario-puntos-compatibles="sin_punto"]
-  color red
+  color white
+  background-color #c62828
+
+// la mitad sin dato (ej: todavía no hay salida) mantiene el lugar con un borde que no cambia el tamaño
+[calendario-puntos-compatibles="sin_dato"]
+  box-shadow inset 0 0 0 1px #9e9e9e
