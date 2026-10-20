@@ -1634,7 +1634,7 @@ function LineasSituacionActual(props: { situacion: NonNullable<ctts.SituacionAct
     </Box>
 }
 
-function PantallaBienvenida(props: { conn: Connector, infoUsuario: InfoUsuario }) {
+function PantallaInicio(props: { conn: Connector, infoUsuario: InfoUsuario }) {
     const { conn, infoUsuario } = props;
     // undefined: todavía no llegó; null: no hay situación para hoy (ej: fin de semana)
     const [situacion, setSituacion] = useState<ctts.SituacionActual | undefined>(undefined);
@@ -1647,9 +1647,9 @@ function PantallaBienvenida(props: { conn: Connector, infoUsuario: InfoUsuario }
     }, []);
 
     return <Paper className="paper-principal">
-        <BarraSuperior infoUsuario={infoUsuario} cerrable={true} titulo="SiPer - Bienvenida"/>
+        <BarraSuperior infoUsuario={infoUsuario} cerrable={true} titulo="SiPer - Inicio"/>
         <Box sx={{ padding: 2 }}>
-            <Typography variant="h5">Bienvenido {infoUsuario.nombres} {infoUsuario.apellido}</Typography>
+            <Typography variant="h5">Hola, {infoUsuario.nombres} {infoUsuario.apellido}</Typography>
             <Typography variant="h6">{(infoUsuario.fecha_actual as RealDate).toDmy()}</Typography>
             {/* acá van a ir los mensajes */}
             {situacion === undefined ? <CircularProgress/>
@@ -1686,13 +1686,13 @@ myOwn.wScreens.mapa_domicilios = function mapa_domicilios(addrParams:any){
 }
 
 // @ts-ignore
-myOwn.wScreens.bienvenida = function bienvenida(addrParams:any){
+myOwn.wScreens.inicio = function inicio(addrParams:any){
     myOwn.ajax.info_usuario().then((infoUsuario: InfoUsuario) => {
         renderConnectedApp(
             myOwn as never as Connector,
             { ...addrParams },
             document.getElementById('total-layout')!,
-            ({ conn }) => (<PantallaBienvenida conn={conn} infoUsuario={infoUsuario} />)
+            ({ conn }) => (<PantallaInicio conn={conn} infoUsuario={infoUsuario} />)
         );
     }).catch(logError);
 }

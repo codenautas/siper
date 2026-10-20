@@ -21,7 +21,7 @@ login:
   activeClausule: usuarios.activo
   unloggedLandPage: false
   plus:
-    successRedirect: /menu#i=bienvenida
+    successRedirect: /menu#i=inicio
     allowHttpLogin: true
     fileStore: true
     loginForm:

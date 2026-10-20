@@ -1637,7 +1637,7 @@ describe("SiPer: " + testConfig.name, function(){
             });
         })
     });
-    describe("situación actual (bienvenida)", function(){
+    describe("situación actual (inicio)", function(){
         type SituacionActualEsperada = Partial<NonNullable<ctts.SituacionActual>>;
         async function verificarSituacionActual(sesion: SesionEmuladaSiper, esperada: SituacionActualEsperada | null){
             const situacion = await sesion.callProcedure(ctts.situacion_actual, {});
