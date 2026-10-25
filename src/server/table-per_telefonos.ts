@@ -4,6 +4,7 @@ import {FieldDefinition, TableDefinition, TableContext} from "./types-principal"
 
 import {idper} from "./table-personas"
 import {tipo_telefono} from "./table-tipos_telefono";
+import { politicaNovedades } from "./table-novedades_registradas";
 
 export const nro_item: FieldDefinition = {name: 'nro_item', typeName: 'bigint', description: 'identificador del teléfono para una persona'}
 
@@ -35,6 +36,7 @@ export function per_telefonos(context: TableContext): TableDefinition{
                                  WHERE per_telefonos.tipo_telefono = t.tipo_telefono
                 )`}
            },
+            policies: politicaNovedades('per_telefonos', null),
         }
     }
 }

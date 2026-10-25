@@ -37,9 +37,9 @@ export function politicaNovedadesComun(alias:string, cargarOver:'cargar'|'ver'){
         `;
 }
 
-export function politicaNovedades(alias:string, nombreFecha:string){
+export function politicaNovedades(alias:string, nombreFecha:string|null){
     var politicaModficacion = `(${politicaNovedadesComun(alias, 'cargar')})`
-    + ((alias == 'personas' || alias == 'trayectoria_laboral') ? '' : ` AND (
+    + ((alias == 'personas' || alias == 'trayectoria_laboral' || nombreFecha == null) ? '' : ` AND (
             ( 
                 CASE WHEN ${nombreFecha} > fecha_actual() THEN true WHEN ${nombreFecha} < fecha_actual() THEN false ELSE (SELECT fecha_hora_actual() - fecha_actual() <= carga_nov_hasta_hora FROM parametros) END 
             ) OR (

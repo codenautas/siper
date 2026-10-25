@@ -2150,6 +2150,22 @@ describe("SiPer: " + testConfig.name, function(){
             });
         })
     })
+    describe("domicilios", function(){
+        it("un usuario básico no puede ver el domicilio de otra persona", async function(){
+            await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                var dom = await rrhhSession.saveRecord(ctts.per_domicilios, {
+                    idper, tipo_domicilio: 'TA', nombre_calle: 'ASCASUBI'
+                }, 'new');
+                await rrhhSession.tableDataTest(ctts.per_domicilios, [
+                    {idper, nro_item: dom.nro_item, nombre_calle: 'ASCASUBI'},
+                ], 'all', {fixedFields:{idper}})
+                await enNuevaPersona(this.test?.title! + " (usuario básico)", {usuario:{sesion:true}}, async (_, {sesion}) => {
+                    await sesion.tableDataTest(ctts.per_domicilios, [
+                    ], 'all', {fixedFields:{idper}})
+                });
+            });
+        })
+    })
     describe("controles finales", function(){
         this.timeout(900000);
         it("presentismo final", async function(){
@@ -2179,7 +2195,7 @@ describe("SiPer: " + testConfig.name, function(){
             )
             // await fs.writeFile('sqlParteDiarioExt.json', JSON.stringify(resultExt,null,' '), 'utf8')
             discrepances.showAndThrow(resultBase.rows, resultExt.rows);
-            discrepances.showAndThrow(resultExt.rows.length, 475);
+            discrepances.showAndThrow(resultExt.rows.length, 485);
         })
     })
     function randInt(int: number) {

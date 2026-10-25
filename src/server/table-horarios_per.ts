@@ -29,6 +29,9 @@ export function horarios_per(context: TableContext): TableDefinition{
             {references: 'fechas'  , fields: [{source:'desde', target:'fecha'}], alias:'desde', onDelete:'cascade'},
             {references: 'fechas'  , fields: [{source:'hasta', target:'fecha'}], alias:'hasta', onDelete:'cascade'},
         ],
+        softForeignKeys: [
+            {references: 'horarios_cod', fields: [horario.name]}, // CAMBIAR A FK
+        ],
         constraints: [
             ...constraintsFechasDesdeHasta(),
             {constraintType:'exclude', consName:'sin superponer fechas', using:'GIST', fields:[idper.name, {fieldName:'lapso_fechas', operator:'&&'}]}

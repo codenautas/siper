@@ -33,6 +33,7 @@ import {provincia} from "./table-provincias";
 import {barrio_localidad} from "./table-barrios_localidades";
 import {calle} from "./table-calles";
 import { comuna_partido } from "./table-comunas_partidos";
+import { politicaNovedades } from "./table-novedades_registradas";
 
 export const nro_item: FieldDefinition = {name: 'nro_item', typeName: 'bigint', description: 'identificador del domicilio para una persona'}
 
@@ -90,6 +91,7 @@ export function per_domicilios(context: TableContext): TableDefinition{
                                  WHERE per_domicilios.tipo_domicilio = t.tipo_domicilio
                 )`}
            },
+            policies: politicaNovedades('per_domicilios', null),
         }
     }
 }
