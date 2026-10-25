@@ -1,0 +1,126 @@
+// DER de SiPer: datos de personas
+// Relaciones: foreignKeys (línea llena) y softForeignKeys (línea de rayas, dashed) de src/server/table-*.ts
+// Pata de gallo del lado "muchos"; el lado "uno" sin marca.
+// Línea punteada fina (dotted): referencia a annios de una tabla que también referencia a fechas (el año se deduce de la fecha).
+// Generar: neato -Tpdf der-personas.dot -o der-personas.pdf   (o -Tsvg / -Tpng)
+//
+// Para acomodar:
+//   - posición: pos="columna,-fila!" en casilleros de grilla, empezando en 1,-1 arriba a la izquierda;
+//     la fila va con signo menos porque en Graphviz el eje y crece hacia arriba; el ! la deja fija;
+//     se pueden usar valores intermedios (ej: 2.5,-3); centro de la caja
+//   - tamaño del casillero: inputscale en la línea "graph" = 1 / pulgadas por casillero (hoy 1.75 pulgadas)
+//   - tamaño de todas las cajas: width y height en la línea "node", en pulgadas (inputscale no los afecta);
+//     de una sola: width=... height=... en su línea
+//   - cortes de renglón del nombre: \n dentro de label
+//   - líneas: tailport (lado de la tabla que referencia) y headport (lado de la tabla referenciada)
+//     indican de qué punto de la caja sale y a cuál llega: n, ne, e, se, s, sw, w, nw o c (centro);
+//     con c la línea apunta al centro y se corta en el borde
+//   - forma de todas las líneas: splines en la línea "graph" (true = curvas que esquivan cajas,
+//     polyline = tramos rectos, line = rectas directas, curved = arcos)
+//   - para distinguir una línea mientras se acomoda: color="red" o penwidth=2
+
+digraph DER {
+  graph [inputscale=0.5714, size="11.7,8.3", splines=true, sep="+4", fontname="Arial"];
+  node  [shape=box, style="rounded,filled", fillcolor="#dbe7f5", fontname="Arial", fontsize=14, width=1.35, height=0.95, fixedsize=true];
+  edge  [dir=both, arrowtail=crow, arrowhead=none, color="#444444", arrowsize=0.8];
+
+  personas                [pos="5,-3.5!", height=6.20, fontsize=16];
+
+  sexos                   [pos="3,-2!"];
+  adjuntos_atributos      [pos="2,-1!", label="adjuntos_\natributos"];
+  tipos_adjunto_atributos [pos="1,-1!", label="tipos_\nadjunto_\natributos"];
+  adjuntos                [pos="2,-2!"];
+  tipos_adjunto           [pos="1,-2!", label="tipos_\nadjunto"];
+  archivos_borrar         [pos="3,-1!", label="archivos_\nborrar"];
+  niveles_educativos      [pos="4,-2!", label="niveles_\neducativos"];
+  jerarquias              [pos="6,-2!"];
+  trayectoria_laboral     [pos="7,-2!", label="trayectoria_\nlaboral"];
+  tareas                  [pos="8,-2!"];
+  per_capa                [pos="3,-3!"];
+  agrupamientos           [pos="6,-3!"];
+  tramos                  [pos="7,-3!"];
+  funciones               [pos="8,-3!"];
+  capa_modalidades        [pos="1,-3!", label="capa_\nmodalidades"];
+  capacitaciones          [pos="2,-3!"];
+  tipos_telefono          [pos="1,-4!", label="tipos_\ntelefono"];
+  per_telefonos           [pos="2,-4!", label="per_\ntelefonos"];
+  perfiles_sgc            [pos="4,-4!", label="perfiles_\nsgc"];
+  grados                  [pos="6,-4!"];
+  situacion_revista       [pos="8,-4!", label="situacion_\nrevista"];
+  sedes                   [pos="3,-4!"];
+  per_domicilios          [pos="3,-5!", label="per_\ndomicilios"];
+  tipos_domicilio         [pos="1,-5!", label="tipos_\ndomicilio"];
+  calles                  [pos="2,-5!"];
+  barrios_localidades     [pos="3,-6!", label="barrios_\nlocalidades"];
+  comunas_partidos        [pos="4,-5!", label="comunas_\npartidos"];
+  barrios                 [pos="1,-6!"];
+  provincias              [pos="2,-6!"];
+  paises                  [pos="4,-1!"];
+  categorias              [pos="5,-1!"];
+  motivos_egreso          [pos="6,-1!", label="motivos_\negreso"];
+  nivel_grado             [pos="7,-1!"];
+  expedientes             [pos="8,-1!"];
+  bandas_horarias         [pos="4,-6!", label="bandas_\nhorarias"];
+  modalidades_trabajo     [pos="5,-6!", label="modalidades_\ntrabajo"];
+  sectores                [pos="7,-5!"];
+  tipos_sec               [pos="8,-5!"];
+  tipos_doc               [pos="6,-6!"];
+  usuarios                [pos="7,-6!"];
+  roles                   [pos="8,-6!"];
+  estados_civiles         [pos="7,-4!", label="estados_\nciviles"];
+
+  personas -> sectores [tailport=c, headport=c];
+  personas -> paises [tailport=c, headport=c];
+  personas -> sexos [tailport=c, headport=c];
+  personas -> tipos_doc [tailport=c, headport=c];
+  personas -> bandas_horarias [tailport=c, headport=c];
+  personas -> perfiles_sgc [tailport=c, headport=c];
+  personas -> niveles_educativos [tailport=c, headport=c];
+  personas -> modalidades_trabajo [tailport=c, headport=c];
+  personas -> jerarquias [tailport=c, headport=c, style=dashed];
+  personas -> motivos_egreso [tailport=c, headport=c, style=dashed];
+  personas -> categorias [tailport=c, headport=c, style=dashed];
+  personas -> agrupamientos [tailport=c, headport=c, style=dashed];
+  personas -> grados [tailport=c, headport=c, style=dashed];
+  personas -> sedes [tailport=c, headport=c];
+  personas -> estados_civiles [tailport=c, headport=c];
+  sectores -> sectores;
+  sectores -> tipos_sec [tailport=c, headport=c];
+  per_telefonos -> personas [tailport=c, headport=c];
+  per_telefonos -> tipos_telefono [tailport=c, headport=c];
+  per_domicilios -> personas [tailport=c, headport=c];
+  per_domicilios -> provincias [tailport=c, headport=c];
+  per_domicilios -> comunas_partidos [tailport=c, headport=c];
+  per_domicilios -> barrios_localidades [tailport=c, headport=c];
+  per_domicilios -> calles [tailport=c, headport=c];
+  per_domicilios -> tipos_domicilio [tailport=c, headport=c];
+  comunas_partidos -> provincias [tailport=c, headport=c];
+  barrios_localidades -> provincias [tailport=c, headport=c];
+  barrios_localidades -> comunas_partidos [tailport=c, headport=c];
+  barrios -> provincias [tailport=c, headport=c];
+  calles -> provincias [tailport=c, headport=c];
+  per_capa -> personas [tailport=c, headport=c];
+  per_capa -> capacitaciones [tailport=c, headport=c];
+  capacitaciones -> capa_modalidades [tailport=c, headport=c];
+  adjuntos -> tipos_adjunto [tailport=c, headport=c];
+  adjuntos -> personas [tailport=c, headport=c];
+  adjuntos -> archivos_borrar [tailport=c, headport=c, style=dashed];
+  adjuntos_atributos -> tipos_adjunto_atributos [tailport=c, headport=c];
+  adjuntos_atributos -> adjuntos [tailport=c, headport=c];
+  tipos_adjunto_atributos -> tipos_adjunto [tailport=c, headport=c];
+  usuarios -> personas [tailport=c, headport=c];
+  usuarios -> roles [tailport=c, headport=c];
+  trayectoria_laboral -> personas [tailport=c, headport=c];
+  trayectoria_laboral -> situacion_revista [tailport=c, headport=c];
+  trayectoria_laboral -> expedientes [tailport=c, headport=c];
+  trayectoria_laboral -> funciones [tailport=c, headport=c];
+  trayectoria_laboral -> jerarquias [tailport=c, headport=c];
+  trayectoria_laboral -> nivel_grado [tailport=c, headport=c];
+  trayectoria_laboral -> tareas [tailport=c, headport=c];
+  trayectoria_laboral -> motivos_egreso [tailport=c, headport=c];
+  trayectoria_laboral -> agrupamientos [tailport=c, headport=c];
+  trayectoria_laboral -> tramos [tailport=c, headport=c];
+  trayectoria_laboral -> grados [tailport=c, headport=c];
+  trayectoria_laboral -> categorias [tailport=c, headport=c];
+  grados -> tramos [tailport=c, headport=c];
+}
