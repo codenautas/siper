@@ -1,0 +1,74 @@
+// DER de SiPer: novedades y fichadas
+// Relaciones: foreignKeys (línea llena) y softForeignKeys (línea de rayas, dashed) de src/server/table-*.ts
+// Pata de gallo del lado "muchos"; el lado "uno" sin marca.
+// Línea punteada fina (dotted): referencias transitivas (ej FK a año de una tabla que también referencia a fechas).
+// Generar: neato -Tpdf der-novedades.dot -o der-novedades.pdf   (o -Tsvg / -Tpng)
+//
+
+digraph DER {
+  graph [inputscale=0.5714, size="11.7,8.3", splines=true, sep="+4", fontname="Arial"];
+  node  [shape=box, style="rounded,filled", fillcolor="white", fontname="Arial", fontsize=14, width=1.35, height=0.95, fixedsize=true];
+  edge  [dir=both, arrowtail=crow, arrowhead=none, color="#444444", arrowsize=0.8];
+
+  avisos_falta_fichada    [pos="6,-5!", label="avisos\nfalta\nfichada"];
+  annios                  [pos="3,-1!", label="años\n(annios)", color="#1f6fb4", penwidth=2.5];
+  bandas_horarias         [pos="7,-3!", label="bandas\nhorarias"];
+  cod_novedades           [pos="1,-3!", height=4.45, fontsize=16, label="cod_\nnovedades", color="#d95f02", penwidth=2.5];
+  clases                  [pos="1,-5!"];
+  fechas                  [pos="4,-1!", color="#7570b3", penwidth=2.5];
+  fichadas                [pos="5,-4!", label="fichadas\n🅃"];
+  fichadas_vigentes       [pos="4,-4!", label="fichadas\nvigentes"];
+  grupos                  [pos="2,-5!"];
+  horarios_cod            [pos="7,-4!", label="horarios\ncód"];
+  horarios_dds            [pos="7,-5!", label="horarios\ndds"];
+  horarios_per            [pos="5,-2!", label="horarios_\nper"];
+  nov_gru                 [pos="2,-4!"];
+  novedades_registradas   [pos="4,-3!", label="novedades\nregistradas\n🅃"];
+  novedades_vigentes      [pos="4,-2!", label="novedades\nvigentes"];
+  parametros              [pos="1,-1!"];
+  pautas                  [pos="2,-2!"];
+  per_gru                 [pos="3,-5!"];
+  per_nov_cant            [pos="4,-5!", label="per_nov_\ncant"];
+  personas                [pos="6,-3!", height=4.45, fontsize=16, color="#1b9e77", penwidth=2.5];
+  reglas                  [pos="2,-1!"];
+  sectores                [pos="5,-1!", label="sectores\n🅃"];
+
+  annios -> annios [color="#1f6fb4"];
+  avisos_falta_fichada -> personas [color="#1b9e77"];
+  cod_novedades -> clases [color="#d95f02"];
+  fechas -> annios [tailport=c, headport=c, style=dotted, penwidth=1.8, color="#1f6fb4"];
+  fechas -> cod_novedades [color="#d95f02"];
+  fichadas -> personas [color="#1b9e77"];
+  fichadas -> fechas [color="#7570b3"];
+  fichadas -> annios [tailport=c, headport=c, style=dotted, penwidth=1.8, color="#1f6fb4"];
+  fichadas_vigentes -> personas [color="#1b9e77"];
+  fichadas_vigentes -> cod_novedades [color="#d95f02"];
+  grupos -> clases;
+  horarios_dds -> horarios_cod;
+  horarios_per -> personas [color="#1b9e77"];
+  horarios_per -> annios [tailport=c, headport=c, style=dotted, penwidth=1.8, color="#1f6fb4"];
+  horarios_per -> fechas [color="#7570b3"];
+  nov_gru -> annios [color="#1f6fb4"];
+  nov_gru -> cod_novedades [color="#d95f02"];
+  nov_gru -> grupos;
+  novedades_registradas -> annios [tailport=c, headport=c, style=dotted, penwidth=1.8, color="#1f6fb4"];
+  novedades_registradas -> personas [color="#1b9e77"];
+  novedades_registradas -> cod_novedades [color="#d95f02"];
+  novedades_registradas -> fechas [color="#7570b3"];
+  novedades_vigentes -> personas [color="#1b9e77"];
+  novedades_vigentes -> fechas [color="#7570b3"];
+  novedades_vigentes -> sectores;
+  novedades_vigentes -> cod_novedades [color="#d95f02"];
+  parametros -> cod_novedades [color="#d95f02"];
+  parametros -> reglas [style=dotted];
+  parametros -> pautas [style=dotted];
+  per_nov_cant -> annios [color="#1f6fb4"];
+  per_nov_cant -> personas [color="#1b9e77"];
+  per_nov_cant -> cod_novedades [color="#d95f02"];
+  per_gru -> personas [color="#1b9e77"];
+  per_gru -> grupos;
+  personas -> bandas_horarias [color="#1b9e77"];
+  personas -> horarios_cod [color="#1b9e77"];
+  personas -> sectores [color="#1b9e77"];
+  sectores -> sectores;
+}
