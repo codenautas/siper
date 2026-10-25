@@ -3,11 +3,10 @@
 // Pata de gallo del lado "muchos"; el lado "uno" sin marca.
 // Línea punteada fina (dotted): referencias transitivas (ej FK a año de una tabla que también referencia a fechas).
 // Generar: neato -Tpdf der-novedades.dot -o der-novedades.pdf   (o -Tsvg / -Tpng)
-//
 
 digraph DER {
   graph [inputscale=0.5714, size="11.7,8.3", splines=true, sep="+4", fontname="Arial"];
-  node  [shape=box, style="rounded,filled", fillcolor="white", fontname="Arial", fontsize=14, width=1.35, height=0.95, fixedsize=true];
+  node  [shape=box, style="rounded,filled", fillcolor="#f8f8f8", fontname="Arial", fontsize=14, width=1.35, height=0.95, fixedsize=true];
   edge  [dir=both, arrowtail=crow, arrowhead=none, color="#444444", arrowsize=0.8];
 
   avisos_falta_fichada    [pos="6,-5!", label="avisos\nfalta\nfichada"];
