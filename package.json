@@ -29,7 +29,7 @@
     "frontend-plus": "^0.1.0-beta.5",
     "guarantee-type": "^0.2.14",
     "leaflet": "^1.9.4",
-    "mssql": "^12.7.10",
+    "mssql": "^12.7.11",
     "pg-triggers": "^0.4.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@hpcc-js/wasm-graphviz-cli": "1.11.4",
     "@types/fs-extra": "^11.0.4",
     "@types/leaflet": "^1.9.22",
     "@types/mocha": "^10.0.10",
@@ -48,14 +49,14 @@
     "eslint-plugin-react": "^7.37.5",
     "globals": "^17.13.0",
     "jiti": "^2.7.0",
-    "mixin-patch": "^1.1.0",
+    "mixin-patch": "^1.1.1",
     "mocha": "^12.0.3",
     "serial-tester": "^0.3.10",
     "source-map-support": "^0.5.21",
     "type-fest": "^5.10.0",
     "types.d.ts": "^0.7.3",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.71.2"
+    "typescript-eslint": "^8.72.0"
   },
   "mixin-patch": {
     "patch": false
@@ -78,6 +79,7 @@
     "test-directo": "mocha --reporter spec --bail --check-leaks dist/test/test/",
     "dump": "npm start -- --dump-db",
     "dumpb": "(tsc -p tsconfig-server.json  || echo \"continue w/error\") && npm run dump",
-    "start": "node dist/server/server/server-principal.js"
+    "start": "node dist/server/server/server-principal.js",
+    "der": "wasm-graphviz-cli -K neato docs/der-personas.dot > docs/der-personas.svg && wasm-graphviz-cli -K neato docs/der-novedades.dot > docs/der-novedades.svg"
   }
 }

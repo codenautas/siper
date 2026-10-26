@@ -5,7 +5,7 @@
 // Generar: neato -Tpdf der-novedades.dot -o der-novedades.pdf   (o -Tsvg / -Tpng)
 
 digraph DER {
-  graph [inputscale=0.5714, size="11.7,8.3", splines=true, sep="+4", fontname="Arial"];
+  graph [layout=neato, inputscale=0.5714, size="11.7,8.3", splines=true, sep="+4", fontname="Arial"];
   node  [shape=box, style="rounded,filled", fillcolor="#f8f8f8", fontname="Arial", fontsize=14, width=1.35, height=0.95, fixedsize=true];
   edge  [dir=both, arrowtail=crow, arrowhead=none, color="#444444", arrowsize=0.8];
 
@@ -16,6 +16,7 @@ digraph DER {
   clases                  [pos="1,-5!"];
   fechas                  [pos="4,-1!", color="#7570b3", penwidth=2.5];
   fichadas                [pos="5,-4!", label="fichadas\n🅃"];
+  fichadas_recibidas      [pos="5,-5!", label="fichadas\nrecibidas"];
   fichadas_vigentes       [pos="4,-4!", label="fichadas\nvigentes"];
   grupos                  [pos="2,-5!"];
   horarios_cod            [pos="7,-4!", label="horarios\ncód"];
@@ -26,31 +27,32 @@ digraph DER {
   novedades_vigentes      [pos="4,-2!", label="novedades\nvigentes"];
   parametros              [pos="1,-1!"];
   pautas                  [pos="2,-2!"];
-  per_gru                 [pos="3,-5!"];
   per_nov_cant            [pos="4,-5!", label="per_nov_\ncant"];
   personas                [pos="6,-3!", height=4.45, fontsize=16, color="#1b9e77", penwidth=2.5];
   reglas                  [pos="2,-1!"];
   sectores                [pos="5,-1!", label="sectores\n🅃"];
+  sinc_fichadores         [pos="7,-1!", label="sinc_\nfichadores"];
 
   annios -> annios [color="#1f6fb4"];
   avisos_falta_fichada -> personas [color="#1b9e77"];
   cod_novedades -> clases [color="#d95f02"];
-  fechas -> annios [tailport=c, headport=c, style=dotted, penwidth=1.8, color="#1f6fb4"];
+  fechas -> annios [style=dotted, penwidth=1.8, color="#1f6fb4"];
   fechas -> cod_novedades [color="#d95f02"];
   fichadas -> personas [color="#1b9e77"];
   fichadas -> fechas [color="#7570b3"];
-  fichadas -> annios [tailport=c, headport=c, style=dotted, penwidth=1.8, color="#1f6fb4"];
+  fichadas -> annios [style=dotted, penwidth=1.8, color="#1f6fb4"];
+  fichadas -> fichadas_recibidas [style=dotted, arrowtail=none];
   fichadas_vigentes -> personas [color="#1b9e77"];
   fichadas_vigentes -> cod_novedades [color="#d95f02"];
   grupos -> clases;
   horarios_dds -> horarios_cod;
   horarios_per -> personas [color="#1b9e77"];
-  horarios_per -> annios [tailport=c, headport=c, style=dotted, penwidth=1.8, color="#1f6fb4"];
+  horarios_per -> annios [style=dotted, penwidth=1.8, color="#1f6fb4"];
   horarios_per -> fechas [color="#7570b3"];
   nov_gru -> annios [color="#1f6fb4"];
   nov_gru -> cod_novedades [color="#d95f02"];
   nov_gru -> grupos;
-  novedades_registradas -> annios [tailport=c, headport=c, style=dotted, penwidth=1.8, color="#1f6fb4"];
+  novedades_registradas -> annios [style=dotted, penwidth=1.8, color="#1f6fb4"];
   novedades_registradas -> personas [color="#1b9e77"];
   novedades_registradas -> cod_novedades [color="#d95f02"];
   novedades_registradas -> fechas [color="#7570b3"];
@@ -64,10 +66,9 @@ digraph DER {
   per_nov_cant -> annios [color="#1f6fb4"];
   per_nov_cant -> personas [color="#1b9e77"];
   per_nov_cant -> cod_novedades [color="#d95f02"];
-  per_gru -> personas [color="#1b9e77"];
-  per_gru -> grupos;
   personas -> bandas_horarias [color="#1b9e77"];
   personas -> horarios_cod [color="#1b9e77"];
   personas -> sectores [color="#1b9e77"];
+  personas -> sinc_fichadores [color="#1b9e77", style=dashed, arrowtail=none];
   sectores -> sectores;
 }
