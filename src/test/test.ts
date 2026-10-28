@@ -208,6 +208,9 @@ describe("SiPer: " + testConfig.name, function(){
             server = contexto.backend;
             server.config.siper = server.config.siper ?? {puntos_compatibles: true}
             server.config.siper.puntos_desde = server.config.siper.puntos_desde ?? '2000-01-01';
+            if (!server.config.siper.puntos_compatibles) {
+                throw new Error("no se puede probar con siper.puntos_compatibles en false, no debe estar en la configuración o debe estar en true")
+            }
             if (VERBOSE) console.log('Sesión admin')
             adminMetadatosSession = contexto.createSession();
             await adminMetadatosSession.login({

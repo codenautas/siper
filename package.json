@@ -16,6 +16,7 @@
     "npm": ">=10.9"
   },
   "overrides": {
+    "@azure/msal-node": ">=7.1.0",
     "diff": ">=8.0.2",
     "serialize-javascript": ">=7.0.0",
     "stylus": {
@@ -24,12 +25,12 @@
     "uuid": ">=14.0.0"
   },
   "dependencies": {
-    "backend-plus": "^2.7.11",
+    "backend-plus": "^2.7.13",
     "fflate": "^0.8.3",
     "frontend-plus": "^0.1.0-beta.5",
-    "guarantee-type": "^0.2.14",
+    "guarantee-type": "^0.3.0",
     "leaflet": "^1.9.4",
-    "mssql": "^12.7.11",
+    "mssql": "^12.7.13",
     "pg-triggers": "^0.4.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -56,7 +57,7 @@
     "type-fest": "^5.10.0",
     "types.d.ts": "^0.7.3",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.72.0"
+    "typescript-eslint": "^8.72.1"
   },
   "mixin-patch": {
     "patch": false
