@@ -1337,6 +1337,16 @@ describe("SiPer: " + testConfig.name, function(){
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(null, salida1, entrada2, salida2), cod_nov: null, cod_nov_final: COD_PRED_PAS, horas:'5H'})
                 })
             })
+            it("una salida antes de la única entrada no cuenta y consolida como abandono", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
+                    const fecha = FECHA_ACTUAL;
+                    const salida1  = '08:00:00';
+                    const entrada2 = '08:10:00';
+                    await registrarFichada(server, {idper, fecha, hora: salida1 , tipo_fichada:'S'});
+                    await registrarFichada(server, {idper, fecha, hora: entrada2, tipo_fichada:'E'});
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE(null, salida1, entrada2, null), cod_nov: COD_ABANDONO})
+                })
+            })
             it("dos fichadas normales consecutivas consolidan con su código de presencialidad", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}, {}) => {
                     const fecha = FECHA_ACTUAL;
@@ -1612,6 +1622,16 @@ describe("SiPer: " + testConfig.name, function(){
                 ], 'all', {fixedFields:{idper, fecha}})
             });
         })
+        it("ficha una salida antes de la entrada, la salida no cuenta", async function(){
+            const fecha = date.iso('2000-01-28');
+            await enNuevaPersona(this.test?.title!, {inicia_fichada: fecha}, async ({idper}) => {
+                await registrarFichada(server, {idper, fecha, tipo_fichada:'S', hora:'08:00:00'});
+                await registrarFichadas(server, {idper, fecha, entrada:'09:00:00', salida:'17:00:00', ...TERM_OBELISCO});
+                await adminMetadatosSession.tableDataTest(ctts.parte_diario, [
+                    {puntos_compatibles: true, puntos_compatibles_entrada: 'compatible', puntos_compatibles_salida: 'compatible'}
+                ], 'all', {fixedFields:{idper, fecha}})
+            });
+        })
         it("teletrabajo en domicilio", async function(){
             const fecha = date.iso('2000-01-28');
             await enNuevaPersona(this.test?.title!, {inicia_fichada: fecha}, async ({idper}) => {
@@ -1673,6 +1693,27 @@ describe("SiPer: " + testConfig.name, function(){
         })
         it("ficha la entrada y la salida sin punto", async function(){
             await enNuevaPersona(this.test?.title!, {usuario:{sesion:true}}, async ({idper}, {sesion}) => {
+                await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, tipo_fichada:'E', hora:'09:10:00', ...TERM_OBELISCO});
+                await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, tipo_fichada:'S', hora:'15:22:00'});
+                await verificarSituacionActual(sesion, {
+                    cod_nov: COD_PRED_PAS!, entrada: '9:10', salida: '15:22', horas: timeInterval({hours:6, minutes:12}),
+                    puntos_compatibles_entrada: 'compatible', puntos_compatibles_salida: 'sin_punto'
+                });
+            });
+        })
+        it("ficha una salida antes de la entrada, la salida no cuenta", async function(){
+            await enNuevaPersona(this.test?.title!, {usuario:{sesion:true}}, async ({idper}, {sesion}) => {
+                await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, tipo_fichada:'S', hora:'08:00:00'});
+                await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, tipo_fichada:'E', hora:'09:10:00', ...TERM_OBELISCO});
+                await verificarSituacionActual(sesion, {
+                    entrada: '9:10', salida: null, horas: null,
+                    puntos_compatibles_entrada: 'compatible', puntos_compatibles_salida: null
+                });
+            });
+        })
+        it("ficha una salida antes de la entrada y la salida, la primera salida no cuenta", async function(){
+            await enNuevaPersona(this.test?.title!, {usuario:{sesion:true}}, async ({idper}, {sesion}) => {
+                await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, tipo_fichada:'S', hora:'08:00:00'});
                 await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, tipo_fichada:'E', hora:'09:10:00', ...TERM_OBELISCO});
                 await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, tipo_fichada:'S', hora:'15:22:00'});
                 await verificarSituacionActual(sesion, {
@@ -1785,8 +1826,8 @@ describe("SiPer: " + testConfig.name, function(){
                     '2000|2000|XX39|T|5|0|0|5|5|0|0|5|XX Prueba 39',
                     '2000|2000|XX4|T|15|0|3|12|15|0|3|12|XX Prueba 4',
                     '2000|2000|XX5|T|20|0|4|16|20|0|4|16|XX Prueba 5',
-                    '2000|2000|XX63|T|5|1|0|4|5|1|0|4|XX Prueba 63',
-                    '2000|2000|XX77|T|20|1|4|15|20|1|4|15|XX Prueba 77',
+                    '2000|2000|XX64|T|5|1|0|4|5|1|0|4|XX Prueba 64',
+                    '2000|2000|XX81|T|20|1|4|15|20|1|4|15|XX Prueba 81',
                 ];
                 discrepances.showAndThrow(obtenido, expected);
             })
@@ -2198,7 +2239,7 @@ describe("SiPer: " + testConfig.name, function(){
             )
             // await fs.writeFile('sqlParteDiarioExt.json', JSON.stringify(resultExt,null,' '), 'utf8')
             discrepances.showAndThrow(resultBase.rows, resultExt.rows);
-            discrepances.showAndThrow(resultExt.rows.length, 485);
+            discrepances.showAndThrow(resultExt.rows.length, 505);
         })
     })
     function randInt(int: number) {

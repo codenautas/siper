@@ -16,10 +16,10 @@ const sqlPuntoCompatible = (context:Context, exigirConsolidacion:boolean, sqlHor
         then puntos_compatibles(nv.idper, nv.fecha, nv.cod_nov, ${sqlHora}) else null end`
     : 'null::text'
 
-// la primera entrada y la última salida (si el último rango no está cerrado la salida es null)
+// la primera entrada (sin la salida que haya antes, ver fichadas_sin_salida_inicial) y la última salida (si el último rango no está cerrado la salida es null)
 // valores: 'compatible', 'sin_compatible', 'sin_punto' o null (ver install/puntos_compatibles.sql)
 export const sqlPuntosCompatibles = (context:Context, exigirConsolidacion:boolean) => `
-        ${sqlPuntoCompatible(context, exigirConsolidacion, 'lower(nv.fichadas)')} as puntos_compatibles_entrada,
+        ${sqlPuntoCompatible(context, exigirConsolidacion, 'lower(fichadas_sin_salida_inicial(nv.fichadas))')} as puntos_compatibles_entrada,
         ${sqlPuntoCompatible(context, exigirConsolidacion, 'upper(nv.fichadas)')} as puntos_compatibles_salida`
 
 const sqlParteDiarioBase = (novedades_vigentes: string, context:Context, exigirConsolidacion:boolean) => `

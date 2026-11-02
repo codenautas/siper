@@ -476,10 +476,10 @@ export const ProceduresPrincipal:ProcedureDef[] = [
         action: 'situacion_actual',
         parameters: [],
         coreFunction: async function(context: ProcedureContext, _params:DefinedType<typeof ctts.situacion_actual.parameters>):Promise<ctts.SituacionActual>{
-            // la primera entrada y la última salida (si el último rango no está cerrado no hay salida ni horas)
+            // la primera entrada (sin la salida que haya antes, ver fichadas_sin_salida_inicial) y la última salida (si el último rango no está cerrado no hay salida ni horas)
             const info = await context.client.query(
                 `select x.fecha, x.cod_nov, x.novedad, x.cuenta_horas, x.mismo_cod_nov_desde, x.mismo_cod_nov_hasta,
-                        lower(x.fichadas) as entrada,
+                        lower(fichadas_sin_salida_inicial(x.fichadas)) as entrada,
                         upper(x.fichadas) as salida,
                         case when upper(x.fichadas) is not null then duration(x.fichadas) else null end as horas,
                         x.puntos_compatibles_entrada,

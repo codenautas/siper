@@ -143,6 +143,14 @@ function textoPuntoCompatible(estado: EstadoPuntosCompatibles, extremo?: Extremo
     return TEXTO_PUNTOS_COMPATIBLES[estado] + (extremo ? ` de ${extremo}` : '');
 }
 
+// una mitad del rectángulo de MarcaPuntosCompatibles (en la pantalla de inicio se muestra sola en el renglón de la entrada o de la salida)
+function SignoPuntoCompatible(props: {extremo: ExtremoFichada, estado: ctts.PuntosCompatibles}){
+    const {extremo, estado} = props;
+    return <span calendario-puntos-compatibles={estado ?? 'sin_dato'}>
+        {estado == null ? '' : estado == 'compatible' ? SIGNO_PUNTO_COMPATIBLE[extremo] : SIGNO_PUNTOS_COMPATIBLES[estado]}
+    </span>
+}
+
 // un solo rectángulo de ancho fijo: la mitad izquierda es la entrada y la derecha la salida (una mitad sin dato queda vacía)
 function MarcaPuntosCompatibles(props: {entrada: ctts.PuntosCompatibles, salida: ctts.PuntosCompatibles}){
     const {entrada, salida} = props;
@@ -154,9 +162,7 @@ function MarcaPuntosCompatibles(props: {entrada: ctts.PuntosCompatibles, salida:
     const tooltip = extremos.flatMap(({extremo, estado}) => estado == null ? [] : [textoPuntoCompatible(estado, extremo)]).join('\n');
     return <span className="calendario-puntos-compatibles" title={tooltip}>
         {extremos.map(({extremo, estado}) =>
-            <span key={extremo} calendario-puntos-compatibles={estado ?? 'sin_dato'}>
-                {estado == null ? '' : estado == 'compatible' ? SIGNO_PUNTO_COMPATIBLE[extremo] : SIGNO_PUNTOS_COMPATIBLES[estado]}
-            </span>
+            <SignoPuntoCompatible key={extremo} extremo={extremo} estado={estado}/>
         )}
     </span>
 }
@@ -1605,7 +1611,7 @@ function PantallaMapaDomicilios(props: { conn: Connector, fixedFields: FixedFiel
 
 function LineasSituacionActual(props: { situacion: NonNullable<ctts.SituacionActual> }) {
     const { situacion } = props;
-    const lineas: {texto: string, error: boolean}[] = [];
+    const lineas: {texto: string, error: boolean, marca?: {extremo: ExtremoFichada, estado: EstadoPuntosCompatibles}}[] = [];
     if (situacion.cuenta_horas !== true && situacion.novedad != null) {
         lineas.push({error: false, texto: `código ${situacion.cod_nov}: ${situacion.novedad}` + (
             sameValue(situacion.mismo_cod_nov_desde, situacion.mismo_cod_nov_hasta) ? ''
@@ -1615,22 +1621,30 @@ function LineasSituacionActual(props: { situacion: NonNullable<ctts.SituacionAct
     if (situacion.entrada == null && situacion.salida == null) {
         if (situacion.cuenta_horas) lineas.push({error: false, texto: 'Sin fichada.'});
     } else {
-        const lineaFichada = (texto: string, novedad: string | null, estado: ctts.PuntosCompatibles) =>
-            [texto, novedad, estado == null ? null : textoPuntoCompatible(estado)].filter(parte => parte != null).join(' - ');
+        const lineaFichada = (texto: string, novedad: string | null, extremo: ExtremoFichada, estado: ctts.PuntosCompatibles) => ({
+            error: false,
+            texto: [texto, novedad, estado == null ? null : textoPuntoCompatible(estado)].filter(parte => parte != null).join(' - '),
+            ...(estado == null ? {} : {marca: {extremo, estado}})
+        });
         if (situacion.entrada != null) {
-            lineas.push({error: false, texto: lineaFichada(`Fichada de entrada ${horaStr(situacion.entrada)}`, situacion.cuenta_horas ? situacion.novedad : null, situacion.puntos_compatibles_entrada)});
+            lineas.push(lineaFichada(`Fichada de entrada ${horaStr(situacion.entrada)}`, situacion.cuenta_horas ? situacion.novedad : null, 'entrada', situacion.puntos_compatibles_entrada));
         } else {
             lineas.push({error: true, texto: 'No hay fichada de entrada'});
         }
         if (situacion.salida != null) {
-            lineas.push({error: false, texto: lineaFichada(`Fichada de salida ${horaStr(situacion.salida)}`, null, situacion.puntos_compatibles_salida)});
+            lineas.push(lineaFichada(`Fichada de salida ${horaStr(situacion.salida)}`, null, 'salida', situacion.puntos_compatibles_salida));
         }
         if (situacion.horas != null) {
             lineas.push({error: false, texto: `Registra ${horassStr(situacion.horas, ' horas ', ' minutos', false)}`});
         }
     }
     return <Box className="situacion-actual">
-        {lineas.map((linea, i) => <Typography key={i} color={linea.error ? 'error' : undefined}>{linea.texto}</Typography>)}
+        {lineas.map((linea, i) => <Typography key={i} color={linea.error ? 'error' : undefined}>
+            {linea.marca == null ? null : <span className="calendario-puntos-compatibles">
+                <SignoPuntoCompatible extremo={linea.marca.extremo} estado={linea.marca.estado}/>
+            </span>}
+            {linea.texto}
+        </Typography>)}
     </Box>
 }
 

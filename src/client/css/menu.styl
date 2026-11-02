@@ -615,3 +615,9 @@ span.calendario-puntos-compatibles
 // la mitad sin dato (ej: todavía no hay salida) mantiene el lugar con un borde que no cambia el tamaño
 [calendario-puntos-compatibles="sin_dato"]
   box-shadow inset 0 0 0 1px #9e9e9e
+
+// en la pantalla de inicio cada renglón (entrada o salida) muestra solo su mitad, a la izquierda del texto
+.situacion-actual span.calendario-puntos-compatibles
+  width (ancho-puntos-compatibles / 2)
+  margin-left 0
+  margin-right 0.5em

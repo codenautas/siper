@@ -1,6 +1,6 @@
 {
   "name": "siper",
-  "version": "0.10.0-rc.3",
+  "version": "0.10.0-rc.4",
   "private": true,
   "license": "MIT",
   "description": "Sistema Integral de Gestión de Agentes, Recursos, Personal y Actividades",
@@ -25,7 +25,7 @@
     "uuid": ">=14.0.0"
   },
   "dependencies": {
-    "backend-plus": "^2.7.14",
+    "backend-plus": "^2.8.0",
     "fflate": "^0.8.3",
     "frontend-plus": "^0.1.0-beta.5",
     "guarantee-type": "^0.3.0",
@@ -48,7 +48,7 @@
     "@types/react-dom": "^18.3.1",
     "eslint": "^9.39.2",
     "eslint-plugin-react": "^7.37.5",
-    "globals": "^17.13.0",
+    "globals": "^17.14.0",
     "jiti": "^2.7.0",
     "mixin-patch": "^1.1.1",
     "mocha": "^12.0.3",

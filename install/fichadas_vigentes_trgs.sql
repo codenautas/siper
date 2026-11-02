@@ -109,6 +109,7 @@ DECLARE
   v_annio integer := EXTRACT(YEAR FROM new.fecha);
   v_annio_abierto boolean;
   v_regla RECORD;
+  v_fichadas time_multirange;
 BEGIN
   SELECT a.abierto
     INTO v_annio_abierto
@@ -119,9 +120,10 @@ BEGIN
       INTO v_regla
       FROM reglas
       WHERE annio = v_annio;
-    IF cardinality(new.fichadas) <= 1 AND lower(new.fichadas) IS NULL AND upper(new.fichadas) IS NULL THEN
+    v_fichadas := fichadas_sin_salida_inicial(new.fichadas);
+    IF cardinality(v_fichadas) <= 1 AND lower(v_fichadas) IS NULL AND upper(v_fichadas) IS NULL THEN
       NEW.cod_nov := v_regla.codnov_sin_fichadas;
-    ELSIF cardinality(new.fichadas) <= 1 AND (lower(new.fichadas) IS NULL OR upper(new.fichadas) IS NULL) THEN
+    ELSIF cardinality(v_fichadas) <= 1 AND (lower(v_fichadas) IS NULL OR upper(v_fichadas) IS NULL) THEN
       NEW.cod_nov := v_regla.codnov_unica_fichada;
     ELSE
       NEW.cod_nov := NULL;
@@ -202,6 +204,21 @@ $sql$
   )
   SELECT coalesce(range_agg(time_range(entrada, salida,'()')), time_multirange()) AS presencia
     FROM rangos;
+$sql$;
+
+/* Una salida antes de la primera entrada se considera un error y no se tiene en cuenta (para la entrada, el código de novedad, etc).
+ * En el multirango queda como un primer tramo sin entrada que se conserva para mostrarlo (calendario, parte diario)
+ * y esta función lo quita. Si es el único tramo se deja porque no hay una entrada posterior que indique que la salida es un error.
+ */
+CREATE OR REPLACE FUNCTION siper.fichadas_sin_salida_inicial(p_fichadas time_multirange)
+  RETURNS time_multirange
+  IMMUTABLE LANGUAGE SQL
+AS
+$sql$
+  SELECT CASE WHEN cardinality(p_fichadas) > 1 AND lower_inf(p_fichadas)
+      THEN (SELECT range_agg(r) FROM unnest(p_fichadas) WITH ORDINALITY AS t(r, ord) WHERE ord > 1)
+      ELSE p_fichadas
+    END;
 $sql$;
 
 /*
