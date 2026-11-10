@@ -2241,6 +2241,19 @@ describe("SiPer: " + testConfig.name, function(){
             discrepances.showAndThrow(resultBase.rows, resultExt.rows);
             discrepances.showAndThrow(resultExt.rows.length, 505);
         })
+        it("no faltan filas de fichadas_vigentes para las personas activas en las fechas de años abiertos", async function(){
+            // invariante descripto en el comentario ATENCIÓN de install/fichadas_vigentes_trgs.sql
+            var {rows: faltantes} = await server.inDbClient(ADMIN_REQ, async client => client.query(
+                `SELECT p.idper, f.fecha
+                    FROM personas p, fechas f INNER JOIN annios a USING (annio)
+                    WHERE p.activo
+                      AND a.abierto
+                      AND NOT EXISTS (SELECT 1 FROM fichadas_vigentes fv WHERE fv.idper = p.idper AND fv.fecha = f.fecha)
+                    ORDER BY p.idper, f.fecha
+                    LIMIT 20`
+            ).fetchAll());
+            discrepances.showAndThrow(faltantes, []);
+        })
     })
     function randInt(int: number) {
         return Math.floor(Math.random()*int);

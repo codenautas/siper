@@ -7,6 +7,7 @@ import {cod_nov} from "./table-cod_novedades";
 import {añoEnBaseAFecha} from "./table-fechas";
 
 // visor de fichadas
+// invariante sobre qué filas tienen que existir: ver el comentario ATENCIÓN de install/fichadas_vigentes_trgs.sql
 export function fichadas_vigentes(context: TableContext): TableDefinition{
     return {
         name: 'fichadas_vigentes',

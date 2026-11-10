@@ -63,7 +63,6 @@ BEGIN
         FROM fechas f
           INNER JOIN annios a USING (annio)
         WHERE a.abierto
-          AND f.fichadas_consolidadas IS NOT TRUE
       ON CONFLICT DO NOTHING;
     UPDATE fichadas_vigentes fv
       SET fichadas = multirango_fichadas(fv.idper, fv.fecha)
@@ -91,7 +90,6 @@ BEGIN
         FROM fechas f, personas p
         WHERE f.annio = new.annio
           AND p.activo
-          AND f.fichadas_consolidadas IS NOT TRUE
       ON CONFLICT DO NOTHING;
     UPDATE fichadas_vigentes fv
       SET fichadas = multirango_fichadas(fv.idper, fv.fecha)
@@ -113,12 +111,14 @@ CREATE OR REPLACE FUNCTION fechas_fichadas_vigentes_trg()
 AS
 $BODY$
 BEGIN
-  IF new.annio IS NOT NULL AND new.fichadas_consolidadas IS NOT TRUE THEN
+  IF new.annio IS NOT NULL THEN
     INSERT INTO fichadas_vigentes (idper, fecha)
       SELECT idper, new.fecha
         FROM personas p
         WHERE p.activo
       ON CONFLICT DO NOTHING;
+  END IF;
+  IF new.annio IS NOT NULL AND new.fichadas_consolidadas IS NOT TRUE THEN
     UPDATE fichadas_vigentes fv
       SET fichadas = multirango_fichadas(fv.idper, fv.fecha)
       FROM personas p, annios a
