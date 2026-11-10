@@ -328,14 +328,11 @@ function Calendario(props:{conn:Connector, idper:string, fecha: RealDate, fechaH
                                 }
                             }}
                         >
-                            <span className="calendario-dia-numero">{dia.dia ?? ''} 
-                                <span x-algo="si">{!mostrarFichadaEnDia ? '' : <MarcaPuntosCompatibles entrada={dia.puntos_compatibles_entrada} salida={dia.puntos_compatibles_salida}/>}</span>
+                            <span className="calendario-dia-encabezado">
+                                <span className="calendario-dia-numero">{dia.dia ?? ''}</span>
+                                {!mostrarFichadaEnDia ? '' : <MarcaPuntosCompatibles entrada={dia.puntos_compatibles_entrada} salida={dia.puntos_compatibles_salida}/>}
+                                <span className="calendario-dia-horas">{mostrarFichadaEnDia && dia.horas ? cantHorasStr(dia.horas) : ''}</span>
                             </span>
-                            {mostrarFichadaEnDia && dia.horas ? (
-                                <span className="calendario-dia-horas">
-                                    {cantHorasStr(dia.horas)}
-                                </span>
-                            ) : null}
                             <span 
                                 className={`calendario-dia-contenido 
                                     ${dia ? 'con_novedad_si' : 'con_novedad_no' } 

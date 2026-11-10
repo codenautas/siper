@@ -59,10 +59,6 @@ install:
       - ../install/function_registrar_fichadas.sql
       - ../install/sinc_fichadas_recibidas.sql    
       post-adapt:
-      - ../node_modules/pg-triggers/lib/recreate-his.sql
-      - ../node_modules/pg-triggers/lib/table-changes.sql
-      - ../node_modules/pg-triggers/lib/function-changes-trg.sql
-      - ../node_modules/pg-triggers/lib/enance.sql    
       - ../install/novedades_calculadas.sql
       - ../install/actualizar_novedades_vigentes.sql
       - ../install/annio_abrir.sql
