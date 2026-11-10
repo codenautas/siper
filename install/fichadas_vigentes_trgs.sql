@@ -18,13 +18,16 @@ BEGIN
         FROM fechas f
           INNER JOIN annios a USING (annio)
         WHERE a.abierto
+          AND f.fichadas_consolidadas IS NOT TRUE
       ON CONFLICT DO NOTHING;
     UPDATE fichadas_vigentes fv
       SET fichadas = multirango_fichadas(fv.idper, fv.fecha)
-      FROM annios a 
+      FROM annios a, fechas f
       WHERE fv.idper = new.idper
         AND fv.annio = a.annio
-        AND a.abierto;
+        AND a.abierto
+        AND fv.fecha = f.fecha
+        AND f.fichadas_consolidadas IS NOT TRUE;
   END IF;
   RETURN NEW;
 END;
@@ -43,13 +46,16 @@ BEGIN
         FROM fechas f, personas p
         WHERE f.annio = new.annio
           AND p.activo
+          AND f.fichadas_consolidadas IS NOT TRUE
       ON CONFLICT DO NOTHING;
     UPDATE fichadas_vigentes fv
       SET fichadas = multirango_fichadas(fv.idper, fv.fecha)
-      FROM personas p
+      FROM personas p, fechas f
       WHERE fv.annio = new.annio
         AND fv.idper = p.idper
-        AND p.activo;
+        AND p.activo
+        AND fv.fecha = f.fecha
+        AND f.fichadas_consolidadas IS NOT TRUE;
   END IF;
   RETURN NEW;
 END;
@@ -62,7 +68,7 @@ CREATE OR REPLACE FUNCTION fechas_fichadas_vigentes_trg()
 AS
 $BODY$
 BEGIN
-  IF new.annio IS NOT NULL THEN
+  IF new.annio IS NOT NULL AND new.fichadas_consolidadas IS NOT TRUE THEN
     INSERT INTO fichadas_vigentes (idper, fecha)
       SELECT idper, new.fecha
         FROM personas p
@@ -81,6 +87,31 @@ BEGIN
 END;
 $BODY$;
 
+-- Recalcula las fichadas vigentes de una persona en un día (aunque el día esté consolidado), salvo que el año esté cerrado
+CREATE OR REPLACE PROCEDURE fichadas_vigentes_recalcular_dia(p_idper text, p_fecha date)
+  SECURITY DEFINER
+  LANGUAGE PLPGSQL
+AS
+$BODY$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+      FROM fechas f
+        INNER JOIN annios a USING (annio)
+      WHERE f.fecha = p_fecha
+        AND a.abierto
+  ) THEN
+    INSERT INTO fichadas_vigentes (idper, fecha)
+      VALUES (p_idper, p_fecha)
+      ON CONFLICT DO NOTHING;
+    UPDATE fichadas_vigentes
+      SET fichadas = multirango_fichadas(idper, fecha)
+      WHERE idper = p_idper
+        AND fecha = p_fecha;
+  END IF;
+END;
+$BODY$;
+
 CREATE OR REPLACE FUNCTION fichadas_fichadas_vigentes_trg()
   RETURNS TRIGGER
   SECURITY DEFINER
@@ -88,14 +119,16 @@ CREATE OR REPLACE FUNCTION fichadas_fichadas_vigentes_trg()
 AS
 $BODY$
 BEGIN
-  INSERT INTO fichadas_vigentes (idper, fecha)
-    VALUES (new.idper, new.fecha)
-    ON CONFLICT DO NOTHING;
-  UPDATE fichadas_vigentes
-    SET fichadas = multirango_fichadas(idper, fecha)
-    WHERE idper = new.idper
-      AND fecha = new.fecha;
-  RETURN new;
+  IF tg_op = 'DELETE' OR tg_op = 'UPDATE' AND (old.idper, old.fecha) IS DISTINCT FROM (new.idper, new.fecha) THEN
+    CALL fichadas_vigentes_recalcular_dia(old.idper, old.fecha);
+  END IF;
+  IF tg_op <> 'DELETE' THEN
+    CALL fichadas_vigentes_recalcular_dia(new.idper, new.fecha);
+  END IF;
+  IF tg_op = 'DELETE' THEN
+    RETURN OLD;
+  END IF;
+  RETURN NEW;
 END;
 $BODY$;
 
@@ -350,7 +383,7 @@ CREATE TRIGGER fichadas_vigentes_a_novedades_trg
   EXECUTE PROCEDURE fichadas_vigentes_a_novedades_trg();
 
 CREATE TRIGGER fichadas_fichadas_vigentes_trg 
-  AFTER INSERT OR UPDATE
+  AFTER INSERT OR UPDATE OR DELETE
   ON fichadas 
   FOR EACH ROW 
   EXECUTE PROCEDURE fichadas_fichadas_vigentes_trg();

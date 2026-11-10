@@ -25,17 +25,17 @@
     "uuid": ">=14.0.0"
   },
   "dependencies": {
-    "backend-plus": "^2.8.0",
+    "backend-plus": "^2.8.3",
     "fflate": "^0.8.3",
     "frontend-plus": "^0.1.0-beta.5",
     "guarantee-type": "^0.3.0",
     "leaflet": "^1.9.4",
-    "mssql": "^12.7.13",
-    "pg-triggers": "^0.4.6",
+    "mssql": "^12.7.14",
+    "pg-triggers": "^0.4.8",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tab-plus": "^0.2.0",
-    "type-store": "^0.6.7"
+    "type-store": "^0.6.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -53,12 +53,12 @@
     "jiti": "^2.7.0",
     "mixin-patch": "^1.1.1",
     "mocha": "^12.0.3",
-    "serial-tester": "^0.3.10",
+    "serial-tester": "^0.3.11",
     "source-map-support": "^0.5.21",
     "type-fest": "^5.10.0",
     "types.d.ts": "^0.7.3",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.72.1"
+    "typescript-eslint": "^8.72.2"
   },
   "mixin-patch": {
     "patch": false
