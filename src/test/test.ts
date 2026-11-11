@@ -1272,11 +1272,23 @@ describe("SiPer: " + testConfig.name, function(){
             it("las fichadas se acomodan a los límites de la banda horaria", async function(){
                 await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
                     const fecha = FECHA_ACTUAL;
-                    const desde = '07:03:00';
-                    const hasta = '21:03:00';
+                    // dentro de los umbrales de 30 minutos de la banda GENERAL (08:00 a 20:00)
+                    const desde = '07:33:00';
+                    const hasta = '20:27:00';
                     await registrarFichada(server, {idper, fecha, hora: desde, tipo_fichada:'E'});
                     await registrarFichada(server, {idper, fecha, hora: hasta, tipo_fichada:'S'});
                     await verificaFichadas({idper, fecha, fichadas: TIME_RANGE('08:00:00', '20:00:00')})
+                })
+            })
+            it("las fichadas fuera de los umbrales de la banda horaria no se tienen en cuenta", async function(){
+                await enNuevaPersona(this.test?.title!, {}, async ({idper}) => {
+                    const fecha = FECHA_ACTUAL;
+                    // la banda GENERAL (08:00 a 20:00) tiene umbrales de 30 minutos: 07:03 y 21:03 quedan afuera
+                    await registrarFichada(server, {idper, fecha, hora: '07:03:00', tipo_fichada:'E'});
+                    await registrarFichada(server, {idper, fecha, hora: '09:00:00', tipo_fichada:'E'});
+                    await registrarFichada(server, {idper, fecha, hora: '17:00:00', tipo_fichada:'S'});
+                    await registrarFichada(server, {idper, fecha, hora: '21:03:00', tipo_fichada:'S'});
+                    await verificaFichadas({idper, fecha, fichadas: TIME_RANGE('09:00:00', '17:00:00')})
                 })
             })
             it("sin fichada consolida como ausente", async function(){
@@ -1826,8 +1838,8 @@ describe("SiPer: " + testConfig.name, function(){
                     '2000|2000|XX39|T|5|0|0|5|5|0|0|5|XX Prueba 39',
                     '2000|2000|XX4|T|15|0|3|12|15|0|3|12|XX Prueba 4',
                     '2000|2000|XX5|T|20|0|4|16|20|0|4|16|XX Prueba 5',
-                    '2000|2000|XX64|T|5|1|0|4|5|1|0|4|XX Prueba 64',
-                    '2000|2000|XX81|T|20|1|4|15|20|1|4|15|XX Prueba 81',
+                    '2000|2000|XX65|T|5|1|0|4|5|1|0|4|XX Prueba 65',
+                    '2000|2000|XX82|T|20|1|4|15|20|1|4|15|XX Prueba 82',
                 ];
                 discrepances.showAndThrow(obtenido, expected);
             })
@@ -2239,7 +2251,7 @@ describe("SiPer: " + testConfig.name, function(){
             )
             // await fs.writeFile('sqlParteDiarioExt.json', JSON.stringify(resultExt,null,' '), 'utf8')
             discrepances.showAndThrow(resultBase.rows, resultExt.rows);
-            discrepances.showAndThrow(resultExt.rows.length, 505);
+            discrepances.showAndThrow(resultExt.rows.length, 510);
         })
         it("no faltan filas de fichadas_vigentes para las personas activas en las fechas de años abiertos", async function(){
             // invariante descripto en el comentario ATENCIÓN de install/fichadas_vigentes_trgs.sql

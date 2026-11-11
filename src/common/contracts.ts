@@ -1057,6 +1057,8 @@ export const bandas_horarias = {
         hora_hasta: is.string,
         umbral_aviso_falta_entrada: is.nullable.number,
         umbral_aviso_falta_salida: is.nullable.number,
+        umbral_comienzo_bh: is.nullable.class(TimeInterval),
+        umbral_fin_bh: is.nullable.class(TimeInterval),
     })
 } satisfies CommonEntityDefinition
 

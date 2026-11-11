@@ -183,3 +183,68 @@ CREATE TRIGGER fichadas_fichadas_vigentes_trg
   ON fichadas 
   FOR EACH ROW 
   EXECUTE PROCEDURE fichadas_fichadas_vigentes_trg();
+
+-- umbrales de la banda horaria: las fichadas más allá de los umbrales no se tienen en cuenta en fichadas_vigentes
+ALTER TABLE bandas_horarias ADD COLUMN umbral_comienzo_bh interval;
+ALTER TABLE bandas_horarias ADD COLUMN umbral_fin_bh interval;
+
+CREATE OR REPLACE FUNCTION siper.multirango_fichadas(p_idper text, p_fecha date) 
+  RETURNS time_multirange 
+  STABLE LANGUAGE SQL
+AS
+$sql$
+  WITH eventos_raw(hora, tipo_fichada) AS (
+    SELECT hora, tipo_fichada,
+        ROW_NUMBER() OVER (ORDER BY hora, tipo_fichada desc) AS orden,
+        COUNT(*) OVER () AS cantidad,
+        hora - MIN(hora) OVER () AS elapsed
+      FROM fichadas f 
+        INNER JOIN personas p ON p.idper = f.idper
+        INNER JOIN bandas_horarias bh ON bh.banda_horaria = p.banda_horaria
+      WHERE f.fecha = p_fecha AND f.idper = p_idper AND tipo_fichada in ('E', 'S')
+        -- las fichadas más allá de los umbrales de la banda horaria no se tienen en cuenta (con umbral null se tienen en cuenta todas);
+        -- se compara la diferencia (y no hora_desde - umbral) para que no dé la vuelta en la medianoche
+        AND (bh.umbral_comienzo_bh IS NULL OR bh.hora_desde - f.hora <= bh.umbral_comienzo_bh)
+        AND (bh.umbral_fin_bh IS NULL OR f.hora - bh.hora_hasta <= bh.umbral_fin_bh)
+  ),
+  eventos_imp AS (
+    SELECT
+      hora,
+      -- CASE
+      --  WHEN cantidad > 1 AND orden = 1        AND tipo_fichada = 'S' THEN 'E'
+      --  WHEN cantidad > 1 AND orden = cantidad AND tipo_fichada = 'E' AND elapsed >= '5 hours'::interval THEN 'S'
+      --  ELSE tipo_fichada
+      -- END AS 
+      tipo_fichada
+    FROM eventos_raw
+  ),
+  primeros AS (
+    SELECT hora, tipo_fichada
+    FROM (
+        SELECT hora, tipo_fichada, LAG(tipo_fichada) OVER (ORDER BY hora, tipo_fichada desc) AS tipo_anterior
+        FROM eventos_imp
+    ) t
+    WHERE tipo_fichada IS DISTINCT FROM tipo_anterior
+  ),
+  eventos AS (
+    SELECT
+      hora,
+      tipo_fichada,
+      SUM(CASE WHEN tipo_fichada = 'E' THEN 1 ELSE 0 END) OVER (ORDER BY hora, tipo_fichada desc ROWS UNBOUNDED PRECEDING) AS grupo
+    FROM primeros
+  ),
+  rangos AS (
+    SELECT
+      grupo,
+      MIN(CASE WHEN tipo_fichada = 'E' THEN greatest(bh.hora_desde, least(bh.hora_hasta, hora)) END) AS entrada,
+      MAX(CASE WHEN tipo_fichada = 'S' THEN greatest(bh.hora_desde, least(bh.hora_hasta, hora)) END) AS salida
+    FROM eventos,
+        personas p INNER JOIN bandas_horarias bh USING (banda_horaria)
+      WHERE p.idper = p_idper
+    GROUP BY grupo, bh.hora_desde, bh.hora_hasta
+  )
+  SELECT coalesce(range_agg(time_range(entrada, salida,'()')), time_multirange()) AS presencia
+    FROM rangos;
+$sql$;
+
+UPDATE bandas_horarias SET umbral_comienzo_bh = '00:30:00', umbral_fin_bh = '00:30:00' WHERE banda_horaria = 'GENERAL';

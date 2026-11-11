@@ -204,7 +204,13 @@ $sql$
         COUNT(*) OVER () AS cantidad,
         hora - MIN(hora) OVER () AS elapsed
       FROM fichadas f 
+        INNER JOIN personas p ON p.idper = f.idper
+        INNER JOIN bandas_horarias bh ON bh.banda_horaria = p.banda_horaria
       WHERE f.fecha = p_fecha AND f.idper = p_idper AND tipo_fichada in ('E', 'S')
+        -- las fichadas más allá de los umbrales de la banda horaria no se tienen en cuenta (con umbral null se tienen en cuenta todas);
+        -- se compara la diferencia (y no hora_desde - umbral) para que no dé la vuelta en la medianoche
+        AND (bh.umbral_comienzo_bh IS NULL OR bh.hora_desde - f.hora <= bh.umbral_comienzo_bh)
+        AND (bh.umbral_fin_bh IS NULL OR f.hora - bh.hora_hasta <= bh.umbral_fin_bh)
   ),
   eventos_imp AS (
     SELECT
@@ -276,7 +282,9 @@ create table casos_prueba_multirango_fichadas.fichadas(
 create table casos_prueba_multirango_fichadas.bandas_horarias(
     banda_horaria text,
     hora_desde time default '08:00',
-    hora_hasta time default '20:00'
+    hora_hasta time default '20:00',
+    umbral_comienzo_bh interval,
+    umbral_fin_bh interval
 );
 
 create table casos_prueba_multirango_fichadas.personas(
@@ -286,6 +294,8 @@ create table casos_prueba_multirango_fichadas.personas(
 
 insert into casos_prueba_multirango_fichadas.bandas_horarias (banda_horaria) values ('N');
 insert into casos_prueba_multirango_fichadas.personas values ('A1', 'N');
+insert into casos_prueba_multirango_fichadas.bandas_horarias (banda_horaria, umbral_comienzo_bh, umbral_fin_bh) values ('U', '30 minutes', '30 minutes');
+insert into casos_prueba_multirango_fichadas.personas values ('A2', 'U');
 
 insert into casos_prueba_multirango_fichadas.fichadas(idper, fecha, hora, tipo_fichada)
 values
@@ -327,7 +337,23 @@ values
     ('A1', '2026-05-15', '12:00', 'E'),
     ('A1', '2026-05-15', '13:00', 'E'),
     ('A1', '2026-05-15', '13:00', 'S'),
-    ('A1', '2026-05-15', '14:00', 'S')
+    ('A1', '2026-05-15', '14:00', 'S'),
+
+    ('A2', '2026-05-18', '07:29', 'E'),
+    ('A2', '2026-05-18', '16:00', 'S'),
+
+    ('A2', '2026-05-19', '07:30', 'E'),
+    ('A2', '2026-05-19', '16:00', 'S'),
+
+    ('A2', '2026-05-20', '07:00', 'E'),
+    ('A2', '2026-05-20', '08:05', 'E'),
+    ('A2', '2026-05-20', '16:00', 'S'),
+
+    ('A2', '2026-05-21', '08:00', 'E'),
+    ('A2', '2026-05-21', '20:30', 'S'),
+
+    ('A2', '2026-05-22', '08:00', 'E'),
+    ('A2', '2026-05-22', '20:31', 'S')
 ;
 set search_path = casos_prueba_multirango_fichadas, siper;
 
@@ -345,7 +371,13 @@ select fecha, multirango_fichadas(idper, fecha) as obtenido, esperado
         ('A1', '2026-05-12'::date, '{(08:00:00,)}'::time_multirange),
         ('A1', '2026-05-13'::date, '{(08:00:00,13:00:00),(14:00:00,)}'::time_multirange),
         ('A1', '2026-05-14'::date, '{(08:00:00,12:00:00),(13:00:00,14:00:00)}'::time_multirange),
-        ('A1', '2026-05-15'::date, '{(08:00:00,12:00:00),(12:00:00,13:00:00),(13:00:00,14:00:00)}'::time_multirange)
+        ('A1', '2026-05-15'::date, '{(08:00:00,12:00:00),(12:00:00,13:00:00),(13:00:00,14:00:00)}'::time_multirange),
+        -- banda con umbrales de 30 minutos
+        ('A2', '2026-05-18'::date, '{(,16:00:00)}'::time_multirange),
+        ('A2', '2026-05-19'::date, '{(08:00:00,16:00:00)}'::time_multirange),
+        ('A2', '2026-05-20'::date, '{(08:05:00,16:00:00)}'::time_multirange),
+        ('A2', '2026-05-21'::date, '{(08:00:00,20:00:00)}'::time_multirange),
+        ('A2', '2026-05-22'::date, '{(08:00:00,)}'::time_multirange)
         
         -- ('A1', '2026-05-08'::date, '{(08:00:00,16:00:00)}'::time_multirange),
         -- ('A1', '2026-05-09'::date, '{(08:00:00,16:00:00)}'::time_multirange),

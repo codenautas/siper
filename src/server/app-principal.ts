@@ -112,8 +112,9 @@ const cronConsolidarFichadas = async (be:AppBackend) => {
                         FROM fechas f
                         JOIN annios a ON a.annio = f.annio AND a.abierto = true
                         CROSS JOIN LATERAL (
-                            SELECT (SELECT max(hora_hasta) FROM bandas_horarias) AS hora_consolidacion,
-                                   r.tolerancia_consolidacion AS tolerancia
+                            -- se consolida después del fin de la banda más el mayor entre su umbral_fin_bh y la tolerancia
+                            SELECT (SELECT max(bh.hora_hasta + greatest(bh.umbral_fin_bh, (r.tolerancia_consolidacion || ' minutes')::interval))
+                                        FROM bandas_horarias bh) AS hora_consolidacion
                                 FROM reglas r
                                 JOIN annios ra ON r.annio = ra.annio AND ra.abierto = true
                                 ORDER BY r.annio DESC LIMIT 1
@@ -122,7 +123,7 @@ const cronConsolidarFichadas = async (be:AppBackend) => {
                           AND (
                             f.fecha < fecha_hora_actual()::date
                             OR (f.fecha = fecha_hora_actual()::date
-                                AND fecha_hora_actual()::time >= params.hora_consolidacion + (params.tolerancia || ' minutes')::interval)
+                                AND fecha_hora_actual()::time >= params.hora_consolidacion)
                           )`
                 ).fetchUniqueValue();
                 if (check.value != null) {

@@ -1,2 +1,2 @@
-banda_horaria|hora_desde|hora_hasta|umbral_aviso_falta_entrada|umbral_aviso_falta_salida
-GENERAL|08:00|20:00||
+banda_horaria|hora_desde|hora_hasta|umbral_aviso_falta_entrada|umbral_aviso_falta_salida|umbral_comienzo_bh|umbral_fin_bh
+GENERAL|08:00|20:00|||00:30:00|00:30:00

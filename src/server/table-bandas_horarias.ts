@@ -21,6 +21,8 @@ export function bandas_horarias(context:TableContext):TableDefinition{
             {name: 'hora_hasta' ,                 typeName:'time', nullable:false  },
             {name: 'umbral_aviso_falta_entrada' , typeName:'integer'               },
             {name: 'umbral_aviso_falta_salida'  , typeName:'integer'               },
+            {name: 'umbral_comienzo_bh'         , typeName:'interval', description: 'tiempo antes de hora_desde en el que se aceptan fichadas (se llevan a hora_desde); null: se aceptan todas' },
+            {name: 'umbral_fin_bh'              , typeName:'interval', description: 'tiempo después de hora_hasta en el que se aceptan fichadas (se llevan a hora_hasta); null: se aceptan todas' },
         ],
         primaryKey: ['banda_horaria'],
         constraints: [
