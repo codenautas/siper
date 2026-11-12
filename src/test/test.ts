@@ -1734,6 +1734,28 @@ describe("SiPer: " + testConfig.name, function(){
                 });
             });
         })
+        it("ficha fuera de los umbrales de la banda horaria", async function(){
+            await enNuevaPersona(this.test?.title!, {usuario:{sesion:true}}, async ({idper}, {sesion}) => {
+                await registrarFichada(server, {idper, fecha:FECHA_ACTUAL, tipo_fichada:'E', hora:'07:00:00'});
+                await verificarSituacionActual(sesion, {entrada: null, fichadas_fuera_de_banda: true});
+            });
+        })
+        it("ficha la salida el último día laborable después del umbral de salida", async function(){
+            await enNuevaPersona(this.test?.title!, {usuario:{sesion:true}}, async ({idper}, {sesion}) => {
+                // FECHA_ACTUAL es lunes, el último día laborable es el viernes anterior
+                const viernes = date.iso('2000-01-28');
+                await registrarFichada(server, {idper, fecha:viernes, tipo_fichada:'E', hora:'09:00:00'});
+                await registrarFichada(server, {idper, fecha:viernes, tipo_fichada:'S', hora:'21:00:00'});
+                await verificarSituacionActual(sesion, {fichadas_fuera_de_banda: true});
+            });
+        })
+        it("ficha la entrada el último día laborable antes del umbral, no se avisa", async function(){
+            await enNuevaPersona(this.test?.title!, {usuario:{sesion:true}}, async ({idper}, {sesion}) => {
+                const viernes = date.iso('2000-01-28');
+                await registrarFichada(server, {idper, fecha:viernes, tipo_fichada:'E', hora:'07:00:00'});
+                await verificarSituacionActual(sesion, {fichadas_fuera_de_banda: false});
+            });
+        })
         it("novedad de varios días", async function(){
             await enNuevaPersona(this.test?.title!, {vacaciones: 20, usuario:{sesion:true}}, async ({idper}, {sesion}) => {
                 const hasta = date.iso('2000-02-04');
@@ -1839,7 +1861,7 @@ describe("SiPer: " + testConfig.name, function(){
                     '2000|2000|XX4|T|15|0|3|12|15|0|3|12|XX Prueba 4',
                     '2000|2000|XX5|T|20|0|4|16|20|0|4|16|XX Prueba 5',
                     '2000|2000|XX65|T|5|1|0|4|5|1|0|4|XX Prueba 65',
-                    '2000|2000|XX82|T|20|1|4|15|20|1|4|15|XX Prueba 82',
+                    '2000|2000|XX85|T|20|1|4|15|20|1|4|15|XX Prueba 85',
                 ];
                 discrepances.showAndThrow(obtenido, expected);
             })
@@ -2251,7 +2273,7 @@ describe("SiPer: " + testConfig.name, function(){
             )
             // await fs.writeFile('sqlParteDiarioExt.json', JSON.stringify(resultExt,null,' '), 'utf8')
             discrepances.showAndThrow(resultBase.rows, resultExt.rows);
-            discrepances.showAndThrow(resultExt.rows.length, 510);
+            discrepances.showAndThrow(resultExt.rows.length, 525);
         })
         it("no faltan filas de fichadas_vigentes para las personas activas en las fechas de años abiertos", async function(){
             // invariante descripto en el comentario ATENCIÓN de install/fichadas_vigentes_trgs.sql

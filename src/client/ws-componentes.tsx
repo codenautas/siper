@@ -1608,7 +1608,7 @@ function PantallaMapaDomicilios(props: { conn: Connector, fixedFields: FixedFiel
 
 function LineasSituacionActual(props: { situacion: NonNullable<ctts.SituacionActual> }) {
     const { situacion } = props;
-    const lineas: {texto: string, error: boolean, marca?: {extremo: ExtremoFichada, estado: EstadoPuntosCompatibles}}[] = [];
+    const lineas: {texto: string, error: boolean, marca?: {extremo: ExtremoFichada, estado: EstadoPuntosCompatibles}, className?: string}[] = [];
     if (situacion.cuenta_horas !== true && situacion.novedad != null) {
         lineas.push({error: false, texto: `código ${situacion.cod_nov}: ${situacion.novedad}` + (
             sameValue(situacion.mismo_cod_nov_desde, situacion.mismo_cod_nov_hasta) ? ''
@@ -1635,8 +1635,11 @@ function LineasSituacionActual(props: { situacion: NonNullable<ctts.SituacionAct
             lineas.push({error: false, texto: `Registra ${horassStr(situacion.horas, ' horas ', ' minutos', false)}`});
         }
     }
+    if (situacion.fichadas_fuera_de_banda) {
+        lineas.push({error: false, texto: 'Recuerde que no está permitido fichar fuera de la banda horaria', className: 'situacion-actual-fuera-de-banda'});
+    }
     return <Box className="situacion-actual">
-        {lineas.map((linea, i) => <Typography key={i} color={linea.error ? 'error' : undefined}>
+        {lineas.map((linea, i) => <Typography key={i} color={linea.error ? 'error' : undefined} className={linea.className}>
             {linea.marca == null ? null : <span className="calendario-puntos-compatibles">
                 <SignoPuntoCompatible extremo={linea.marca.extremo} estado={linea.marca.estado}/>
             </span>}

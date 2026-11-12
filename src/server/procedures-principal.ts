@@ -18,7 +18,7 @@ import * as sql from 'mssql';
 import { ACCIONES, ESTADOS } from './table-sinc_fichadores';
 import { ConfigFichadasDb, getConfigFichadasDb, MAX_INTENTOS } from './app-principal';
 
-import { sqlLeftJoinLateralTrayectoriaLaboral } from './table-personas';
+import { sqlLeftJoinLateralTrayectoriaLaboral, sqlEsLaborable } from './table-personas';
 
 import { sqlParteDiarioAgrupado, sqlParteDiarioExtendido, sqlPuntosCompatibles } from './table-parte_diario'
 
@@ -483,7 +483,23 @@ export const ProceduresPrincipal:ProcedureDef[] = [
                         upper(x.fichadas) as salida,
                         case when upper(x.fichadas) is not null then duration(x.fichadas) else null end as horas,
                         x.puntos_compatibles_entrada,
-                        x.puntos_compatibles_salida
+                        x.puntos_compatibles_salida,
+                        -- fichadas que no se tienen en cuenta: las de hoy fuera de los umbrales y las del último día laborable después del umbral de salida
+                        exists (
+                            select 1
+                                from fichadas f
+                                    inner join personas p on p.idper = f.idper
+                                    inner join bandas_horarias bh on bh.banda_horaria = p.banda_horaria
+                                where f.idper = x.idper
+                                  and f.tipo_fichada in ('E', 'S')
+                                  and (
+                                    f.fecha = x.fecha
+                                        and (fichada_antes_del_umbral(f.hora, bh.hora_desde, bh.umbral_comienzo_bh)
+                                            or fichada_despues_del_umbral(f.hora, bh.hora_hasta, bh.umbral_fin_bh))
+                                    or f.fecha = (select max(fe.fecha) from fechas fe where fe.fecha < x.fecha and ${sqlEsLaborable('fe')})
+                                        and fichada_despues_del_umbral(f.hora, bh.hora_hasta, bh.umbral_fin_bh)
+                                  )
+                        ) as fichadas_fuera_de_banda
                     from (${sqlParteDiarioExtendido(context, false)}) x
                         inner join usuarios u using (idper)
                     where u.usuario = $1 and x.fecha = fecha_actual()`,

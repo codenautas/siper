@@ -568,6 +568,7 @@ export const situacion_actual = {
         horas: is.nullable.class(TimeInterval),
         puntos_compatibles_entrada: puntosCompatibles,
         puntos_compatibles_salida: puntosCompatibles,
+        fichadas_fuera_de_banda: is.boolean,
     })
 }
 

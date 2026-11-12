@@ -30,8 +30,10 @@ export const sqlLeftJoinLateralTrayectoriaLaboral = (sqlFecha:string) => `
                     LIMIT 1) t ON TRUE
 `
 
+export const sqlEsLaborable = (aliasFechas:string) => `${aliasFechas}.laborable is not false and ${aliasFechas}.dds between 1 and 5`
+
 export const sqlPersonas = (sqlFecha:string) => `
-SELECT p.*, f.dds, f.laborable is not false and f.dds between 1 and 5 as es_laborable,
+SELECT p.*, f.dds, ${sqlEsLaborable('f')} as es_laborable,
         t.categoria, t.situacion_revista, 
         t.motivo_egreso, t.jerarquia, t.cargo_atgc, t.agrupamiento, t.tramo, t.grado,
         hp.horario, nov_grupo,

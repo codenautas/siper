@@ -193,6 +193,25 @@ BEGIN
 END;
 $BODY$;
 
+-- Una fichada anterior a hora_desde por más que el umbral no se tiene en cuenta (sin umbral se tienen en cuenta todas).
+-- Se compara la diferencia (y no hora_desde - umbral) para que no dé la vuelta en la medianoche.
+CREATE OR REPLACE FUNCTION siper.fichada_antes_del_umbral(p_hora time, p_hora_desde time, p_umbral_comienzo_bh interval)
+  RETURNS boolean
+  IMMUTABLE LANGUAGE SQL
+AS
+$sql$
+  SELECT p_umbral_comienzo_bh IS NOT NULL AND p_hora_desde - p_hora > p_umbral_comienzo_bh;
+$sql$;
+
+-- Una fichada posterior a hora_hasta por más que el umbral no se tiene en cuenta (sin umbral se tienen en cuenta todas).
+CREATE OR REPLACE FUNCTION siper.fichada_despues_del_umbral(p_hora time, p_hora_hasta time, p_umbral_fin_bh interval)
+  RETURNS boolean
+  IMMUTABLE LANGUAGE SQL
+AS
+$sql$
+  SELECT p_umbral_fin_bh IS NOT NULL AND p_hora - p_hora_hasta > p_umbral_fin_bh;
+$sql$;
+
 CREATE OR REPLACE FUNCTION siper.multirango_fichadas(p_idper text, p_fecha date) 
   RETURNS time_multirange 
   STABLE LANGUAGE SQL
@@ -207,10 +226,8 @@ $sql$
         INNER JOIN personas p ON p.idper = f.idper
         INNER JOIN bandas_horarias bh ON bh.banda_horaria = p.banda_horaria
       WHERE f.fecha = p_fecha AND f.idper = p_idper AND tipo_fichada in ('E', 'S')
-        -- las fichadas más allá de los umbrales de la banda horaria no se tienen en cuenta (con umbral null se tienen en cuenta todas);
-        -- se compara la diferencia (y no hora_desde - umbral) para que no dé la vuelta en la medianoche
-        AND (bh.umbral_comienzo_bh IS NULL OR bh.hora_desde - f.hora <= bh.umbral_comienzo_bh)
-        AND (bh.umbral_fin_bh IS NULL OR f.hora - bh.hora_hasta <= bh.umbral_fin_bh)
+        AND NOT fichada_antes_del_umbral(f.hora, bh.hora_desde, bh.umbral_comienzo_bh)
+        AND NOT fichada_despues_del_umbral(f.hora, bh.hora_hasta, bh.umbral_fin_bh)
   ),
   eventos_imp AS (
     SELECT
