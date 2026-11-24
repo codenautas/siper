@@ -1,9 +1,15 @@
 {
   description = "Ambiente de desarrollo de SiPer";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    coderun = {
+      url = "github:codenautas/coderun";
+      flake = false;
+    };
+  };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, coderun }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
@@ -11,14 +17,16 @@
         pkgs.nodejs_22
         pkgs.postgresql_18
         pkgs.git
+        pkgs.yq-go
       ];
+      coderunDevel = "${coderun}/devel";
     in {
       devShells.${system}.default = pkgs.mkShell {
         packages = herramientas;
         shellHook = ''
-          if ! . pg-env.sh; then
-            echo "No se encontro pg-env.sh en el PATH"
-          elif [ ! -f local-config.yaml ]; then
+          export PATH="${coderunDevel}:$PATH"
+          . pg-env.sh
+          if [ ! -f local-config.yaml ]; then
             echo "El ambiente no esta instalado: no existe local-config.yaml"
           elif [ ! -d "$PGDATA" ]; then
             echo "El ambiente no esta instalado: no existe la instancia de PostgreSQL en local-pg/data"
@@ -35,7 +43,10 @@
         program = "${pkgs.writeShellApplication {
           name = "install";
           runtimeInputs = herramientas;
-          text = "install-dev-env";
+          text = ''
+            export PATH="${coderunDevel}:$PATH"
+            install-dev-env
+          '';
         }}/bin/install";
       };
     };
