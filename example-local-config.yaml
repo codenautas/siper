@@ -5,12 +5,13 @@ db:
   description: base de prueba
   host: localhost
   port: 5432
-  database: siper_db
+  database: siper_db # for-test: siper_local_test_db
   schema: siper
   user: siper_admin
   password: cambiar_esta_clave
+  owner: siper_owner
 modulo-fichadas-db:
-  user: usuario,
+  user: usuario
   password: cambiar_esta_clave
   server: host o ip
   database: database
@@ -19,22 +20,26 @@ modulo-fichadas-db:
     encrypt: false
     trustServerCertificate: true
 install:
+  pg_triggers: all
   dump:
-    drop-his: false # poner en true en desarrollo
+    drop-his: false # for-test: true
     db:
       owner: siper_owner
 test:
   only-in-db: siper_local_test_db
 client-setup: 
   lang: es
+  tab-plus: only
 devel: # no incluir en producción. En desarrollo quitar la x-
   x-delay: 500
-  tests-can-delete-db: true
+  tests-can-delete-db: false # for-test: true
   useFileDevelopment: true
 log:
   db:
     on-demand: true
 mixin-patch:
   copy:
-  - from: ../siper-data/grafica
-    to: ./dist    
+  - from: ./src
+    to: ./dist
+siper:
+  puntos_compatibles: true

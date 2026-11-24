@@ -25,3 +25,7 @@ Probar el front-end in recompilar y manteniendo el backend abierto para poder pr
 ```sh
 npm test -- --nav --no-close
 ```
+
+# pruebas y desarrollo en WSL con Nix
+
+Ver [docs/usando-nix.md](docs/usando-nix.md)
